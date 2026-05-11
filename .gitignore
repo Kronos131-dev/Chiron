@@ -1,0 +1,101 @@
+# =========================================================================
+# G I T I G N O R E   F O R   C H I R O N   P R O J E C T
+# =========================================================================
+
+# -------------------------------------------------------------------------
+# OS / Environments
+# -------------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+ehthumbs_vista.db
+[Tt]humbs.db
+.env
+.env.local
+.env.*.local
+
+# -------------------------------------------------------------------------
+# IDEs and Editors
+# -------------------------------------------------------------------------
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+*.iml
+*.iws
+.classpath
+.project
+.settings/
+.springBeans
+
+# -------------------------------------------------------------------------
+# Java / Spring Boot (chiron-back)
+# -------------------------------------------------------------------------
+# Maven / Gradle build folders
+target/
+build/
+bin/
+.gradle/
+
+# Compiled class files
+*.class
+
+# Log files
+*.log
+
+# Compiled archives
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Ignore Maven wrapper jar but keep the wrapper script
+!/.mvn/wrapper/maven-wrapper.jar
+
+# Crash reports
+hs_err_pid*
+replay_pid*
+
+# App Specific - Uploads directory used for Profile avatars
+uploads/
+chiron-back/uploads/
+
+# -------------------------------------------------------------------------
+# Node / Angular (chiron-front)
+# -------------------------------------------------------------------------
+# Dependencies
+node_modules/
+chiron-front/node_modules/
+
+# Build and Testing output
+dist/
+chiron-front/dist/
+tmp/
+out-tsc/
+bazel-out/
+coverage/
+chiron-front/coverage/
+
+# Angular specific
+.angular/
+chiron-front/.angular/
+
+# Logs
+npm-debug.log
+npm-debug.log.*
+yarn-debug.log
+yarn-debug.log.*
+yarn-error.log
+yarn-error.log.*
+
+# -------------------------------------------------------------------------
+# Docker (Optional)
+# -------------------------------------------------------------------------
+.docker-sync

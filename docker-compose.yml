@@ -1,0 +1,63 @@
+services:
+  # 1. LA BASE DE DONNÉES
+  db:
+    image: postgres:16-alpine
+    container_name: chiron_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: chiron_user
+      POSTGRES_PASSWORD: chiron_password
+      POSTGRES_DB: chiron_db
+    volumes:
+      - chiron_pg_data:/var/lib/postgresql/data
+    ports:
+      - "5454:5432"
+
+  # 2. LE BACKEND
+  backend:
+    image: eclipse-temurin:21-jre-alpine
+    container_name: chiron_backend
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/chiron_db
+      - SPRING_DATASOURCE_USERNAME=chiron_user
+      - SPRING_DATASOURCE_PASSWORD=chiron_password
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./app.jar:/app/app.jar
+    command: ["java", "-jar", "/app/app.jar"]
+    depends_on:
+      - db
+
+  # 3. LE FRONTEND (Ton Nginx à toi)
+  frontend:
+    image: nginx:alpine
+    container_name: chiron_frontend
+    restart: always
+    # J'ai supprimé l'ouverture des ports ici ! Il n'est plus accessible de l'extérieur.
+    volumes:
+      - ./dist/chiron-front/browser:/usr/share/nginx/html
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - backend
+
+  # 4. NGINX PROXY MANAGER (Le "videur" qui gère le HTTPS)
+  npm:
+    image: 'jc21/nginx-proxy-manager:latest'
+    container_name: chiron_npm
+    restart: always
+    ports:
+      - "80:80"      # NPM intercepte le HTTP
+      - "443:443"    # NPM intercepte le HTTPS
+      - "81:81"      # Interface d'administration
+    volumes:
+      - ./npm/data:/data
+      - ./npm/letsencrypt:/etc/letsencrypt
+    depends_on:
+      - frontend
+
+volumes:
+  chiron_pg_data:
