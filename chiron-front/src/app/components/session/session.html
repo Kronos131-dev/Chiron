@@ -1,0 +1,151 @@
+<!-- Top Navigation Header -->
+<header class="bg-slate-950/80 backdrop-blur-md flex items-center justify-between px-6 py-4 w-full fixed top-0 z-50 border-b border-secondary/10">
+  <!-- Back Button and Title -->
+  <div class="flex items-center gap-3">
+    <button (click)="retour()" class="material-symbols-outlined text-secondary hover:text-white transition-colors cursor-pointer">arrow_back</button>
+    <h1 class="text-2xl font-black text-[#f8fafc] tracking-widest font-headline uppercase">CHIRON</h1>
+  </div>
+  <!-- Header Icon -->
+  <div class="w-8 h-8 rounded-full bg-slate-800 border border-secondary/30 flex items-center justify-center overflow-hidden">
+    <span class="material-symbols-outlined text-secondary text-lg">person</span>
+  </div>
+</header>
+
+<!-- Main Session Interface -->
+<main class="min-h-screen pt-20 pb-32 bg-slate-950 heroic-texture relative">
+
+  <!-- Session Title and Global Actions Section -->
+  <section class="px-6 py-10 relative overflow-hidden">
+    <!-- Decorative Gradient -->
+    <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-slate-800/40 to-transparent pointer-events-none"></div>
+
+    <div class="max-w-md mx-auto relative z-10 space-y-4">
+      <!-- Editable/Read-only Title Input -->
+      <div>
+        <p class="text-secondary text-[10px] font-bold tracking-[0.25em] uppercase mb-1">Séance</p>
+        <input type="text"
+               [ngModel]="titreRoutine()"
+               (ngModelChange)="titreRoutine.set($event)"
+               [readOnly]="isReadonly()"
+               class="w-full bg-transparent border-b-2 border-transparent hover:border-white/10 focus:border-secondary outline-none font-headline text-3xl md:text-4xl font-black text-white uppercase tracking-tight pb-1 transition-colors"
+               placeholder="NOM DE LA ROUTINE" />
+      </div>
+
+      <!-- Action Buttons (Hidden in Read-only Mode) -->
+      @if (!isReadonly()) {
+        <div class="flex justify-between items-end pt-2">
+          <!-- Last Session Date Display -->
+          <p class="text-on-surface-variant text-[10px] font-bold tracking-widest uppercase">Dernière session : {{ derniereSession() }}</p>
+
+          <div class="flex flex-col gap-2">
+            <!-- Save to Journal (History) Button -->
+            <button (click)="ajouterAuJournal()"
+                    class="bg-gradient-to-r from-blue-500 to-blue-700 text-white font-bold text-xs px-6 py-2 rounded uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2">
+              <span class="material-symbols-outlined text-sm">add_task</span>
+              Ajouter au journal
+            </button>
+
+            <!-- Save as Template Button -->
+            <button (click)="sauvegarder()"
+                    class="bg-gradient-to-r from-secondary to-[#c77a30] text-slate-950 font-bold text-xs px-6 py-3 rounded uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg shadow-secondary/20 flex items-center justify-center gap-2">
+              <span class="material-symbols-outlined text-sm">save</span>
+              Sauvegarder modèle
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- Exercises List Section -->
+  <section class="px-4 md:px-8">
+    <div class="max-w-md mx-auto space-y-6">
+
+      @for (exo of exercices(); track exo.id) {
+        <!-- Individual Exercise Block -->
+        <article class="bg-[#1a1c23]/80 backdrop-blur-sm border border-white/5 rounded-xl p-5 shadow-xl">
+
+          <!-- Exercise Name Input and Delete Button -->
+          <div class="flex items-end gap-3 mb-6">
+            <div class="flex-1">
+              <label class="text-secondary text-[9px] font-bold tracking-[0.2em] uppercase ml-1">Nom de l'exercice</label>
+              <input type="text" [(ngModel)]="exo.nom"
+                     [readOnly]="isReadonly()"
+                     class="w-full mt-1 bg-slate-950/50 border border-white/10 rounded p-3 text-white font-headline text-lg outline-none focus:border-secondary/50 transition-colors"
+                     placeholder="Ex: Squat">
+            </div>
+
+            @if (!isReadonly()) {
+              <button (click)="supprimerExercice(exo.id)" class="bg-slate-950/50 border border-white/10 p-3 rounded text-on-surface-variant hover:text-red-400 hover:border-red-400/30 transition-all mb-[1px]">
+                <span class="material-symbols-outlined text-xl">delete</span>
+              </button>
+            }
+          </div>
+
+          <!-- Sets Table Headers -->
+          <div class="grid grid-cols-12 gap-3 mb-2 px-1">
+            <div class="col-span-3 text-on-surface-variant text-[9px] font-bold tracking-widest uppercase">Série</div>
+            <div class="col-span-4 text-on-surface-variant text-[9px] font-bold tracking-widest uppercase">Poids (KG)</div>
+            <div class="col-span-5 text-on-surface-variant text-[9px] font-bold tracking-widest uppercase">Reps</div>
+          </div>
+
+          <!-- Sets (Series) Rows -->
+          <div class="space-y-3 mb-5">
+            @for (serie of exo.series; track serie.id; let i = $index) {
+              <div class="grid grid-cols-12 gap-3 items-center">
+
+                <!-- Set Number -->
+                <div class="col-span-3 text-secondary font-bold font-headline text-lg pl-1">
+                  {{ i + 1 < 10 ? '0' + (i + 1) : i + 1 }}
+                </div>
+
+                <!-- Weight Input -->
+                <div class="col-span-4">
+                  <input type="number" [(ngModel)]="serie.poids"
+                         [readOnly]="isReadonly()"
+                         class="w-full bg-slate-950/80 border border-white/5 rounded p-2.5 text-white font-body text-center outline-none focus:border-secondary/50 transition-colors">
+                </div>
+
+                <!-- Reps Input and Delete Button -->
+                <div class="col-span-5">
+                  <div class="flex items-center gap-2">
+                    <input type="number" [(ngModel)]="serie.reps"
+                           [readOnly]="isReadonly()"
+                           class="w-full bg-slate-950/80 border border-white/5 rounded p-2.5 text-white font-body text-center outline-none focus:border-secondary/50 transition-colors">
+
+                    @if (!isReadonly()) {
+                      <button (click)="supprimerSerie(exo.id, serie.id)" class="text-on-surface-variant hover:text-red-400 transition-colors">
+                        <span class="material-symbols-outlined text-sm">close</span>
+                      </button>
+                    }
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- Add Set Button -->
+          @if (!isReadonly()) {
+            <button (click)="ajouterSerie(exo.id)"
+                    class="w-full border border-dashed border-white/10 rounded py-3 flex items-center justify-center gap-2 text-on-surface-variant text-[10px] font-bold tracking-widest uppercase hover:text-secondary hover:bg-white/5 transition-colors">
+              <span class="text-lg leading-none">+</span> Ajouter une série
+            </button>
+          }
+
+        </article>
+      }
+
+      <!-- Add Exercise Button -->
+      @if (!isReadonly()) {
+        <button (click)="ajouterExercice()"
+                class="w-full mt-8 bg-[#1a1c23]/50 border border-dashed border-white/10 rounded-xl p-8 flex flex-col items-center justify-center gap-3 text-on-surface-variant hover:text-white hover:border-white/30 transition-all group">
+          <div class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-white/10 transition-colors">
+            <span class="material-symbols-outlined text-2xl font-bold">add</span>
+          </div>
+          <span class="text-[11px] font-bold tracking-[0.2em] uppercase">Ajouter un exercice</span>
+        </button>
+      }
+
+    </div>
+  </section>
+</main>

@@ -1,0 +1,119 @@
+<!-- Header Section: Navigation back button, title, and optional admin badge -->
+<header class="bg-slate-950/80 backdrop-blur-md flex items-center justify-between px-6 py-4 w-full fixed top-0 z-50 border-b border-secondary/10">
+  <div class="flex items-center gap-3">
+    <button (click)="goBack()" class="material-symbols-outlined text-secondary hover:text-white transition-colors cursor-pointer">arrow_back</button>
+    <h1 class="text-2xl font-black text-[#f8fafc] tracking-widest font-headline uppercase">AGORA</h1>
+  </div>
+  @if (isAdmin()) {
+    <div class="bg-amber-600 text-slate-900 text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-[0_0_10px_rgba(217,119,6,0.5)] border border-amber-400">
+      Admin
+    </div>
+  }
+</header>
+
+<!-- Main Content Area -->
+<main class="min-h-screen pt-24 pb-32 bg-slate-950 heroic-texture px-4 md:px-8">
+  <div class="max-w-3xl mx-auto space-y-8">
+
+    <!-- Title Section -->
+    <div class="text-center mb-8">
+      <p class="text-secondary text-[10px] font-bold tracking-[0.25em] uppercase mb-2">Le Panthéon des Guerriers</p>
+      <h2 class="font-headline text-4xl md:text-5xl font-black text-white uppercase tracking-tight">L'AGORA</h2>
+      <div class="h-1 w-16 bg-gradient-to-r from-secondary to-transparent mx-auto mt-4 rounded-full"></div>
+    </div>
+
+    <!-- User Search Section -->
+    <div class="relative max-w-xl mx-auto mb-12">
+      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        <span class="material-symbols-outlined text-secondary/50">search</span>
+      </div>
+      <input type="text"
+             [ngModel]="searchQuery()"
+             (ngModelChange)="searchQuery.set($event); searchProfiles()"
+             placeholder="Rechercher un guerrier..."
+             class="w-full bg-slate-900/80 text-white pl-10 pr-4 py-3 rounded-xl border border-secondary/20 focus:border-secondary outline-none transition-colors font-body shadow-lg">
+
+      <!-- Dynamic Search Results Dropdown -->
+      @if (searchResults().length > 0) {
+        <div class="absolute w-full mt-2 bg-slate-900 border border-secondary/30 rounded-xl shadow-2xl z-50 overflow-hidden">
+          @for (result of searchResults(); track result.username) {
+            <div (click)="goToProfile(result.username)"
+                 class="flex items-center gap-4 p-4 hover:bg-secondary/10 cursor-pointer border-b border-white/5 last:border-0 transition-colors">
+              <img [src]="chironApi.getImageUrl(result.icon || 'default_icon.png')"
+                   (error)="$event.target.src='/images/default_icon.png'"
+                   class="w-10 h-10 rounded-full border border-secondary/30 object-cover"
+                   alt="avatar">
+              <div>
+                <p class="text-white font-bold font-headline uppercase tracking-wide flex items-center gap-2">
+                  {{ result.username }}
+                  @if (result.isAdmin) {
+                    <span class="material-symbols-outlined text-amber-500 text-xs" title="Administrateur">shield</span>
+                  }
+                </p>
+                <p class="text-secondary text-xs font-bold tracking-widest uppercase">{{ result.rank }}</p>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Loading Spinner Indicator -->
+    @if (isLoading()) {
+      <div class="flex justify-center py-20">
+        <span class="w-12 h-12 border-4 border-secondary/20 border-t-secondary rounded-full animate-spin"></span>
+      </div>
+    }
+
+    <!-- Default View: Grid of all participants displayed when not searching -->
+    @if (!searchQuery() || searchResults().length === 0) {
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        @for (athlete of participants(); track athlete.username) {
+          <article (click)="goToProfile(athlete.username)"
+                   class="group bg-slate-900/60 backdrop-blur-md border border-secondary/10 rounded-2xl p-6 cursor-pointer hover:bg-slate-900/80 hover:border-secondary/40 transition-all duration-300 shadow-xl overflow-hidden relative">
+
+            <div class="absolute inset-0 bg-gradient-to-br from-secondary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+
+            <div class="relative z-10 flex items-center gap-5">
+              <div class="relative">
+                <img [src]="chironApi.getImageUrl(athlete.icon || 'default_icon.png')"
+                     (error)="$event.target.src='/images/default_icon.png'"
+                     class="w-16 h-16 rounded-full border-2 border-slate-800 group-hover:border-secondary transition-colors object-cover shadow-lg"
+                     alt="avatar">
+
+                <!-- Active status visual indicator -->
+                <div class="absolute bottom-0 right-0 w-4 h-4 bg-green-500 border-2 border-slate-900 rounded-full"></div>
+              </div>
+
+              <div class="flex-1">
+                <h3 class="font-headline font-black text-xl text-white uppercase tracking-wide flex items-center gap-2 group-hover:text-secondary transition-colors">
+                  {{ athlete.username }}
+                  @if (athlete.isAdmin) {
+                    <span class="material-symbols-outlined text-amber-500 text-sm" title="Administrateur">shield</span>
+                  }
+                </h3>
+                <p class="text-xs font-bold text-on-surface-variant tracking-widest uppercase mt-1">
+                  Rang : <span class="text-secondary">{{ athlete.rank }}</span>
+                </p>
+              </div>
+
+              <span class="material-symbols-outlined text-secondary/30 group-hover:text-secondary group-hover:translate-x-1 transition-all">
+                arrow_forward
+              </span>
+            </div>
+
+          </article>
+        }
+      </div>
+    }
+
+    <!-- Empty State: Displayed when no participants are found after loading -->
+    @if (!isLoading() && participants().length === 0) {
+      <div class="text-center py-20 bg-slate-900/30 rounded-2xl border border-white/5">
+        <span class="material-symbols-outlined text-4xl text-secondary/50 mb-3">group_off</span>
+        <p class="text-on-surface-variant uppercase tracking-widest text-sm font-bold">L'Agora est vide.</p>
+      </div>
+    }
+
+  </div>
+</main>

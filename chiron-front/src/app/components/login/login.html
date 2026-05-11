@@ -1,0 +1,50 @@
+<!-- Main wrapper with thematic background -->
+<div class="min-h-screen greek-bg heroic-texture flex items-center justify-center">
+
+  <!-- Authentication Card -->
+  <div class="login-container bg-surface w-full max-w-md">
+    <h2>{{ isLoginMode ? 'Connexion' : 'Inscription' }}</h2>
+
+    <!-- Authentication Form -->
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+
+      <!-- Username Input -->
+      <div class="form-group">
+        <label for="username">Nom d'utilisateur</label>
+        <input type="text" id="username" formControlName="username" autocomplete="username">
+      </div>
+
+      <!-- Email Input (Only visible in Registration Mode) -->
+      <div class="form-group" *ngIf="!isLoginMode">
+        <label for="email">Adresse Email</label>
+        <input type="email" id="email" formControlName="email" autocomplete="email">
+      </div>
+
+      <!-- Password Input -->
+      <div class="form-group">
+        <label for="password">Mot de passe</label>
+        <input type="password" id="password" formControlName="password" autocomplete="current-password">
+      </div>
+
+      <!-- Error Message Display -->
+      <div *ngIf="errorMessage" class="error-message">
+        {{ errorMessage }}
+      </div>
+
+      <!-- Submit Button -->
+      <button type="submit" [disabled]="loginForm.invalid || isLoading">
+        <span *ngIf="isLoading">En cours...</span>
+        <span *ngIf="!isLoading">{{ isLoginMode ? 'Se connecter' : 'Forger mon compte' }}</span>
+      </button>
+
+    </form>
+
+    <!-- Mode Toggle Button -->
+    <div class="mt-6 text-center">
+      <button type="button" class="switch-mode-btn" (click)="switchMode()">
+        {{ isLoginMode ? "Pas encore de compte ? S'inscrire" : "Déjà un compte ? Se connecter" }}
+      </button>
+    </div>
+
+  </div>
+</div>

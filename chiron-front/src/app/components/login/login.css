@@ -1,0 +1,127 @@
+/* login.component.css */
+
+/* Conteneur principal de la carte de connexion */
+.login-container {
+  max-width: 420px;
+  margin: 10vh auto;
+  padding: 2.5rem;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-outline-variant);
+  border-radius: 16px;
+  /* Ombre subtile pour détacher la carte du fond */
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+}
+
+/* Titre "Connexion à Chiron" */
+h2 {
+  font-family: var(--font-headline);
+  color: var(--color-on-background);
+  font-size: 2rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Espacement entre les champs */
+.form-group {
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Libellés des champs */
+label {
+  font-family: var(--font-body);
+  color: var(--color-on-surface-variant);
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+/* Champs de saisie */
+input {
+  font-family: var(--font-body);
+  background-color: var(--color-background);
+  border: 1px solid var(--color-outline-variant);
+  color: var(--color-on-surface);
+  padding: 0.875rem 1rem;
+  border-radius: 8px;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+/* Effet au clic sur un champ de saisie (focus) */
+input:focus {
+  border-color: var(--color-secondary);
+  /* Lueur bronze subtile définie dans votre thème */
+  box-shadow: 0 0 0 2px rgba(255, 183, 121, 0.15);
+}
+
+/* Bouton d'action principal */
+button {
+  width: 100%;
+  padding: 1rem;
+  margin-top: 1rem;
+  background-color: var(--color-secondary);
+  color: var(--color-background); /* Texte sombre sur fond bronze pour un contraste fort */
+  font-family: var(--font-headline);
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+/* Animation au survol du bouton */
+button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  /* Utilisation de l'effet bronze-glow */
+  box-shadow: 0 0 20px rgba(255, 183, 121, 0.4);
+}
+
+/* Style du bouton lorsqu'il est désactivé (formulaire invalide ou chargement) */
+button:disabled {
+  background-color: var(--color-outline-variant);
+  color: var(--color-on-surface-variant);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Message d'erreur (Identifiants incorrects) */
+.error-message {
+  font-family: var(--font-body);
+  color: #ef4444; /* Rouge classique pour l'erreur */
+  font-size: 0.875rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+  padding: 0.75rem;
+  background-color: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 8px;
+}
+
+.switch-mode-btn {
+  background: none;
+  color: var(--color-on-surface-variant);
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  text-transform: none;
+  letter-spacing: normal;
+  padding: 0;
+  margin-top: 0;
+  box-shadow: none;
+}
+
+.switch-mode-btn:hover {
+  background: none;
+  color: var(--color-secondary);
+  box-shadow: none;
+  transform: none;
+  text-decoration: underline;
+}

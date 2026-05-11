@@ -1,0 +1,134 @@
+<!-- Top Navigation Header -->
+<header class="bg-slate-950/80 backdrop-blur-md flex items-center justify-between px-6 py-4 w-full fixed top-0 z-50 border-b border-secondary/10">
+  <div class="flex items-center gap-3">
+    <span class="material-symbols-outlined text-secondary">menu_book</span>
+    <h1 class="text-2xl font-black text-[#f8fafc] tracking-widest font-headline uppercase">ANNALES</h1>
+  </div>
+  <a href="/chat" class="material-symbols-outlined text-secondary hover:opacity-80 transition-opacity">arrow_back</a>
+</header>
+
+<!-- Main Journal Content Area -->
+<main class="min-h-screen pt-24 pb-12 heroic-texture px-4 md:px-8">
+  <div class="max-w-5xl mx-auto">
+
+    <!-- Page Title & Subtitle -->
+    <div class="text-center mb-12">
+      <h2 class="font-headline text-4xl md:text-5xl font-black text-on-surface uppercase tracking-tight">
+        TON <span class="text-secondary">HÉRITAGE</span>
+      </h2>
+      <p class="text-on-surface-variant font-body mt-2">L'historique de tes batailles contre la fonte.</p>
+    </div>
+
+    <!-- Loading Spinner Indicator -->
+    @if (isLoading()) {
+      <div class="flex justify-center mt-20">
+        <span class="w-12 h-12 border-4 border-secondary/20 border-t-secondary rounded-full animate-spin"></span>
+      </div>
+    }
+
+    <!-- Empty State (No sessions found) -->
+    @if (!isLoading() && historique().length === 0) {
+      <div class="text-center p-12 bg-slate-900/50 rounded-xl border border-secondary/10">
+        <span class="material-symbols-outlined text-6xl text-secondary/50 mb-4">fitness_center</span>
+        <h3 class="text-xl font-headline text-on-surface">Aucune séance enregistrée</h3>
+        <p class="text-on-surface-variant">Va forger ton histoire au temple.</p>
+      </div>
+    }
+
+    <!-- Weekly Grouped Workout History -->
+    <div class="space-y-12">
+      @for (weekGroup of historiqueGrouped(); track weekGroup.weekNumber) {
+        <div class="space-y-6">
+
+          <!-- Week Header Separator -->
+          <div class="flex items-center gap-4">
+            <div class="h-px bg-secondary/30 flex-1"></div>
+            <h3 class="text-secondary font-headline font-black text-xl tracking-widest uppercase">Semaine {{ weekGroup.weekNumber }}</h3>
+            <div class="h-px bg-secondary/30 flex-1"></div>
+          </div>
+
+          <!-- List of Sessions for the current week -->
+          <div class="space-y-4">
+            @for (seance of weekGroup.seances; track seance.id) {
+              <article class="bg-slate-900/60 backdrop-blur-md border border-secondary/20 rounded-xl overflow-hidden shadow-2xl transition-all hover:border-secondary/40">
+
+                <!-- Clickable Session Header Summary (Accordion Toggle) -->
+                <div class="bg-slate-950/50 p-6 border-b border-secondary/10 flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer hover:bg-slate-900/80 transition-colors"
+                     (click)="toggleSeanceDetails(seance.id)">
+                  <div>
+                    <h3 class="font-headline text-2xl font-bold text-white uppercase tracking-wide flex items-center gap-3">
+                      {{ seance.titre || 'Entraînement' }}
+
+                      <!-- Expansion Indicator Icon -->
+                      <span class="material-symbols-outlined text-secondary transition-transform duration-300"
+                            [class.rotate-180]="expandedSeanceId() === seance.id">
+                        expand_more
+                      </span>
+                    </h3>
+                    <p class="text-on-surface-variant text-sm flex items-center gap-2 mt-1">
+                      <span class="material-symbols-outlined text-sm">calendar_today</span>
+                      <span class="capitalize font-bold">{{ formatDate(seance.startTime) }}</span>
+                    </p>
+                  </div>
+
+                  <!-- Session Actions and Badges -->
+                  <div class="flex items-center gap-2">
+                    <!-- Exercise Count Badge -->
+                    <div class="text-xs font-bold uppercase tracking-widest bg-secondary/10 text-secondary px-4 py-2 rounded">
+                      {{ seance.exercices?.length || 0 }} Exercices
+                    </div>
+
+                    <!-- Delete Session Button -->
+                    <button (click)="supprimerSeance(seance.id, $event)"
+                            class="w-8 h-8 rounded bg-red-900/20 flex items-center justify-center text-red-400 hover:bg-red-900/40 transition-colors cursor-pointer z-10">
+                      <span class="material-symbols-outlined text-sm">delete</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Expandable Session Details (Exercises and Sets) -->
+                @if (expandedSeanceId() === seance.id) {
+                  <div class="p-6 space-y-6 animate-in fade-in slide-in-from-top-4 duration-300">
+                    @for (exo of seance.exercices; track exo.id) {
+
+                      <!-- Individual Exercise Block -->
+                      <div class="bg-slate-950/30 rounded-lg p-4 border border-white/5">
+                        <h4 class="font-headline text-lg text-on-surface mb-3 flex items-center gap-2">
+                          <span class="material-symbols-outlined text-secondary text-lg">fitness_center</span>
+                          {{ exo.nom }}
+                        </h4>
+
+                        <!-- Sets (Series) Table -->
+                        <div class="overflow-x-auto">
+                          <table class="w-full text-left border-collapse">
+                            <thead>
+                            <tr class="border-b border-secondary/20 text-on-surface-variant font-headline text-sm tracking-wider uppercase">
+                              <th class="py-2 px-4">Série</th>
+                              <th class="py-2 px-4">Reps</th>
+                              <th class="py-2 px-4">Poids (kg)</th>
+                            </tr>
+                            </thead>
+                            <tbody class="font-body text-on-surface">
+                              @for (serie of exo.series; track serie.id; let i = $index) {
+                                <tr class="border-b border-white/5 hover:bg-white/5 transition-colors">
+                                  <td class="py-2 px-4 font-bold text-secondary/80">#{{ i + 1 }}</td>
+                                  <td class="py-2 px-4">{{ serie.nombreReps }}</td>
+                                  <td class="py-2 px-4">{{ serie.poids }}</td>
+                                </tr>
+                              }
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                }
+
+              </article>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</main>
