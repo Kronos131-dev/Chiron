@@ -155,7 +155,7 @@ export class Session implements OnInit {
           series: exo.series.map((serie: any) => ({
             id: serie.id || this.generateUniqueId(),
             poids: serie.poids,
-            reps: serie.nombreReps
+            reps: serie.reps
           }))
         }));
 
