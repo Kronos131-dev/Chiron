@@ -213,4 +213,14 @@ export class ChironApi {
   removeCoach(username: string, coachUsername: string): Observable<any> {
     return this.http.delete(`${this.apiUrl}/profile/${encodeURIComponent(username)}/coach/${encodeURIComponent(coachUsername)}`);
   }
+
+  /**
+   * Deletes a user profile and all associated data.
+   *
+   * @param username The username of the profile to delete.
+   * @return An Observable indicating the completion of the deletion.
+   */
+  deleteProfile(username: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/profile/${encodeURIComponent(username)}`);
+  }
 }

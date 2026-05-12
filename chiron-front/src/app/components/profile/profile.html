@@ -68,8 +68,15 @@
           </button>
         }
 
+        <!-- Delete Profile Button (Visible to the user and to admins) -->
+        @if (isMyProfile() || isAdmin()) {
+          <button (click)="deleteProfile()" class="absolute top-6 right-6 bg-slate-950 border border-red-900/50 p-2.5 rounded-xl hover:bg-red-900/20 text-red-400 transition-colors group z-10" title="Supprimer le compte">
+            <span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">delete_forever</span>
+          </button>
+        }
+
         <!-- Avatar Image Container -->
-        <div class="relative inline-block mb-6">
+        <div class="relative inline-block mb-6 mt-4">
           <div class="absolute inset-0 bg-secondary/20 rounded-full blur-xl"></div>
           <img [src]="chironApi.getImageUrl(athleteProfile().icon)"
                (error)="$event.target.src='/images/default_icon.png'"

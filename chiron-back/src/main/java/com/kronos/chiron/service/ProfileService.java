@@ -236,6 +236,40 @@ public class ProfileService {
     }
 
     /**
+     * Deletes a user profile and all associated data.
+     * Validates that the requesting user is either the profile owner or an administrator.
+     *
+     * @param username        The username of the profile to delete.
+     * @param requestUsername The username of the user making the request.
+     */
+    @Transactional
+    public void deleteProfile(String username, String requestUsername) {
+        Utilisateur userToDelete = utilisateurRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User to delete not found"));
+
+        Utilisateur requestUser = utilisateurRepository.findByUsername(requestUsername)
+                .orElseThrow(() -> new RuntimeException("Requesting user not found"));
+
+        boolean isRequestUserAdmin = requestUser.getRole() == Role.ADMIN || "kronos".equalsIgnoreCase(requestUsername) || "chiron".equalsIgnoreCase(requestUsername);
+
+        if (!username.equals(requestUsername) && !isRequestUserAdmin) {
+            throw new RuntimeException("Access denied. You can only delete your own profile.");
+        }
+
+        // Handle bidirectional relationship cleanup before deletion
+        for (Utilisateur coach : userToDelete.getCoaches()) {
+            coach.getCoachedUsers().remove(userToDelete);
+        }
+        for (Utilisateur coachedUser : userToDelete.getCoachedUsers()) {
+            coachedUser.getCoaches().remove(userToDelete);
+        }
+        userToDelete.getCoaches().clear();
+        userToDelete.getCoachedUsers().clear();
+
+        utilisateurRepository.delete(userToDelete);
+    }
+
+    /**
      * Calculates the total number of sets performed by the user over the last 30 days.
      *
      * @param userId The ID of the target user.

@@ -302,6 +302,33 @@ export class Profile implements OnInit {
   }
 
   /**
+   * Deletes the currently viewed profile.
+   */
+  deleteProfile() {
+    const targetUsername = this.athleteProfile()?.username;
+    if (!targetUsername) return;
+
+    if (confirm(`Es-tu sûr de vouloir supprimer le compte de ${targetUsername} ? Cette action est irréversible.`)) {
+      this.isLoading.set(true);
+      this.chironApi.deleteProfile(targetUsername).subscribe({
+        next: () => {
+          alert("Compte supprimé avec succès.");
+          if (this.isMyProfile()) {
+            this.authService.logout();
+          } else {
+             this.router.navigate(['/chat']);
+          }
+        },
+        error: (err) => {
+          console.error("Erreur suppression compte", err);
+          alert("Erreur lors de la suppression du compte.");
+          this.isLoading.set(false);
+        }
+      });
+    }
+  }
+
+  /**
    * Navigates back to the main chat interface.
    */
   goBack() {

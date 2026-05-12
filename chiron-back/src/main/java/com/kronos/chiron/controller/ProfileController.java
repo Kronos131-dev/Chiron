@@ -132,4 +132,25 @@ public class ProfileController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    /**
+     * Deletes a user's profile.
+     *
+     * @param username       The username of the profile to delete.
+     * @param authentication The security context of the authenticated user.
+     * @return A ResponseEntity indicating success or an authorization failure.
+     */
+    @DeleteMapping("/{username}")
+    public ResponseEntity<?> deleteProfile(@PathVariable String username, Authentication authentication) {
+        try {
+            if (authentication == null) {
+                return ResponseEntity.status(403).body("Unauthorized");
+            }
+            String requestUsername = authentication.getName();
+            profileService.deleteProfile(username, requestUsername);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 }
