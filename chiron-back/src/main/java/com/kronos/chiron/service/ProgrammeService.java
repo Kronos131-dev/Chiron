@@ -3,10 +3,12 @@ package com.kronos.chiron.service;
 import com.kronos.chiron.dto.ExerciceDto;
 import com.kronos.chiron.dto.SeanceDto;
 import com.kronos.chiron.dto.SerieDto;
+import com.kronos.chiron.dto.DegressifDto;
 import com.kronos.chiron.entity.Exercice;
 import com.kronos.chiron.entity.Role;
 import com.kronos.chiron.entity.Seance;
 import com.kronos.chiron.entity.Serie;
+import com.kronos.chiron.entity.Degressif;
 import com.kronos.chiron.entity.Utilisateur;
 import com.kronos.chiron.repository.SeanceRepository;
 import com.kronos.chiron.repository.UtilisateurRepository;
@@ -106,6 +108,16 @@ public class ProgrammeService {
                         serie.setPoids(serieDto.poids() != null ? serieDto.poids() : 0.0);
                         serie.setNombreReps(serieDto.reps() != null ? serieDto.reps() : 0);
                         serie.setCommentaire(serieDto.commentaire());
+                        
+                        if (serieDto.degressifs() != null) {
+                            for (DegressifDto degDto : serieDto.degressifs()) {
+                                Degressif degressif = new Degressif();
+                                degressif.setPoids(degDto.poids() != null ? degDto.poids() : 0.0);
+                                degressif.setNombreReps(degDto.reps() != null ? degDto.reps() : 0);
+                                serie.addDegressif(degressif);
+                            }
+                        }
+                        
                         exercice.addSerie(serie);
                     }
                 }
@@ -223,6 +235,14 @@ public class ProgrammeService {
                 newSerie.setPoids(sourceSerie.getPoids());
                 newSerie.setNombreReps(sourceSerie.getNombreReps());
                 newSerie.setCommentaire(sourceSerie.getCommentaire());
+                
+                for (Degressif sourceDegressif : sourceSerie.getDegressifs()) {
+                    Degressif newDegressif = new Degressif();
+                    newDegressif.setPoids(sourceDegressif.getPoids());
+                    newDegressif.setNombreReps(sourceDegressif.getNombreReps());
+                    newSerie.addDegressif(newDegressif);
+                }
+
                 newExo.addSerie(newSerie);
             }
             newSeance.addExercice(newExo);

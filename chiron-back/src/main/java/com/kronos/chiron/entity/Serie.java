@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Entity representing a specific set (serie) performed during an exercise.
  * It tracks the weight lifted, the number of repetitions, and any optional comments.
@@ -43,4 +46,13 @@ public class Serie {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "exercice_id")
     private Exercice exercice;
+    
+    @OneToMany(mappedBy = "serie", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Degressif> degressifs = new ArrayList<>();
+    
+    public void addDegressif(Degressif degressif) {
+        degressifs.add(degressif);
+        degressif.setSerie(this);
+    }
 }

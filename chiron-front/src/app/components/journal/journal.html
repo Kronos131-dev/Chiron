@@ -115,6 +115,13 @@
                                   <td class="py-2 px-4">{{ serie.reps }}</td>
                                   <td class="py-2 px-4">{{ serie.poids }}</td>
                                 </tr>
+                                @for (deg of serie.degressifs; track deg.id; let j = $index) {
+                                  <tr class="border-b border-white/5 bg-slate-900/30 hover:bg-white/5 transition-colors">
+                                    <td class="py-2 px-4 pl-8 text-on-surface-variant text-xs">↳ Dég.</td>
+                                    <td class="py-2 px-4 text-sm">{{ deg.reps }}</td>
+                                    <td class="py-2 px-4 text-sm">{{ deg.poids }}</td>
+                                  </tr>
+                                }
                               }
                             </tbody>
                           </table>

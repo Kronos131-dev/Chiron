@@ -6,12 +6,22 @@ import { ChironApi } from '../../service/chiron-api';
 import { AuthService } from '../../service/auth.service';
 
 /**
+ * Interface defining the structure of a drop set (degressif) within the session form.
+ */
+export interface DegressifForm {
+  id: number | string;
+  poids: number | null;
+  reps: number | null;
+}
+
+/**
  * Interface defining the structure of a set (serie) within the session form.
  */
 export interface SerieForm {
   id: number | string;
   poids: number | null;
   reps: number | null;
+  degressifs: DegressifForm[];
 }
 
 /**
@@ -114,7 +124,7 @@ export class Session implements OnInit {
           this.titreRoutine.set('Nouvelle Routine');
           this.loadedSeanceIsModele.set(false);
           this.exercices.set([
-            { id: this.generateUniqueId(), nom: '', series: [{ id: this.generateUniqueId(), poids: null, reps: null }] }
+            { id: this.generateUniqueId(), nom: '', series: [{ id: this.generateUniqueId(), poids: null, reps: null, degressifs: [] }] }
           ]);
         }
       });
@@ -155,7 +165,12 @@ export class Session implements OnInit {
           series: exo.series.map((serie: any) => ({
             id: serie.id || this.generateUniqueId(),
             poids: serie.poids,
-            reps: serie.reps
+            reps: serie.reps,
+            degressifs: serie.degressifs ? serie.degressifs.map((deg: any) => ({
+              id: deg.id || this.generateUniqueId(),
+              poids: deg.poids,
+              reps: deg.reps
+            })) : []
           }))
         }));
 
@@ -178,7 +193,7 @@ export class Session implements OnInit {
     if (this.isReadonly()) return;
     this.exercices.update(exos => [
       ...exos,
-      { id: this.generateUniqueId(), nom: '', series: [{ id: this.generateUniqueId(), poids: null, reps: null }] }
+      { id: this.generateUniqueId(), nom: '', series: [{ id: this.generateUniqueId(), poids: null, reps: null, degressifs: [] }] }
     ]);
   }
 
@@ -201,7 +216,7 @@ export class Session implements OnInit {
     if (this.isReadonly()) return;
     this.exercices.update(exos => exos.map(exo => {
       if (exo.id === exoId) {
-        return { ...exo, series: [...exo.series, { id: this.generateUniqueId(), poids: null, reps: null }] };
+        return { ...exo, series: [...exo.series, { id: this.generateUniqueId(), poids: null, reps: null, degressifs: [] }] };
       }
       return exo;
     }));
@@ -218,6 +233,55 @@ export class Session implements OnInit {
     this.exercices.update(exos => exos.map(exo => {
       if (exo.id === exoId) {
         return { ...exo, series: exo.series.filter(s => s.id !== serieId) };
+      }
+      return exo;
+    }));
+  }
+
+  /**
+   * Adds a new empty drop set (degressif) to a specific serie.
+   *
+   * @param exoId The ID of the parent exercise.
+   * @param serieId The ID of the parent serie.
+   */
+  ajouterDegressif(exoId: number | string, serieId: number | string) {
+    if (this.isReadonly()) return;
+    this.exercices.update(exos => exos.map(exo => {
+      if (exo.id === exoId) {
+        return {
+          ...exo,
+          series: exo.series.map(serie => {
+            if (serie.id === serieId) {
+              return { ...serie, degressifs: [...serie.degressifs, { id: this.generateUniqueId(), poids: null, reps: null }] };
+            }
+            return serie;
+          })
+        };
+      }
+      return exo;
+    }));
+  }
+
+  /**
+   * Removes a specific drop set (degressif) from its parent serie.
+   *
+   * @param exoId The ID of the parent exercise.
+   * @param serieId The ID of the parent serie.
+   * @param degressifId The ID of the drop set to remove.
+   */
+  supprimerDegressif(exoId: number | string, serieId: number | string, degressifId: number | string) {
+    if (this.isReadonly()) return;
+    this.exercices.update(exos => exos.map(exo => {
+      if (exo.id === exoId) {
+        return {
+          ...exo,
+          series: exo.series.map(serie => {
+            if (serie.id === serieId) {
+              return { ...serie, degressifs: serie.degressifs.filter(d => d.id !== degressifId) };
+            }
+            return serie;
+          })
+        };
       }
       return exo;
     }));
@@ -246,7 +310,11 @@ export class Session implements OnInit {
         series: exo.series.map(serie => ({
           poids: serie.poids != null ? Number(serie.poids) : 0,
           reps: serie.reps != null ? Number(serie.reps) : 0,
-          commentaire: ""
+          commentaire: "",
+          degressifs: serie.degressifs.map(deg => ({
+            poids: deg.poids != null ? Number(deg.poids) : 0,
+            reps: deg.reps != null ? Number(deg.reps) : 0
+          }))
         }))
       }))
     };
@@ -293,7 +361,11 @@ export class Session implements OnInit {
         series: exo.series.map(serie => ({
           poids: serie.poids != null ? Number(serie.poids) : 0,
           reps: serie.reps != null ? Number(serie.reps) : 0,
-          commentaire: ""
+          commentaire: "",
+          degressifs: serie.degressifs.map(deg => ({
+            poids: deg.poids != null ? Number(deg.poids) : 0,
+            reps: deg.reps != null ? Number(deg.reps) : 0
+          }))
         }))
       }))
     };

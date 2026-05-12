@@ -106,7 +106,7 @@
                          class="w-full bg-slate-950/80 border border-white/5 rounded p-2.5 text-white font-body text-center outline-none focus:border-secondary/50 transition-colors">
                 </div>
 
-                <!-- Reps Input and Delete Button -->
+                <!-- Reps Input and Actions -->
                 <div class="col-span-5">
                   <div class="flex items-center gap-2">
                     <input type="number" [(ngModel)]="serie.reps"
@@ -114,13 +114,45 @@
                            class="w-full bg-slate-950/80 border border-white/5 rounded p-2.5 text-white font-body text-center outline-none focus:border-secondary/50 transition-colors">
 
                     @if (!isReadonly()) {
-                      <button (click)="supprimerSerie(exo.id, serie.id)" class="text-on-surface-variant hover:text-red-400 transition-colors">
+                      <button (click)="ajouterDegressif(exo.id, serie.id)" class="text-on-surface-variant hover:text-secondary transition-colors" title="Ajouter un dégressif">
+                        <span class="material-symbols-outlined text-sm">keyboard_double_arrow_down</span>
+                      </button>
+                      <button (click)="supprimerSerie(exo.id, serie.id)" class="text-on-surface-variant hover:text-red-400 transition-colors" title="Supprimer la série">
                         <span class="material-symbols-outlined text-sm">close</span>
                       </button>
                     }
                   </div>
                 </div>
               </div>
+
+              <!-- Degressifs Rows -->
+              @for (deg of serie.degressifs; track deg.id) {
+                <div class="grid grid-cols-12 gap-3 items-center mt-1 pl-4 opacity-80">
+                  <div class="col-span-3 text-on-surface-variant text-xs font-bold text-right pr-2">
+                    ↳ Dég.
+                  </div>
+                  <div class="col-span-4">
+                    <input type="number" [(ngModel)]="deg.poids"
+                           [readOnly]="isReadonly()"
+                           class="w-full bg-slate-950/50 border border-white/5 rounded p-1.5 text-white text-sm font-body text-center outline-none focus:border-secondary/50 transition-colors"
+                           placeholder="Kg">
+                  </div>
+                  <div class="col-span-5">
+                    <div class="flex items-center gap-2">
+                      <input type="number" [(ngModel)]="deg.reps"
+                             [readOnly]="isReadonly()"
+                             class="w-full bg-slate-950/50 border border-white/5 rounded p-1.5 text-white text-sm font-body text-center outline-none focus:border-secondary/50 transition-colors"
+                             placeholder="Reps">
+
+                      @if (!isReadonly()) {
+                        <button (click)="supprimerDegressif(exo.id, serie.id, deg.id)" class="text-on-surface-variant hover:text-red-400 transition-colors" title="Supprimer le dégressif">
+                          <span class="material-symbols-outlined text-sm">close</span>
+                        </button>
+                      }
+                    </div>
+                  </div>
+                </div>
+              }
             }
           </div>
 

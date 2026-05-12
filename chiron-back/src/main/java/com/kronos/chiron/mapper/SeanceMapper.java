@@ -4,9 +4,11 @@ import com.kronos.chiron.dto.ExerciceDto;
 import com.kronos.chiron.dto.ProfileDto;
 import com.kronos.chiron.dto.SeanceDto;
 import com.kronos.chiron.dto.SerieDto;
+import com.kronos.chiron.dto.DegressifDto;
 import com.kronos.chiron.entity.Exercice;
 import com.kronos.chiron.entity.Seance;
 import com.kronos.chiron.entity.Serie;
+import com.kronos.chiron.entity.Degressif;
 import org.springframework.stereotype.Component;
 
 import java.util.stream.Collectors;
@@ -82,10 +84,30 @@ public class SeanceMapper {
     public SerieDto toSerieDto(Serie serie) {
         if (serie == null) return null;
 
+        var degressifsDto = serie.getDegressifs() != null ? serie.getDegressifs().stream()
+                .map(this::toDegressifDto)
+                .collect(Collectors.toList()) : null;
+
         return new SerieDto(
                 serie.getPoids(),
                 serie.getNombreReps(),
-                serie.getCommentaire()
+                serie.getCommentaire(),
+                degressifsDto
+        );
+    }
+
+    /**
+     * Converts a Degressif entity to a DegressifDto.
+     *
+     * @param degressif The Degressif entity to convert.
+     * @return The corresponding DegressifDto, or null if the input is null.
+     */
+    public DegressifDto toDegressifDto(Degressif degressif) {
+        if (degressif == null) return null;
+
+        return new DegressifDto(
+                degressif.getPoids(),
+                degressif.getNombreReps()
         );
     }
 }
