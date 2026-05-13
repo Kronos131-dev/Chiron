@@ -9,6 +9,7 @@ import com.kronos.chiron.entity.Utilisateur;
 import com.kronos.chiron.repository.SeanceRepository;
 import com.kronos.chiron.repository.UtilisateurRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -35,6 +36,9 @@ public class ProfileService {
     private final UtilisateurRepository utilisateurRepository;
     private final SeanceRepository seanceRepository;
     private final PerformanceService performanceService;
+
+    @Value("${chiron.uploads-dir:./uploads/images}")
+    private String uploadsDir;
 
     /**
      * Retrieves the detailed profile of a specified user.
@@ -191,7 +195,7 @@ public class ProfileService {
         }
 
         try {
-            Path uploadPath = Paths.get("uploads/images/").toAbsolutePath().normalize();
+            Path uploadPath = Paths.get(uploadsDir).toAbsolutePath().normalize();
 
             if (!Files.exists(uploadPath)) {
                 Files.createDirectories(uploadPath);
