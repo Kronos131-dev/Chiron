@@ -117,8 +117,10 @@ export class Tresor implements OnInit {
     if (r < 1 || r > 36) return null;
     const meta = EXERCISE_META[exercise.exerciseType];
     const bw = this.summary()?.poidsCorps ?? null;
+    // Mirror backend cap: bodyweight exercise with no added weight → cap reps at 10
+    const effectiveReps = (meta?.isBodyweight && w === 0) ? Math.min(r, 10) : r;
     const effectiveWeight = (meta?.isBodyweight && bw) ? w + bw : w;
-    return Math.round(effectiveWeight * (36 / (37 - r)) * 100) / 100;
+    return Math.round(effectiveWeight * (36 / (37 - effectiveReps)) * 100) / 100;
   });
 
   previewRatio = computed(() => {
@@ -204,8 +206,9 @@ export class Tresor implements OnInit {
 
   openModal(exercise: any) {
     this.editingExercise.set(exercise);
-    // Default to last recorded values, or sensible defaults
-    this.weightValue.set(exercise.poids ?? 60);
+    const hasPrior = exercise.poids !== null && exercise.poids !== undefined;
+    const isBodyweight = this.isBodyweightExercise(exercise.exerciseType);
+    this.weightValue.set(hasPrior ? exercise.poids : (isBodyweight ? 0 : 60));
     this.repsValue.set(exercise.nombreReps ?? 5);
     this.weightOffset.set(0);
     this.repsOffset.set(0);
@@ -229,10 +232,10 @@ export class Tresor implements OnInit {
       poids: this.weightValue(),
       nombreReps: this.repsValue(),
     }).subscribe({
-      next: () => {
+      next: (updatedSummary) => {
+        this.summary.set(updatedSummary);
         this.isSaving.set(false);
         this.closeModal();
-        this.loadSummary(username);
       },
       error: () => this.isSaving.set(false),
     });
@@ -279,6 +282,20 @@ export class Tresor implements OnInit {
     if (!this._dragging) return;
     this._dragging = null;
     this.weightOffset.set(0);
+    this.repsOffset.set(0);
+  }
+
+  setWeightFromInput(val: number) {
+    if (!val && val !== 0) return;
+    const clamped = Math.max(0, Math.min(300, Math.round(val * 2) / 2));
+    this.weightValue.set(clamped);
+    this.weightOffset.set(0);
+  }
+
+  setRepsFromInput(val: number) {
+    if (!val) return;
+    const clamped = Math.max(1, Math.min(36, Math.round(val)));
+    this.repsValue.set(clamped);
     this.repsOffset.set(0);
   }
 

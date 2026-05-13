@@ -24,7 +24,7 @@ public class PerformanceController {
     }
 
     @PostMapping("/{username}/record")
-    public ResponseEntity<ExercisePerformanceDto> addRecord(
+    public ResponseEntity<PerformanceSummaryDto> addRecord(
             @PathVariable String username,
             @RequestBody PerformanceRecordDto dto) {
         return ResponseEntity.ok(performanceService.addRecord(username, dto));

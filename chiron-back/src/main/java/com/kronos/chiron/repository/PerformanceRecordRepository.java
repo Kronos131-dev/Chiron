@@ -20,4 +20,7 @@ public interface PerformanceRecordRepository extends JpaRepository<PerformanceRe
 
     Optional<PerformanceRecord> findFirstByUtilisateurIdAndExerciseTypeOrderByRm1EstimeDesc(
             Long utilisateurId, ExerciseType exerciseType);
+
+    Optional<PerformanceRecord> findFirstByUtilisateurIdAndExerciseTypeOrderByRecordedAtDesc(
+            Long utilisateurId, ExerciseType exerciseType);
 }

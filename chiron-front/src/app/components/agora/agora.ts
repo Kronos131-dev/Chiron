@@ -13,7 +13,8 @@ import { AuthService } from '../../service/auth.service';
   selector: 'app-agora',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './agora.html'
+  templateUrl: './agora.html',
+  styleUrls: ['./agora.css']
 })
 export class Agora implements OnInit {
   /** Signal holding the list of all participants. */
@@ -118,7 +119,13 @@ export class Agora implements OnInit {
   /**
    * Navigates the user back to the chat interface.
    */
+  getTierClass(level: number): string {
+    const l = Math.max(1, Math.min(8, level || 1));
+    return `agora-card tier-${l}`;
+  }
+
   goBack() {
     this.router.navigate(['/chat']);
   }
+
 }

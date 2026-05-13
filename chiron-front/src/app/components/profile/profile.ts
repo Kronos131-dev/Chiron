@@ -329,7 +329,7 @@ export class Profile implements OnInit {
     }
   }
 
-  // ── Tier styling helpers ────────────────────────────────────────────────────
+  // ── Tier helpers ───────────────────────────────────────────────────────────
 
   getTierLevel(): number {
     return this.athleteProfile()?.performanceTierLevel ?? 1;
@@ -342,55 +342,104 @@ export class Profile implements OnInit {
     return 'legend';
   }
 
+  getTierCategoryLabel(): string {
+    const cat = this.getTierCategory();
+    if (cat === 'novice')  return 'Novice';
+    if (cat === 'athlete') return 'Athlète';
+    return 'Légende';
+  }
+
   getCurrentTierName(): string {
-    return this.athleteProfile()?.performanceTier ?? this.athleteProfile()?.rank ?? 'Citoyen';
+    return this.athleteProfile()?.performanceTier ?? this.athleteProfile()?.rank ?? 'Éphèbe';
   }
 
-  getProfileCardClass(): string {
-    return `profile-card-lvl-${this.getTierLevel()}`;
+  // ── Header ──────────────────────────────────────────────────────────────────
+
+  getHeaderClass(): string {
+    return `header-${this.getTierCategory()} backdrop-blur-md`;
+  }
+  getHeaderIconClass(): string { return `header-icon-${this.getTierCategory()}`; }
+  getHeaderTitleClass(): string { return `header-title-${this.getTierCategory()}`; }
+  getHeaderSubtitleClass(): string { return `header-subtitle-${this.getTierCategory()}`; }
+  getAdminBadgeClass(): string { return `admin-badge-${this.getTierCategory()}`; }
+
+  // ── Main background ─────────────────────────────────────────────────────────
+
+  getTierBgClass(): string { return `tier-${this.getTierCategory()}-bg`; }
+  getAmbientGlowClass(): string { return `ambient-${this.getTierCategory()}`; }
+
+  // ── Profile card ────────────────────────────────────────────────────────────
+
+  getProfileCardClass(): string { return `profile-card-${this.getTierCategory()}`; }
+  getCardInnerGlowClass(): string { return `card-inner-${this.getTierCategory()}`; }
+  getActionBtnClass(): string { return `action-btn-${this.getTierCategory()}`; }
+
+  // ── Avatar ──────────────────────────────────────────────────────────────────
+
+  getAvatarAmbientClass(): string { return `avatar-ambient-${this.getTierCategory()}`; }
+
+  getAthleteRingClass(): string {
+    const lvl = this.getTierLevel();
+    return `athlete-spike-ring athlete-spike-${lvl}`;
+  }
+  getAthleteOuterRingClass(): string {
+    const lvl = this.getTierLevel();
+    return `athlete-outer-ring athlete-outer-${lvl}`;
   }
 
-  getAvatarGlowClass(): string {
-    const colors = [
-      'bg-slate-600/10',
-      'bg-amber-800/15',
-      'bg-slate-400/15',
-      'bg-blue-500/20',
-      'bg-blue-400/30',
-      'bg-purple-500/25',
-      'bg-amber-400/25',
-      'bg-amber-400/40',
-    ];
-    return colors[Math.min(this.getTierLevel() - 1, 7)];
-  }
+  getAvatarWrapperClass(): string { return `avatar-wrapper-lvl-${this.getTierLevel()}`; }
 
-  getAvatarRingClass(): string {
-    return `avatar-ring-lvl-${this.getTierLevel()} relative rounded-full inline-block`;
-  }
+  getAvatarImgClass(): string { return `avatar-img-lvl-${this.getTierLevel()}`; }
 
-  getTierBadgeClass(): string {
-    return `tier-badge-lvl-${this.getTierLevel()} border-2 bg-slate-950`;
-  }
+  getTierBadgeClass(): string { return `tier-badge-lvl-${this.getTierLevel()}`; }
 
-  getTierSymbolClass(): string {
-    return `tier-symbol-lvl-${this.getTierLevel()} font-normal`;
-  }
+  // ── Username & symbols ──────────────────────────────────────────────────────
+
+  getUsernameClass(): string { return `username-${this.getTierCategory()}`; }
+
+  getLaurelClass(): string { return `laurel-${this.getTierCategory()}`; }
 
   getTierSymbol(): string {
     const lvl = this.getTierLevel();
-    if (lvl >= 8) return '✦';   // Olympien: star
-    if (lvl >= 6) return '❧';   // Légende: fleuron
-    if (lvl >= 3) return 'Ω';   // Athlète: omega
-    return 'ω';                  // Novice: small omega
+    if (lvl >= 3) return 'Ω';
+    return 'ω';
   }
 
-  getUsernameClass(): string {
-    return this.getTierLevel() === 8 ? 'username-olympien' : '';
+  getTierSymbolClass(): string {
+    const lvl = this.getTierLevel();
+    const map: Record<number, string> = {
+      1: 'tier-symbol-novice-sm',
+      2: 'tier-symbol-novice-lg',
+      3: 'tier-symbol-athlete-sm',
+      4: 'tier-symbol-athlete-md',
+      5: 'tier-symbol-athlete-lg',
+      6: 'tier-symbol-legend-sm',
+      7: 'tier-symbol-legend-md',
+      8: 'tier-symbol-legend-lg',
+    };
+    return map[lvl] ?? 'tier-symbol-novice-sm';
   }
 
-  getStatsCardClass(): string {
-    return `stats-card-${this.getTierCategory()} border`;
-  }
+  // ── Stats ───────────────────────────────────────────────────────────────────
+
+  getStatsCardClass(): string { return `stats-${this.getTierCategory()}`; }
+  getStatsHoverClass(): string { return `stats-hover-${this.getTierCategory()}`; }
+  getStatsValueClass(): string { return `stats-val-${this.getTierCategory()}`; }
+  getStatsAltValueClass(): string { return `stats-alt-${this.getTierCategory()}`; }
+
+  // ── Trésor link ─────────────────────────────────────────────────────────────
+
+  getTresorLinkClass(): string { return `tresor-link-${this.getTierCategory()}`; }
+  getTresorIconClass(): string { return `tresor-icon-${this.getTierCategory()}`; }
+  getTresorTextClass(): string { return `tresor-text-${this.getTierCategory()}`; }
+
+  // ── Sections & programmes ───────────────────────────────────────────────────
+
+  getSectionTitleClass(): string { return `section-title-${this.getTierCategory()}`; }
+  getSectionIconClass(): string  { return `section-icon-${this.getTierCategory()}`; }
+  getProgrammeCardClass(): string { return `prog-card-${this.getTierCategory()}`; }
+  getCopyBtnClass(): string { return `copy-btn-${this.getTierCategory()}`; }
+  getToggleActiveClass(): string { return `toggle-active-${this.getTierCategory()}`; }
 
   // ── Navigation ──────────────────────────────────────────────────────────────
 

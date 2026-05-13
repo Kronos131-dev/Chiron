@@ -25,7 +25,7 @@ public class PerformanceService {
 
     /**
      * Returns the full performance summary for a user:
-     * best record per exercise, individual tiers, and overall tier (avg of top 4).
+     * best record per exercise, individual tiers, and overall tier (avg of top 3).
      */
     @Transactional(readOnly = true)
     public PerformanceSummaryDto getSummary(String username) {
@@ -48,10 +48,10 @@ public class PerformanceService {
     }
 
     /**
-     * Records a new performance entry for a given exercise and returns the updated exercise summary.
+     * Records a new performance entry and returns the full updated summary.
      */
     @Transactional
-    public ExercisePerformanceDto addRecord(String username, PerformanceRecordDto dto) {
+    public PerformanceSummaryDto addRecord(String username, PerformanceRecordDto dto) {
         Utilisateur user = findUser(username);
         ExerciseType type = parseExerciseType(dto.getExerciseType());
 
@@ -61,7 +61,7 @@ public class PerformanceService {
 
         Double poidsCorps = user.getPoidsCorps();
         double rm1 = calculateRm1(type, dto.getPoids(), dto.getNombreReps(), poidsCorps);
-        Double ratio = (poidsCorps != null && poidsCorps > 0) ? computeRatio(type, rm1, poidsCorps) : null;
+        Double ratio = (poidsCorps != null && poidsCorps > 0) ? computeRatio(rm1, poidsCorps) : null;
 
         PerformanceRecord record = PerformanceRecord.builder()
                 .utilisateur(user)
@@ -73,8 +73,22 @@ public class PerformanceService {
                 .poidsCorporel(poidsCorps)
                 .build();
 
-        performanceRecordRepository.save(record);
-        return buildExerciseDto(user.getId(), type, poidsCorps);
+        performanceRecordRepository.saveAndFlush(record);
+
+        // Re-read user to ensure fresh state, then build full summary
+        List<ExercisePerformanceDto> exercises = Arrays.stream(ExerciseType.values())
+                .map(t -> buildExerciseDto(user.getId(), t, poidsCorps))
+                .collect(Collectors.toList());
+
+        PerformanceTier overall = computeOverallTier(exercises);
+
+        return PerformanceSummaryDto.builder()
+                .overallTier(overall.getNom())
+                .overallTierLevel(overall.getLevel())
+                .overallTierCategorie(overall.getCategorie())
+                .poidsCorps(poidsCorps)
+                .exercises(exercises)
+                .build();
     }
 
     /**
@@ -95,19 +109,30 @@ public class PerformanceService {
     public List<ExercisePerformanceDto> getHistory(String username, String exerciseTypeName) {
         Utilisateur user = findUser(username);
         ExerciseType type = parseExerciseType(exerciseTypeName);
+        Double poidsCorps = user.getPoidsCorps();
 
         return performanceRecordRepository
                 .findByUtilisateurIdAndExerciseTypeOrderByRecordedAtDesc(user.getId(), type)
                 .stream()
-                .map(r -> toDto(r, tierForRatio(type, r.getRatioPerformance())))
+                .map(r -> {
+                    Double ratio = (poidsCorps != null && poidsCorps > 0)
+                            ? round2(computeRatio(r.getRm1Estime(), poidsCorps))
+                            : r.getRatioPerformance();
+                    return toDto(r, tierForRatio(type, ratio), ratio);
+                })
                 .collect(Collectors.toList());
     }
 
     // -------------------------------------------------------------------------
 
+    /**
+     * Builds the best-record DTO for a given exercise type.
+     * Ratio and tier are always computed from the user's CURRENT bodyweight,
+     * so changing bodyweight retroactively updates all tiers.
+     */
     private ExercisePerformanceDto buildExerciseDto(Long userId, ExerciseType type, Double poidsCorps) {
         Optional<PerformanceRecord> best = performanceRecordRepository
-                .findFirstByUtilisateurIdAndExerciseTypeOrderByRm1EstimeDesc(userId, type);
+                .findFirstByUtilisateurIdAndExerciseTypeOrderByRecordedAtDesc(userId, type);
 
         if (best.isEmpty()) {
             PerformanceTier ephebe = PerformanceTier.EPHEBE;
@@ -121,18 +146,24 @@ public class PerformanceService {
         }
 
         PerformanceRecord r = best.get();
-        PerformanceTier tier = tierForRatio(type, r.getRatioPerformance());
-        return toDto(r, tier);
+
+        // Always use current bodyweight for ratio/tier (not the snapshot stored in the record)
+        Double currentRatio = (poidsCorps != null && poidsCorps > 0)
+                ? round2(computeRatio(r.getRm1Estime(), poidsCorps))
+                : null;
+
+        PerformanceTier tier = tierForRatio(type, currentRatio);
+        return toDto(r, tier, currentRatio);
     }
 
-    private ExercisePerformanceDto toDto(PerformanceRecord r, PerformanceTier tier) {
+    private ExercisePerformanceDto toDto(PerformanceRecord r, PerformanceTier tier, Double ratio) {
         return ExercisePerformanceDto.builder()
                 .exerciseType(r.getExerciseType().name())
                 .nom(r.getExerciseType().getNom())
                 .poids(r.getPoids())
                 .nombreReps(r.getNombreReps())
                 .rm1Estime(round2(r.getRm1Estime()))
-                .ratioPerformance(r.getRatioPerformance() != null ? round2(r.getRatioPerformance()) : null)
+                .ratioPerformance(ratio)
                 .poidsCorporel(r.getPoidsCorporel())
                 .tier(tier.getNom())
                 .tierLevel(tier.getLevel())
@@ -142,18 +173,23 @@ public class PerformanceService {
     }
 
     /**
-     * 1RM formula: poids × (36 / (37 - reps)).
-     * For bodyweight exercises, poids is extra weight; bodyweight is added before formula.
+     * 1RM formula: effectiveWeight × (36 / (37 − reps)).
+     * For bodyweight exercises: effectiveWeight = lest + poidsCorps.
+     * For barbell exercises:    effectiveWeight = poids (bar weight).
      */
     double calculateRm1(ExerciseType type, double poids, int reps, Double poidsCorps) {
+        // Cap reps at 10 for bodyweight exercises without added weight (lest=0)
+        int effectiveReps = (type.isBodyweightExercise() && poids == 0.0) ? Math.min(reps, 10) : reps;
         double effectiveWeight = (type.isBodyweightExercise() && poidsCorps != null)
                 ? poids + poidsCorps
                 : poids;
-        return effectiveWeight * (36.0 / (37 - reps));
+        return effectiveWeight * (36.0 / (37 - effectiveReps));
     }
 
-    private double computeRatio(ExerciseType type, double rm1, double poidsCorps) {
-        // For bodyweight exercises rm1 already includes bodyweight, so ratio = rm1 / poidsCorps
+    /**
+     * Ratio = 1RM / poidsCorps. Same formula for all exercise types.
+     */
+    private double computeRatio(double rm1, double poidsCorps) {
         return rm1 / poidsCorps;
     }
 
@@ -181,13 +217,13 @@ public class PerformanceService {
     }
 
     /**
-     * Overall tier = floor-average of the top-4 exercise tier levels.
+     * Overall tier = floor-average of the top-3 exercise tier levels.
      */
     private PerformanceTier computeOverallTier(List<ExercisePerformanceDto> exercises) {
         List<Integer> levels = exercises.stream()
                 .map(ExercisePerformanceDto::getTierLevel)
                 .sorted(Comparator.reverseOrder())
-                .limit(4)
+                .limit(3)
                 .collect(Collectors.toList());
 
         if (levels.isEmpty()) return PerformanceTier.EPHEBE;

@@ -48,18 +48,19 @@
     background-blend-mode: overlay;
   }
 
-  /* Tier colors — used by the Trésor page */
-  .tier-1  { --tier-color: #64748b; --tier-bg: rgba(100,116,139,.18); --tier-border: rgba(100,116,139,.4); }
-  .tier-2  { --tier-color: #cd7f32; --tier-bg: rgba(205,127,50,.18);  --tier-border: rgba(205,127,50,.45); }
-  .tier-3  { --tier-color: #94a3b8; --tier-bg: rgba(148,163,184,.18); --tier-border: rgba(148,163,184,.4); }
-  .tier-4  { --tier-color: #3b82f6; --tier-bg: rgba(59,130,246,.18);  --tier-border: rgba(59,130,246,.4); }
-  .tier-5  { --tier-color: #8b5cf6; --tier-bg: rgba(139,92,246,.18);  --tier-border: rgba(139,92,246,.4); }
-  .tier-6  { --tier-color: #c084fc; --tier-bg: rgba(192,132,252,.18); --tier-border: rgba(192,132,252,.4); }
-  .tier-7  { --tier-color: #ffb779; --tier-bg: rgba(255,183,121,.18); --tier-border: rgba(255,183,121,.45); }
-  .tier-8  {
+  /* Tier colors: Novice=gris, Athlète=bleu, Légende=or */
+  .tier-1 { --tier-color: #64748b; --tier-bg: rgba(100,116,139,.18); --tier-border: rgba(100,116,139,.40); }
+  .tier-2 { --tier-color: #cd7f32; --tier-bg: rgba(205,127,50,.18);  --tier-border: rgba(205,127,50,.45); }
+  .tier-3 { --tier-color: #94a3b8; --tier-bg: rgba(148,163,184,.18); --tier-border: rgba(148,163,184,.40); }
+  .tier-4 { --tier-color: #60a5fa; --tier-bg: rgba(96,165,250,.18);  --tier-border: rgba(96,165,250,.45); }
+  .tier-5 { --tier-color: #3b82f6; --tier-bg: rgba(59,130,246,.22);  --tier-border: rgba(59,130,246,.60);
+             text-shadow: 0 0 10px rgba(59,130,246,.5); }
+  .tier-6 { --tier-color: #d97706; --tier-bg: rgba(217,119,6,.18);   --tier-border: rgba(217,119,6,.45); }
+  .tier-7 { --tier-color: #f59e0b; --tier-bg: rgba(245,158,11,.20);  --tier-border: rgba(245,158,11,.55); }
+  .tier-8 {
     --tier-color: #fbbf24;
-    --tier-bg: rgba(251,191,36,.2);
-    --tier-border: rgba(251,191,36,.55);
-    text-shadow: 0 0 12px rgba(251,191,36,.6);
+    --tier-bg: rgba(251,191,36,.22);
+    --tier-border: rgba(251,191,36,.65);
+    text-shadow: 0 0 12px rgba(251,191,36,.65);
   }
 }
