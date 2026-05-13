@@ -132,12 +132,9 @@
                   <span class="material-symbols-outlined text-base" [style.color]="'var(--tier-color)'">fitness_center</span>
                   <h3 class="text-sm font-black text-white tracking-widest uppercase font-headline">{{ exercise.nom }}</h3>
                 </div>
-                <p class="text-[10px] text-on-surface-variant tracking-widest uppercase ml-6">
-                  {{ exerciseSubtitle(exercise.exerciseType) }}
-                  @if (isBodyweightExercise(exercise.exerciseType)) {
-                    <span class="text-secondary/50 ml-1">• Lest + Poids de corps</span>
-                  }
-                </p>
+                @if (isBodyweightExercise(exercise.exerciseType)) {
+                  <p class="text-[10px] text-secondary/50 tracking-widest uppercase ml-6">Lest + Poids de corps</p>
+                }
               </div>
               <div class="tier-badge" [class]="tierClass(exercise.tierLevel)">{{ exercise.tier }}</div>
             </div>

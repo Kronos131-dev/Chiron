@@ -35,3 +35,6 @@ langchain4j:
 jwt:
   # Expiration du token (ex: 2592000000ms = 30 jours)
   expiration: 2592000000
+
+chiron:
+  uploads-dir: ${UPLOADS_DIR:./uploads/images}
