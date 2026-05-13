@@ -37,25 +37,25 @@ public class ProfileDto {
      * Indicates whether this profile is visible to all users.
      */
     @JsonProperty("isPublic")
-    private boolean isPublic;
+    private Boolean isPublic;
 
     /**
      * Indicates if the displayed profile serves as a coach for the currently authenticated viewer.
      */
     @JsonProperty("isMyCoach")
-    private boolean isMyCoach;
+    private Boolean isMyCoach;
 
     /**
      * Indicates if the currently authenticated viewer serves as a coach for this displayed profile.
      */
     @JsonProperty("amICoach")
-    private boolean amICoach;
+    private Boolean amICoach;
 
     /**
      * Indicates if the profile belongs to a system administrator.
      */
     @JsonProperty("isAdmin")
-    private boolean isAdmin;
+    private Boolean isAdmin;
 
     /**
      * The total number of workout sessions logged by this user.
