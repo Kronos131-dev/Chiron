@@ -1,33 +1,4 @@
-<!-- ═══════════════ HEADER ═══════════════ -->
-<header class="fixed top-0 w-full z-50 border-b"
-        [ngClass]="getHeaderClass()">
-  <div class="flex items-center justify-between px-6 py-4">
-    <div class="flex items-center gap-3">
-      <button (click)="goBack()"
-              class="material-symbols-outlined transition-colors cursor-pointer"
-              [ngClass]="getHeaderIconClass()">arrow_back</button>
-      <div>
-        <h1 class="text-2xl font-black tracking-widest font-headline uppercase"
-            [ngClass]="getHeaderTitleClass()">PROFIL</h1>
-        @if (!isLoading() && athleteProfile()) {
-          <p class="text-[10px] font-bold tracking-[0.2em] uppercase -mt-0.5"
-             [ngClass]="getHeaderSubtitleClass()">
-            {{ getTierCategoryLabel() }} · {{ getCurrentTierName() }}
-          </p>
-        }
-      </div>
-    </div>
-
-    <div class="flex items-center gap-2">
-      @if (athleteProfile()?.isAdmin) {
-        <div class="text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full border"
-             [ngClass]="getAdminBadgeClass()">
-          Admin
-        </div>
-      }
-    </div>
-  </div>
-</header>
+<app-header [title]="'PROFIL'" [showBack]="true" [backRoute]="'/chat'"></app-header>
 
 <!-- ═══════════════ MAIN ═══════════════ -->
 <main class="min-h-screen pt-24 pb-32 px-4 md:px-8 relative overflow-hidden"

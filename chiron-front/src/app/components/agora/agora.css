@@ -27,6 +27,13 @@
   box-shadow: 0 0 18px var(--tier-bg);
 }
 
+/* Extra glow ring for legend tiers (6-8) */
+.tier-6 .agora-avatar,
+.tier-7 .agora-avatar,
+.tier-8 .agora-avatar {
+  box-shadow: 0 0 14px var(--tier-bg), 0 0 28px var(--tier-bg);
+}
+
 /* Username hover */
 .agora-username {
   transition: color 0.25s;
@@ -35,9 +42,21 @@
   color: var(--tier-color);
 }
 
-/* Rank badge text */
+/* Tier name badge */
 .agora-rank {
   color: var(--tier-color);
+  opacity: 0.85;
+  transition: opacity 0.25s;
+}
+.agora-card:hover .agora-rank {
+  opacity: 1;
+}
+
+/* Legend tier rank glows */
+.tier-6 .agora-rank,
+.tier-7 .agora-rank,
+.tier-8 .agora-rank {
+  text-shadow: 0 0 8px var(--tier-color);
 }
 
 /* Arrow icon */
@@ -48,11 +67,4 @@
 .agora-card:hover .agora-arrow {
   color: var(--tier-color);
   transform: translateX(4px);
-}
-
-/* Extra glow ring for legend tiers (6-8) */
-.tier-6 .agora-avatar,
-.tier-7 .agora-avatar,
-.tier-8 .agora-avatar {
-  box-shadow: 0 0 14px var(--tier-bg), 0 0 28px var(--tier-bg);
 }

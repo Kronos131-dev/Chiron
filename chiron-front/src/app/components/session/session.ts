@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ChironApi } from '../../service/chiron-api';
 import { AuthService } from '../../service/auth.service';
+import { HeaderComponent } from '../shared/header/header';
 
 /**
  * Interface defining the structure of a drop set (degressif) within the session form.
@@ -40,7 +41,7 @@ export interface ExerciceForm {
 @Component({
   selector: 'app-session',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, HeaderComponent],
   templateUrl: './session.html'
 })
 export class Session implements OnInit {

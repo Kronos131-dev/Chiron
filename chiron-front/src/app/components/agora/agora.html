@@ -1,5 +1,5 @@
 <!-- Header Section: Navigation back button, title, and optional admin badge -->
-<app-header [title]="'AGORA'" [icon]="'groups'" [showBack]="true" [backRoute]="'/chat'"></app-header>
+<app-header [title]="'AGORA'" [showBack]="true" [backRoute]="'/chat'"></app-header>
 
 <!-- Main Content Area -->
 <main class="min-h-screen pt-24 pb-32 bg-slate-950 heroic-texture px-4 md:px-8">
@@ -61,20 +61,14 @@
         @for (athlete of participants(); track athlete.username) {
           <article (click)="goToProfile(athlete.username)"
                    [ngClass]="getTierClass(athlete.performanceTierLevel)"
-                   class="rounded-2xl p-6 cursor-pointer shadow-xl overflow-hidden relative">
-
-            <!-- Tier-tinted gradient overlay on hover -->
-            <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
-                 style="background: linear-gradient(135deg, var(--tier-bg) 0%, transparent 60%)"></div>
+                   class="rounded-2xl p-6 cursor-pointer shadow-xl overflow-hidden relative group">
 
             <div class="relative z-10 flex items-center gap-5">
-              <div class="relative flex-shrink-0">
-                <img [src]="chironApi.getImageUrl(athlete.icon || 'default_icon.png')"
-                     (error)="$event.target.src='/images/default_icon.png'"
-                     class="agora-avatar w-16 h-16 rounded-full object-cover"
-                     alt="avatar">
-                <div class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-slate-900 rounded-full"></div>
-              </div>
+              <!-- Avatar with tier-colored border, no status bubble -->
+              <img [src]="chironApi.getImageUrl(athlete.icon || 'default_icon.png')"
+                   (error)="$event.target.src='/images/default_icon.png'"
+                   class="agora-avatar w-16 h-16 rounded-full object-cover flex-shrink-0"
+                   alt="avatar">
 
               <div class="flex-1 min-w-0">
                 <h3 class="agora-username font-headline font-black text-xl text-white uppercase tracking-wide flex items-center gap-2">
@@ -83,8 +77,8 @@
                     <span class="material-symbols-outlined text-amber-500 text-sm" title="Administrateur">shield</span>
                   }
                 </h3>
-                <p class="text-xs font-bold text-on-surface-variant tracking-widest uppercase mt-1">
-                  <span class="agora-rank">{{ athlete.performanceTier || athlete.rank || 'Éphèbe' }}</span>
+                <p class="agora-rank text-xs font-black tracking-widest uppercase mt-1">
+                  {{ athlete.performanceTier || 'Éphèbe' }}
                 </p>
               </div>
 

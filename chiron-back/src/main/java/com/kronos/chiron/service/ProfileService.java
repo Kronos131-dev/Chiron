@@ -145,12 +145,17 @@ public class ProfileService {
                     boolean isMyCoach = user.getCoaches().contains(requestUser);
                     return isMyCoach || (user.getIsPublic() != null && user.getIsPublic());
                 })
-                .map(user -> ProfileDto.builder()
-                        .username(user.getUsername())
-                        .icon(user.getIcon())
-                        .rank(user.getRank())
-                        .isAdmin(user.getRole() == Role.ADMIN || "kronos".equalsIgnoreCase(user.getUsername()) || "chiron".equalsIgnoreCase(user.getUsername()))
-                        .build())
+                .map(user -> {
+                    PerformanceSummaryDto perf = performanceService.getSummary(user.getUsername());
+                    return ProfileDto.builder()
+                            .username(user.getUsername())
+                            .icon(user.getIcon())
+                            .rank(user.getRank())
+                            .isAdmin(user.getRole() == Role.ADMIN || "kronos".equalsIgnoreCase(user.getUsername()) || "chiron".equalsIgnoreCase(user.getUsername()))
+                            .performanceTier(perf.getOverallTier())
+                            .performanceTierLevel(perf.getOverallTierLevel())
+                            .build();
+                })
                 .collect(Collectors.toList());
     }
 

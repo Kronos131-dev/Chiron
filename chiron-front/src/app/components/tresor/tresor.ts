@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ChironApi } from '../../service/chiron-api';
 import { AuthService } from '../../service/auth.service';
+import { HeaderComponent } from '../shared/header/header';
 
 const TIERS = [
   { level: 1, name: 'Éphèbe',    cat: 'Novice'  },
@@ -38,7 +39,7 @@ const REP_TICK_PX    = 60;
 @Component({
   selector: 'app-tresor',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, HeaderComponent],
   templateUrl: './tresor.html',
   styleUrls: ['./tresor.css'],
 })
@@ -341,12 +342,12 @@ export class Tresor implements OnInit {
     return EXERCISE_META[exerciseType]?.subtitle ?? '';
   }
 
-  goBack() {
+  backRoute = computed(() => {
     const id = this.route.snapshot.paramMap.get('id');
-    if (id) {
-      this.router.navigate(['/profile', id]);
-    } else {
-      this.router.navigate(['/profile']);
-    }
+    return id ? `/profile/${id}` : '/profile';
+  });
+
+  goBack() {
+    this.router.navigateByUrl(this.backRoute());
   }
 }

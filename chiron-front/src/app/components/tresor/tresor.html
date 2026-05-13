@@ -1,19 +1,4 @@
-<!-- ═══════════════ HEADER ═══════════════ -->
-<header class="bg-slate-950/80 backdrop-blur-md flex items-center justify-between px-6 py-4 w-full fixed top-0 z-50 border-b border-secondary/10">
-  <div class="flex items-center gap-3">
-    <button (click)="goBack()" class="material-symbols-outlined text-secondary hover:text-white transition-colors cursor-pointer">arrow_back</button>
-    <div>
-      <h1 class="text-2xl font-black text-[#f8fafc] tracking-widest font-headline uppercase">TRÉSOR</h1>
-      @if (!isMyProfile()) {
-        <p class="text-xs text-secondary/70 font-bold tracking-widest uppercase -mt-0.5">{{ viewedUsername() }}</p>
-      }
-    </div>
-  </div>
-  <div class="flex items-center gap-2">
-    <span class="material-symbols-outlined text-secondary/40 text-sm">star</span>
-    <span class="text-[10px] font-bold tracking-[0.2em] text-on-surface-variant uppercase">Paliers</span>
-  </div>
-</header>
+<app-header [title]="'TRÉSOR'" [showBack]="true" [backRoute]="backRoute()"></app-header>
 
 <!-- ═══════════════ MAIN ═══════════════ -->
 <main class="min-h-screen pt-24 pb-32 heroic-texture px-4 md:px-8">
