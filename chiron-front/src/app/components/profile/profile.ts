@@ -14,7 +14,8 @@ import { AuthService } from '../../service/auth.service';
   selector: 'app-profile',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './profile.html'
+  templateUrl: './profile.html',
+  styleUrls: ['./profile.css']
 })
 export class Profile implements OnInit {
 
@@ -325,6 +326,84 @@ export class Profile implements OnInit {
           this.isLoading.set(false);
         }
       });
+    }
+  }
+
+  // ── Tier styling helpers ────────────────────────────────────────────────────
+
+  getTierLevel(): number {
+    return this.athleteProfile()?.performanceTierLevel ?? 1;
+  }
+
+  getTierCategory(): 'novice' | 'athlete' | 'legend' {
+    const lvl = this.getTierLevel();
+    if (lvl <= 2) return 'novice';
+    if (lvl <= 5) return 'athlete';
+    return 'legend';
+  }
+
+  getCurrentTierName(): string {
+    return this.athleteProfile()?.performanceTier ?? this.athleteProfile()?.rank ?? 'Citoyen';
+  }
+
+  getProfileCardClass(): string {
+    return `profile-card-lvl-${this.getTierLevel()}`;
+  }
+
+  getAvatarGlowClass(): string {
+    const colors = [
+      'bg-slate-600/10',
+      'bg-amber-800/15',
+      'bg-slate-400/15',
+      'bg-blue-500/20',
+      'bg-blue-400/30',
+      'bg-purple-500/25',
+      'bg-amber-400/25',
+      'bg-amber-400/40',
+    ];
+    return colors[Math.min(this.getTierLevel() - 1, 7)];
+  }
+
+  getAvatarRingClass(): string {
+    return `avatar-ring-lvl-${this.getTierLevel()} relative rounded-full inline-block`;
+  }
+
+  getTierBadgeClass(): string {
+    return `tier-badge-lvl-${this.getTierLevel()} border-2 bg-slate-950`;
+  }
+
+  getTierSymbolClass(): string {
+    return `tier-symbol-lvl-${this.getTierLevel()} font-normal`;
+  }
+
+  getTierSymbol(): string {
+    const lvl = this.getTierLevel();
+    if (lvl >= 8) return '✦';   // Olympien: star
+    if (lvl >= 6) return '❧';   // Légende: fleuron
+    if (lvl >= 3) return 'Ω';   // Athlète: omega
+    return 'ω';                  // Novice: small omega
+  }
+
+  getUsernameClass(): string {
+    return this.getTierLevel() === 8 ? 'username-olympien' : '';
+  }
+
+  getStatsCardClass(): string {
+    return `stats-card-${this.getTierCategory()} border`;
+  }
+
+  // ── Navigation ──────────────────────────────────────────────────────────────
+
+  /**
+   * Navigates to the Trésor page for the currently viewed profile.
+   */
+  goToTresor() {
+    const target = this.athleteProfile()?.username;
+    if (!target) return;
+    if (this.isMyProfile()) {
+      this.router.navigate(['/tresor']);
+    } else {
+      this.router.navigate(['/tresor', target]);
     }
   }
 

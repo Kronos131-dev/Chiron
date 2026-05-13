@@ -58,7 +58,8 @@
 
     <!-- Profile Details Card -->
     @if (!isLoading() && athleteProfile()) {
-      <div class="bg-slate-900/60 backdrop-blur-md rounded-3xl p-8 text-center relative border border-secondary/20 shadow-2xl">
+      <div class="bg-slate-900/60 backdrop-blur-md rounded-3xl p-8 text-center relative border shadow-2xl overflow-hidden"
+           [ngClass]="getProfileCardClass()">
 
         <!-- Avatar Edit Button (Visible only on own profile) -->
         @if (isMyProfile()) {
@@ -77,21 +78,28 @@
 
         <!-- Avatar Image Container -->
         <div class="relative inline-block mb-6 mt-4">
-          <div class="absolute inset-0 bg-secondary/20 rounded-full blur-xl"></div>
-          <img [src]="chironApi.getImageUrl(athleteProfile().icon)"
-               (error)="$event.target.src='/images/default_icon.png'"
-               class="relative w-32 h-32 mx-auto rounded-full border-4 border-slate-900 shadow-[0_0_15px_rgba(199,122,48,0.5)] object-cover"
-               alt="avatar">
+          <!-- Ambient glow -->
+          <div class="absolute -inset-6 rounded-full blur-2xl" [ngClass]="getAvatarGlowClass()"></div>
 
-          <!-- Rank Badge -->
-          <div class="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-slate-950 border-2 border-secondary text-secondary px-4 py-1 rounded-full whitespace-nowrap shadow-lg">
-            <span class="text-xs font-black tracking-widest uppercase">{{ athleteProfile().rank }}</span>
+          <!-- Avatar ring wrapper (tier-specific border + rings) -->
+          <div [ngClass]="getAvatarRingClass()">
+            <img [src]="chironApi.getImageUrl(athleteProfile().icon)"
+                 (error)="$event.target.src='/images/default_icon.png'"
+                 class="w-32 h-32 rounded-full object-cover block"
+                 alt="avatar">
+          </div>
+
+          <!-- Tier badge (shows performance tier name) -->
+          <div class="absolute -bottom-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full whitespace-nowrap shadow-lg"
+               [ngClass]="getTierBadgeClass()">
+            <span class="text-xs font-black tracking-widest uppercase">{{ getCurrentTierName() }}</span>
           </div>
         </div>
 
         <!-- Username and Role Indicators -->
-        <h2 class="text-4xl font-black text-white tracking-widest font-headline uppercase mt-4 mb-8 flex items-center justify-center gap-3">
-          {{ athleteProfile().username }}
+        <h2 class="text-4xl font-black tracking-widest font-headline uppercase mt-4 mb-8 flex items-center justify-center gap-3">
+          <span [ngClass]="getUsernameClass()">{{ athleteProfile().username }}</span>
+          <span [ngClass]="getTierSymbolClass()">{{ getTierSymbol() }}</span>
 
           @if (athleteProfile()?.isAdmin) {
             <span class="material-symbols-outlined text-amber-500 text-lg" title="Administrateur">shield</span>
@@ -118,17 +126,36 @@
 
         <!-- Global User Statistics -->
         <div class="grid grid-cols-2 gap-4">
-          <div class="bg-slate-950/50 border border-white/5 p-4 rounded-2xl relative overflow-hidden group">
+          <div class="bg-slate-950/50 p-4 rounded-2xl relative overflow-hidden group" [ngClass]="getStatsCardClass()">
             <div class="absolute inset-0 bg-gradient-to-t from-secondary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
             <p class="text-[10px] text-on-surface-variant font-bold tracking-[0.2em] uppercase mb-1">Sessions</p>
             <p class="text-4xl font-black font-headline text-white">{{ athleteProfile().totalSessions }}</p>
           </div>
-          <div class="bg-slate-950/50 border border-white/5 p-4 rounded-2xl relative overflow-hidden group">
+          <div class="bg-slate-950/50 p-4 rounded-2xl relative overflow-hidden group" [ngClass]="getStatsCardClass()">
             <div class="absolute inset-0 bg-gradient-to-t from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
             <p class="text-[10px] text-on-surface-variant font-bold tracking-[0.2em] uppercase mb-1">Séries / Mois</p>
             <p class="text-4xl font-black font-headline text-blue-400">{{ athleteProfile().averageSeriesPerMonth }}</p>
           </div>
         </div>
+
+        <!-- Trésor link -->
+        <button (click)="goToTresor()"
+                class="mt-5 w-full flex items-center justify-between bg-secondary/8 border border-secondary/25 hover:border-secondary/50 hover:bg-secondary/15 px-5 py-4 rounded-2xl transition-all group">
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-secondary text-2xl">military_tech</span>
+            <div class="text-left">
+              <p class="text-sm font-black text-white tracking-widest uppercase font-headline">Trésor</p>
+              <p class="text-[10px] text-on-surface-variant tracking-widest uppercase">
+                @if (athleteProfile().performanceTier) {
+                  Palier · {{ athleteProfile().performanceTier }}
+                } @else {
+                  Paliers de force & performances
+                }
+              </p>
+            </div>
+          </div>
+          <span class="material-symbols-outlined text-secondary/50 group-hover:text-secondary group-hover:translate-x-1 transition-all">chevron_right</span>
+        </button>
 
       </div>
 

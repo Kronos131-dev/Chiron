@@ -223,4 +223,20 @@ export class ChironApi {
   deleteProfile(username: string): Observable<any> {
     return this.http.delete(`${this.apiUrl}/profile/${encodeURIComponent(username)}`);
   }
+
+  getPerformanceSummary(username: string): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/performance/${encodeURIComponent(username)}`);
+  }
+
+  addPerformanceRecord(username: string, dto: { exerciseType: string; poids: number; nombreReps: number }): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/performance/${encodeURIComponent(username)}/record`, dto);
+  }
+
+  updateBodyweight(username: string, poidsCorps: number): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/performance/${encodeURIComponent(username)}/bodyweight`, { poidsCorps });
+  }
+
+  getPerformanceHistory(username: string, exerciseType: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/performance/${encodeURIComponent(username)}/history/${encodeURIComponent(exerciseType)}`);
+  }
 }

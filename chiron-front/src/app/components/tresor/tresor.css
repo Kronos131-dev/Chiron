@@ -1,0 +1,138 @@
+/* ── Drum wrapper ────────────────────────────────────────────────────────── */
+.drum-wrapper {
+  position: relative;
+  background: #0f172a;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 183, 121, 0.25);
+  overflow: hidden;
+  user-select: none;
+  touch-action: none;
+  cursor: grab;
+}
+.drum-wrapper:active { cursor: grabbing; }
+
+/* ── Gear teeth (rack-gear silhouette, repeating) ───────────────────────── */
+.drum-teeth-top,
+.drum-teeth-bottom {
+  height: 14px;
+  background-repeat: repeat-x;
+  background-size: 20px 14px;
+  transition: background-position-x 0.05s linear;
+  flex-shrink: 0;
+}
+.drum-teeth-top {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='14'%3E%3Crect x='3' y='0' width='14' height='9' rx='2' fill='%23ffb779' opacity='.7'/%3E%3Crect x='0' y='9' width='20' height='5' fill='%23ffb779' opacity='.2'/%3E%3C/svg%3E");
+}
+.drum-teeth-bottom {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='14'%3E%3Crect x='0' y='0' width='20' height='5' fill='%23ffb779' opacity='.2'/%3E%3Crect x='3' y='5' width='14' height='9' rx='2' fill='%23ffb779' opacity='.7'/%3E%3C/svg%3E");
+}
+
+/* ── Drum track ─────────────────────────────────────────────────────────── */
+.drum-track {
+  height: 56px;
+  overflow: hidden;
+  position: relative;
+  /* fade out left/right edges */
+  mask-image: linear-gradient(to right,
+    transparent 0%, rgba(0,0,0,.4) 10%, black 22%, black 78%, rgba(0,0,0,.4) 90%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right,
+    transparent 0%, rgba(0,0,0,.4) 10%, black 22%, black 78%, rgba(0,0,0,.4) 90%, transparent 100%);
+}
+
+/* ── Drum strip (sliding row of numbers) ────────────────────────────────── */
+.drum-strip {
+  display: flex;
+  height: 100%;
+  will-change: transform;
+}
+
+/* ── Individual drum item ───────────────────────────────────────────────── */
+.drum-item {
+  flex: 0 0 60px;
+  width: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: rgba(248, 250, 252, 0.35);
+  transition: color 0.1s, font-size 0.1s, font-weight 0.1s;
+}
+
+.drum-item.active {
+  color: #ffb779;
+  font-size: 1.35rem;
+  font-weight: 900;
+}
+
+/* ── Center selection highlight ─────────────────────────────────────────── */
+.drum-center-indicator {
+  position: absolute;
+  top: 14px;               /* height of teeth */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 56px;
+  border-left: 2px solid rgba(255, 183, 121, 0.5);
+  border-right: 2px solid rgba(255, 183, 121, 0.5);
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* ── Tier badge ─────────────────────────────────────────────────────────── */
+.tier-badge {
+  color: var(--tier-color);
+  background: var(--tier-bg);
+  border: 1px solid var(--tier-border);
+  border-radius: 9999px;
+  padding: 2px 12px;
+  font-size: 0.65rem;
+  font-weight: 900;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  font-family: "Space Grotesk", sans-serif;
+}
+
+/* ── Large tier badge (overall) ─────────────────────────────────────────── */
+.tier-badge-lg {
+  color: var(--tier-color);
+  background: var(--tier-bg);
+  border: 2px solid var(--tier-border);
+  box-shadow: 0 0 24px var(--tier-border);
+  border-radius: 9999px;
+  padding: 6px 28px;
+  font-size: 0.85rem;
+  font-weight: 900;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-family: "Space Grotesk", sans-serif;
+}
+
+/* ── Progress bar ───────────────────────────────────────────────────────── */
+.progress-track {
+  height: 4px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(to right, var(--tier-color), rgba(255,183,121,.8));
+  border-radius: 9999px;
+  transition: width 0.5s ease;
+}
+
+/* ── Olympien shimmer ────────────────────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+.tier-olympien-glow {
+  background: linear-gradient(90deg, #fbbf24 0%, #fff7c0 45%, #fbbf24 55%, #f59e0b 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 3s linear infinite;
+}

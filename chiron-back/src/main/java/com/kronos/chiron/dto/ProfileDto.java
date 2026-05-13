@@ -67,6 +67,12 @@ public class ProfileDto {
      */
     private int averageSeriesPerMonth;
 
+    private Double poidsCorps;
+
+    private String performanceTier;
+
+    private int performanceTierLevel;
+
     /**
      * Summaries of workout templates or programs created by this user.
      */

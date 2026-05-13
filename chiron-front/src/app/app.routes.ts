@@ -7,6 +7,7 @@ import { Programme } from './components/programme/programme';
 import { Session } from './components/session/session';
 import { Profile } from './components/profile/profile';
 import { Agora } from './components/agora/agora';
+import { Tresor } from './components/tresor/tresor';
 
 /**
  * Global routing configuration for the Angular application.
@@ -53,6 +54,16 @@ export const routes: Routes = [
   {
     path: 'profile/:id',
     component: Profile,
+    canActivate: [authGuard]
+  },
+  {
+    path: 'tresor',
+    component: Tresor,
+    canActivate: [authGuard]
+  },
+  {
+    path: 'tresor/:id',
+    component: Tresor,
     canActivate: [authGuard]
   },
 

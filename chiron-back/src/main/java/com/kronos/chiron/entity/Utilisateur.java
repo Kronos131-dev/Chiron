@@ -68,6 +68,9 @@ public class Utilisateur implements UserDetails {
     @Builder.Default
     private Role role = Role.USER;
 
+    @Column(name = "poids_corps")
+    private Double poidsCorps;
+
     /**
      * The set of users who act as coaches for this user.
      * These coaches have access to this user's programs.
