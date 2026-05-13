@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ChironApi } from '../../service/chiron-api';
 import { AuthService } from '../../service/auth.service';
-import { HeaderComponent } from '../shared/header/header';
 
 /**
  * Component representing the "Agora" view, which is the main hub
@@ -13,8 +12,9 @@ import { HeaderComponent } from '../shared/header/header';
 @Component({
   selector: 'app-agora',
   standalone: true,
-  imports: [CommonModule, FormsModule, HeaderComponent],
-  templateUrl: './agora.html'
+  imports: [CommonModule, FormsModule],
+  templateUrl: './agora.html',
+  styleUrls: ['./agora.css']
 })
 export class Agora implements OnInit {
   /** Signal holding the list of all participants. */
@@ -119,7 +119,13 @@ export class Agora implements OnInit {
   /**
    * Navigates the user back to the chat interface.
    */
+  getTierClass(level: number): string {
+    const l = Math.max(1, Math.min(8, level || 1));
+    return `agora-card tier-${l}`;
+  }
+
   goBack() {
     this.router.navigate(['/chat']);
   }
+
 }

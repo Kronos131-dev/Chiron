@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ChironApi } from '../../service/chiron-api';
 import { AuthService } from '../../service/auth.service';
-import { HeaderComponent } from '../shared/header/header';
 
 /**
  * Component representing the user profile view.
@@ -14,8 +13,9 @@ import { HeaderComponent } from '../shared/header/header';
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule, HeaderComponent],
-  templateUrl: './profile.html'
+  imports: [CommonModule, FormsModule],
+  templateUrl: './profile.html',
+  styleUrls: ['./profile.css']
 })
 export class Profile implements OnInit {
 
@@ -326,6 +326,133 @@ export class Profile implements OnInit {
           this.isLoading.set(false);
         }
       });
+    }
+  }
+
+  // ── Tier helpers ───────────────────────────────────────────────────────────
+
+  getTierLevel(): number {
+    return this.athleteProfile()?.performanceTierLevel ?? 1;
+  }
+
+  getTierCategory(): 'novice' | 'athlete' | 'legend' {
+    const lvl = this.getTierLevel();
+    if (lvl <= 2) return 'novice';
+    if (lvl <= 5) return 'athlete';
+    return 'legend';
+  }
+
+  getTierCategoryLabel(): string {
+    const cat = this.getTierCategory();
+    if (cat === 'novice')  return 'Novice';
+    if (cat === 'athlete') return 'Athlète';
+    return 'Légende';
+  }
+
+  getCurrentTierName(): string {
+    return this.athleteProfile()?.performanceTier ?? this.athleteProfile()?.rank ?? 'Éphèbe';
+  }
+
+  // ── Header ──────────────────────────────────────────────────────────────────
+
+  getHeaderClass(): string {
+    return `header-${this.getTierCategory()} backdrop-blur-md`;
+  }
+  getHeaderIconClass(): string { return `header-icon-${this.getTierCategory()}`; }
+  getHeaderTitleClass(): string { return `header-title-${this.getTierCategory()}`; }
+  getHeaderSubtitleClass(): string { return `header-subtitle-${this.getTierCategory()}`; }
+  getAdminBadgeClass(): string { return `admin-badge-${this.getTierCategory()}`; }
+
+  // ── Main background ─────────────────────────────────────────────────────────
+
+  getTierBgClass(): string { return `tier-${this.getTierCategory()}-bg`; }
+  getAmbientGlowClass(): string { return `ambient-${this.getTierCategory()}`; }
+
+  // ── Profile card ────────────────────────────────────────────────────────────
+
+  getProfileCardClass(): string { return `profile-card-${this.getTierCategory()}`; }
+  getCardInnerGlowClass(): string { return `card-inner-${this.getTierCategory()}`; }
+  getActionBtnClass(): string { return `action-btn-${this.getTierCategory()}`; }
+
+  // ── Avatar ──────────────────────────────────────────────────────────────────
+
+  getAvatarAmbientClass(): string { return `avatar-ambient-${this.getTierCategory()}`; }
+
+  getAthleteRingClass(): string {
+    const lvl = this.getTierLevel();
+    return `athlete-spike-ring athlete-spike-${lvl}`;
+  }
+  getAthleteOuterRingClass(): string {
+    const lvl = this.getTierLevel();
+    return `athlete-outer-ring athlete-outer-${lvl}`;
+  }
+
+  getAvatarWrapperClass(): string { return `avatar-wrapper-lvl-${this.getTierLevel()}`; }
+
+  getAvatarImgClass(): string { return `avatar-img-lvl-${this.getTierLevel()}`; }
+
+  getTierBadgeClass(): string { return `tier-badge-lvl-${this.getTierLevel()}`; }
+
+  // ── Username & symbols ──────────────────────────────────────────────────────
+
+  getUsernameClass(): string { return `username-${this.getTierCategory()}`; }
+
+  getLaurelClass(): string { return `laurel-${this.getTierCategory()}`; }
+
+  getTierSymbol(): string {
+    const lvl = this.getTierLevel();
+    if (lvl >= 3) return 'Ω';
+    return 'ω';
+  }
+
+  getTierSymbolClass(): string {
+    const lvl = this.getTierLevel();
+    const map: Record<number, string> = {
+      1: 'tier-symbol-novice-sm',
+      2: 'tier-symbol-novice-lg',
+      3: 'tier-symbol-athlete-sm',
+      4: 'tier-symbol-athlete-md',
+      5: 'tier-symbol-athlete-lg',
+      6: 'tier-symbol-legend-sm',
+      7: 'tier-symbol-legend-md',
+      8: 'tier-symbol-legend-lg',
+    };
+    return map[lvl] ?? 'tier-symbol-novice-sm';
+  }
+
+  // ── Stats ───────────────────────────────────────────────────────────────────
+
+  getStatsCardClass(): string { return `stats-${this.getTierCategory()}`; }
+  getStatsHoverClass(): string { return `stats-hover-${this.getTierCategory()}`; }
+  getStatsValueClass(): string { return `stats-val-${this.getTierCategory()}`; }
+  getStatsAltValueClass(): string { return `stats-alt-${this.getTierCategory()}`; }
+
+  // ── Trésor link ─────────────────────────────────────────────────────────────
+
+  getTresorLinkClass(): string { return `tresor-link-${this.getTierCategory()}`; }
+  getTresorIconClass(): string { return `tresor-icon-${this.getTierCategory()}`; }
+  getTresorTextClass(): string { return `tresor-text-${this.getTierCategory()}`; }
+
+  // ── Sections & programmes ───────────────────────────────────────────────────
+
+  getSectionTitleClass(): string { return `section-title-${this.getTierCategory()}`; }
+  getSectionIconClass(): string  { return `section-icon-${this.getTierCategory()}`; }
+  getProgrammeCardClass(): string { return `prog-card-${this.getTierCategory()}`; }
+  getCopyBtnClass(): string { return `copy-btn-${this.getTierCategory()}`; }
+  getToggleActiveClass(): string { return `toggle-active-${this.getTierCategory()}`; }
+
+  // ── Navigation ──────────────────────────────────────────────────────────────
+
+  /**
+   * Navigates to the Trésor page for the currently viewed profile.
+   */
+  goToTresor() {
+    const target = this.athleteProfile()?.username;
+    if (!target) return;
+    if (this.isMyProfile()) {
+      this.router.navigate(['/tresor']);
+    } else {
+      this.router.navigate(['/tresor', target]);
     }
   }
 

@@ -1,0 +1,58 @@
+/* ── Agora participant card — tier-aware ───────────────────────── */
+.agora-card {
+  background: rgba(8, 14, 28, 0.75);
+  border: 1px solid var(--tier-border);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5), 0 0 30px var(--tier-bg);
+  backdrop-filter: blur(12px);
+  transition: border-color 0.25s, box-shadow 0.25s, background 0.25s;
+}
+
+.agora-card:hover {
+  background: rgba(10, 18, 36, 0.9);
+  border-color: var(--tier-color);
+  box-shadow:
+    0 6px 32px rgba(0,0,0,0.6),
+    0 0 50px var(--tier-bg),
+    0 0 20px var(--tier-bg);
+}
+
+/* Avatar ring follows tier */
+.agora-avatar {
+  border: 2px solid var(--tier-border);
+  box-shadow: 0 0 10px var(--tier-bg);
+  transition: border-color 0.25s, box-shadow 0.25s;
+}
+.agora-card:hover .agora-avatar {
+  border-color: var(--tier-color);
+  box-shadow: 0 0 18px var(--tier-bg);
+}
+
+/* Username hover */
+.agora-username {
+  transition: color 0.25s;
+}
+.agora-card:hover .agora-username {
+  color: var(--tier-color);
+}
+
+/* Rank badge text */
+.agora-rank {
+  color: var(--tier-color);
+}
+
+/* Arrow icon */
+.agora-arrow {
+  color: var(--tier-border);
+  transition: color 0.25s, transform 0.25s;
+}
+.agora-card:hover .agora-arrow {
+  color: var(--tier-color);
+  transform: translateX(4px);
+}
+
+/* Extra glow ring for legend tiers (6-8) */
+.tier-6 .agora-avatar,
+.tier-7 .agora-avatar,
+.tier-8 .agora-avatar {
+  box-shadow: 0 0 14px var(--tier-bg), 0 0 28px var(--tier-bg);
+}

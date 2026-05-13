@@ -1,5 +1,6 @@
 package com.kronos.chiron.service;
 
+import com.kronos.chiron.dto.PerformanceSummaryDto;
 import com.kronos.chiron.dto.ProfileDto;
 import com.kronos.chiron.dto.SeanceSummaryDto;
 import com.kronos.chiron.entity.Role;
@@ -33,6 +34,7 @@ public class ProfileService {
 
     private final UtilisateurRepository utilisateurRepository;
     private final SeanceRepository seanceRepository;
+    private final PerformanceService performanceService;
 
     /**
      * Retrieves the detailed profile of a specified user.
@@ -73,6 +75,8 @@ public class ProfileService {
                 .map(this::toSeanceSummaryDto)
                 .collect(Collectors.toList());
 
+        PerformanceSummaryDto performanceSummary = performanceService.getSummary(username);
+
         return ProfileDto.builder()
                 .username(user.getUsername())
                 .icon(user.getIcon())
@@ -80,9 +84,12 @@ public class ProfileService {
                 .isPublic(user.getIsPublic() != null ? user.getIsPublic() : false)
                 .isMyCoach(isMyCoach)
                 .amICoach(amICoach)
-                .isAdmin(user.getRole() == Role.ADMIN || "kronos".equalsIgnoreCase(user.getUsername()) || "chiron".equalsIgnoreCase(user.getUsername())) 
+                .isAdmin(user.getRole() == Role.ADMIN || "kronos".equalsIgnoreCase(user.getUsername()) || "chiron".equalsIgnoreCase(user.getUsername()))
                 .totalSessions(historique.size())
                 .averageSeriesPerMonth(averageSeriesPerMonth)
+                .poidsCorps(user.getPoidsCorps())
+                .performanceTier(performanceSummary.getOverallTier())
+                .performanceTierLevel(performanceSummary.getOverallTierLevel())
                 .programmes(programmeSummaries)
                 .historiqueRecent(historiqueSummaries)
                 .build();
