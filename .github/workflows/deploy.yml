@@ -127,20 +127,16 @@ jobs:
             DEPLOY_DIR=/opt/chiron
 
             echo "▶ Arrêt du backend..."
-            sudo systemctl stop chiron-back
+            docker stop chiron_backend || true
 
             echo "▶ Mise à jour du JAR..."
             sudo cp /tmp/chiron-app.jar $DEPLOY_DIR/app.jar
 
             echo "▶ Mise à jour du frontend..."
             sudo rsync -a --delete /tmp/chiron-frontend/ $DEPLOY_DIR/frontend/
-            sudo chown -R www-data:www-data $DEPLOY_DIR/frontend/
 
             echo "▶ Démarrage du backend..."
-            sudo systemctl start chiron-back
-
-            echo "▶ Rechargement nginx..."
-            sudo nginx -t && sudo systemctl reload nginx
+            docker start chiron_backend
 
             echo "▶ Nettoyage..."
             rm -f /tmp/chiron-app.jar
