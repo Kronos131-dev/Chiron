@@ -13,7 +13,7 @@
 ehthumbs.db
 ehthumbs_vista.db
 [Tt]humbs.db
-.env
+chiron-back/.env
 .env.local
 .env.*.local
 

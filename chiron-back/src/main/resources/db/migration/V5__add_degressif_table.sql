@@ -1,5 +1,5 @@
 CREATE TABLE degressif (
-    id SERIAL PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
     poids DOUBLE PRECISION NOT NULL,
     nombre_reps INTEGER NOT NULL,
     serie_id BIGINT,

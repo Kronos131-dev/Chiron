@@ -19,7 +19,7 @@ services:
     container_name: chiron_backend
     restart: always
     env_file:
-      - .env
+      - chiron-back/.env
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/chiron_db
       - SPRING_DATASOURCE_USERNAME=chiron_user
