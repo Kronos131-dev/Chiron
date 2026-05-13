@@ -1,15 +1,5 @@
 <!-- Header Section: Navigation back button, title, and optional admin badge -->
-<header class="bg-slate-950/80 backdrop-blur-md flex items-center justify-between px-6 py-4 w-full fixed top-0 z-50 border-b border-secondary/10">
-  <div class="flex items-center gap-3">
-    <button (click)="goBack()" class="material-symbols-outlined text-secondary hover:text-white transition-colors cursor-pointer">arrow_back</button>
-    <h1 class="text-2xl font-black text-[#f8fafc] tracking-widest font-headline uppercase">AGORA</h1>
-  </div>
-  @if (isAdmin()) {
-    <div class="bg-amber-600 text-slate-900 text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-[0_0_10px_rgba(217,119,6,0.5)] border border-amber-400">
-      Admin
-    </div>
-  }
-</header>
+<app-header [title]="'AGORA'" [icon]="'groups'" [showBack]="true" [backRoute]="'/chat'"></app-header>
 
 <!-- Main Content Area -->
 <main class="min-h-screen pt-24 pb-32 bg-slate-950 heroic-texture px-4 md:px-8">

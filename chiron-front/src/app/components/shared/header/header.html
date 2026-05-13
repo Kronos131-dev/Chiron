@@ -1,0 +1,48 @@
+<header class="bg-slate-950/80 backdrop-blur-md flex items-center justify-between px-6 py-4 w-full fixed top-0 z-50 border-b border-secondary/10">
+  <div class="flex items-center gap-3">
+    @if (showBack) {
+      <button (click)="goBack()" class="material-symbols-outlined text-secondary hover:text-white transition-colors cursor-pointer">arrow_back</button>
+    } @else {
+      <span class="material-symbols-outlined text-secondary">{{ icon }}</span>
+    }
+    <h1 class="text-2xl font-black text-[#f8fafc] tracking-widest font-headline uppercase">{{ title }}</h1>
+  </div>
+
+  <div class="flex items-center gap-4">
+    @if (isAdmin()) {
+      <div class="bg-amber-600 text-slate-900 text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-[0_0_10px_rgba(217,119,6,0.5)] border border-amber-400">
+        Admin
+      </div>
+    }
+
+    <div class="relative">
+      <button (click)="toggleSettings()"
+              class="material-symbols-outlined text-[#f8fafc] hover:text-secondary transition-colors duration-200 cursor-pointer">
+        settings
+      </button>
+
+      @if (showSettings()) {
+        <div class="absolute right-0 mt-2 w-48 bg-slate-900 border border-secondary/20 rounded-lg shadow-xl py-2 z-50 animate-in fade-in zoom-in duration-150">
+          <div class="px-4 py-2 border-b border-white/5 text-xs text-on-surface-variant uppercase tracking-widest font-bold flex items-center gap-2">
+            {{ currentUsername }}
+            @if (isAdmin()) {
+              <span class="material-symbols-outlined text-amber-500 text-xs">shield</span>
+            }
+          </div>
+          <a href="/profile" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-white/5 transition-colors cursor-pointer">
+            <span class="material-symbols-outlined text-sm">person</span> Mon Profil
+          </a>
+          <a href="/agora" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-white/5 transition-colors cursor-pointer">
+            <span class="material-symbols-outlined text-sm">groups</span> L'Agora
+          </a>
+          <a href="/journal" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-white/5 transition-colors cursor-pointer">
+            <span class="material-symbols-outlined text-sm">history</span> Mes Annales
+          </a>
+          <button (click)="logout()" class="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer">
+            <span class="material-symbols-outlined text-sm">logout</span> Déconnexion
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+</header>

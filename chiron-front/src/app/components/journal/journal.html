@@ -1,11 +1,5 @@
-<!-- Top Navigation Header -->
-<header class="bg-slate-950/80 backdrop-blur-md flex items-center justify-between px-6 py-4 w-full fixed top-0 z-50 border-b border-secondary/10">
-  <div class="flex items-center gap-3">
-    <span class="material-symbols-outlined text-secondary">menu_book</span>
-    <h1 class="text-2xl font-black text-[#f8fafc] tracking-widest font-headline uppercase">ANNALES</h1>
-  </div>
-  <a href="/chat" class="material-symbols-outlined text-secondary hover:opacity-80 transition-opacity">arrow_back</a>
-</header>
+<!-- Top Navigation Header via Shared Component -->
+<app-header [title]="'ANNALES'" [icon]="'menu_book'" [showBack]="true" [backRoute]="'/chat'"></app-header>
 
 <!-- Main Journal Content Area -->
 <main class="min-h-screen pt-24 pb-12 heroic-texture px-4 md:px-8">

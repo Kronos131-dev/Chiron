@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ChironApi } from '../../service/chiron-api';
 import { AuthService } from '../../service/auth.service';
+import { HeaderComponent } from '../shared/header/header';
 
 /**
  * Component representing the "Agora" view, which is the main hub
@@ -12,7 +13,7 @@ import { AuthService } from '../../service/auth.service';
 @Component({
   selector: 'app-agora',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, HeaderComponent],
   templateUrl: './agora.html'
 })
 export class Agora implements OnInit {

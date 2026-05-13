@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ChironApi } from '../../service/chiron-api';
 import { AuthService } from '../../service/auth.service';
 import { Router } from '@angular/router';
+import { HeaderComponent } from '../shared/header/header';
 
 /**
  * Component responsible for displaying the user's workout journal history.
@@ -11,7 +12,7 @@ import { Router } from '@angular/router';
 @Component({
   selector: 'app-journal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, HeaderComponent],
   templateUrl: './journal.html',
   styleUrls: ['./journal.css']
 })

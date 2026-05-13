@@ -5,3 +5,4 @@ CREATE TABLE degressif (
     serie_id BIGINT,
     CONSTRAINT fk_degressif_serie FOREIGN KEY (serie_id) REFERENCES serie(id) ON DELETE CASCADE
 );
+

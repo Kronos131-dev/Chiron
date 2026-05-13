@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ChironApi } from '../../service/chiron-api';
 import { AuthService } from '../../service/auth.service';
+import { HeaderComponent } from '../shared/header/header';
 
 /**
  * Component representing the user profile view.
@@ -13,7 +14,7 @@ import { AuthService } from '../../service/auth.service';
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, HeaderComponent],
   templateUrl: './profile.html'
 })
 export class Profile implements OnInit {

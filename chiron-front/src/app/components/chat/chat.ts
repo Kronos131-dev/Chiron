@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { ChironApi } from '../../service/chiron-api';
 import { AuthService } from '../../service/auth.service';
+import { HeaderComponent } from '../shared/header/header';
 
 /**
  * Interface defining the structure of a chat message.
@@ -22,7 +23,8 @@ declare var SpeechRecognition: any;
  */
 @Component({
   selector: 'app-chat',
-  imports: [FormsModule, CommonModule],
+  standalone: true,
+  imports: [FormsModule, CommonModule, HeaderComponent],
   templateUrl: './chat.html',
   styleUrl: './chat.css',
 })
@@ -42,14 +44,8 @@ export class Chat implements OnInit {
   /** Web Speech API recognition instance. */
   recognition: any;
 
-  /** Signal toggling the visibility of the settings menu. */
-  showSettings = signal(false);
-
   /** The username of the currently authenticated user. */
   currentUsername: string = '';
-
-  /** Signal indicating whether the current user has administrative privileges. */
-  isAdmin = signal(false);
 
   /**
    * Initializes a new instance of the Chat component.
@@ -72,29 +68,6 @@ export class Chat implements OnInit {
     this.initSpeechRecognition();
 
     this.currentUsername = this.authService.getUsername() || 'Guerrier';
-
-    this.chironApi.getProfile(this.currentUsername, this.currentUsername).subscribe({
-      next: (profile) => {
-        if (profile && profile.isAdmin) {
-          this.isAdmin.set(true);
-        }
-      },
-      error: () => console.log("Erreur lors de la récupération du profil pour vérifier les droits admin")
-    });
-  }
-
-  /**
-   * Toggles the display of the user settings dropdown menu.
-   */
-  toggleSettings() {
-    this.showSettings.update(v => !v);
-  }
-
-  /**
-   * Logs out the current user and redirects them to the login screen.
-   */
-  logout() {
-    this.authService.logout();
   }
 
   /**
