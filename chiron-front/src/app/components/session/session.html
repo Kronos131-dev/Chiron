@@ -1,15 +1,4 @@
-<!-- Top Navigation Header -->
-<header class="bg-slate-950/80 backdrop-blur-md flex items-center justify-between px-6 py-4 w-full fixed top-0 z-50 border-b border-secondary/10">
-  <!-- Back Button and Title -->
-  <div class="flex items-center gap-3">
-    <button (click)="retour()" class="material-symbols-outlined text-secondary hover:text-white transition-colors cursor-pointer">arrow_back</button>
-    <h1 class="text-2xl font-black text-[#f8fafc] tracking-widest font-headline uppercase">CHIRON</h1>
-  </div>
-  <!-- Header Icon -->
-  <div class="w-8 h-8 rounded-full bg-slate-800 border border-secondary/30 flex items-center justify-center overflow-hidden">
-    <span class="material-symbols-outlined text-secondary text-lg">person</span>
-  </div>
-</header>
+<app-header [title]="'SÉANCE'" [showBack]="true" [backRoute]="'/programmes'"></app-header>
 
 <!-- Main Session Interface -->
 <main class="min-h-screen pt-20 pb-32 bg-slate-950 heroic-texture relative">

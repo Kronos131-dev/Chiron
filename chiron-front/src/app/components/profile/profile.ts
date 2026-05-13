@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ChironApi } from '../../service/chiron-api';
 import { AuthService } from '../../service/auth.service';
+import { HeaderComponent } from '../shared/header/header';
 
 /**
  * Component representing the user profile view.
@@ -13,7 +14,7 @@ import { AuthService } from '../../service/auth.service';
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, HeaderComponent],
   templateUrl: './profile.html',
   styleUrls: ['./profile.css']
 })
@@ -352,16 +353,6 @@ export class Profile implements OnInit {
   getCurrentTierName(): string {
     return this.athleteProfile()?.performanceTier ?? this.athleteProfile()?.rank ?? 'Éphèbe';
   }
-
-  // ── Header ──────────────────────────────────────────────────────────────────
-
-  getHeaderClass(): string {
-    return `header-${this.getTierCategory()} backdrop-blur-md`;
-  }
-  getHeaderIconClass(): string { return `header-icon-${this.getTierCategory()}`; }
-  getHeaderTitleClass(): string { return `header-title-${this.getTierCategory()}`; }
-  getHeaderSubtitleClass(): string { return `header-subtitle-${this.getTierCategory()}`; }
-  getAdminBadgeClass(): string { return `admin-badge-${this.getTierCategory()}`; }
 
   // ── Main background ─────────────────────────────────────────────────────────
 

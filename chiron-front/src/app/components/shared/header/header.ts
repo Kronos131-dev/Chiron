@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, signal } from '@angular/core';
+import { Component, Input, OnInit, signal, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../service/auth.service';
@@ -12,7 +12,6 @@ import { ChironApi } from '../../../service/chiron-api';
 })
 export class HeaderComponent implements OnInit {
   @Input() title: string = 'CHIRON';
-  @Input() icon: string = 'account_balance';
   @Input() showBack: boolean = false;
   @Input() backRoute: string = '/chat';
 
@@ -42,6 +41,14 @@ export class HeaderComponent implements OnInit {
 
   toggleSettings() {
     this.showSettings.update(v => !v);
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+    if (!target.closest('app-header')) {
+      this.showSettings.set(false);
+    }
   }
 
   logout() {
