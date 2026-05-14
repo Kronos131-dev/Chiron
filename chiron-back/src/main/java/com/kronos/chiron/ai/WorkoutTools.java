@@ -411,6 +411,185 @@ public class WorkoutTools {
     }
 
     /**
+     * Returns the full details (exercises, sets, weights, reps) of a specific programme by name.
+     *
+     * @param userId        The ID of the requesting user.
+     * @param programmeName The name (or partial name) of the programme to fetch.
+     * @return A formatted string with all exercises and their sets for the matching programme(s).
+     */
+    @Tool("Récupère le contenu détaillé d'un programme spécifique (exercices, séries, poids, répétitions) à partir de son nom. À utiliser quand l'utilisateur demande 'qu'est-ce que mon programme X contient ?'.")
+    public String getProgrammeDetails(@MemoryId String userId, String programmeName) {
+        Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
+                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+
+        List<Seance> programmes = seanceRepository.findByUtilisateurUsernameAndIsModeleFalseOrderByStartTimeDesc(user.getUsername());
+
+        List<Seance> matching = programmes.stream()
+                .filter(s -> s.getTitre() != null && s.getTitre().toLowerCase().contains(programmeName.toLowerCase()))
+                .collect(Collectors.toList());
+
+        if (matching.isEmpty()) {
+            return "Aucun programme trouvé avec le nom '" + programmeName + "'. Utilise [getUserProgrammes] pour voir les programmes disponibles.";
+        }
+
+        StringBuilder res = new StringBuilder();
+        for (Seance s : matching) {
+            res.append("Programme : '").append(s.getTitre()).append("'\n");
+            if (s.getExercices() == null || s.getExercices().isEmpty()) {
+                res.append("  Aucun exercice enregistré dans ce programme.\n");
+            } else {
+                for (Exercice e : s.getExercices()) {
+                    res.append("  - ").append(e.getNom()).append(" : ");
+                    if (e.getSeries() != null && !e.getSeries().isEmpty()) {
+                        String seriesDetails = e.getSeries().stream()
+                                .map(serie -> serie.getNombreReps() + " reps @ " + serie.getPoids() + "kg")
+                                .collect(Collectors.joining(" | "));
+                        res.append(seriesDetails);
+                    } else {
+                        res.append("Aucune série définie");
+                    }
+                    res.append("\n");
+                }
+            }
+            res.append("\n");
+        }
+        return res.toString();
+    }
+
+    /**
+     * Returns the full details of a specific historical session found by title.
+     *
+     * @param userId       The ID of the user.
+     * @param sessionTitle The title (or partial title) of the session to look up.
+     * @return A formatted string with the date, exercises, sets, and comments for the matching session(s).
+     */
+    @Tool("Récupère les détails complets d'une ou plusieurs séances historiques à partir de leur titre. Inclut tous les exercices, séries, poids et commentaires. À utiliser quand l'utilisateur mentionne le nom d'une séance.")
+    public String getSessionDetails(@MemoryId String userId, String sessionTitle) {
+        Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
+                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+
+        List<Seance> historique = seanceRepository.findByUtilisateurUsernameAndIsModeleTrueOrderByStartTimeDesc(user.getUsername());
+
+        List<Seance> matching = historique.stream()
+                .filter(s -> s.getTitre() != null && s.getTitre().toLowerCase().contains(sessionTitle.toLowerCase()))
+                .collect(Collectors.toList());
+
+        if (matching.isEmpty()) {
+            return "Aucune séance trouvée avec le titre '" + sessionTitle + "'. Utilise [getUserHistory] pour voir l'historique complet.";
+        }
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMMM yyyy à HH:mm", Locale.FRANCE);
+        StringBuilder res = new StringBuilder();
+        for (Seance s : matching) {
+            String dateStr = s.getStartTime() != null ? s.getStartTime().format(formatter) : "Date inconnue";
+            res.append("Séance '").append(s.getTitre()).append("' — ").append(dateStr).append("\n");
+            if (s.getExercices() == null || s.getExercices().isEmpty()) {
+                res.append("  Aucun exercice enregistré.\n");
+            } else {
+                for (Exercice e : s.getExercices()) {
+                    res.append("  - ").append(e.getNom()).append(" : ");
+                    if (e.getSeries() != null && !e.getSeries().isEmpty()) {
+                        String seriesDetails = e.getSeries().stream()
+                                .map(serie -> {
+                                    String detail = serie.getNombreReps() + " reps @ " + serie.getPoids() + "kg";
+                                    if (serie.getCommentaire() != null && !serie.getCommentaire().isBlank()) {
+                                        detail += " (" + serie.getCommentaire() + ")";
+                                    }
+                                    return detail;
+                                })
+                                .collect(Collectors.joining(" | "));
+                        res.append(seriesDetails);
+                    } else {
+                        res.append("Aucune série");
+                    }
+                    res.append("\n");
+                }
+            }
+            res.append("\n");
+        }
+        return res.toString();
+    }
+
+    /**
+     * Returns the complete history of every time the user performed a specific exercise,
+     * with all sets, weights and reps from each session.
+     *
+     * @param userId      The ID of the user.
+     * @param nomExercice The name (or partial name) of the exercise.
+     * @return A formatted string listing every historical occurrence of the exercise.
+     */
+    @Tool("Récupère l'historique COMPLET de toutes les fois où l'utilisateur a effectué un exercice donné, avec les détails de chaque série. À utiliser pour analyser la progression sur un exercice.")
+    public String getFullExerciseHistory(@MemoryId String userId, String nomExercice) {
+        List<Exercice> exercises = exerciceRepository.findAllHistoricExercises(Long.parseLong(userId), nomExercice);
+
+        if (exercises.isEmpty()) {
+            return "L'utilisateur n'a jamais fait l'exercice '" + nomExercice + "' dans son historique.";
+        }
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.FRANCE);
+        StringBuilder res = new StringBuilder("Historique complet de '" + nomExercice + "' (" + exercises.size() + " séance(s)) :\n");
+
+        for (Exercice exo : exercises) {
+            String dateStr = exo.getStartTime() != null ? exo.getStartTime().format(formatter) : "Date inconnue";
+            res.append("- ").append(dateStr).append(" : ");
+            if (exo.getSeries() != null && !exo.getSeries().isEmpty()) {
+                String seriesDetails = exo.getSeries().stream()
+                        .map(s -> s.getNombreReps() + " reps @ " + s.getPoids() + "kg")
+                        .collect(Collectors.joining(" | "));
+                res.append(seriesDetails);
+            } else {
+                res.append("Aucune série enregistrée");
+            }
+            res.append("\n");
+        }
+        return res.toString();
+    }
+
+    /**
+     * Finds the personal record (best estimated 1RM and heaviest set) for a specific exercise.
+     * Uses the Epley formula: 1RM = weight × (1 + reps / 30).
+     *
+     * @param userId      The ID of the user.
+     * @param nomExercice The name (or partial name) of the exercise.
+     * @return A formatted string with the best set and estimated 1RM.
+     */
+    @Tool("Trouve le record personnel de l'utilisateur pour un exercice donné : la meilleure série réalisée et le 1RM estimé (formule d'Epley). À utiliser quand l'utilisateur demande son PR ou son record.")
+    public String getPersonalRecord(@MemoryId String userId, String nomExercice) {
+        List<Exercice> exercises = exerciceRepository.findAllHistoricExercises(Long.parseLong(userId), nomExercice);
+
+        if (exercises.isEmpty()) {
+            return "L'utilisateur n'a jamais fait l'exercice '" + nomExercice + "' dans son historique.";
+        }
+
+        Serie bestSet = null;
+        LocalDateTime bestDate = null;
+        double best1RM = 0;
+
+        for (Exercice exo : exercises) {
+            if (exo.getSeries() == null) continue;
+            for (Serie serie : exo.getSeries()) {
+                double rm1 = serie.getPoids() * (1 + serie.getNombreReps() / 30.0);
+                if (rm1 > best1RM) {
+                    best1RM = rm1;
+                    bestSet = serie;
+                    bestDate = exo.getStartTime();
+                }
+            }
+        }
+
+        if (bestSet == null) {
+            return "Aucune série enregistrée pour l'exercice '" + nomExercice + "'.";
+        }
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.FRANCE);
+        String dateStr = bestDate != null ? bestDate.format(formatter) : "date inconnue";
+
+        return String.format(
+                "Record personnel pour '%s' :\n- Meilleure série : %d reps @ %.1f kg (le %s)\n- 1RM estimé (formule d'Epley) : %.1f kg",
+                nomExercice, bestSet.getNombreReps(), bestSet.getPoids(), dateStr, best1RM);
+    }
+
+    /**
      * Utility method to fetch the current unfinished active session for the given user.
      *
      * @param userId The ID of the user as a string.
