@@ -16,9 +16,8 @@ ehthumbs_vista.db
 chiron-back/.env
 .env.local
 .env.*.local
-GEMINI.md
+CLAUDE.md
 .claude
-AGENT.md
 # -------------------------------------------------------------------------
 # IDEs and Editors
 # -------------------------------------------------------------------------
