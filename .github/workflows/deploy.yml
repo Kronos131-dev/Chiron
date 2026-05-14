@@ -1,6 +1,9 @@
 name: Deploy Chiron
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       target:
@@ -136,7 +139,7 @@ jobs:
     name: Deploy → ${{ inputs.target }}
     runs-on: ubuntu-latest
     needs: [test-unit, test-integration]
-    environment: ${{ inputs.target }}
+    environment: ${{ inputs.target || 'production' }}
 
     steps:
       - uses: actions/download-artifact@v4
