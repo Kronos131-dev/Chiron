@@ -56,12 +56,34 @@
 
           <!-- Exercise Name Input and Delete Button -->
           <div class="flex items-end gap-3 mb-6">
-            <div class="flex-1">
+            <div class="flex-1 relative">
               <label class="text-secondary text-[9px] font-bold tracking-[0.2em] uppercase ml-1">Nom de l'exercice</label>
-              <input type="text" [(ngModel)]="exo.nom"
-                     [readOnly]="isReadonly()"
-                     class="w-full mt-1 bg-slate-950/50 border border-white/10 rounded p-3 text-white font-headline text-lg outline-none focus:border-secondary/50 transition-colors"
-                     placeholder="Ex: Squat">
+              @if (!isReadonly()) {
+                <input type="text"
+                       [value]="exo.nom"
+                       (input)="onNomInput($event, exo)"
+                       (blur)="closeSuggestions()"
+                       class="w-full mt-1 bg-slate-950/50 border border-white/10 rounded p-3 text-white font-headline text-lg outline-none focus:border-secondary/50 transition-colors"
+                       placeholder="Rechercher un exercice...">
+                @if (activeSearchExoId() === exo.id && suggestions().length > 0) {
+                  <ul class="absolute z-50 left-0 right-0 mt-1 bg-[#1a1c23] border border-white/10 rounded-lg shadow-xl max-h-96 overflow-y-auto">
+                    @for (def of suggestions(); track def.id) {
+                      <li (mousedown)="selectDefinition(def, exo)"
+                          class="flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-white/5 transition-colors border-b border-white/5 last:border-0">
+                        @if (def.imageUrl) {
+                          <img [src]="def.imageUrl" alt="" class="w-8 h-8 object-cover rounded" loading="lazy">
+                        }
+                        <div class="flex-1 min-w-0">
+                          <span class="text-white font-bold text-sm block truncate">{{ def.nomFr ?? def.nomEn }}</span>
+                          <span class="text-on-surface-variant text-[10px] uppercase tracking-wider">{{ def.musclePrincipal }}</span>
+                        </div>
+                      </li>
+                    }
+                  </ul>
+                }
+              } @else {
+                <p class="w-full mt-1 bg-slate-950/50 border border-white/10 rounded p-3 text-white font-headline text-lg">{{ exo.nom }}</p>
+              }
             </div>
 
             @if (!isReadonly()) {

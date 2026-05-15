@@ -1,5 +1,6 @@
 server:
   port: 9090
+  forward-headers-strategy: framework
 
 spring:
   application:

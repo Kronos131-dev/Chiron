@@ -1,0 +1,3 @@
+ALTER TABLE exercice_definition
+    ADD COLUMN IF NOT EXISTS image0 BYTEA,
+    ADD COLUMN IF NOT EXISTS image1 BYTEA;
