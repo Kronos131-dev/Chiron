@@ -77,11 +77,14 @@ public class SecurityConfig {
                                 "/api/auth/**",
                                 "/api/images/**",
                                 "/images/**",
+                                "/api/exercices/*/image/*",
                                 "/actuator/health",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html"
                         ).permitAll()
+                        // Import exercice dataset — admin seulement
+                        .requestMatchers(HttpMethod.POST, "/api/exercices/import").hasRole("ADMIN")
                         // All other requests must be authenticated
                         .anyRequest().authenticated()
                 )

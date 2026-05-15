@@ -3,6 +3,20 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
+export interface ExerciceDefinitionDto {
+  id: number;
+  nomFr: string | null;
+  nomEn: string;
+  imageUrl: string | null;
+  imageUrl2: string | null;
+  musclePrincipal: string | null;
+  musclesSecondaires: string[];
+  typeEquipement: string | null;
+  difficulte: string | null;
+  descriptionFr: string | null;
+  descriptionEn: string | null;
+}
+
 /**
  * Interface defining the structure of an aggregated exercise performance summary.
  */
@@ -238,5 +252,25 @@ export class ChironApi {
 
   getPerformanceHistory(username: string, exerciseType: string): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/performance/${encodeURIComponent(username)}/history/${encodeURIComponent(exerciseType)}`);
+  }
+
+  searchExercices(q: string, muscle?: string, equipement?: string, difficulte?: string): Observable<ExerciceDefinitionDto[]> {
+    let url = `${this.apiUrl}/exercices?q=${encodeURIComponent(q)}`;
+    if (muscle) url += `&muscle=${encodeURIComponent(muscle)}`;
+    if (equipement) url += `&equipement=${encodeURIComponent(equipement)}`;
+    if (difficulte) url += `&difficulte=${encodeURIComponent(difficulte)}`;
+    return this.http.get<ExerciceDefinitionDto[]>(url);
+  }
+
+  getExercices(muscle?: string, equipement?: string, difficulte?: string): Observable<ExerciceDefinitionDto[]> {
+    let url = `${this.apiUrl}/exercices?`;
+    if (muscle) url += `&muscle=${encodeURIComponent(muscle)}`;
+    if (equipement) url += `&equipement=${encodeURIComponent(equipement)}`;
+    if (difficulte) url += `&difficulte=${encodeURIComponent(difficulte)}`;
+    return this.http.get<ExerciceDefinitionDto[]>(url);
+  }
+
+  getExerciceGifUrl(id: number): string {
+    return `${this.apiUrl}/exercices/${id}/gif`;
   }
 }
