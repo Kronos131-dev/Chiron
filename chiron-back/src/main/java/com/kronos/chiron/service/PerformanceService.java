@@ -32,9 +32,7 @@ public class PerformanceService {
         Utilisateur user = findUser(username);
         Double poidsCorps = user.getPoidsCorps();
 
-        List<ExercisePerformanceDto> exercises = Arrays.stream(ExerciseType.values())
-                .map(type -> buildExerciseDto(user.getId(), type, poidsCorps))
-                .collect(Collectors.toList());
+        List<ExercisePerformanceDto> exercises = buildAllExerciseDtos(user.getId(), poidsCorps);
 
         PerformanceTier overall = computeOverallTier(exercises);
 
@@ -75,10 +73,7 @@ public class PerformanceService {
 
         performanceRecordRepository.saveAndFlush(record);
 
-        // Re-read user to ensure fresh state, then build full summary
-        List<ExercisePerformanceDto> exercises = Arrays.stream(ExerciseType.values())
-                .map(t -> buildExerciseDto(user.getId(), t, poidsCorps))
-                .collect(Collectors.toList());
+        List<ExercisePerformanceDto> exercises = buildAllExerciseDtos(user.getId(), poidsCorps);
 
         PerformanceTier overall = computeOverallTier(exercises);
 
@@ -125,14 +120,18 @@ public class PerformanceService {
 
     // -------------------------------------------------------------------------
 
-    /**
-     * Builds the best-record DTO for a given exercise type.
-     * Ratio and tier are always computed from the user's CURRENT bodyweight,
-     * so changing bodyweight retroactively updates all tiers.
-     */
-    private ExercisePerformanceDto buildExerciseDto(Long userId, ExerciseType type, Double poidsCorps) {
-        Optional<PerformanceRecord> best = performanceRecordRepository
-                .findFirstByUtilisateurIdAndExerciseTypeOrderByRecordedAtDesc(userId, type);
+    private List<ExercisePerformanceDto> buildAllExerciseDtos(Long userId, Double poidsCorps) {
+        Map<ExerciseType, PerformanceRecord> latestByType = performanceRecordRepository
+                .findLatestPerExerciseTypeForUser(userId)
+                .stream()
+                .collect(Collectors.toMap(PerformanceRecord::getExerciseType, r -> r));
+
+        return Arrays.stream(ExerciseType.values())
+                .map(type -> buildExerciseDto(Optional.ofNullable(latestByType.get(type)), type, poidsCorps))
+                .collect(Collectors.toList());
+    }
+
+    private ExercisePerformanceDto buildExerciseDto(Optional<PerformanceRecord> best, ExerciseType type, Double poidsCorps) {
 
         if (best.isEmpty()) {
             PerformanceTier ephebe = PerformanceTier.EPHEBE;

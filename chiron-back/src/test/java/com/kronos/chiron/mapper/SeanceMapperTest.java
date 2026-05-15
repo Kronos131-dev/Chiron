@@ -41,6 +41,22 @@ class SeanceMapperTest {
         return e;
     }
 
+    private Exercice buildExerciceWithDefinition(String nom, Long definitionId) {
+        Exercice e = new Exercice();
+        e.setNom(nom);
+        e.setCommentaire("note");
+        if (definitionId != null) {
+            com.kronos.chiron.entity.ExerciceDefinition def =
+                    com.kronos.chiron.entity.ExerciceDefinition.builder()
+                            .id(definitionId)
+                            .nomEn("Bench Press")
+                            .musclesSecondaires(new java.util.ArrayList<>())
+                            .build();
+            e.setDefinition(def);
+        }
+        return e;
+    }
+
     private Seance buildSeance(String titre, Utilisateur user, Exercice... exercices) {
         Seance seance = new Seance();
         seance.setId(1L);
@@ -132,6 +148,31 @@ class SeanceMapperTest {
     @Test
     void toDegressifDto_null_returnsNull() {
         assertThat(mapper.toDegressifDto(null)).isNull();
+    }
+
+    @Test
+    void toExerciceDto_withDefinition_mapsDefinitionId() {
+        Exercice e = buildExerciceWithDefinition("Bench Press", 99L);
+        ExerciceDto dto = mapper.toExerciceDto(e);
+
+        assertThat(dto.exerciceDefinitionId()).isEqualTo(99L);
+    }
+
+    @Test
+    void toExerciceDto_withoutDefinition_definitionIdIsNull() {
+        Exercice e = buildExercice("Squat", buildSerie(100, 5));
+        ExerciceDto dto = mapper.toExerciceDto(e);
+
+        assertThat(dto.exerciceDefinitionId()).isNull();
+    }
+
+    @Test
+    void toExerciceDto_mapsExerciceId() {
+        Exercice e = buildExercice("Deadlift");
+        e.setId(77L);
+        ExerciceDto dto = mapper.toExerciceDto(e);
+
+        assertThat(dto.id()).isEqualTo(77L);
     }
 
     @Test

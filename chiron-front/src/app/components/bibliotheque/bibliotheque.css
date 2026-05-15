@@ -1,0 +1,156 @@
+.chip {
+  padding: 6px 12px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #94a3b8;
+  background: rgba(255,255,255,0.05);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.chip:hover {
+  border-color: rgba(255, 183, 121, 0.4);
+  color: #ffb779;
+}
+
+.chip-active {
+  padding: 6px 12px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border: 1px solid #ffb779;
+  color: #ffb779;
+  background: rgba(255, 183, 121, 0.1);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.exercise-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+@media (min-width: 640px) {
+  .exercise-grid {
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  }
+}
+
+.exercise-card {
+  background: #1a1c23;
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.exercise-card:hover {
+  border-color: rgba(255, 183, 121, 0.3);
+  transform: scale(1.02);
+}
+
+.gif-container {
+  position: relative;
+  background: #0f1117;
+  overflow: hidden;
+  aspect-ratio: 1 / 1;
+}
+
+.exercise-gif {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gif-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(4px);
+  z-index: 50;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+@media (min-width: 640px) {
+  .modal-overlay {
+    align-items: center;
+    padding: 16px;
+  }
+}
+
+.modal-content {
+  position: relative;
+  background: #1a1c23;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px 16px 0 0;
+  width: 100%;
+  overflow-y: auto;
+  max-height: 90vh;
+}
+
+@media (min-width: 640px) {
+  .modal-content {
+    border-radius: 16px;
+    max-width: 448px;
+  }
+}
+
+.modal-gif-container {
+  background: #0f1117;
+  overflow: hidden;
+  aspect-ratio: 1 / 1;
+  max-height: 300px;
+}
+
+.modal-gif {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  border: 1px solid;
+}
+
+.tag-muscle {
+  border-color: rgba(255, 183, 121, 0.3);
+  color: #ffb779;
+  background: rgba(255, 183, 121, 0.1);
+}
+
+.tag-equip {
+  border-color: rgba(255,255,255,0.2);
+  color: #94a3b8;
+  background: rgba(255,255,255,0.05);
+}
+
+.tag-secondary {
+  border-color: rgba(255,255,255,0.1);
+  color: #94a3b8;
+  background: rgba(255,255,255,0.05);
+}

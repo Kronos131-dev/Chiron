@@ -55,7 +55,7 @@ class ProgrammeServiceTest {
         when(utilisateurRepository.findByUsername("owner")).thenReturn(Optional.of(owner));
 
         SeanceDto dto = new SeanceDto(null, "Leg Day", LocalDateTime.now(), null, 1, false, null,
-                List.of(new ExerciceDto("Squat", null,
+                List.of(new ExerciceDto(null, "Squat", null, null,
                         List.of(new SerieDto(100.0, 5, null, null)))));
 
         Seance result = programmeService.sauvegarderProgramme("owner", dto);

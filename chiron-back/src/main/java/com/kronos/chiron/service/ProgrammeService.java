@@ -10,6 +10,7 @@ import com.kronos.chiron.entity.Seance;
 import com.kronos.chiron.entity.Serie;
 import com.kronos.chiron.entity.Degressif;
 import com.kronos.chiron.entity.Utilisateur;
+import com.kronos.chiron.repository.ExerciceDefinitionRepository;
 import com.kronos.chiron.repository.SeanceRepository;
 import com.kronos.chiron.repository.UtilisateurRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Service responsible for managing workout templates and programs.
@@ -34,6 +38,7 @@ public class ProgrammeService {
 
     private final SeanceRepository seanceRepository;
     private final UtilisateurRepository utilisateurRepository;
+    private final ExerciceDefinitionRepository exerciceDefinitionRepository;
 
     /**
      * Saves a new workout program or updates an existing one based on the provided DTO.
@@ -101,6 +106,10 @@ public class ProgrammeService {
                 Exercice exercice = new Exercice();
                 exercice.setNom(exoDto.nom());
                 exercice.setCommentaire(exoDto.commentaire());
+                if (exoDto.exerciceDefinitionId() != null) {
+                    exerciceDefinitionRepository.findById(exoDto.exerciceDefinitionId())
+                            .ifPresent(exercice::setDefinition);
+                }
 
                 if (exoDto.series() != null) {
                     for (SerieDto serieDto : exoDto.series()) {
@@ -125,7 +134,19 @@ public class ProgrammeService {
             }
         }
 
-        return seanceRepository.save(seance);
+        Seance saved = seanceRepository.save(seance);
+
+        if (seanceDto.exercices() != null) {
+            Set<Long> usedDefinitionIds = seanceDto.exercices().stream()
+                    .map(ExerciceDto::exerciceDefinitionId)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+            if (!usedDefinitionIds.isEmpty()) {
+                exerciceDefinitionRepository.incrementUsageCount(usedDefinitionIds);
+            }
+        }
+
+        return saved;
     }
 
     /**
@@ -229,6 +250,7 @@ public class ProgrammeService {
             Exercice newExo = new Exercice();
             newExo.setNom(sourceExo.getNom());
             newExo.setCommentaire(sourceExo.getCommentaire());
+            newExo.setDefinition(sourceExo.getDefinition());
             
             for (Serie sourceSerie : sourceExo.getSeries()) {
                 Serie newSerie = new Serie();

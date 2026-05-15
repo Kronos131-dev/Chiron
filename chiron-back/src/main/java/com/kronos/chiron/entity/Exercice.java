@@ -52,10 +52,17 @@ public class Exercice {
     @JoinColumn(name = "seance_id")
     private Seance seance;
 
+    // Lien optionnel vers la définition standardisée — null pour les exercices saisis en texte libre
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "exercice_definition_id")
+    private ExerciceDefinition definition;
+
     /**
      * The list of sets (Series) performed during this exercise.
      */
     @OneToMany(mappedBy = "exercice", cascade = CascadeType.ALL, orphanRemoval = true)
+    @org.hibernate.annotations.BatchSize(size = 30)
+    @Builder.Default
     private List<Serie> series = new ArrayList<>();
 
     /**

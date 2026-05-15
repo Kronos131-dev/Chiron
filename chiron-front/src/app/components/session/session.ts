@@ -2,7 +2,7 @@ import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { ChironApi } from '../../service/chiron-api';
+import { ChironApi, ExerciceDefinitionDto } from '../../service/chiron-api';
 import { AuthService } from '../../service/auth.service';
 import { HeaderComponent } from '../shared/header/header';
 
@@ -31,6 +31,7 @@ export interface SerieForm {
 export interface ExerciceForm {
   id: number | string;
   nom: string;
+  definitionId?: number;
   series: SerieForm[];
 }
 
@@ -72,6 +73,10 @@ export class Session implements OnInit {
 
   /** Loading state indicator. */
   isLoading = signal(false);
+
+  suggestions = signal<ExerciceDefinitionDto[]>([]);
+  activeSearchExoId = signal<number | string | null>(null);
+  private debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
   /** The username of the athlete who owns the currently loaded session. */
   targetUsername = signal<string | null>(null);
@@ -163,6 +168,7 @@ export class Session implements OnInit {
         const exosFormates: ExerciceForm[] = data.exercices.map((exo: any) => ({
           id: exo.id || this.generateUniqueId(),
           nom: exo.nom,
+          definitionId: exo.exerciceDefinitionId ?? undefined,
           series: exo.series.map((serie: any) => ({
             id: serie.id || this.generateUniqueId(),
             poids: serie.poids,
@@ -288,6 +294,56 @@ export class Session implements OnInit {
     }));
   }
 
+  onNomInput(event: Event, exo: ExerciceForm) {
+    const query = (event.target as HTMLInputElement).value;
+    exo.nom = query;
+    exo.definitionId = undefined;
+
+    if (this.debounceTimer) clearTimeout(this.debounceTimer);
+
+    if (!query || query.length < 2) {
+      this.suggestions.set([]);
+      this.activeSearchExoId.set(null);
+      return;
+    }
+
+    this.debounceTimer = setTimeout(() => {
+      this.chironApi.searchExercices(query).subscribe({
+        next: (results) => {
+          const q = query.toLowerCase();
+          // Server already orders by usage_count DESC; re-rank by match position as tiebreaker
+          // (startsWith first, then contains). Array.sort is stable so popularity order is preserved within groups.
+          const sorted = [...results].sort((a, b) => {
+            const aName = (a.nomFr ?? a.nomEn).toLowerCase();
+            const bName = (b.nomFr ?? b.nomEn).toLowerCase();
+            return (aName.startsWith(q) ? 0 : 1) - (bName.startsWith(q) ? 0 : 1);
+          });
+          this.suggestions.set(sorted.slice(0, 20));
+          this.activeSearchExoId.set(exo.id);
+        },
+        error: () => this.suggestions.set([])
+      });
+    }, 300);
+  }
+
+  selectDefinition(def: ExerciceDefinitionDto, exo: ExerciceForm) {
+    exo.nom = def.nomFr ?? def.nomEn;
+    exo.definitionId = def.id;
+    this.suggestions.set([]);
+    this.activeSearchExoId.set(null);
+  }
+
+  closeSuggestions() {
+    setTimeout(() => {
+      this.suggestions.set([]);
+      this.activeSearchExoId.set(null);
+    }, 200);
+  }
+
+  displayNom(exo: ExerciceForm): string {
+    return exo.nom;
+  }
+
   /**
    * Persists the current session state to the backend as a reusable Program Template (isModele = false).
    */
@@ -308,6 +364,7 @@ export class Session implements OnInit {
       exercices: this.exercices().map(exo => ({
         nom: exo.nom,
         commentaire: "",
+        exerciceDefinitionId: exo.definitionId ?? null,
         series: exo.series.map(serie => ({
           poids: serie.poids != null ? Number(serie.poids) : 0,
           reps: serie.reps != null ? Number(serie.reps) : 0,
@@ -359,6 +416,7 @@ export class Session implements OnInit {
       exercices: this.exercices().map(exo => ({
         nom: exo.nom,
         commentaire: "",
+        exerciceDefinitionId: exo.definitionId ?? null,
         series: exo.series.map(serie => ({
           poids: serie.poids != null ? Number(serie.poids) : 0,
           reps: serie.reps != null ? Number(serie.reps) : 0,

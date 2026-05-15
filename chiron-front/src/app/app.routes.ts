@@ -8,6 +8,7 @@ import { Session } from './components/session/session';
 import { Profile } from './components/profile/profile';
 import { Agora } from './components/agora/agora';
 import { Tresor } from './components/tresor/tresor';
+import { Bibliotheque } from './components/bibliotheque/bibliotheque';
 
 /**
  * Global routing configuration for the Angular application.
@@ -64,6 +65,12 @@ export const routes: Routes = [
   {
     path: 'tresor/:id',
     component: Tresor,
+    canActivate: [authGuard]
+  },
+
+  {
+    path: 'bibliotheque',
+    component: Bibliotheque,
     canActivate: [authGuard]
   },
 

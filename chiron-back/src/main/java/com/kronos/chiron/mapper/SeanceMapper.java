@@ -68,9 +68,13 @@ public class SeanceMapper {
                 .map(this::toSerieDto)
                 .collect(Collectors.toList());
 
+        Long definitionId = exercice.getDefinition() != null ? exercice.getDefinition().getId() : null;
+
         return new ExerciceDto(
+                exercice.getId(),
                 exercice.getNom(),
                 exercice.getCommentaire(),
+                definitionId,
                 seriesDto
         );
     }

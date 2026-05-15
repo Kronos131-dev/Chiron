@@ -53,6 +53,7 @@ public class Seance {
      * The list of exercises performed during this session.
      */
     @OneToMany(mappedBy = "seance", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<Exercice> exercices = new ArrayList<>();
 
     /**
