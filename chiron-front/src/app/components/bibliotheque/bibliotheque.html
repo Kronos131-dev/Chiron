@@ -1,0 +1,191 @@
+<app-header [title]="'BIBLIOTHÈQUE'" [showBack]="true" [backRoute]="'/chat'"></app-header>
+
+<main class="min-h-screen pt-20 pb-16 bg-slate-950 heroic-texture">
+
+  <!-- Search Bar -->
+  <section class="sticky top-16 z-30 bg-slate-950/90 backdrop-blur-md border-b border-white/5 px-4 py-4">
+    <div class="max-w-3xl mx-auto">
+      <div class="relative">
+        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-xl pointer-events-none">search</span>
+        <input type="text"
+               [value]="searchQuery()"
+               (input)="onSearchInput(($event.target)!['value'])"
+               class="w-full bg-[#1a1c23] border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white outline-none focus:border-secondary/50 transition-colors placeholder:text-on-surface-variant"
+               placeholder="Rechercher un exercice...">
+      </div>
+    </div>
+  </section>
+
+  <div class="max-w-3xl mx-auto px-4 pt-5 space-y-4">
+
+    <!-- Muscle Filter -->
+    <div>
+      <p class="text-on-surface-variant text-[9px] font-bold tracking-[0.25em] uppercase mb-2">Muscle</p>
+      <div class="flex flex-wrap gap-2">
+        @for (m of muscles; track m.key) {
+          <button (click)="toggleMuscle(m.key)"
+                  [class]="selectedMuscle() === m.key
+                    ? 'chip-active'
+                    : 'chip'">
+            {{ m.label }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Equipment Filter -->
+    <div>
+      <p class="text-on-surface-variant text-[9px] font-bold tracking-[0.25em] uppercase mb-2">Équipement</p>
+      <div class="flex flex-wrap gap-2">
+        @for (e of equipements; track e.key) {
+          <button (click)="toggleEquipement(e.key)"
+                  [class]="selectedEquipement() === e.key
+                    ? 'chip-active'
+                    : 'chip'">
+            {{ e.label }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Difficulty Filter -->
+    <div>
+      <p class="text-on-surface-variant text-[9px] font-bold tracking-[0.25em] uppercase mb-2">Niveau</p>
+      <div class="flex flex-wrap gap-2">
+        @for (d of difficultes; track d.key) {
+          <button (click)="toggleDifficulte(d.key)"
+                  [class]="selectedDifficulte() === d.key
+                    ? 'chip-active'
+                    : 'chip'">
+            {{ d.label }}
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <section class="max-w-3xl mx-auto px-4 mt-6">
+
+    <!-- Loading -->
+    @if (loading()) {
+      <div class="flex justify-center py-16">
+        <div class="w-10 h-10 border-4 border-secondary/30 border-t-secondary rounded-full animate-spin"></div>
+      </div>
+    }
+
+    <!-- Empty state — no search yet -->
+    @else if (!hasSearched()) {
+      <div class="flex flex-col items-center justify-center py-20 text-center">
+        <span class="material-symbols-outlined text-5xl text-secondary/30 mb-4">fitness_center</span>
+        <p class="text-on-surface-variant text-sm">Recherche un exercice ou sélectionne un filtre</p>
+      </div>
+    }
+
+    <!-- No results -->
+    @else if (exercices().length === 0) {
+      <div class="flex flex-col items-center justify-center py-20 text-center">
+        <span class="material-symbols-outlined text-5xl text-on-surface-variant/30 mb-4">search_off</span>
+        <p class="text-on-surface-variant text-sm">Aucun exercice trouvé</p>
+      </div>
+    }
+
+    <!-- Exercise Grid -->
+    @else {
+      <p class="text-on-surface-variant text-[10px] uppercase tracking-widest mb-4">{{ exercices().length }} exercice{{ exercices().length > 1 ? 's' : '' }}</p>
+      <div class="exercise-grid">
+        @for (exo of exercices(); track exo.id) {
+          <article (click)="openDetail(exo)" class="exercise-card">
+            <div class="gif-container">
+              @if (exo.imageUrl) {
+                <img [src]="exo.imageUrl" [alt]="exo.nomFr ?? exo.nomEn" loading="lazy" class="exercise-gif">
+              } @else {
+                <div class="gif-placeholder">
+                  <span class="material-symbols-outlined text-3xl text-secondary/40">fitness_center</span>
+                </div>
+              }
+            </div>
+            <div class="p-3">
+              <h3 class="text-white font-bold text-sm leading-tight mb-1 line-clamp-2">{{ exo.nomFr ?? exo.nomEn }}</h3>
+              <div class="flex items-center justify-between">
+                <span class="text-secondary text-[10px] uppercase tracking-wider font-bold">{{ muscleLabel(exo.musclePrincipal) }}</span>
+                @if (exo.difficulte) {
+                  <span [class]="'text-[9px] font-bold uppercase ' + difficulteClass(exo.difficulte)">{{ difficulteLabel(exo.difficulte) }}</span>
+                }
+              </div>
+            </div>
+          </article>
+        }
+      </div>
+    }
+
+  </section>
+</main>
+
+<!-- Detail Modal -->
+@if (selectedExercice()) {
+  <div class="modal-overlay" (click)="closeDetail()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+
+      <!-- Close button -->
+      <button (click)="closeDetail()" class="absolute top-4 right-4 text-on-surface-variant hover:text-white transition-colors z-10">
+        <span class="material-symbols-outlined text-2xl">close</span>
+      </button>
+
+      <!-- Images -->
+      @if (selectedExercice()!.imageUrl) {
+        <div class="modal-gif-container">
+          <img [src]="selectedExercice()!.imageUrl" [alt]="selectedExercice()!.nomFr ?? selectedExercice()!.nomEn" class="modal-gif">
+          @if (selectedExercice()!.imageUrl2) {
+            <img [src]="selectedExercice()!.imageUrl2" [alt]="selectedExercice()!.nomFr ?? selectedExercice()!.nomEn" class="modal-gif">
+          }
+        </div>
+      }
+
+      <!-- Info -->
+      <div class="p-5">
+        <h2 class="text-white font-black font-headline text-xl uppercase tracking-tight mb-1">
+          {{ selectedExercice()!.nomFr ?? selectedExercice()!.nomEn }}
+        </h2>
+        @if (selectedExercice()!.nomFr && selectedExercice()!.nomEn !== selectedExercice()!.nomFr) {
+          <p class="text-on-surface-variant text-xs mb-3 italic">{{ selectedExercice()!.nomEn }}</p>
+        }
+
+        <!-- Tags -->
+        <div class="flex flex-wrap gap-2 mb-4">
+          @if (selectedExercice()!.musclePrincipal) {
+            <span class="tag tag-muscle">{{ muscleLabel(selectedExercice()!.musclePrincipal) }}</span>
+          }
+          @if (selectedExercice()!.typeEquipement) {
+            <span class="tag tag-equip">{{ equipementLabel(selectedExercice()!.typeEquipement) }}</span>
+          }
+          @if (selectedExercice()!.difficulte) {
+            <span [class]="'tag ' + difficulteClass(selectedExercice()!.difficulte)">{{ difficulteLabel(selectedExercice()!.difficulte) }}</span>
+          }
+        </div>
+
+        <!-- Secondary muscles -->
+        @if (selectedExercice()!.musclesSecondaires && selectedExercice()!.musclesSecondaires.length > 0) {
+          <div class="mb-4">
+            <p class="text-on-surface-variant text-[9px] uppercase tracking-widest font-bold mb-1">Muscles secondaires</p>
+            <div class="flex flex-wrap gap-1.5">
+              @for (m of selectedExercice()!.musclesSecondaires; track m) {
+                <span class="tag tag-secondary">{{ muscleLabel(m) }}</span>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Description -->
+        @if (selectedExercice()!.descriptionFr ?? selectedExercice()!.descriptionEn) {
+          <div>
+            <p class="text-on-surface-variant text-[9px] uppercase tracking-widest font-bold mb-2">Exécution</p>
+            <p class="text-on-surface text-sm leading-relaxed whitespace-pre-line">
+              {{ selectedExercice()!.descriptionFr ?? selectedExercice()!.descriptionEn }}
+            </p>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}
