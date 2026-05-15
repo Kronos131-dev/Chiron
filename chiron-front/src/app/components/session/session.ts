@@ -310,15 +310,7 @@ export class Session implements OnInit {
     this.debounceTimer = setTimeout(() => {
       this.chironApi.searchExercices(query).subscribe({
         next: (results) => {
-          const q = query.toLowerCase();
-          // Server already orders by usage_count DESC; re-rank by match position as tiebreaker
-          // (startsWith first, then contains). Array.sort is stable so popularity order is preserved within groups.
-          const sorted = [...results].sort((a, b) => {
-            const aName = (a.nomFr ?? a.nomEn).toLowerCase();
-            const bName = (b.nomFr ?? b.nomEn).toLowerCase();
-            return (aName.startsWith(q) ? 0 : 1) - (bName.startsWith(q) ? 0 : 1);
-          });
-          this.suggestions.set(sorted.slice(0, 20));
+          this.suggestions.set(results.slice(0, 20));
           this.activeSearchExoId.set(exo.id);
         },
         error: () => this.suggestions.set([])

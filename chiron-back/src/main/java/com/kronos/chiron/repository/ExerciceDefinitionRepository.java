@@ -33,10 +33,14 @@ public interface ExerciceDefinitionRepository extends JpaRepository<ExerciceDefi
               AND (:muscle IS NULL OR e.musclePrincipal = :muscle)
               AND (:equipement IS NULL OR e.typeEquipement = :equipement)
               AND (:difficulte IS NULL OR e.difficulte = :difficulte)
-            ORDER BY e.usageCount DESC, COALESCE(e.nomFr, e.nomEn) ASC
+            ORDER BY
+              CASE WHEN LOWER(COALESCE(e.nomFr, '')) LIKE :qPrefix THEN 0 ELSE 1 END,
+              e.usageCount DESC,
+              COALESCE(e.nomFr, e.nomEn) ASC
             """)
     List<ExerciceDefinition> search(
             @Param("q") String q,
+            @Param("qPrefix") String qPrefix,
             @Param("muscle") MuscleGroup muscle,
             @Param("equipement") TypeEquipement equipement,
             @Param("difficulte") NiveauDifficulte difficulte
