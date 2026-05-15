@@ -28,9 +28,12 @@ public class ExerciceDefinitionService {
         TypeEquipement equipementEnum = equipement != null ? TypeEquipement.valueOf(equipement) : null;
         NiveauDifficulte difficulteEnum = difficulte != null ? NiveauDifficulte.valueOf(difficulte) : null;
         // Pattern pré-calculé pour éviter CONCAT dans le JPQL (cause lower(bytea) sur Hibernate 6 + PG)
-        String qPattern = (q != null && !q.isBlank()) ? "%" + q.trim().toLowerCase() + "%" : null;
+        String qTrimmed = (q != null && !q.isBlank()) ? q.trim().toLowerCase() : null;
+        String qPattern = qTrimmed != null ? "%" + qTrimmed + "%" : null;
+        // "%" matches everything → all rows rank 0 when no query, preserving usageCount order
+        String qPrefix = qTrimmed != null ? qTrimmed + "%" : "%";
 
-        return repository.search(qPattern, muscleEnum, equipementEnum, difficulteEnum)
+        return repository.search(qPattern, qPrefix, muscleEnum, equipementEnum, difficulteEnum)
                 .stream()
                 .limit(50)
                 .map(this::toDto)

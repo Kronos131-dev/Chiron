@@ -73,20 +73,20 @@ class ExerciceDefinitionRepositoryTest {
 
     @Test
     void search_noFilters_returnsAll() {
-        List<ExerciceDefinition> results = repository.search(null, null, null, null);
+        List<ExerciceDefinition> results = repository.search(null, "%", null, null, null);
         assertThat(results).hasSize(3);
     }
 
     @Test
     void search_byQuery_matchesFrenchName() {
-        List<ExerciceDefinition> results = repository.search("%développé%", null, null, null);
+        List<ExerciceDefinition> results = repository.search("%développé%", "développé%", null, null, null);
         assertThat(results).hasSize(1);
         assertThat(results.get(0).getExternalId()).isEqualTo("Barbell_Bench_Press");
     }
 
     @Test
     void search_byQuery_matchesEnglishName() {
-        List<ExerciceDefinition> results = repository.search("%pull%", null, null, null);
+        List<ExerciceDefinition> results = repository.search("%pull%", "pull%", null, null, null);
         assertThat(results).hasSize(1);
         assertThat(results.get(0).getExternalId()).isEqualTo("Pull_Up");
     }
@@ -94,21 +94,21 @@ class ExerciceDefinitionRepositoryTest {
     @Test
     void search_byQuery_caseInsensitive() {
         // Le service pré-calcule en lowercase, le repo reçoit déjà en minuscules
-        List<ExerciceDefinition> results = repository.search("%squat%", null, null, null);
+        List<ExerciceDefinition> results = repository.search("%squat%", "squat%", null, null, null);
         assertThat(results).hasSize(1);
         assertThat(results.get(0).getExternalId()).isEqualTo("Barbell_Squat");
     }
 
     @Test
     void search_byMuscle_returnsMuscleMatch() {
-        List<ExerciceDefinition> results = repository.search(null, MuscleGroup.PECTORAUX, null, null);
+        List<ExerciceDefinition> results = repository.search(null, "%", MuscleGroup.PECTORAUX, null, null);
         assertThat(results).hasSize(1);
         assertThat(results.get(0).getExternalId()).isEqualTo("Barbell_Bench_Press");
     }
 
     @Test
     void search_byEquipement_filtersCorrectly() {
-        List<ExerciceDefinition> results = repository.search(null, null, TypeEquipement.BARRE, null);
+        List<ExerciceDefinition> results = repository.search(null, "%", null, TypeEquipement.BARRE, null);
         assertThat(results).hasSize(2);
         assertThat(results).extracting(ExerciceDefinition::getExternalId)
                 .containsExactlyInAnyOrder("Barbell_Bench_Press", "Barbell_Squat");
@@ -116,27 +116,27 @@ class ExerciceDefinitionRepositoryTest {
 
     @Test
     void search_byDifficulte_filtersCorrectly() {
-        List<ExerciceDefinition> results = repository.search(null, null, null, NiveauDifficulte.AVANCE);
+        List<ExerciceDefinition> results = repository.search(null, "%", null, null, NiveauDifficulte.AVANCE);
         assertThat(results).hasSize(1);
         assertThat(results.get(0).getExternalId()).isEqualTo("Pull_Up");
     }
 
     @Test
     void search_combinedFilters_appliedTogether() {
-        List<ExerciceDefinition> results = repository.search("%barbell%", MuscleGroup.QUADRICEPS, TypeEquipement.BARRE, null);
+        List<ExerciceDefinition> results = repository.search("%barbell%", "barbell%", MuscleGroup.QUADRICEPS, TypeEquipement.BARRE, null);
         assertThat(results).hasSize(1);
         assertThat(results.get(0).getExternalId()).isEqualTo("Barbell_Squat");
     }
 
     @Test
     void search_queryNoMatch_returnsEmpty() {
-        List<ExerciceDefinition> results = repository.search("%xyzzyx%", null, null, null);
+        List<ExerciceDefinition> results = repository.search("%xyzzyx%", "xyzzyx%", null, null, null);
         assertThat(results).isEmpty();
     }
 
     @Test
     void search_matchesExerciseWithNullFrName_byEnglishName() {
-        List<ExerciceDefinition> results = repository.search("%pull-up%", null, null, null);
+        List<ExerciceDefinition> results = repository.search("%pull-up%", "pull-up%", null, null, null);
         assertThat(results).hasSize(1);
         assertThat(results.get(0).getNomFr()).isNull();
     }
