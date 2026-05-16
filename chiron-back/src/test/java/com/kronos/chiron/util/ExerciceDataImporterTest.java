@@ -1,6 +1,6 @@
 package com.kronos.chiron.util;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import com.kronos.chiron.entity.*;
 import com.kronos.chiron.repository.ExerciceDefinitionRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,7 +36,7 @@ class ExerciceDataImporterTest {
 
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(importer, "objectMapper", new ObjectMapper());
+        ReflectionTestUtils.setField(importer, "objectMapper", new JsonMapper());
         ReflectionTestUtils.setField(importer, "uploadsDir", tempDir.toString());
     }
 

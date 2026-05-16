@@ -1,6 +1,6 @@
 package com.kronos.chiron.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import com.kronos.chiron.dto.SeanceDto;
 import com.kronos.chiron.entity.Seance;
 import com.kronos.chiron.mapper.SeanceMapper;
@@ -8,9 +8,11 @@ import com.kronos.chiron.security.JwtService;
 import com.kronos.chiron.service.ProgrammeService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
+import org.springframework.context.annotation.Import;
+import org.springframework.boot.jackson.autoconfigure.JacksonAutoConfiguration;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.web.servlet.MockMvc;
@@ -22,16 +24,17 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@Import(JacksonAutoConfiguration.class)
 @WebMvcTest(value = ProgrammeController.class, excludeAutoConfiguration = SecurityAutoConfiguration.class)
 class ProgrammeControllerTest {
 
     @Autowired private MockMvc mockMvc;
-    @Autowired private ObjectMapper objectMapper;
+    @Autowired private JsonMapper objectMapper;
 
-    @MockBean private ProgrammeService programmeService;
-    @MockBean private SeanceMapper seanceMapper;
-    @MockBean private JwtService jwtService;
-    @MockBean private UserDetailsService userDetailsService;
+    @MockitoBean private ProgrammeService programmeService;
+    @MockitoBean private SeanceMapper seanceMapper;
+    @MockitoBean private JwtService jwtService;
+    @MockitoBean private UserDetailsService userDetailsService;
 
     private SeanceDto buildSeanceDto() {
         return new SeanceDto(1L, "Push Day", null, null, 1, false, null, List.of());
