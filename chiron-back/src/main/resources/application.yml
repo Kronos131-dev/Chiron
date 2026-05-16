@@ -27,16 +27,6 @@ spring:
       max-file-size: 10MB
       max-request-size: 10MB
 
-langchain4j:
-  mistral-ai:
-    chat-model:
-      api-key: ${MISTRAL_API_KEY}
-      model-name: mistral-large-latest
-
-jwt:
-  # Expiration du token (ex: 2592000000ms = 30 jours)
-  expiration: 2592000000
-
   mail:
     host: smtp.gmail.com
     port: 587
@@ -48,6 +38,16 @@ jwt:
           auth: true
           starttls:
             enable: true
+
+langchain4j:
+  mistral-ai:
+    chat-model:
+      api-key: ${MISTRAL_API_KEY}
+      model-name: mistral-large-latest
+
+jwt:
+  # Expiration du token (ex: 2592000000ms = 30 jours)
+  expiration: 2592000000
 
 chiron:
   uploads-dir: ${UPLOADS_DIR:./uploads/images}
