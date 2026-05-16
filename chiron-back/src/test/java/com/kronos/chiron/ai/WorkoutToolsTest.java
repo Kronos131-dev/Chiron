@@ -298,6 +298,7 @@ class WorkoutToolsTest {
 
         Exercice exo = new Exercice();
         exo.setNom("Squat");
+        exo.setDefinition(new ExerciceDefinition());
         exo.setStartTime(LocalDateTime.now().minusDays(3));
         exo.addSerie(serie);
 
@@ -313,6 +314,7 @@ class WorkoutToolsTest {
     void getLastExercisePerformance_exerciceNoSeries_returnsNoSeriesMessage() {
         Exercice exo = new Exercice();
         exo.setNom("Bench");
+        exo.setDefinition(new ExerciceDefinition());
         exo.setStartTime(LocalDateTime.now().minusDays(1));
 
         when(exerciceRepository.findFirstHistoricExercise(1L, "Bench"))
@@ -486,8 +488,11 @@ class WorkoutToolsTest {
 
     @Test
     void getFullExerciseHistory_withMultipleSessions_returnsAll() {
+        ExerciceDefinition def = new ExerciceDefinition();
+
         Exercice exo1 = new Exercice();
         exo1.setNom("Deadlift");
+        exo1.setDefinition(def);
         exo1.setStartTime(LocalDateTime.now().minusDays(7));
         Serie s1 = new Serie();
         s1.setPoids(150.0);
@@ -496,6 +501,7 @@ class WorkoutToolsTest {
 
         Exercice exo2 = new Exercice();
         exo2.setNom("Deadlift");
+        exo2.setDefinition(def);
         exo2.setStartTime(LocalDateTime.now().minusDays(14));
         Serie s2 = new Serie();
         s2.setPoids(140.0);
@@ -524,6 +530,7 @@ class WorkoutToolsTest {
     void getPersonalRecord_withSets_returnsBestSet() {
         Exercice exo = new Exercice();
         exo.setNom("Bench Press");
+        exo.setDefinition(new ExerciceDefinition());
         exo.setStartTime(LocalDateTime.of(2025, 2, 1, 10, 0));
         Serie light = new Serie();
         light.setPoids(80.0);
@@ -554,6 +561,7 @@ class WorkoutToolsTest {
     void getPersonalRecord_exercisesWithNoSeries_returnsNoSeriesMessage() {
         Exercice exo = new Exercice();
         exo.setNom("Pull-up");
+        exo.setDefinition(new ExerciceDefinition());
         exo.setStartTime(LocalDateTime.now());
 
         when(exerciceRepository.findAllHistoricExercises(1L, "Pull-up")).thenReturn(List.of(exo));

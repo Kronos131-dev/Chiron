@@ -3,7 +3,10 @@ package com.kronos.chiron.controller;
 import com.kronos.chiron.dto.auth.AuthenticationRequest;
 import com.kronos.chiron.dto.auth.AuthenticationResponse;
 import com.kronos.chiron.dto.auth.RegisterRequest;
+import com.kronos.chiron.dto.settings.ForgotPasswordRequest;
+import com.kronos.chiron.dto.settings.ResetPasswordRequest;
 import com.kronos.chiron.service.AuthenticationService;
+import com.kronos.chiron.service.SettingsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthenticationController {
 
     private final AuthenticationService service;
+    private final SettingsService settingsService;
 
     /**
      * Endpoint to register a new user in the system.
@@ -46,5 +50,17 @@ public class AuthenticationController {
             @RequestBody AuthenticationRequest request
     ) {
         return ResponseEntity.ok(service.authenticate(request));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Void> forgotPassword(@RequestBody ForgotPasswordRequest request) {
+        settingsService.forgotPassword(request.email());
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Void> resetPassword(@RequestBody ResetPasswordRequest request) {
+        settingsService.resetPassword(request.token(), request.newPassword());
+        return ResponseEntity.ok().build();
     }
 }

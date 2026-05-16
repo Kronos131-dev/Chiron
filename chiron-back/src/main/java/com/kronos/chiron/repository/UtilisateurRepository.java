@@ -30,4 +30,8 @@ public interface UtilisateurRepository extends JpaRepository<Utilisateur, Long> 
      * @return A list of matching Utilisateur entities.
      */
     List<Utilisateur> findByUsernameContainingIgnoreCase(String username);
+
+    Optional<Utilisateur> findByEmail(String email);
+
+    Optional<Utilisateur> findByUsernameIgnoreCase(String username);
 }

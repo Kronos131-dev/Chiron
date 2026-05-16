@@ -68,6 +68,9 @@ public class Utilisateur implements UserDetails {
     @Builder.Default
     private Role role = Role.USER;
 
+    @Column(unique = true)
+    private String email;
+
     @Column(name = "poids_corps")
     private Double poidsCorps;
 

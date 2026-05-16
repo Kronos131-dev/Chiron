@@ -273,4 +273,28 @@ export class ChironApi {
   getExerciceGifUrl(id: number): string {
     return `${this.apiUrl}/exercices/${id}/gif`;
   }
+
+  changePassword(req: { currentPassword: string; newPassword: string }): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/settings/password`, req);
+  }
+
+  getSettingsInfo(): Observable<{ username: string; email: string | null }> {
+    return this.http.get<{ username: string; email: string | null }>(`${this.apiUrl}/settings/me`);
+  }
+
+  changeEmail(req: { newEmail: string }): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/settings/email`, req);
+  }
+
+  changeUsername(req: { newUsername: string }): Observable<{ token: string }> {
+    return this.http.put<{ token: string }>(`${this.apiUrl}/settings/username`, req);
+  }
+
+  forgotPassword(email: string): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/auth/forgot-password`, { email });
+  }
+
+  resetPassword(token: string, newPassword: string): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/auth/reset-password`, { token, newPassword });
+  }
 }
