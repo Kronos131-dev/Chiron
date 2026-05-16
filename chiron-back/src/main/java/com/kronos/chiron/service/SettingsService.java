@@ -14,10 +14,14 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.NoSuchElementException;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 @RequiredArgsConstructor
 public class SettingsService {
+
+    private static final Logger log = LoggerFactory.getLogger(SettingsService.class);
 
     private final UtilisateurRepository utilisateurRepository;
     private final PasswordResetTokenRepository tokenRepository;
@@ -82,7 +86,11 @@ public class SettingsService {
         tokenRepository.save(token);
 
         String resetLink = frontendUrl + "/reset-password?token=" + tokenValue;
-        emailService.sendPasswordResetEmail(email, resetLink);
+        try {
+            emailService.sendPasswordResetEmail(email, resetLink);
+        } catch (Exception ex) {
+            log.warn("Échec de l'envoi de l'email de réinitialisation pour {} : {}", email, ex.getMessage());
+        }
     }
 
     @Transactional
