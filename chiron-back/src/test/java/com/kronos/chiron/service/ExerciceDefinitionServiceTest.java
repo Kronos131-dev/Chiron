@@ -45,7 +45,7 @@ class ExerciceDefinitionServiceTest {
     @Test
     void search_delegatesToRepository_andMapsToDto() {
         ExerciceDefinition def = buildDef(1L, "Squat barre", "Barbell Squat", MuscleGroup.QUADRICEPS);
-        when(repository.search(null, null, null, null)).thenReturn(List.of(def));
+        when(repository.search(null, "%", null, null, null)).thenReturn(List.of(def));
 
         List<ExerciceDefinitionDto> results = service.search(null, null, null, null);
 
@@ -64,13 +64,13 @@ class ExerciceDefinitionServiceTest {
 
     @Test
     void search_parsesEnumFilters() {
-        when(repository.search("%squat%", MuscleGroup.QUADRICEPS, TypeEquipement.BARRE, NiveauDifficulte.INTERMEDIAIRE))
+        when(repository.search("%squat%", "squat%", MuscleGroup.QUADRICEPS, TypeEquipement.BARRE, NiveauDifficulte.INTERMEDIAIRE))
                 .thenReturn(List.of());
 
         List<ExerciceDefinitionDto> results = service.search("squat", "QUADRICEPS", "BARRE", "INTERMEDIAIRE");
 
         assertThat(results).isEmpty();
-        verify(repository).search("%squat%", MuscleGroup.QUADRICEPS, TypeEquipement.BARRE, NiveauDifficulte.INTERMEDIAIRE);
+        verify(repository).search("%squat%", "squat%", MuscleGroup.QUADRICEPS, TypeEquipement.BARRE, NiveauDifficulte.INTERMEDIAIRE);
     }
 
     @Test
@@ -78,7 +78,7 @@ class ExerciceDefinitionServiceTest {
         List<ExerciceDefinition> many = java.util.stream.IntStream.range(0, 60)
                 .mapToObj(i -> buildDef((long) i, "Exo " + i, "Exercise " + i, MuscleGroup.DOS))
                 .toList();
-        when(repository.search(null, null, null, null)).thenReturn(many);
+        when(repository.search(null, "%", null, null, null)).thenReturn(many);
 
         List<ExerciceDefinitionDto> results = service.search(null, null, null, null);
 
@@ -87,20 +87,20 @@ class ExerciceDefinitionServiceTest {
 
     @Test
     void search_blankQuery_passedAsNullPattern() {
-        when(repository.search(null, null, null, null)).thenReturn(List.of());
+        when(repository.search(null, "%", null, null, null)).thenReturn(List.of());
 
         service.search("  ", null, null, null);
 
-        verify(repository).search(null, null, null, null);
+        verify(repository).search(null, "%", null, null, null);
     }
 
     @Test
     void search_nonBlankQuery_passedAsLowercasePattern() {
-        when(repository.search("%squat%", null, null, null)).thenReturn(List.of());
+        when(repository.search("%squat%", "squat%", null, null, null)).thenReturn(List.of());
 
         service.search("Squat", null, null, null);
 
-        verify(repository).search("%squat%", null, null, null);
+        verify(repository).search("%squat%", "squat%", null, null, null);
     }
 
     // ── getById ───────────────────────────────────────────────────────────────
@@ -129,7 +129,7 @@ class ExerciceDefinitionServiceTest {
     @Test
     void toDto_withGifPath_buildsImageUrls() {
         ExerciceDefinition def = buildDef(5L, null, "Pull-Up", MuscleGroup.DOS);
-        when(repository.search(null, null, null, null)).thenReturn(List.of(def));
+        when(repository.search(null, "%", null, null, null)).thenReturn(List.of(def));
 
         ExerciceDefinitionDto dto = service.search(null, null, null, null).get(0);
 
@@ -145,7 +145,7 @@ class ExerciceDefinitionServiceTest {
                 .gifPath(null)
                 .musclesSecondaires(List.of())
                 .build();
-        when(repository.search(null, null, null, null)).thenReturn(List.of(def));
+        when(repository.search(null, "%", null, null, null)).thenReturn(List.of(def));
 
         ExerciceDefinitionDto dto = service.search(null, null, null, null).get(0);
 
