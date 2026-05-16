@@ -44,7 +44,8 @@ export class Login {
     this.loginForm = this.fb.group({
       username: ['', Validators.required],
       email: [''],
-      password: ['', Validators.required]
+      password: ['', Validators.required],
+      confirmPassword: ['']
     });
   }
 
@@ -97,6 +98,11 @@ export class Login {
 
     if (!this.isLoginMode && !this.loginForm.value.email) {
       this.errorMessage = "L'email est requis pour s'inscrire.";
+      return;
+    }
+
+    if (!this.isLoginMode && this.loginForm.value.password !== this.loginForm.value.confirmPassword) {
+      this.errorMessage = 'Les mots de passe ne correspondent pas.';
       return;
     }
 
