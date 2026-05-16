@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } 
 import { Router } from '@angular/router';
 import { AuthService } from '../../service/auth.service';
 import { ChironApi } from '../../service/chiron-api';
+import { catchError, EMPTY } from 'rxjs';
 
 /**
  * Component handling user authentication and registration.
@@ -74,15 +75,15 @@ export class Login {
   onForgotPassword() {
     if (!this.forgotEmail) return;
     this.isLoading = true;
-    this.chironApi.forgotPassword(this.forgotEmail).subscribe({
-      next: () => {
+    this.chironApi.forgotPassword(this.forgotEmail).pipe(
+      catchError(() => {
         this.isLoading = false;
         this.forgotMessage = 'Si un compte est associé à cet email, un lien vous a été envoyé.';
-      },
-      error: () => {
-        this.isLoading = false;
-        this.forgotMessage = 'Si un compte est associé à cet email, un lien vous a été envoyé.';
-      }
+        return EMPTY;
+      })
+    ).subscribe(() => {
+      this.isLoading = false;
+      this.forgotMessage = 'Si un compte est associé à cet email, un lien vous a été envoyé.';
     });
   }
 
