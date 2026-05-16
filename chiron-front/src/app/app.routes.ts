@@ -9,6 +9,8 @@ import { Profile } from './components/profile/profile';
 import { Agora } from './components/agora/agora';
 import { Tresor } from './components/tresor/tresor';
 import { Bibliotheque } from './components/bibliotheque/bibliotheque';
+import { Settings } from './components/settings/settings';
+import { ResetPassword } from './components/reset-password/reset-password';
 
 /**
  * Global routing configuration for the Angular application.
@@ -73,6 +75,13 @@ export const routes: Routes = [
     component: Bibliotheque,
     canActivate: [authGuard]
   },
+
+  {
+    path: 'settings',
+    component: Settings,
+    canActivate: [authGuard]
+  },
+  { path: 'reset-password', component: ResetPassword },
 
   { path: '', redirectTo: 'chat', pathMatch: 'full' },
   { path: '**', redirectTo: 'chat' }

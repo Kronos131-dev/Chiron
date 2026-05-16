@@ -86,7 +86,7 @@ public class WorkoutTools {
         for (Seance s : programmes) {
             res.append("- Programme '").append(s.getTitre()).append("' (");
             if (s.getExercices() != null && !s.getExercices().isEmpty()) {
-                String exos = s.getExercices().stream().map(Exercice::getNom).collect(Collectors.joining(", "));
+                String exos = s.getExercices().stream().map(this::exoLabel).collect(Collectors.joining(", "));
                 res.append("Exercices : ").append(exos);
             } else {
                 res.append("Aucun exercice");
@@ -138,7 +138,7 @@ public class WorkoutTools {
             res.append("- Le ").append(dateStr).append(" : Séance '").append(s.getTitre() != null ? s.getTitre() : "Sans nom").append("' (");
             
             if (s.getExercices() != null && !s.getExercices().isEmpty()) {
-                String exos = s.getExercices().stream().map(Exercice::getNom).collect(Collectors.joining(", "));
+                String exos = s.getExercices().stream().map(this::exoLabel).collect(Collectors.joining(", "));
                 res.append("Exercices : ").append(exos);
             } else {
                 res.append("Aucun exercice");
@@ -317,8 +317,12 @@ public class WorkoutTools {
         }
 
         Exercice exo = lastExoOpt.get();
+        if (exo.getDefinition() == null) {
+            return "L'exercice '" + nomExercice + "' n'est pas dans la base standardisée [std]. Analyse de progression indisponible.";
+        }
+
         StringBuilder reponse = new StringBuilder();
-        
+
         if (exo.getStartTime() != null) {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMMM yyyy à HH:mm", Locale.FRANCE);
             reponse.append("Dernière performance trouvée le ").append(exo.getStartTime().format(formatter)).append(".\n");
@@ -392,7 +396,7 @@ public class WorkoutTools {
                 res.append("- Séance '").append(s.getTitre() != null ? s.getTitre() : "Sans nom").append("' :\n");
                 if (s.getExercices() != null) {
                     for (Exercice e : s.getExercices()) {
-                        res.append("  * ").append(e.getNom()).append(" : ");
+                        res.append("  * ").append(exoLabel(e)).append(" : ");
                         if (e.getSeries() != null && !e.getSeries().isEmpty()) {
                             String seriesDetails = e.getSeries().stream()
                                     .map(serie -> serie.getNombreReps() + " reps @ " + serie.getPoids() + "kg")
@@ -439,7 +443,7 @@ public class WorkoutTools {
                 res.append("  Aucun exercice enregistré dans ce programme.\n");
             } else {
                 for (Exercice e : s.getExercices()) {
-                    res.append("  - ").append(e.getNom()).append(" : ");
+                    res.append("  - ").append(exoLabel(e)).append(" : ");
                     if (e.getSeries() != null && !e.getSeries().isEmpty()) {
                         String seriesDetails = e.getSeries().stream()
                                 .map(serie -> serie.getNombreReps() + " reps @ " + serie.getPoids() + "kg")
@@ -487,7 +491,7 @@ public class WorkoutTools {
                 res.append("  Aucun exercice enregistré.\n");
             } else {
                 for (Exercice e : s.getExercices()) {
-                    res.append("  - ").append(e.getNom()).append(" : ");
+                    res.append("  - ").append(exoLabel(e)).append(" : ");
                     if (e.getSeries() != null && !e.getSeries().isEmpty()) {
                         String seriesDetails = e.getSeries().stream()
                                 .map(serie -> {
@@ -526,10 +530,16 @@ public class WorkoutTools {
             return "L'utilisateur n'a jamais fait l'exercice '" + nomExercice + "' dans son historique.";
         }
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.FRANCE);
-        StringBuilder res = new StringBuilder("Historique complet de '" + nomExercice + "' (" + exercises.size() + " séance(s)) :\n");
+        boolean anyStd = exercises.stream().anyMatch(e -> e.getDefinition() != null);
+        if (!anyStd) {
+            return "L'exercice '" + nomExercice + "' n'est pas dans la base standardisée [std]. Analyse de progression indisponible.";
+        }
 
-        for (Exercice exo : exercises) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.FRANCE);
+        List<Exercice> stdExercises = exercises.stream().filter(e -> e.getDefinition() != null).collect(Collectors.toList());
+        StringBuilder res = new StringBuilder("Historique complet de '" + nomExercice + "' [std] (" + stdExercises.size() + " séance(s)) :\n");
+
+        for (Exercice exo : stdExercises) {
             String dateStr = exo.getStartTime() != null ? exo.getStartTime().format(formatter) : "Date inconnue";
             res.append("- ").append(dateStr).append(" : ");
             if (exo.getSeries() != null && !exo.getSeries().isEmpty()) {
@@ -560,6 +570,12 @@ public class WorkoutTools {
         if (exercises.isEmpty()) {
             return "L'utilisateur n'a jamais fait l'exercice '" + nomExercice + "' dans son historique.";
         }
+
+        boolean anyStdPR = exercises.stream().anyMatch(e -> e.getDefinition() != null);
+        if (!anyStdPR) {
+            return "L'exercice '" + nomExercice + "' n'est pas dans la base standardisée [std]. Analyse de progression indisponible.";
+        }
+        exercises = exercises.stream().filter(e -> e.getDefinition() != null).collect(Collectors.toList());
 
         Serie bestSet = null;
         LocalDateTime bestDate = null;
@@ -598,5 +614,9 @@ public class WorkoutTools {
     private Seance getActiveSeance(String userId) {
         return seanceRepository.findFirstByUtilisateurIdAndEndTimeIsNullOrderByStartTimeDesc(Long.parseLong(userId))
                 .orElse(null);
+    }
+
+    private String exoLabel(Exercice e) {
+        return e.getDefinition() != null ? e.getNom() + " [std]" : e.getNom();
     }
 }

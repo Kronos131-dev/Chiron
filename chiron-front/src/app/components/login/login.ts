@@ -1,8 +1,9 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../service/auth.service';
+import { ChironApi } from '../../service/chiron-api';
 
 /**
  * Component handling user authentication and registration.
@@ -11,7 +12,7 @@ import { AuthService } from '../../service/auth.service';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule],
   templateUrl: './login.html',
   styleUrls: ['./login.css']
 })
@@ -28,17 +29,16 @@ export class Login {
   /** Determines if the UI should display the login form (true) or registration form (false). */
   isLoginMode: boolean = true;
 
-  /**
-   * Initializes the Login component and configures the reactive form validation.
-   *
-   * @param fb          FormBuilder to construct the reactive form.
-   * @param authService Service handling authentication API calls.
-   * @param router      Router to navigate upon successful authentication.
-   */
+  /** Mot de passe oublié mode */
+  isForgotMode: boolean = false;
+  forgotEmail: string = '';
+  forgotMessage: string = '';
+
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private chironApi: ChironApi
   ) {
     this.loginForm = this.fb.group({
       username: ['', Validators.required],
@@ -53,7 +53,37 @@ export class Login {
    */
   switchMode() {
     this.isLoginMode = !this.isLoginMode;
+    this.isForgotMode = false;
     this.errorMessage = '';
+    this.forgotMessage = '';
+  }
+
+  showForgot() {
+    this.isForgotMode = true;
+    this.isLoginMode = true;
+    this.errorMessage = '';
+    this.forgotMessage = '';
+  }
+
+  hideForgot() {
+    this.isForgotMode = false;
+    this.forgotMessage = '';
+    this.forgotEmail = '';
+  }
+
+  onForgotPassword() {
+    if (!this.forgotEmail) return;
+    this.isLoading = true;
+    this.chironApi.forgotPassword(this.forgotEmail).subscribe({
+      next: () => {
+        this.isLoading = false;
+        this.forgotMessage = 'Si un compte est associé à cet email, un lien vous a été envoyé.';
+      },
+      error: () => {
+        this.isLoading = false;
+        this.forgotMessage = 'Si un compte est associé à cet email, un lien vous a été envoyé.';
+      }
+    });
   }
 
   /**

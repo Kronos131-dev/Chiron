@@ -37,5 +37,18 @@ jwt:
   # Expiration du token (ex: 2592000000ms = 30 jours)
   expiration: 2592000000
 
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${GMAIL_USERNAME:}
+    password: ${GMAIL_APP_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
 chiron:
   uploads-dir: ${UPLOADS_DIR:./uploads/images}
+  frontend-url: ${FRONTEND_URL:http://localhost:4200}
