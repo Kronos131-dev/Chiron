@@ -1,6 +1,6 @@
 package com.kronos.chiron.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import com.kronos.chiron.dto.auth.AuthenticationRequest;
 import com.kronos.chiron.dto.auth.AuthenticationResponse;
 import com.kronos.chiron.dto.auth.RegisterRequest;
@@ -9,9 +9,11 @@ import com.kronos.chiron.service.AuthenticationService;
 import com.kronos.chiron.service.SettingsService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
+import org.springframework.context.annotation.Import;
+import org.springframework.boot.jackson.autoconfigure.JacksonAutoConfiguration;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.web.servlet.MockMvc;
@@ -21,16 +23,17 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@Import(JacksonAutoConfiguration.class)
 @WebMvcTest(value = AuthenticationController.class, excludeAutoConfiguration = {SecurityAutoConfiguration.class})
 class AuthenticationControllerTest {
 
     @Autowired private MockMvc mockMvc;
-    @Autowired private ObjectMapper objectMapper;
+    @Autowired private JsonMapper objectMapper;
 
-    @MockBean private AuthenticationService authenticationService;
-    @MockBean private SettingsService settingsService;
-    @MockBean private JwtService jwtService;
-    @MockBean private UserDetailsService userDetailsService;
+    @MockitoBean private AuthenticationService authenticationService;
+    @MockitoBean private SettingsService settingsService;
+    @MockitoBean private JwtService jwtService;
+    @MockitoBean private UserDetailsService userDetailsService;
 
     @Test
     void register_validRequest_returns200WithToken() throws Exception {

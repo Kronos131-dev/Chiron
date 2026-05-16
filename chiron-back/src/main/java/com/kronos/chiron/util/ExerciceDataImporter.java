@@ -1,7 +1,7 @@
 package com.kronos.chiron.util;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
 import com.kronos.chiron.entity.*;
 import com.kronos.chiron.repository.ExerciceDefinitionRepository;
 import lombok.RequiredArgsConstructor;
@@ -39,7 +39,7 @@ import java.util.*;
 public class ExerciceDataImporter {
 
     private final ExerciceDefinitionRepository repository;
-    private final ObjectMapper objectMapper;
+    private final JsonMapper objectMapper;
 
     @Value("${chiron.uploads-dir:./uploads/images}")
     private String uploadsDir;

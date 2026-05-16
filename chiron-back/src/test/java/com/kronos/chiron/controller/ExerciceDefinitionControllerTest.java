@@ -1,6 +1,6 @@
 package com.kronos.chiron.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import com.kronos.chiron.dto.ExerciceDefinitionDto;
 import com.kronos.chiron.entity.MuscleGroup;
 import com.kronos.chiron.entity.NiveauDifficulte;
@@ -10,9 +10,11 @@ import com.kronos.chiron.service.ExerciceDefinitionService;
 import com.kronos.chiron.util.ExerciceDataImporter;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
+import org.springframework.context.annotation.Import;
+import org.springframework.boot.jackson.autoconfigure.JacksonAutoConfiguration;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
@@ -28,16 +30,17 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@Import(JacksonAutoConfiguration.class)
 @WebMvcTest(value = ExerciceDefinitionController.class, excludeAutoConfiguration = SecurityAutoConfiguration.class)
 class ExerciceDefinitionControllerTest {
 
     @Autowired private MockMvc mockMvc;
-    @Autowired private ObjectMapper objectMapper;
+    @Autowired private JsonMapper objectMapper;
 
-    @MockBean private ExerciceDefinitionService service;
-    @MockBean private ExerciceDataImporter importer;
-    @MockBean private JwtService jwtService;
-    @MockBean private UserDetailsService userDetailsService;
+    @MockitoBean private ExerciceDefinitionService service;
+    @MockitoBean private ExerciceDataImporter importer;
+    @MockitoBean private JwtService jwtService;
+    @MockitoBean private UserDetailsService userDetailsService;
 
     private ExerciceDefinitionDto buildDto(Long id, String nomFr, String nomEn) {
         return new ExerciceDefinitionDto(
