@@ -6,6 +6,7 @@ import com.kronos.chiron.dto.auth.AuthenticationResponse;
 import com.kronos.chiron.dto.auth.RegisterRequest;
 import com.kronos.chiron.security.JwtService;
 import com.kronos.chiron.service.AuthenticationService;
+import com.kronos.chiron.service.SettingsService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
@@ -27,6 +28,7 @@ class AuthenticationControllerTest {
     @Autowired private ObjectMapper objectMapper;
 
     @MockBean private AuthenticationService authenticationService;
+    @MockBean private SettingsService settingsService;
     @MockBean private JwtService jwtService;
     @MockBean private UserDetailsService userDetailsService;
 
