@@ -172,6 +172,16 @@ jobs:
             artifacts/frontend/ \
             ${{ secrets.SSH_USER }}@${{ env.SERVER_HOST }}:/tmp/chiron-frontend/
 
+      - name: Upload secrets
+        run: |
+          printf 'GMAIL_USERNAME=%s\nGMAIL_APP_PASSWORD=%s\nFRONTEND_URL=%s\n' \
+            '${{ secrets.GMAIL_USERNAME }}' \
+            '${{ secrets.GMAIL_APP_PASSWORD }}' \
+            '${{ secrets.FRONTEND_URL }}' \
+            > /tmp/chiron.secrets
+          scp -i ~/.ssh/deploy_key /tmp/chiron.secrets \
+            ${{ secrets.SSH_USER }}@${{ env.SERVER_HOST }}:/tmp/chiron.secrets
+
       - name: Deploy on server
         run: |
           ssh -i ~/.ssh/deploy_key \
@@ -180,9 +190,11 @@ jobs:
 
             set -e
             DEPLOY_DIR=/opt/chiron
+            CHIRON_DIR=~/chiron
 
-            echo "▶ Arrêt du backend..."
+            echo "▶ Arrêt et suppression du backend..."
             docker stop chiron_backend || true
+            docker rm chiron_backend || true
 
             echo "▶ Mise à jour du JAR..."
             sudo cp /tmp/chiron-app.jar $DEPLOY_DIR/app.jar
@@ -190,11 +202,22 @@ jobs:
             echo "▶ Mise à jour du frontend..."
             sudo rsync -a --delete /tmp/chiron-frontend/ $DEPLOY_DIR/frontend/
 
-            echo "▶ Démarrage du backend..."
-            docker start chiron_backend
+            echo "▶ Mise à jour du .env..."
+            ENV_FILE=$CHIRON_DIR/chiron-back/.env
+            grep -v '^GMAIL_\|^FRONTEND_URL=' "$ENV_FILE" > /tmp/.env.tmp 2>/dev/null || true
+            cat /tmp/chiron.secrets >> /tmp/.env.tmp
+            mv /tmp/.env.tmp "$ENV_FILE"
+
+            echo "▶ Redémarrage du backend (recréation)..."
+            cd $CHIRON_DIR
+            if command -v docker-compose &> /dev/null; then
+              docker-compose up -d backend
+            else
+              docker compose up -d backend
+            fi
 
             echo "▶ Nettoyage..."
-            rm -f /tmp/chiron-app.jar
+            rm -f /tmp/chiron-app.jar /tmp/chiron.secrets /tmp/.env.tmp
             rm -rf /tmp/chiron-frontend/
 
             echo "✓ Déploiement terminé"
