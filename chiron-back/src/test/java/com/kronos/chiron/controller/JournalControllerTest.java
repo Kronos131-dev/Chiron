@@ -7,9 +7,11 @@ import com.kronos.chiron.repository.SeanceRepository;
 import com.kronos.chiron.security.JwtService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
+import org.springframework.context.annotation.Import;
+import org.springframework.boot.jackson.autoconfigure.JacksonAutoConfiguration;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -20,15 +22,16 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@Import(JacksonAutoConfiguration.class)
 @WebMvcTest(value = JournalController.class, excludeAutoConfiguration = {SecurityAutoConfiguration.class})
 class JournalControllerTest {
 
     @Autowired private MockMvc mockMvc;
 
-    @MockBean private SeanceRepository seanceRepository;
-    @MockBean private SeanceMapper seanceMapper;
-    @MockBean private JwtService jwtService;
-    @MockBean private UserDetailsService userDetailsService;
+    @MockitoBean private SeanceRepository seanceRepository;
+    @MockitoBean private SeanceMapper seanceMapper;
+    @MockitoBean private JwtService jwtService;
+    @MockitoBean private UserDetailsService userDetailsService;
 
     @Test
     void getHistorique_returnsListOfSessions() throws Exception {
