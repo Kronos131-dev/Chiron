@@ -48,7 +48,14 @@
               class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-white/5 transition-colors">
         <div class="flex items-center gap-3">
           <span class="material-symbols-outlined text-secondary">mail</span>
-          <span class="text-white font-bold">Changer l'adresse email</span>
+          <div>
+            <span class="text-white font-bold">Changer l'adresse email</span>
+            @if (currentEmail()) {
+              <p class="text-white/40 text-xs mt-0.5">{{ currentEmail() }}</p>
+            } @else {
+              <p class="text-white/30 text-xs mt-0.5 italic">Aucun email renseigné</p>
+            }
+          </div>
         </div>
         <span class="material-symbols-outlined text-secondary/60 transition-transform"
               [class.rotate-180]="openSection() === 'email'">expand_more</span>
@@ -57,8 +64,6 @@
         <div class="px-5 pb-5 space-y-3 border-t border-white/5">
           <input type="email" [(ngModel)]="newEmail" placeholder="Nouvelle adresse email"
                  class="w-full mt-4 bg-slate-950/60 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:border-secondary outline-none">
-          <input type="password" [(ngModel)]="currentPasswordForEmail" placeholder="Mot de passe actuel"
-                 class="w-full bg-slate-950/60 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:border-secondary outline-none">
           <button (click)="onChangeEmail()" [disabled]="isLoading()"
                   class="w-full bg-secondary text-slate-900 font-black uppercase tracking-widest py-3 rounded-xl hover:bg-secondary/80 transition-colors disabled:opacity-50">
             Mettre à jour
@@ -73,7 +78,10 @@
               class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-white/5 transition-colors">
         <div class="flex items-center gap-3">
           <span class="material-symbols-outlined text-secondary">badge</span>
-          <span class="text-white font-bold">Changer le pseudo</span>
+          <div>
+            <span class="text-white font-bold">Changer le pseudo</span>
+            <p class="text-white/40 text-xs mt-0.5">{{ username }}</p>
+          </div>
         </div>
         <span class="material-symbols-outlined text-secondary/60 transition-transform"
               [class.rotate-180]="openSection() === 'username'">expand_more</span>
@@ -82,8 +90,6 @@
         <div class="px-5 pb-5 space-y-3 border-t border-white/5">
           <p class="text-white/40 text-xs mt-4">Le pseudo peut être en minuscules ou majuscules selon ta préférence.</p>
           <input type="text" [(ngModel)]="newUsername" placeholder="Nouveau pseudo"
-                 class="w-full bg-slate-950/60 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:border-secondary outline-none">
-          <input type="password" [(ngModel)]="currentPasswordForUsername" placeholder="Mot de passe actuel"
                  class="w-full bg-slate-950/60 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:border-secondary outline-none">
           <button (click)="onChangeUsername()" [disabled]="isLoading()"
                   class="w-full bg-secondary text-slate-900 font-black uppercase tracking-widest py-3 rounded-xl hover:bg-secondary/80 transition-colors disabled:opacity-50">

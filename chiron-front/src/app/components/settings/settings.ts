@@ -14,8 +14,8 @@ import { HeaderComponent } from '../shared/header/header';
 })
 export class Settings {
   username: string;
+  currentEmail = signal<string | null>(null);
 
-  // Section ouverte
   openSection = signal<'password' | 'email' | 'username' | 'delete' | null>(null);
 
   // Champs password
@@ -23,18 +23,13 @@ export class Settings {
   newPassword = '';
   confirmPassword = '';
 
-  // Champs email
-  currentPasswordForEmail = '';
+  // Champs email / username
   newEmail = '';
-
-  // Champs username
-  currentPasswordForUsername = '';
   newUsername = '';
 
   // Suppression
   deleteConfirm = '';
 
-  // Feedback
   successMessage = signal('');
   errorMessage = signal('');
   isLoading = signal(false);
@@ -46,6 +41,12 @@ export class Settings {
   ) {
     this.username = this.authService.getUsername() || '';
     this.newUsername = this.username;
+    this.chironApi.getSettingsInfo().subscribe({
+      next: (info) => {
+        this.currentEmail.set(info.email);
+        this.newEmail = info.email ?? '';
+      }
+    });
   }
 
   toggle(section: 'password' | 'email' | 'username' | 'delete') {
@@ -83,11 +84,11 @@ export class Settings {
   onChangeEmail() {
     this.isLoading.set(true);
     this.clearFeedback();
-    this.chironApi.changeEmail({ currentPassword: this.currentPasswordForEmail, newEmail: this.newEmail }).subscribe({
+    this.chironApi.changeEmail({ newEmail: this.newEmail }).subscribe({
       next: () => {
         this.isLoading.set(false);
+        this.currentEmail.set(this.newEmail);
         this.successMessage.set('Email mis à jour.');
-        this.currentPasswordForEmail = '';
       },
       error: (err) => {
         this.isLoading.set(false);
@@ -99,14 +100,12 @@ export class Settings {
   onChangeUsername() {
     this.isLoading.set(true);
     this.clearFeedback();
-    this.chironApi.changeUsername({ currentPassword: this.currentPasswordForUsername, newUsername: this.newUsername }).subscribe({
+    this.chironApi.changeUsername({ newUsername: this.newUsername }).subscribe({
       next: (res) => {
         this.isLoading.set(false);
-        // Mise à jour du token sans déconnexion
         this.authService.saveToken(res.token);
         this.username = this.newUsername;
         this.successMessage.set('Pseudo mis à jour.');
-        this.currentPasswordForUsername = '';
       },
       error: (err) => {
         this.isLoading.set(false);

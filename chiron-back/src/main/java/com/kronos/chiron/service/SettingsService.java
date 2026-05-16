@@ -40,12 +40,9 @@ public class SettingsService {
     }
 
     @Transactional
-    public void changeEmail(String username, String currentPassword, String newEmail) {
+    public void changeEmail(String username, String newEmail) {
         Utilisateur user = utilisateurRepository.findByUsername(username)
                 .orElseThrow(() -> new NoSuchElementException("Utilisateur introuvable"));
-        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
-            throw new IllegalArgumentException("Mot de passe actuel incorrect");
-        }
         if (utilisateurRepository.findByEmail(newEmail).isPresent()) {
             throw new IllegalArgumentException("Cet email est déjà utilisé");
         }
@@ -54,19 +51,15 @@ public class SettingsService {
     }
 
     @Transactional
-    public String changeUsername(String username, String currentPassword, String newUsername) {
+    public String changeUsername(String username, String newUsername) {
         Utilisateur user = utilisateurRepository.findByUsername(username)
                 .orElseThrow(() -> new NoSuchElementException("Utilisateur introuvable"));
-        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
-            throw new IllegalArgumentException("Mot de passe actuel incorrect");
-        }
         // Unicité insensible à la casse (exclut l'utilisateur lui-même)
         utilisateurRepository.findByUsernameIgnoreCase(newUsername)
                 .filter(existing -> !existing.getId().equals(user.getId()))
                 .ifPresent(__ -> { throw new IllegalArgumentException("Ce pseudo est déjà pris"); });
         user.setUsername(newUsername);
         utilisateurRepository.save(user);
-        // Retourner un nouveau JWT avec le nouveau username pour éviter une déconnexion
         return jwtService.generateToken(user);
     }
 

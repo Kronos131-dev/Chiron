@@ -278,11 +278,15 @@ export class ChironApi {
     return this.http.put<void>(`${this.apiUrl}/settings/password`, req);
   }
 
-  changeEmail(req: { currentPassword: string; newEmail: string }): Observable<void> {
+  getSettingsInfo(): Observable<{ username: string; email: string | null }> {
+    return this.http.get<{ username: string; email: string | null }>(`${this.apiUrl}/settings/me`);
+  }
+
+  changeEmail(req: { newEmail: string }): Observable<void> {
     return this.http.put<void>(`${this.apiUrl}/settings/email`, req);
   }
 
-  changeUsername(req: { currentPassword: string; newUsername: string }): Observable<{ token: string }> {
+  changeUsername(req: { newUsername: string }): Observable<{ token: string }> {
     return this.http.put<{ token: string }>(`${this.apiUrl}/settings/username`, req);
   }
 
