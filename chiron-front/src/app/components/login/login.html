@@ -3,48 +3,81 @@
 
   <!-- Authentication Card -->
   <div class="login-container bg-surface w-full max-w-md">
-    <h2>{{ isLoginMode ? 'Connexion' : 'Inscription' }}</h2>
 
-    <!-- Authentication Form -->
-    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+    <!-- Mode : Mot de passe oublié -->
+    @if (isForgotMode) {
+      <h2>Mot de passe oublié</h2>
+      <p class="text-white/50 text-sm mb-4">Saisis ton adresse email pour recevoir un lien de réinitialisation.</p>
 
-      <!-- Username Input -->
-      <div class="form-group">
-        <label for="username">Nom d'utilisateur</label>
-        <input type="text" id="username" formControlName="username" autocomplete="username">
+      @if (forgotMessage) {
+        <div class="error-message" style="background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.3); color: #34d399;">
+          {{ forgotMessage }}
+        </div>
+      }
+
+      @if (!forgotMessage) {
+        <div class="form-group">
+          <label for="forgotEmail">Adresse email</label>
+          <input type="email" id="forgotEmail" [(ngModel)]="forgotEmail" name="forgotEmail" autocomplete="email">
+        </div>
+        <button type="button" (click)="onForgotPassword()" [disabled]="!forgotEmail || isLoading">
+          <span *ngIf="isLoading">En cours...</span>
+          <span *ngIf="!isLoading">Envoyer le lien</span>
+        </button>
+      }
+
+      <div class="mt-6 text-center">
+        <button type="button" class="switch-mode-btn" (click)="hideForgot()">
+          Retour à la connexion
+        </button>
       </div>
+    }
 
-      <!-- Email Input (Only visible in Registration Mode) -->
-      <div class="form-group" *ngIf="!isLoginMode">
-        <label for="email">Adresse Email</label>
-        <input type="email" id="email" formControlName="email" autocomplete="email">
+    <!-- Mode : Connexion / Inscription -->
+    @if (!isForgotMode) {
+      <h2>{{ isLoginMode ? 'Connexion' : 'Inscription' }}</h2>
+
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+
+        <div class="form-group">
+          <label for="username">Nom d'utilisateur</label>
+          <input type="text" id="username" formControlName="username" autocomplete="username">
+        </div>
+
+        <div class="form-group" *ngIf="!isLoginMode">
+          <label for="email">Adresse Email</label>
+          <input type="email" id="email" formControlName="email" autocomplete="email">
+        </div>
+
+        <div class="form-group">
+          <label for="password">Mot de passe</label>
+          <input type="password" id="password" formControlName="password" autocomplete="current-password">
+        </div>
+
+        <div *ngIf="errorMessage" class="error-message">
+          {{ errorMessage }}
+        </div>
+
+        <button type="submit" [disabled]="loginForm.invalid || isLoading">
+          <span *ngIf="isLoading">En cours...</span>
+          <span *ngIf="!isLoading">{{ isLoginMode ? 'Se connecter' : 'Forger mon compte' }}</span>
+        </button>
+
+      </form>
+
+      <div class="mt-6 text-center space-y-2">
+        <button type="button" class="switch-mode-btn" (click)="switchMode()">
+          {{ isLoginMode ? "Pas encore de compte ? S'inscrire" : "Déjà un compte ? Se connecter" }}
+        </button>
+        @if (isLoginMode) {
+          <div>
+            <button type="button" class="switch-mode-btn text-xs opacity-60 hover:opacity-100" (click)="showForgot()">
+              Mot de passe oublié ?
+            </button>
+          </div>
+        }
       </div>
-
-      <!-- Password Input -->
-      <div class="form-group">
-        <label for="password">Mot de passe</label>
-        <input type="password" id="password" formControlName="password" autocomplete="current-password">
-      </div>
-
-      <!-- Error Message Display -->
-      <div *ngIf="errorMessage" class="error-message">
-        {{ errorMessage }}
-      </div>
-
-      <!-- Submit Button -->
-      <button type="submit" [disabled]="loginForm.invalid || isLoading">
-        <span *ngIf="isLoading">En cours...</span>
-        <span *ngIf="!isLoading">{{ isLoginMode ? 'Se connecter' : 'Forger mon compte' }}</span>
-      </button>
-
-    </form>
-
-    <!-- Mode Toggle Button -->
-    <div class="mt-6 text-center">
-      <button type="button" class="switch-mode-btn" (click)="switchMode()">
-        {{ isLoginMode ? "Pas encore de compte ? S'inscrire" : "Déjà un compte ? Se connecter" }}
-      </button>
-    </div>
+    }
 
   </div>
 </div>
