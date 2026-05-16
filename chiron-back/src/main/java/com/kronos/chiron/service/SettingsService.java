@@ -85,7 +85,8 @@ public class SettingsService {
                 .build();
         tokenRepository.save(token);
 
-        String resetLink = frontendUrl + "/reset-password?token=" + tokenValue;
+        String baseUrl = frontendUrl.replaceAll("/+$", "").replaceAll("/(chat|login|register)/?$", "");
+        String resetLink = baseUrl + "/reset-password?token=" + tokenValue;
         try {
             emailService.sendPasswordResetEmail(email, resetLink);
         } catch (Exception ex) {
