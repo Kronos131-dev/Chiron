@@ -203,7 +203,7 @@ jobs:
             sudo rsync -a --delete /tmp/chiron-frontend/ $DEPLOY_DIR/frontend/
 
             echo "▶ Mise à jour du .env..."
-            ENV_FILE=$CHIRON_DIR/chiron-back/.env
+            ENV_FILE=$CHIRON_DIR/.env
             grep -v '^GMAIL_\|^FRONTEND_URL=' "$ENV_FILE" > /tmp/.env.tmp 2>/dev/null || true
             cat /tmp/chiron.secrets >> /tmp/.env.tmp
             mv /tmp/.env.tmp "$ENV_FILE"
