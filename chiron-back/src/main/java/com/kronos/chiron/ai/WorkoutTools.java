@@ -76,7 +76,7 @@ public class WorkoutTools {
             }
         }
 
-        List<Seance> programmes = seanceRepository.findByUtilisateurUsernameAndIsModeleFalseOrderByStartTimeDesc(targetUser.getUsername());
+        List<Seance> programmes = seanceRepository.findByUtilisateurUsernameAndIsModeleFalseOrderByDisplayOrderAscStartTimeDesc(targetUser.getUsername());
         
         if (programmes.isEmpty()) {
             return "L'utilisateur " + searchUsername + " n'a aucun modèle de programme d'entraînement enregistré.";
@@ -426,7 +426,7 @@ public class WorkoutTools {
         Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
                 .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
 
-        List<Seance> programmes = seanceRepository.findByUtilisateurUsernameAndIsModeleFalseOrderByStartTimeDesc(user.getUsername());
+        List<Seance> programmes = seanceRepository.findByUtilisateurUsernameAndIsModeleFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername());
 
         List<Seance> matching = programmes.stream()
                 .filter(s -> s.getTitre() != null && s.getTitre().toLowerCase().contains(programmeName.toLowerCase()))

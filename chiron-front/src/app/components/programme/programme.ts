@@ -161,13 +161,22 @@ export class Programme implements OnInit {
   private _applyReorder() {
     const from = this._from;
     const to   = this._to;
-    if (from >= 0 && to >= 0 && from !== to) {
-      const list = [...this.routines()];
-      const [item] = list.splice(from, 1);
-      list.splice(to, 0, item);
-      this.routines.set(list);
-    }
     this._from = -1;
     this._to   = -1;
+    if (from < 0 || to < 0 || from === to) return;
+
+    const previous = this.routines();
+    const list = [...previous];
+    const [item] = list.splice(from, 1);
+    list.splice(to, 0, item);
+    this.routines.set(list);
+
+    const username = this.authService.getUsername();
+    if (!username) return;
+
+    const ids = list.map(r => parseInt(r.id));
+    this.chironApi.updateProgrammesOrder(username, ids).subscribe({
+      error: () => this.routines.set(previous),
+    });
   }
 }
