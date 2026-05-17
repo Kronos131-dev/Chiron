@@ -175,6 +175,42 @@ class SeanceRepositoryTest {
     }
 
     @Test
+    void exercicesOrder_persistsAndReloadsByDisplayOrder() {
+        Seance template = makeSeance("Push Day", false, 0, LocalDateTime.now(), null);
+
+        // Insert in "wrong" PK/insertion order to prove sorting is by displayOrder, not by id.
+        Exercice ohp   = new Exercice(); ohp.setNom("OHP");     ohp.setDisplayOrder(2);
+        Exercice bench = new Exercice(); bench.setNom("Bench"); bench.setDisplayOrder(0);
+        Exercice dips  = new Exercice(); dips.setNom("Dips");   dips.setDisplayOrder(1);
+        template.addExercice(ohp);
+        template.addExercice(bench);
+        template.addExercice(dips);
+        em.flush();
+        em.clear();
+
+        Seance reloaded = em.find(Seance.class, template.getId());
+        assertThat(reloaded.getExercices())
+                .extracting(Exercice::getNom)
+                .containsExactly("Bench", "Dips", "OHP");
+
+        // Reorder by swapping displayOrder values, then flush+reload.
+        reloaded.getExercices().forEach(e -> {
+            switch (e.getNom()) {
+                case "OHP"   -> e.setDisplayOrder(0);
+                case "Bench" -> e.setDisplayOrder(1);
+                case "Dips"  -> e.setDisplayOrder(2);
+            }
+        });
+        em.flush();
+        em.clear();
+
+        Seance afterReorder = em.find(Seance.class, template.getId());
+        assertThat(afterReorder.getExercices())
+                .extracting(Exercice::getNom)
+                .containsExactly("OHP", "Bench", "Dips");
+    }
+
+    @Test
     void countTotalSeriesForUserSince_excludesBeyondDateRange() {
         Seance oldSession = makeSeance("OldPush", true, 1,
                 LocalDateTime.now().minusDays(40), LocalDateTime.now().minusDays(40));

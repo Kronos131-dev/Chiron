@@ -98,6 +98,41 @@ class ProgrammeServiceTest {
     }
 
     @Test
+    void sauvegarderProgramme_updateExisting_assignsDisplayOrderFromDtoPosition() {
+        Seance existing = new Seance();
+        existing.setId(7L);
+        existing.setTitre("Push");
+        existing.setModele(false);
+        existing.setUtilisateur(owner);
+        // Pre-populate with exercises in some order to confirm the service clears them.
+        Exercice old = new Exercice();
+        old.setNom("Old");
+        existing.addExercice(old);
+
+        when(utilisateurRepository.findByUsername("owner")).thenReturn(Optional.of(owner));
+        when(seanceRepository.findById(7L)).thenReturn(Optional.of(existing));
+
+        SeanceDto dto = new SeanceDto(7L, "Push", null, null, null, false, null,
+                List.of(
+                        new ExerciceDto(null, "Dips",  null, null, List.of()),
+                        new ExerciceDto(null, "Bench", null, null, List.of()),
+                        new ExerciceDto(null, "Squat", null, null, List.of())
+                ));
+
+        programmeService.sauvegarderProgramme("owner", dto);
+
+        // The persisted Exercice.displayOrder must match the position in the input DTO list,
+        // otherwise reordering from the front-end is lost on save.
+        assertThat(existing.getExercices())
+                .extracting(Exercice::getNom, Exercice::getDisplayOrder)
+                .containsExactly(
+                        tuple("Dips",  0),
+                        tuple("Bench", 1),
+                        tuple("Squat", 2)
+                );
+    }
+
+    @Test
     void sauvegarderProgramme_updateByUnauthorized_throwsException() {
         Seance existing = new Seance();
         existing.setId(5L);

@@ -42,6 +42,13 @@
             </button>
           </div>
         </div>
+
+        <!-- Transient status message (auto-clears after 3s) -->
+        @if (saveStatus()) {
+          <p class="text-secondary text-xs font-bold tracking-widest uppercase text-right pt-2 animate-pulse">
+            {{ saveStatus() }}
+          </p>
+        }
       }
     </div>
   </section>
@@ -50,12 +57,36 @@
   <section class="px-4 md:px-8">
     <div class="max-w-md mx-auto space-y-6">
 
-      @for (exo of exercices(); track exo.id) {
+      @for (exo of exercices(); track exo.id; let i = $index) {
         <!-- Individual Exercise Block -->
-        <article class="bg-[#1a1c23]/80 backdrop-blur-sm border border-white/5 rounded-xl p-5 shadow-xl">
+        <article #exoCard
+                 [attr.data-exo-idx]="i"
+                 class="exo-card bg-[#1a1c23]/80 backdrop-blur-sm border border-white/5 rounded-xl shadow-xl overflow-hidden"
+                 [class.is-dragging]="dragFromIdx() === i"
+                 [class.is-drop-target]="dragOverIdx() === i && dragFromIdx() !== i"
+                 (dragover)="onExoDragOver($event, i)"
+                 (drop)="onExoDrop($event, i)"
+                 (dragend)="onExoDragEnd()">
+
+          @if (!isReadonly()) {
+            <!-- Drag handle bar (top of the card, long-press on mobile / click-and-drag on desktop) -->
+            <div class="drag-handle flex items-center justify-center gap-2 py-2 bg-white/5 border-b border-white/10 text-secondary/60 hover:text-secondary hover:bg-secondary/10 cursor-grab active:cursor-grabbing transition-colors"
+                 [draggable]="true"
+                 (dragstart)="onExoDragStart($event, i, exoCard)"
+                 (touchstart)="onExoTouchStart($event, i)"
+                 (touchmove)="onExoTouchMove($event)"
+                 (touchend)="onExoTouchEnd()"
+                 title="Glisser pour réordonner cet exercice">
+              <span class="material-symbols-outlined text-base select-none">drag_indicator</span>
+              <span class="text-[9px] font-bold tracking-[0.2em] uppercase select-none">Déplacer</span>
+            </div>
+          }
+
+          <div class="p-5">
 
           <!-- Exercise Name Input and Delete Button -->
           <div class="flex items-end gap-3 mb-6">
+
             <div class="flex-1 relative">
               <label class="text-secondary text-[9px] font-bold tracking-[0.2em] uppercase ml-1">Nom de l'exercice</label>
               @if (!isReadonly()) {
@@ -175,6 +206,7 @@
             </button>
           }
 
+          </div>
         </article>
       }
 

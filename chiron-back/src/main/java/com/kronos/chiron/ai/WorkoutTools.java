@@ -224,13 +224,20 @@ public class WorkoutTools {
             return "ERREUR SYSTEME : Impossible d'ajouter l'exercice. L'utilisateur doit d'abord démarrer une séance. Appelle l'outil [startSession] en premier !";
         }
 
+        if (activeSeance.getExercices() == null) activeSeance.setExercices(new ArrayList<>());
+
+        int nextPosition = activeSeance.getExercices().stream()
+                .mapToInt(Exercice::getDisplayOrder)
+                .max()
+                .orElse(-1) + 1;
+
         Exercice exercice = Exercice.builder()
                 .nom(nomExercice)
                 .startTime(LocalDateTime.now())
+                .displayOrder(nextPosition)
                 .build();
 
         if (exercice.getSeries() == null) exercice.setSeries(new ArrayList<>());
-        if (activeSeance.getExercices() == null) activeSeance.setExercices(new ArrayList<>());
 
         activeSeance.addExercice(exercice);
         seanceRepository.save(activeSeance);
