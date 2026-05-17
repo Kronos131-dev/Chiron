@@ -19,6 +19,9 @@ env:
   NODE_VERSION: '22'
   SERVER_HOST: 46.224.227.209
   DEPLOY_DIR: /opt/chiron
+  # Force les actions JS (upload-artifact@v5, etc.) à tourner sur Node 24
+  # plutôt que sur Node 20 — déprécié sur les runners GitHub depuis 09/2025.
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
 jobs:
 
