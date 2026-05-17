@@ -82,6 +82,10 @@ export class Session implements OnInit {
   /** The username of the athlete who owns the currently loaded session. */
   targetUsername = signal<string | null>(null);
 
+  /** Short transient feedback message shown after a save / journal action (auto-clears). */
+  saveStatus = signal<string | null>(null);
+  private _saveStatusTimer: ReturnType<typeof setTimeout> | null = null;
+
   // ── Drag & drop state for exercise reordering ──────────────────────────────
   dragFromIdx = signal(-1);
   dragOverIdx = signal(-1);
@@ -478,15 +482,23 @@ export class Session implements OnInit {
     };
 
     this.chironApi.sauvegarderProgramme(username, dto).subscribe({
-      next: () => {
-          if (this.isCoachEdit()) {
-              this.router.navigate(['/profile', this.targetUsername()]);
-          } else {
-              this.router.navigate(['/programme']);
-          }
+      next: (response) => {
+        // Backend returns "Program saved with ID: 42" — capture the ID so subsequent saves
+        // update this same programme instead of creating duplicates.
+        const match = typeof response === 'string' ? response.match(/ID:\s*(\d+)/) : null;
+        if (match && !this.routineId) {
+          this.routineId = match[1];
+        }
+        this.flashStatus('Modèle sauvegardé.');
       },
-      error: (err) => alert("Erreur lors de la sauvegarde du modèle.")
+      error: () => this.flashStatus('Erreur lors de la sauvegarde du modèle.'),
     });
+  }
+
+  private flashStatus(msg: string) {
+    this.saveStatus.set(msg);
+    if (this._saveStatusTimer) clearTimeout(this._saveStatusTimer);
+    this._saveStatusTimer = setTimeout(() => this.saveStatus.set(null), 3000);
   }
 
   /**
@@ -530,11 +542,8 @@ export class Session implements OnInit {
     };
 
     this.chironApi.sauvegarderProgramme(username, dto).subscribe({
-      next: () => {
-        alert("Séance enregistrée dans votre journal avec succès !");
-        this.router.navigate(['/journal']);
-      },
-      error: (err) => alert("Erreur lors de l'enregistrement dans le journal.")
+      next: () => this.flashStatus('Séance ajoutée au journal.'),
+      error: () => this.flashStatus("Erreur lors de l'enregistrement dans le journal."),
     });
   }
 
