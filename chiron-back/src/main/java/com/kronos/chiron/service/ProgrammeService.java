@@ -156,9 +156,46 @@ public class ProgrammeService {
      * @return A list of Seance entities acting as models.
      */
     public List<Seance> getProgrammes(String username) {
-        List<Seance> programmes = seanceRepository.findByUtilisateurUsernameAndIsModeleFalseOrderByStartTimeDesc(username);
+        List<Seance> programmes = seanceRepository.findByUtilisateurUsernameAndIsModeleFalseOrderByDisplayOrderAscStartTimeDesc(username);
         logger.info("Found {} programmes for user {}", programmes.size(), username);
         return programmes;
+    }
+
+    /**
+     * Persists a new manual display order for the user's programme templates.
+     * The list of IDs defines the new order (first ID → top of the list).
+     * Validates ownership (or coach / admin rights) for every programme in the list.
+     *
+     * @param username   The username of the requester performing the reorder.
+     * @param orderedIds The programme IDs in the desired display order.
+     */
+    @Transactional
+    public void reorderProgrammes(String username, List<Long> orderedIds) {
+        if (orderedIds == null || orderedIds.isEmpty()) return;
+
+        Utilisateur requestUser = utilisateurRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        List<Seance> programmes = seanceRepository.findAllById(orderedIds);
+        if (programmes.size() != orderedIds.size()) {
+            throw new RuntimeException("One or more programmes not found.");
+        }
+
+        for (Seance s : programmes) {
+            Utilisateur owner = s.getUtilisateur();
+            if (!owner.getUsername().equals(username)
+                    && !owner.getCoaches().contains(requestUser)
+                    && requestUser.getRole() != Role.ADMIN) {
+                throw new RuntimeException("Access denied. You cannot reorder this programme.");
+            }
+        }
+
+        java.util.Map<Long, Seance> byId = programmes.stream()
+                .collect(Collectors.toMap(Seance::getId, s -> s));
+
+        for (int i = 0; i < orderedIds.size(); i++) {
+            byId.get(orderedIds.get(i)).setDisplayOrder(i);
+        }
     }
 
     /**

@@ -51,7 +51,7 @@ class ProfileServiceTest {
         emptyPerf = PerformanceSummaryDto.builder()
                 .overallTier("Éphèbe").overallTierLevel(1).build();
 
-        when(seanceRepository.findByUtilisateurUsernameAndIsModeleFalseOrderByStartTimeDesc(any()))
+        when(seanceRepository.findByUtilisateurUsernameAndIsModeleFalseOrderByDisplayOrderAscStartTimeDesc(any()))
                 .thenReturn(List.of());
         when(seanceRepository.findByUtilisateurUsernameAndIsModeleTrueOrderByStartTimeDesc(any()))
                 .thenReturn(List.of());

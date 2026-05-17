@@ -43,12 +43,13 @@ public interface SeanceRepository extends JpaRepository<Seance, Long> {
     List<Seance> findByUtilisateurUsernameAndIsModeleTrueOrderByStartTimeDesc(String username);
 
     /**
-     * Retrieves all workout templates/programs (isModele = false) for a specific user, ordered by start time descending.
+     * Retrieves all workout templates/programs (isModele = false) for a specific user, ordered by the
+     * user's manual display order first (ascending), then by start time descending as a stable fallback.
      *
      * @param username The username of the user.
      * @return A list of template Seance entities.
      */
-    List<Seance> findByUtilisateurUsernameAndIsModeleFalseOrderByStartTimeDesc(String username);
+    List<Seance> findByUtilisateurUsernameAndIsModeleFalseOrderByDisplayOrderAscStartTimeDesc(String username);
 
     /**
      * Calculates the total number of sets (series) performed by a user in historical sessions

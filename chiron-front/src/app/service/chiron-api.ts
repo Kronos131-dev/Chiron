@@ -142,6 +142,17 @@ export class ChironApi {
   }
 
   /**
+   * Persists a new manual display order for the user's programmes (drag-and-drop reorder).
+   *
+   * @param username   The requesting user's username.
+   * @param orderedIds The programme IDs in the desired display order (first ID → top).
+   * @return An Observable indicating the completion of the reorder request.
+   */
+  updateProgrammesOrder(username: string, orderedIds: number[]): Observable<any> {
+    return this.http.put(`${this.apiUrl}/programmes/order?username=${encodeURIComponent(username)}`, orderedIds);
+  }
+
+  /**
    * Fetches the detailed profile data of a specific user.
    *
    * @param username        The username of the target profile.

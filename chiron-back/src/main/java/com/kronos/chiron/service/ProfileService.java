@@ -69,7 +69,7 @@ public class ProfileService {
         user.setRank(rank);
         utilisateurRepository.save(user);
 
-        List<Seance> programmes = seanceRepository.findByUtilisateurUsernameAndIsModeleFalseOrderByStartTimeDesc(username);
+        List<Seance> programmes = seanceRepository.findByUtilisateurUsernameAndIsModeleFalseOrderByDisplayOrderAscStartTimeDesc(username);
         List<SeanceSummaryDto> programmeSummaries = programmes.stream()
                 .map(this::toSeanceSummaryDto)
                 .collect(Collectors.toList());
