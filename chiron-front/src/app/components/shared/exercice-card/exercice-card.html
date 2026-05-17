@@ -1,0 +1,149 @@
+<article #exoCard
+         [attr.data-exo-idx]="index"
+         class="exo-card bg-[#1a1c23]/80 backdrop-blur-sm border border-white/5 rounded-xl shadow-xl overflow-hidden"
+         [class.is-dragging]="isDragging"
+         [class.is-drop-target]="isDropTarget"
+         (dragover)="exoDragOver.emit($event)"
+         (drop)="exoDrop.emit($event)"
+         (dragend)="exoDragEnd.emit()">
+
+  @if (!readonly) {
+    <!-- Drag handle bar (top of the card, long-press on mobile / click-and-drag on desktop) -->
+    <div class="drag-handle flex items-center justify-center gap-2 py-2 bg-white/5 border-b border-white/10 text-secondary/60 hover:text-secondary hover:bg-secondary/10 cursor-grab active:cursor-grabbing transition-colors"
+         [draggable]="true"
+         (dragstart)="onDragStart($event, exoCard)"
+         (touchstart)="exoTouchStart.emit($event)"
+         (touchmove)="exoTouchMove.emit($event)"
+         (touchend)="exoTouchEnd.emit()"
+         title="Glisser pour réordonner cet exercice">
+      <span class="material-symbols-outlined text-base select-none">drag_indicator</span>
+      <span class="text-[9px] font-bold tracking-[0.2em] uppercase select-none">Déplacer</span>
+    </div>
+  }
+
+  <div class="p-5">
+
+    <!-- Exercise Name Input and Delete Button -->
+    <div class="flex items-end gap-3 mb-6">
+
+      <div class="flex-1 relative">
+        <label class="text-secondary text-[9px] font-bold tracking-[0.2em] uppercase ml-1">Nom de l'exercice</label>
+        @if (!readonly) {
+          <input type="text"
+                 [value]="exercice.nom"
+                 (input)="onNomInput($event)"
+                 (blur)="closeSuggestions()"
+                 class="w-full mt-1 bg-slate-950/50 border border-white/10 rounded p-3 text-white font-headline text-lg outline-none focus:border-secondary/50 transition-colors"
+                 placeholder="Rechercher un exercice...">
+          @if (showSuggestions() && suggestions().length > 0) {
+            <ul class="absolute z-50 left-0 right-0 mt-1 bg-[#1a1c23] border border-white/10 rounded-lg shadow-xl max-h-96 overflow-y-auto">
+              @for (def of suggestions(); track def.id) {
+                <li (mousedown)="selectDefinition(def)"
+                    class="flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-white/5 transition-colors border-b border-white/5 last:border-0">
+                  @if (def.imageUrl) {
+                    <img [src]="def.imageUrl" alt="" class="w-8 h-8 object-cover rounded" loading="lazy">
+                  }
+                  <div class="flex-1 min-w-0">
+                    <span class="text-white font-bold text-sm block line-clamp-2 break-words">{{ def.nomFr ?? def.nomEn }}</span>
+                    <span class="text-on-surface-variant text-[10px] uppercase tracking-wider">{{ def.musclePrincipal }}</span>
+                  </div>
+                </li>
+              }
+            </ul>
+          }
+        } @else {
+          <p class="w-full mt-1 bg-slate-950/50 border border-white/10 rounded p-3 text-white font-headline text-lg break-words">{{ exercice.nom }}</p>
+        }
+      </div>
+
+      @if (!readonly) {
+        <button (click)="remove.emit()" class="bg-slate-950/50 border border-white/10 p-3 rounded text-on-surface-variant hover:text-red-400 hover:border-red-400/30 transition-all mb-[1px]">
+          <span class="material-symbols-outlined text-xl">delete</span>
+        </button>
+      }
+    </div>
+
+    <!-- Sets Table Headers -->
+    <div class="grid grid-cols-12 gap-3 mb-2 px-1">
+      <div class="col-span-3 text-on-surface-variant text-[9px] font-bold tracking-widest uppercase">Série</div>
+      <div class="col-span-4 text-on-surface-variant text-[9px] font-bold tracking-widest uppercase">Poids (KG)</div>
+      <div class="col-span-5 text-on-surface-variant text-[9px] font-bold tracking-widest uppercase">Reps</div>
+    </div>
+
+    <!-- Sets (Series) Rows -->
+    <div class="space-y-3 mb-5">
+      @for (serie of exercice.series; track serie.id; let i = $index) {
+        <div class="grid grid-cols-12 gap-3 items-center">
+
+          <!-- Set Number -->
+          <div class="col-span-3 text-secondary font-bold font-headline text-lg pl-1">
+            {{ i + 1 < 10 ? '0' + (i + 1) : i + 1 }}
+          </div>
+
+          <!-- Weight Input -->
+          <div class="col-span-4">
+            <input type="number" [(ngModel)]="serie.poids"
+                   [readOnly]="readonly"
+                   class="w-full bg-slate-950/80 border border-white/5 rounded p-2.5 text-white font-body text-center outline-none focus:border-secondary/50 transition-colors">
+          </div>
+
+          <!-- Reps Input and Actions -->
+          <div class="col-span-5">
+            <div class="flex items-center gap-2">
+              <input type="number" [(ngModel)]="serie.reps"
+                     [readOnly]="readonly"
+                     class="w-full bg-slate-950/80 border border-white/5 rounded p-2.5 text-white font-body text-center outline-none focus:border-secondary/50 transition-colors">
+
+              @if (!readonly) {
+                <button (click)="ajouterDegressif(serie.id)" class="text-on-surface-variant hover:text-secondary transition-colors" title="Ajouter un dégressif">
+                  <span class="material-symbols-outlined text-sm">keyboard_double_arrow_down</span>
+                </button>
+                <button (click)="supprimerSerie(serie.id)" class="text-on-surface-variant hover:text-red-400 transition-colors" title="Supprimer la série">
+                  <span class="material-symbols-outlined text-sm">close</span>
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Degressifs Rows -->
+        @for (deg of serie.degressifs; track deg.id) {
+          <div class="grid grid-cols-12 gap-3 items-center mt-1 pl-4 opacity-80">
+            <div class="col-span-3 text-on-surface-variant text-xs font-bold text-right pr-2">
+              ↳ Dég.
+            </div>
+            <div class="col-span-4">
+              <input type="number" [(ngModel)]="deg.poids"
+                     [readOnly]="readonly"
+                     class="w-full bg-slate-950/50 border border-white/5 rounded p-1.5 text-white text-sm font-body text-center outline-none focus:border-secondary/50 transition-colors"
+                     placeholder="Kg">
+            </div>
+            <div class="col-span-5">
+              <div class="flex items-center gap-2">
+                <input type="number" [(ngModel)]="deg.reps"
+                       [readOnly]="readonly"
+                       class="w-full bg-slate-950/50 border border-white/5 rounded p-1.5 text-white text-sm font-body text-center outline-none focus:border-secondary/50 transition-colors"
+                       placeholder="Reps">
+
+                @if (!readonly) {
+                  <button (click)="supprimerDegressif(serie.id, deg.id)" class="text-on-surface-variant hover:text-red-400 transition-colors" title="Supprimer le dégressif">
+                    <span class="material-symbols-outlined text-sm">close</span>
+                  </button>
+                }
+              </div>
+            </div>
+          </div>
+        }
+      }
+    </div>
+
+    <!-- Add Set Button -->
+    @if (!readonly) {
+      <button (click)="ajouterSerie()"
+              class="w-full border border-dashed border-white/10 rounded py-3 flex items-center justify-center gap-2 text-on-surface-variant text-[10px] font-bold tracking-widest uppercase hover:text-secondary hover:bg-white/5 transition-colors">
+        <span class="text-lg leading-none">+</span> Ajouter une série
+      </button>
+    }
+
+  </div>
+</article>

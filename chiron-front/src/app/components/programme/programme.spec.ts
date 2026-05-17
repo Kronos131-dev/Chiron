@@ -12,6 +12,7 @@ describe('Programme', () => {
   let fixture: ComponentFixture<Programme>;
   let chironApi: { getProgrammes: ReturnType<typeof vi.fn>; deleteProgramme: ReturnType<typeof vi.fn>; updateProgrammesOrder: ReturnType<typeof vi.fn>; };
   let auth: { getUsername: ReturnType<typeof vi.fn>; };
+  let router: { navigate: ReturnType<typeof vi.fn>; };
 
   function fakeDragEvent(): any {
     return { preventDefault: () => {}, dataTransfer: null };
@@ -28,7 +29,7 @@ describe('Programme', () => {
       updateProgrammesOrder: vi.fn().mockReturnValue(of(null)),
     };
     auth = { getUsername: vi.fn().mockReturnValue('alice') };
-    const router = { navigate: vi.fn() };
+    router = { navigate: vi.fn() };
 
     await TestBed.configureTestingModule({
       imports: [Programme],
@@ -51,6 +52,23 @@ describe('Programme', () => {
   it('loads programmes on init', () => {
     expect(chironApi.getProgrammes).toHaveBeenCalledWith('alice');
     expect(component.routines().map(r => r.id)).toEqual(['1', '2', '3']);
+  });
+
+  describe('navigation', () => {
+    it('commencerRoutine opens the execution Session view', () => {
+      component.commencerRoutine('42');
+      expect(router.navigate).toHaveBeenCalledWith(['/session', '42']);
+    });
+
+    it('editerRoutine opens the ProgrammeBuilder in edit mode', () => {
+      component.editerRoutine('42');
+      expect(router.navigate).toHaveBeenCalledWith(['/programme', '42', 'edit']);
+    });
+
+    it('ajouterRoutine opens the ProgrammeBuilder in create mode', () => {
+      component.ajouterRoutine();
+      expect(router.navigate).toHaveBeenCalledWith(['/programme', 'new']);
+    });
   });
 
   describe('drag reorder', () => {

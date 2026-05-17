@@ -5,6 +5,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { ChironApi } from '../../service/chiron-api';
 import { AuthService } from '../../service/auth.service';
 import { HeaderComponent } from '../shared/header/header';
+import { tierBadgeUrl } from '../../shared/tier-badges';
 
 /**
  * Component representing the user profile view.
@@ -221,18 +222,30 @@ export class Profile implements OnInit {
    * @param progId The ID of the program to view.
    */
   viewProgramme(progId: number) {
-    const queryParams: any = { from: 'journal' };
+    // Coach editing an athlete's programme → open the builder in coach mode.
+    if (!this.isMyProfile() && this.athleteProfile().amICoach) {
+      this.router.navigate(['/programme', progId, 'edit'], {
+        queryParams: { asUser: this.athleteProfile()?.username }
+      });
+      return;
+    }
 
+    // Otherwise: open the session view (read-only journal-style).
+    const queryParams: any = { from: 'journal' };
     if (!this.isMyProfile() && !this.athleteProfile().amICoach) {
       queryParams.external = 'true';
     }
-
-    if (!this.isMyProfile() && this.athleteProfile().amICoach) {
-        queryParams.coachEdit = 'true';
-        delete queryParams.from;
-    }
-
     this.router.navigate(['/session', progId], { queryParams });
+  }
+
+  /**
+   * Coach action: create a new programme for the viewed athlete.
+   * Visible only when the logged-in user is one of the athlete's coaches.
+   */
+  createProgrammeForAthlete() {
+    this.router.navigate(['/programme', 'new'], {
+      queryParams: { asUser: this.athleteProfile()?.username }
+    });
   }
 
   /**
@@ -354,6 +367,11 @@ export class Profile implements OnInit {
     return this.athleteProfile()?.performanceTier ?? this.athleteProfile()?.rank ?? 'Éphèbe';
   }
 
+  /** Image du badge correspondant au palier moyen (top 3 exercices). */
+  getTierBadgeUrl(): string {
+    return tierBadgeUrl(this.getTierLevel());
+  }
+
   // ── Main background ─────────────────────────────────────────────────────────
 
   getTierBgClass(): string { return `tier-${this.getTierCategory()}-bg`; }
@@ -389,27 +407,6 @@ export class Profile implements OnInit {
   getUsernameClass(): string { return `username-${this.getTierCategory()}`; }
 
   getLaurelClass(): string { return `laurel-${this.getTierCategory()}`; }
-
-  getTierSymbol(): string {
-    const lvl = this.getTierLevel();
-    if (lvl >= 3) return 'Ω';
-    return 'ω';
-  }
-
-  getTierSymbolClass(): string {
-    const lvl = this.getTierLevel();
-    const map: Record<number, string> = {
-      1: 'tier-symbol-novice-sm',
-      2: 'tier-symbol-novice-lg',
-      3: 'tier-symbol-athlete-sm',
-      4: 'tier-symbol-athlete-md',
-      5: 'tier-symbol-athlete-lg',
-      6: 'tier-symbol-legend-sm',
-      7: 'tier-symbol-legend-md',
-      8: 'tier-symbol-legend-lg',
-    };
-    return map[lvl] ?? 'tier-symbol-novice-sm';
-  }
 
   // ── Stats ───────────────────────────────────────────────────────────────────
 

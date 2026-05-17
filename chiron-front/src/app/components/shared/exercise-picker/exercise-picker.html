@@ -1,0 +1,170 @@
+@if (open) {
+  <div class="picker-sheet fixed inset-0 z-50 bg-slate-950 flex flex-col">
+
+    <!-- Sheet header -->
+    <header class="sticky top-0 z-10 bg-slate-950/95 backdrop-blur-md border-b border-white/10 px-4 py-3 flex items-center gap-3">
+      <button (click)="close()"
+              class="w-10 h-10 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-white transition-colors">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+      <div class="flex-1 min-w-0">
+        <p class="text-secondary text-[9px] font-bold tracking-[0.25em] uppercase">Ajouter un exercice</p>
+        <h2 class="text-white font-bold text-base truncate">Bibliothèque</h2>
+      </div>
+      @if (addedExercises.length > 0) {
+        <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-secondary/15 border border-secondary/30">
+          <span class="material-symbols-outlined text-secondary text-base">check_circle</span>
+          <span class="text-secondary text-xs font-bold tracking-wider">{{ addedExercises.length }} ajouté{{ addedExercises.length > 1 ? 's' : '' }}</span>
+        </div>
+      }
+    </header>
+
+    <!-- Sheet content (scrollable) -->
+    <div class="flex-1 overflow-y-auto">
+
+      <!-- Recently added panel -->
+      @if (addedExercises.length > 0) {
+        <section class="max-w-3xl mx-auto px-4 pt-4">
+          <p class="text-on-surface-variant text-[9px] font-bold tracking-[0.25em] uppercase mb-2">Sélection</p>
+          <ul class="space-y-2">
+            @for (exo of addedExercises; track exo.id) {
+              <li class="flex items-center gap-3 bg-secondary/5 border border-secondary/20 rounded-lg pl-3 pr-2 py-2">
+                <span class="material-symbols-outlined text-secondary/70 text-base shrink-0">check</span>
+                <span class="flex-1 min-w-0 text-white text-sm font-medium truncate">{{ exo.nom || 'Exercice personnalisé' }}</span>
+                <button (click)="removeAdded.emit(exo)"
+                        type="button"
+                        title="Retirer cet exercice"
+                        class="w-8 h-8 rounded-md bg-white/5 hover:bg-red-900/30 hover:text-red-300 text-on-surface-variant flex items-center justify-center transition-colors">
+                  <span class="material-symbols-outlined text-base">close</span>
+                </button>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+
+      <!-- Search -->
+      <div class="sticky top-0 z-10 bg-slate-950/95 backdrop-blur-md border-b border-white/5 px-4 py-3">
+        <div class="relative max-w-3xl mx-auto">
+          <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-xl pointer-events-none">search</span>
+          <input type="text"
+                 [value]="query()"
+                 (input)="onQueryInput(($event.target)!['value'])"
+                 class="w-full bg-[#1a1c23] border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white outline-none focus:border-secondary/50 transition-colors placeholder:text-on-surface-variant"
+                 placeholder="Rechercher un exercice...">
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="max-w-3xl mx-auto px-4 pt-4 space-y-3">
+        <div>
+          <p class="text-on-surface-variant text-[9px] font-bold tracking-[0.25em] uppercase mb-2">Muscle</p>
+          <div class="flex flex-wrap gap-2">
+            @for (m of muscles; track m.key) {
+              <button (click)="toggleMuscle(m.key)"
+                      [class]="muscle() === m.key ? 'chip-active' : 'chip'">
+                {{ m.label }}
+              </button>
+            }
+          </div>
+        </div>
+        <div>
+          <p class="text-on-surface-variant text-[9px] font-bold tracking-[0.25em] uppercase mb-2">Équipement</p>
+          <div class="flex flex-wrap gap-2">
+            @for (e of equipements; track e.key) {
+              <button (click)="toggleEquipement(e.key)"
+                      [class]="equipement() === e.key ? 'chip-active' : 'chip'">
+                {{ e.label }}
+              </button>
+            }
+          </div>
+        </div>
+        <div>
+          <p class="text-on-surface-variant text-[9px] font-bold tracking-[0.25em] uppercase mb-2">Niveau</p>
+          <div class="flex flex-wrap gap-2">
+            @for (d of difficultes; track d.key) {
+              <button (click)="toggleDifficulte(d.key)"
+                      [class]="difficulte() === d.key ? 'chip-active' : 'chip'">
+                {{ d.label }}
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Results -->
+      <section class="max-w-3xl mx-auto px-4 mt-6 pb-6">
+        @if (loading()) {
+          <div class="flex justify-center py-12">
+            <div class="w-10 h-10 border-4 border-secondary/30 border-t-secondary rounded-full animate-spin"></div>
+          </div>
+        } @else if (!hasSearched()) {
+          <div class="flex flex-col items-center justify-center py-12 text-center">
+            <span class="material-symbols-outlined text-5xl text-secondary/30 mb-4">search</span>
+            <p class="text-on-surface-variant text-sm">Recherche un exercice ou sélectionne un filtre</p>
+          </div>
+        } @else if (results().length === 0) {
+          <div class="flex flex-col items-center justify-center py-12 text-center">
+            <span class="material-symbols-outlined text-5xl text-on-surface-variant/30 mb-4">search_off</span>
+            <p class="text-on-surface-variant text-sm">Aucun exercice trouvé</p>
+          </div>
+        } @else {
+          <p class="text-on-surface-variant text-[10px] uppercase tracking-widest mb-4">
+            {{ results().length }} exercice{{ results().length > 1 ? 's' : '' }}
+          </p>
+          <div class="picker-grid">
+            @for (exo of results(); track exo.id) {
+              <article (click)="addFromDefinition.emit(exo)" class="picker-card group">
+                <div class="picker-gif-container">
+                  @if (exo.imageUrl) {
+                    <img [src]="exo.imageUrl" [alt]="exo.nomFr ?? exo.nomEn" loading="lazy" class="picker-gif">
+                  } @else {
+                    <div class="picker-gif-placeholder">
+                      <span class="material-symbols-outlined text-3xl text-secondary/40">fitness_center</span>
+                    </div>
+                  }
+                  <div class="picker-add-badge">
+                    <span class="material-symbols-outlined text-2xl">add</span>
+                  </div>
+                </div>
+                <div class="p-3">
+                  <h3 class="text-white font-bold text-sm leading-tight mb-1 line-clamp-2">{{ exo.nomFr ?? exo.nomEn }}</h3>
+                  <div class="flex items-center justify-between">
+                    <span class="text-secondary text-[10px] uppercase tracking-wider font-bold">{{ muscleLabel(exo.musclePrincipal) }}</span>
+                    @if (exo.difficulte) {
+                      <span [class]="'text-[9px] font-bold uppercase ' + difficulteClass(exo.difficulte)">{{ difficulteLabel(exo.difficulte) }}</span>
+                    }
+                  </div>
+                </div>
+              </article>
+            }
+          </div>
+        }
+      </section>
+
+      <!-- Custom exercise escape hatch -->
+      <div class="max-w-3xl mx-auto px-4 pb-8">
+        <div class="border-t border-white/10 pt-6">
+          <button (click)="addCustom.emit()"
+                  class="w-full bg-[#1a1c23]/50 border-2 border-dashed border-white/15 rounded-xl p-5 flex flex-col items-center justify-center gap-2 text-on-surface-variant hover:text-secondary hover:border-secondary/40 hover:bg-secondary/5 transition-all group">
+            <span class="material-symbols-outlined text-2xl group-hover:scale-110 transition-transform">edit</span>
+            <span class="text-xs font-bold tracking-[0.15em] uppercase">Ajouter un exercice personnalisé</span>
+            <span class="text-[10px] opacity-70 normal-case tracking-normal">(non lié à la bibliothèque)</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Sheet footer: close action when at least one exo has been added -->
+    @if (addedExercises.length > 0) {
+      <footer class="sticky bottom-0 bg-slate-950/95 backdrop-blur-md border-t border-white/10 px-4 py-3">
+        <button (click)="close()"
+                class="w-full bg-gradient-to-r from-secondary to-[#c77a30] text-slate-950 font-bold text-xs px-6 py-3 rounded uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-transform shadow-lg shadow-secondary/20 flex items-center justify-center gap-2">
+          <span class="material-symbols-outlined text-sm">check</span>
+          Terminer ({{ addedExercises.length }} exercice{{ addedExercises.length > 1 ? 's' : '' }})
+        </button>
+      </footer>
+    }
+  </div>
+}

@@ -51,6 +51,57 @@ describe('Session', () => {
     expect(component).toBeTruthy();
   });
 
+  describe('library picker', () => {
+    function makeDef(id: number, nom: string) {
+      return {
+        id, nomFr: nom, nomEn: nom, imageUrl: null, imageUrl2: null,
+        musclePrincipal: null, musclesSecondaires: [], typeEquipement: null,
+        difficulte: null, descriptionFr: null, descriptionEn: null,
+      };
+    }
+
+    beforeEach(() => component.exercices.set([]));
+
+    it('openPicker flips the open flag and clears the picker session list', () => {
+      component.openPicker();
+      expect(component.pickerOpen()).toBe(true);
+      expect(component.addedExercises()).toEqual([]);
+    });
+
+    it('addExerciceFromDefinition appends to both the session and the picker list', () => {
+      component.addExerciceFromDefinition(makeDef(1, 'Bench'));
+      expect(component.exercices()[0].nom).toBe('Bench');
+      expect(component.exercices()[0].definitionId).toBe(1);
+      expect(component.addedExercises()).toHaveLength(1);
+    });
+
+    it('removeAddedFromPicker drops the exo from both lists', () => {
+      component.openPicker();
+      component.addExerciceFromDefinition(makeDef(1, 'A'));
+      component.addExerciceFromDefinition(makeDef(2, 'B'));
+      component.removeAddedFromPicker(component.addedExercises()[0]);
+
+      expect(component.exercices().map(e => e.nom)).toEqual(['B']);
+      expect(component.addedExercises().map(e => e.nom)).toEqual(['B']);
+    });
+
+    it('closePicker clears the picker session list but keeps the session exos', () => {
+      component.openPicker();
+      component.addExerciceFromDefinition(makeDef(1, 'A'));
+      component.closePicker();
+
+      expect(component.pickerOpen()).toBe(false);
+      expect(component.addedExercises()).toEqual([]);
+      expect(component.exercices()).toHaveLength(1);
+    });
+
+    it('openPicker is a no-op in readonly mode', () => {
+      component.isReadonly.set(true);
+      component.openPicker();
+      expect(component.pickerOpen()).toBe(false);
+    });
+  });
+
   describe('exercise drag reorder', () => {
     beforeEach(() => {
       component.exercices.set([makeExo('a', 'Bench'), makeExo('b', 'Dips'), makeExo('c', 'OHP')]);

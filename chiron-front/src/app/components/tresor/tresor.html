@@ -69,19 +69,14 @@
              [style.background]="'radial-gradient(circle at 50% 80%, var(--tier-bg, rgba(255,183,121,0.15)) 0%, transparent 70%)'"
              [class]="tierClass(summary().overallTierLevel)"></div>
 
-        <p class="text-[10px] font-bold tracking-[0.25em] text-on-surface-variant uppercase mb-3">Ton Palier Global</p>
+        <p class="text-[10px] font-bold tracking-[0.25em] text-on-surface-variant uppercase mb-3 relative z-10">Ton Palier Global</p>
 
-        <!-- Trophy icon -->
-        <div class="flex justify-center mb-4">
-          <span class="material-symbols-outlined text-5xl"
-                [class]="tierClass(summary().overallTierLevel)"
-                [style.color]="'var(--tier-color)'"
-                [style.filter]="'drop-shadow(0 0 14px var(--tier-color))'">
-            @if (summary().overallTierLevel >= 8) { emoji_events }
-            @else if (summary().overallTierLevel >= 6) { military_tech }
-            @else if (summary().overallTierLevel >= 4) { workspace_premium }
-            @else { shield }
-          </span>
+        <!-- Badge image (moyenne sur les 3 meilleurs exos) -->
+        <div class="flex justify-center mb-5 relative z-10">
+          <img [src]="tierBadge(summary().overallTierLevel)"
+               [alt]="'Palier ' + summary().overallTier"
+               [class]="'tresor-badge-img-lg ' + tierClass(summary().overallTierLevel)"
+               [title]="'Palier moyen — ' + summary().overallTier" />
         </div>
 
         <div class="flex justify-center mb-2">
@@ -120,28 +115,33 @@
       </h2>
 
       @for (exercise of summary().exercises; track exercise.exerciseType) {
-        <div class="bg-slate-900/60 backdrop-blur-md rounded-2xl border transition-colors"
+        <div class="exercise-card bg-slate-900/60 backdrop-blur-md rounded-2xl border transition-colors overflow-hidden"
              [class]="tierClass(exercise.tierLevel)"
              [style.border-color]="'var(--tier-border)'">
 
           <div class="p-5">
-            <!-- Exercise header -->
-            <div class="flex items-start justify-between mb-3">
-              <div>
-                <div class="flex items-center gap-2 mb-0.5">
-                  <span class="material-symbols-outlined text-base" [style.color]="'var(--tier-color)'">fitness_center</span>
-                  <h3 class="text-sm font-black text-white tracking-widest uppercase font-headline">{{ exercise.nom }}</h3>
-                </div>
-                @if (isBodyweightExercise(exercise.exerciseType)) {
-                  <p class="text-[10px] text-secondary/50 tracking-widest uppercase ml-6">Lest + Poids de corps</p>
-                }
+            <!-- Hero: badge centré + nom + palier -->
+            <div class="exercise-hero flex flex-col items-center text-center">
+              <img [src]="tierBadge(exercise.tierLevel)"
+                   [alt]="'Palier ' + exercise.tier"
+                   class="exercise-badge"
+                   [title]="exercise.nom + ' — ' + exercise.tier" />
+              <h3 class="text-xl font-black text-white tracking-widest uppercase font-headline mt-3">
+                {{ exercise.nom }}
+              </h3>
+              <div class="flex items-center gap-2 mt-1.5">
+                <span class="h-px w-6 bg-white/15"></span>
+                <span class="tier-badge" [class]="tierClass(exercise.tierLevel)">{{ exercise.tier }}</span>
+                <span class="h-px w-6 bg-white/15"></span>
               </div>
-              <div class="tier-badge" [class]="tierClass(exercise.tierLevel)">{{ exercise.tier }}</div>
+              @if (isBodyweightExercise(exercise.exerciseType)) {
+                <p class="text-[10px] text-secondary/60 tracking-widest uppercase mt-1.5">Lest + Poids de corps</p>
+              }
             </div>
 
             @if (exercise.poids !== null && exercise.poids !== undefined) {
               <!-- Performance stats -->
-              <div class="grid grid-cols-3 gap-3 mb-4">
+              <div class="grid grid-cols-3 gap-3 mb-4 mt-4">
                 <div class="bg-slate-950/50 rounded-xl p-3 text-center">
                   <p class="text-[9px] text-on-surface-variant tracking-widest uppercase mb-1">
                     {{ isBodyweightExercise(exercise.exerciseType) ? 'Lest' : 'Poids' }}

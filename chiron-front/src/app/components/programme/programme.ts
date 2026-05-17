@@ -63,8 +63,8 @@ export class Programme implements OnInit {
   }
 
   commencerRoutine(id: string) { this.router.navigate(['/session', id]); }
-  ajouterRoutine()             { this.router.navigate(['/session']); }
-  editerRoutine(id: string)    { this.router.navigate(['/session', id]); }
+  ajouterRoutine()             { this.router.navigate(['/programme', 'new']); }
+  editerRoutine(id: string)    { this.router.navigate(['/programme', id, 'edit']); }
 
   supprimerRoutine(routineId: string) {
     if (confirm('Es-tu sûr de vouloir supprimer ce programme ?')) {
