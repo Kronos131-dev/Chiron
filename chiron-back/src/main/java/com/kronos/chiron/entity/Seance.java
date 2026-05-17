@@ -57,9 +57,12 @@ public class Seance {
     private int displayOrder;
 
     /**
-     * The list of exercises performed during this session.
+     * The list of exercises performed during this session, kept in user-defined order.
+     * The position is stored explicitly on {@link Exercice#getDisplayOrder()} and assigned
+     * by the save logic from the input DTO's list order.
      */
     @OneToMany(mappedBy = "seance", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("displayOrder ASC")
     @Builder.Default
     private List<Exercice> exercices = new ArrayList<>();
 
