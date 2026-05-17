@@ -34,6 +34,14 @@ public class Exercice {
     private String commentaire;
 
     /**
+     * Position of this exercise within its parent {@link Seance}, lower = displayed first.
+     * Assigned by {@code ProgrammeService.sauvegarderProgramme} from the order of the input DTO,
+     * and used as the JPA {@code @OrderBy} key on {@link Seance#getExercices()}.
+     */
+    @Column(name = "display_order", nullable = false)
+    private int displayOrder;
+
+    /**
      * The start time of the exercise.
      */
     private LocalDateTime startTime;
