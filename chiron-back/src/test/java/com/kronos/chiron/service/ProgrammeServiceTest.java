@@ -150,6 +150,52 @@ class ProgrammeServiceTest {
     }
 
     @Test
+    void sauvegarderProgramme_createForAthleteByCoach_ownsTheNewProgramme() {
+        Utilisateur coach = Utilisateur.builder().id(3L).username("coach").role(Role.USER).build();
+        owner.addCoach(coach);
+
+        when(utilisateurRepository.findByUsername("coach")).thenReturn(Optional.of(coach));
+        when(utilisateurRepository.findByUsername("owner")).thenReturn(Optional.of(owner));
+
+        SeanceDto dto = new SeanceDto(null, "For my athlete", null, null, 0, false, null, List.of());
+
+        programmeService.sauvegarderProgramme("coach", dto, "owner");
+
+        // The new programme must belong to the athlete (`owner`), not the coach.
+        verify(seanceRepository).save(argThat(s ->
+                s.getUtilisateur().equals(owner) &&
+                s.getTitre().equals("For my athlete")
+        ));
+    }
+
+    @Test
+    void sauvegarderProgramme_createForAthleteByNonCoach_throwsException() {
+        // `otherUser` is NOT a coach of `owner` → must be rejected.
+        when(utilisateurRepository.findByUsername("other")).thenReturn(Optional.of(otherUser));
+        when(utilisateurRepository.findByUsername("owner")).thenReturn(Optional.of(owner));
+
+        SeanceDto dto = new SeanceDto(null, "Hack", null, null, 0, false, null, List.of());
+
+        assertThatThrownBy(() -> programmeService.sauvegarderProgramme("other", dto, "owner"))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("not a coach");
+
+        verify(seanceRepository, never()).save(any());
+    }
+
+    @Test
+    void sauvegarderProgramme_createForSelf_ignoresForUsername() {
+        // forUsername == username → behaves as a normal self-create, no coach check.
+        when(utilisateurRepository.findByUsername("owner")).thenReturn(Optional.of(owner));
+
+        SeanceDto dto = new SeanceDto(null, "Mine", null, null, 0, false, null, List.of());
+
+        programmeService.sauvegarderProgramme("owner", dto, "owner");
+
+        verify(seanceRepository).save(argThat(s -> s.getUtilisateur().equals(owner)));
+    }
+
+    @Test
     void sauvegarderProgramme_updateByCoach_succeeds() {
         Utilisateur coach = Utilisateur.builder().id(3L).username("coach").role(Role.USER).build();
         owner.addCoach(coach);

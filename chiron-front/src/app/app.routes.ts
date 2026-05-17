@@ -4,6 +4,7 @@ import { Journal } from './components/journal/journal';
 import { Login } from './components/login/login';
 import { authGuard } from './security/auth.guard';
 import { Programme } from './components/programme/programme';
+import { ProgrammeBuilder } from './components/programme-builder/programme-builder';
 import { Session } from './components/session/session';
 import { Profile } from './components/profile/profile';
 import { Agora } from './components/agora/agora';
@@ -32,6 +33,16 @@ export const routes: Routes = [
   {
     path: 'programme',
     component: Programme,
+    canActivate: [authGuard]
+  },
+  {
+    path: 'programme/new',
+    component: ProgrammeBuilder,
+    canActivate: [authGuard]
+  },
+  {
+    path: 'programme/:id/edit',
+    component: ProgrammeBuilder,
     canActivate: [authGuard]
   },
   {
