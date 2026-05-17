@@ -50,6 +50,13 @@ public class Seance {
     private boolean isModele;
 
     /**
+     * Manual display order for programme templates on the Programme page (lower = higher in the list).
+     * Set by the drag-and-drop reorder endpoint. Unused for executed sessions.
+     */
+    @Column(nullable = false, columnDefinition = "integer default 0")
+    private int displayOrder;
+
+    /**
      * The list of exercises performed during this session.
      */
     @OneToMany(mappedBy = "seance", cascade = CascadeType.ALL, orphanRemoval = true)
