@@ -18,8 +18,21 @@
         <java.version>21</java.version>
         <langchain4j.version>1.14.1</langchain4j.version>
         <jjwt.version>0.12.6</jjwt.version>
+        <testcontainers.version>1.21.3</testcontainers.version>
         <skipUTs>false</skipUTs>
     </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>testcontainers-bom</artifactId>
+                <version>${testcontainers.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <dependency>
@@ -48,9 +61,15 @@
             <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
         </dependency>
+        <!-- Spring Boot 4.x split Flyway auto-configuration into spring-boot-starter-flyway.
+             Without it, `spring.flyway.enabled: true` is silently ignored and migrations never run. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-flyway</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-core</artifactId>
+            <artifactId>flyway-database-postgresql</artifactId>
         </dependency>
 
         <dependency>
@@ -124,6 +143,21 @@
             <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-testcontainers</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -152,6 +186,7 @@
                     <excludes>
                         <exclude>**/controller/**</exclude>
                         <exclude>**/repository/**</exclude>
+                        <exclude>**/migration/**</exclude>
                     </excludes>
                 </configuration>
             </plugin>
@@ -159,11 +194,19 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <configuration>
-                    <!-- Integration tests: controller (@WebMvcTest) and repository (@DataJpaTest) -->
+                    <!-- Integration tests: controller (@WebMvcTest), repository (@DataJpaTest), migration (@SpringBootTest + Testcontainers) -->
                     <includes>
                         <include>**/controller/**Test.java</include>
                         <include>**/repository/**Test.java</include>
+                        <include>**/migration/**Test.java</include>
                     </includes>
+                    <!-- docker-java defaults to API 1.32, which modern Docker daemons (>=29) reject.
+                         DOCKER_HOST routes us to the env-based strategy; api.version is the
+                         docker-java property name that overrides the default API version. -->
+                    <environmentVariables>
+                        <DOCKER_HOST>unix:///var/run/docker.sock</DOCKER_HOST>
+                    </environmentVariables>
+                    <argLine>-Dapi.version=1.44</argLine>
                 </configuration>
                 <executions>
                     <execution>

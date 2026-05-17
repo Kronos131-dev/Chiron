@@ -1,0 +1,36 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  mail:
+    # EmailService injects @Value("${spring.mail.username}"); the test's base application.yml
+    # doesn't define mail, so we satisfy the placeholder here. The mail bean itself is stubbed
+    # by MailStubConfig in the test class.
+    username: stub@example.com
+    password: stub
+
+logging:
+  level:
+    org.flywaydb: INFO
+
+langchain4j:
+  mistral-ai:
+    chat-model:
+      api-key: test-key
+      model-name: mistral-small-latest
+
+jwt:
+  secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+  expiration: 86400000
+
+chiron:
+  uploads-dir: /tmp/chiron-test-uploads
+  frontend-url: http://localhost:4200
+
+# Placeholders read by EmailService — not actually used in this test.
+GMAIL_USERNAME: stub@example.com
+GMAIL_APP_PASSWORD: stub
