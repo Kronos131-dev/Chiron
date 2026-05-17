@@ -57,9 +57,12 @@ public class Seance {
     private int displayOrder;
 
     /**
-     * The list of exercises performed during this session.
+     * The list of exercises performed during this session, kept in user-defined order.
+     * Hibernate maintains the `display_order` column based on the position in this list,
+     * so simply rewriting the list (clear + addAll) is enough to persist a reorder.
      */
     @OneToMany(mappedBy = "seance", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderColumn(name = "display_order")
     @Builder.Default
     private List<Exercice> exercices = new ArrayList<>();
 

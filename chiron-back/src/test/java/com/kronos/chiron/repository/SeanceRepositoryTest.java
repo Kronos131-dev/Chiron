@@ -175,6 +175,38 @@ class SeanceRepositoryTest {
     }
 
     @Test
+    void exercicesOrder_persistsAndReloadsInListPosition() {
+        Seance template = makeSeance("Push Day", false, 0, LocalDateTime.now(), null);
+
+        Exercice bench = new Exercice(); bench.setNom("Bench");
+        Exercice dips  = new Exercice(); dips.setNom("Dips");
+        Exercice ohp   = new Exercice(); ohp.setNom("OHP");
+
+        // Initial save: insert in [Bench, Dips, OHP] order.
+        template.addExercice(bench);
+        template.addExercice(dips);
+        template.addExercice(ohp);
+        em.flush();
+        em.clear();
+
+        Seance reloaded = em.find(Seance.class, template.getId());
+        assertThat(reloaded.getExercices())
+                .extracting(Exercice::getNom)
+                .containsExactly("Bench", "Dips", "OHP");
+
+        // Reorder to [OHP, Bench, Dips] by mutating the list and re-saving.
+        Exercice moved = reloaded.getExercices().remove(2);
+        reloaded.getExercices().add(0, moved);
+        em.flush();
+        em.clear();
+
+        Seance afterReorder = em.find(Seance.class, template.getId());
+        assertThat(afterReorder.getExercices())
+                .extracting(Exercice::getNom)
+                .containsExactly("OHP", "Bench", "Dips");
+    }
+
+    @Test
     void countTotalSeriesForUserSince_excludesBeyondDateRange() {
         Seance oldSession = makeSeance("OldPush", true, 1,
                 LocalDateTime.now().minusDays(40), LocalDateTime.now().minusDays(40));

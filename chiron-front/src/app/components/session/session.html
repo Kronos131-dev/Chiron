@@ -50,12 +50,33 @@
   <section class="px-4 md:px-8">
     <div class="max-w-md mx-auto space-y-6">
 
-      @for (exo of exercices(); track exo.id) {
+      @for (exo of exercices(); track exo.id; let i = $index) {
         <!-- Individual Exercise Block -->
-        <article class="bg-[#1a1c23]/80 backdrop-blur-sm border border-white/5 rounded-xl p-5 shadow-xl">
+        <article #exoCard
+                 [attr.data-exo-idx]="i"
+                 class="exo-card bg-[#1a1c23]/80 backdrop-blur-sm border border-white/5 rounded-xl p-5 shadow-xl"
+                 [class.is-dragging]="dragFromIdx() === i"
+                 [class.is-drop-target]="dragOverIdx() === i && dragFromIdx() !== i"
+                 (dragover)="onExoDragOver($event, i)"
+                 (drop)="onExoDrop($event, i)"
+                 (dragend)="onExoDragEnd()">
 
           <!-- Exercise Name Input and Delete Button -->
           <div class="flex items-end gap-3 mb-6">
+
+            @if (!isReadonly()) {
+              <!-- Drag handle (long-press on mobile, click-and-drag on desktop) -->
+              <div class="drag-handle flex-shrink-0 mb-[1px] cursor-grab active:cursor-grabbing text-secondary/30 hover:text-secondary/70 transition-colors p-2"
+                   [draggable]="true"
+                   (dragstart)="onExoDragStart($event, i, exoCard)"
+                   (touchstart)="onExoTouchStart($event, i)"
+                   (touchmove)="onExoTouchMove($event)"
+                   (touchend)="onExoTouchEnd()"
+                   title="Glisser pour réordonner">
+                <span class="material-symbols-outlined text-xl select-none">drag_indicator</span>
+              </div>
+            }
+
             <div class="flex-1 relative">
               <label class="text-secondary text-[9px] font-bold tracking-[0.2em] uppercase ml-1">Nom de l'exercice</label>
               @if (!isReadonly()) {

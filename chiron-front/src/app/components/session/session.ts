@@ -43,7 +43,8 @@ export interface ExerciceForm {
   selector: 'app-session',
   standalone: true,
   imports: [CommonModule, FormsModule, HeaderComponent],
-  templateUrl: './session.html'
+  templateUrl: './session.html',
+  styleUrls: ['./session.css']
 })
 export class Session implements OnInit {
 
@@ -80,6 +81,17 @@ export class Session implements OnInit {
 
   /** The username of the athlete who owns the currently loaded session. */
   targetUsername = signal<string | null>(null);
+
+  // ── Drag & drop state for exercise reordering ──────────────────────────────
+  dragFromIdx = signal(-1);
+  dragOverIdx = signal(-1);
+
+  private _from           = -1;
+  private _to             = -1;
+  private _touchDragging  = false;
+  private _longPressTimer: any = null;
+  private _touchStartX    = 0;
+  private _touchStartY    = 0;
 
   /**
    * Initializes a new instance of the Session component.
@@ -212,6 +224,102 @@ export class Session implements OnInit {
   supprimerExercice(exoId: number | string) {
     if (this.isReadonly()) return;
     this.exercices.update(exos => exos.filter(e => e.id !== exoId));
+  }
+
+  // ── HTML5 Drag & Drop (desktop) for exercise reorder ─────────────────────────
+
+  onExoDragStart(event: DragEvent, index: number, cardEl: HTMLElement) {
+    if (this.isReadonly()) return;
+    this._from = index;
+    this.dragFromIdx.set(index);
+    event.dataTransfer?.setData('text/plain', String(index));
+    if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer?.setDragImage(cardEl, cardEl.offsetWidth / 2, 30);
+  }
+
+  onExoDragOver(event: DragEvent, index: number) {
+    if (this.isReadonly() || this._from < 0) return;
+    event.preventDefault();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+    this._to = index;
+    this.dragOverIdx.set(index);
+  }
+
+  onExoDrop(event: DragEvent, index: number) {
+    if (this.isReadonly()) return;
+    event.preventDefault();
+    this._to = index;
+    this._applyExoReorder();
+  }
+
+  onExoDragEnd() {
+    this.dragFromIdx.set(-1);
+    this.dragOverIdx.set(-1);
+    this._from = -1;
+    this._to   = -1;
+  }
+
+  // ── Touch drag (mobile long-press) ───────────────────────────────────────────
+
+  onExoTouchStart(event: TouchEvent, index: number) {
+    if (this.isReadonly()) return;
+    const t = event.touches[0];
+    this._touchStartX = t.clientX;
+    this._touchStartY = t.clientY;
+
+    this._longPressTimer = setTimeout(() => {
+      this._touchDragging = true;
+      this._from = index;
+      this.dragFromIdx.set(index);
+      if ('vibrate' in navigator) (navigator as any).vibrate(30);
+    }, 350);
+  }
+
+  onExoTouchMove(event: TouchEvent) {
+    if (this.isReadonly()) return;
+    const t = event.touches[0];
+
+    if (!this._touchDragging) {
+      if (Math.abs(t.clientX - this._touchStartX) > 8 || Math.abs(t.clientY - this._touchStartY) > 8) {
+        clearTimeout(this._longPressTimer);
+      }
+      return;
+    }
+
+    const el   = document.elementFromPoint(t.clientX, t.clientY) as HTMLElement;
+    const card = el?.closest<HTMLElement>('[data-exo-idx]');
+    if (card) {
+      const idx = parseInt(card.getAttribute('data-exo-idx')!);
+      if (!isNaN(idx)) {
+        this._to = idx;
+        this.dragOverIdx.set(idx);
+      }
+    }
+  }
+
+  onExoTouchEnd() {
+    clearTimeout(this._longPressTimer);
+    if (this._touchDragging) {
+      this._applyExoReorder();
+      this._touchDragging = false;
+      this.dragFromIdx.set(-1);
+      this.dragOverIdx.set(-1);
+    }
+  }
+
+  private _applyExoReorder() {
+    const from = this._from;
+    const to   = this._to;
+    this._from = -1;
+    this._to   = -1;
+    if (from < 0 || to < 0 || from === to) return;
+
+    this.exercices.update(list => {
+      const next = [...list];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      return next;
+    });
   }
 
   /**

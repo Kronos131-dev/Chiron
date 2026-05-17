@@ -98,6 +98,37 @@ class ProgrammeServiceTest {
     }
 
     @Test
+    void sauvegarderProgramme_updateExisting_preservesExerciceOrderFromDto() {
+        Seance existing = new Seance();
+        existing.setId(7L);
+        existing.setTitre("Push");
+        existing.setModele(false);
+        existing.setUtilisateur(owner);
+        // Pre-populate with exercises in some order to confirm the service clears them.
+        Exercice old = new Exercice();
+        old.setNom("Old");
+        existing.addExercice(old);
+
+        when(utilisateurRepository.findByUsername("owner")).thenReturn(Optional.of(owner));
+        when(seanceRepository.findById(7L)).thenReturn(Optional.of(existing));
+
+        SeanceDto dto = new SeanceDto(7L, "Push", null, null, null, false, null,
+                List.of(
+                        new ExerciceDto(null, "Dips",  null, null, List.of()),
+                        new ExerciceDto(null, "Bench", null, null, List.of()),
+                        new ExerciceDto(null, "Squat", null, null, List.of())
+                ));
+
+        programmeService.sauvegarderProgramme("owner", dto);
+
+        // Hibernate persists @OrderColumn from list position, so the order saved on the
+        // entity's `exercices` list IS the order users see when the seance is reloaded.
+        assertThat(existing.getExercices())
+                .extracting(Exercice::getNom)
+                .containsExactly("Dips", "Bench", "Squat");
+    }
+
+    @Test
     void sauvegarderProgramme_updateByUnauthorized_throwsException() {
         Seance existing = new Seance();
         existing.setId(5L);

@@ -1,0 +1,25 @@
+.exo-card {
+  transition: border-color 0.2s, opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+
+/* Card being dragged: fade + shrink */
+.exo-card.is-dragging {
+  opacity: 0.35;
+  transform: scale(0.98);
+  box-shadow: none;
+}
+
+/* Drop target: amber top border + subtle lift */
+.exo-card.is-drop-target {
+  border-color: var(--color-secondary);
+  border-top-width: 2px;
+  box-shadow: 0 -4px 20px rgba(255, 183, 121, 0.25);
+  transform: translateY(-2px);
+}
+
+/* Drag handle: prevent text selection, block scroll on touch */
+.drag-handle {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
