@@ -136,3 +136,36 @@
   -webkit-text-fill-color: transparent;
   animation: shimmer 3s linear infinite;
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   BADGES PNG (palier — moyenne globale + par exercice)
+   PNG transparents : drop-shadow + marges négatives pour compenser
+   l'espace transparent intrinsèque de l'illustration.
+   ══════════════════════════════════════════════════════════════════ */
+
+.tresor-badge-img-lg {
+  width: 240px;
+  height: 240px;
+  max-width: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 12px 22px rgba(0, 0, 0, 0.6));
+  transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.tresor-badge-img-lg:hover { transform: scale(1.04) rotate(-2deg); }
+
+/* Badge dans chaque carte exercice — placé en haut, légèrement débordant. */
+.exercise-badge {
+  width: 140px;
+  height: 140px;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.55));
+  transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.exercise-card:hover .exercise-badge {
+  transform: scale(1.04);
+}
+
+/* Lignes décoratives autour du palier — on les rend plus claires sur tier-color */
+.exercise-hero .tier-badge { font-size: 0.65rem; }

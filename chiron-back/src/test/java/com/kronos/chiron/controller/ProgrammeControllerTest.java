@@ -66,7 +66,7 @@ class ProgrammeControllerTest {
     void creerProgramme_success_returns200() throws Exception {
         Seance saved = new Seance();
         saved.setId(42L);
-        when(programmeService.sauvegarderProgramme(eq("alice"), any())).thenReturn(saved);
+        when(programmeService.sauvegarderProgramme(eq("alice"), any(), any())).thenReturn(saved);
 
         mockMvc.perform(post("/api/programmes")
                         .param("username", "alice")
@@ -78,7 +78,7 @@ class ProgrammeControllerTest {
 
     @Test
     void creerProgramme_serviceThrows_returns400() throws Exception {
-        when(programmeService.sauvegarderProgramme(any(), any()))
+        when(programmeService.sauvegarderProgramme(any(), any(), any()))
                 .thenThrow(new RuntimeException("Save failed"));
 
         mockMvc.perform(post("/api/programmes")

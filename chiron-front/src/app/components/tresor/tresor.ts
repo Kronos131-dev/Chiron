@@ -5,6 +5,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { ChironApi } from '../../service/chiron-api';
 import { AuthService } from '../../service/auth.service';
 import { HeaderComponent } from '../shared/header/header';
+import { tierBadgeUrl } from '../../shared/tier-badges';
 
 const TIERS = [
   { level: 1, name: 'Éphèbe',    cat: 'Novice'  },
@@ -308,6 +309,11 @@ export class Tresor implements OnInit {
 
   tierClass(level: number): string {
     return `tier-${Math.max(1, Math.min(8, level))}`;
+  }
+
+  /** Image du badge associée à un niveau de palier (1-8). */
+  tierBadge(level: number | null | undefined): string {
+    return tierBadgeUrl(level);
   }
 
   getProgress(exercise: any): { percent: number; nextTier: string; remaining: number } | null {

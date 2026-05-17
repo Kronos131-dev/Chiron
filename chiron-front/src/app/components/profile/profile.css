@@ -472,3 +472,24 @@
 .toggle-active-novice  { background-color: #64748b; }
 .toggle-active-athlete { background-color: #3b82f6; }
 .toggle-active-legend  { background-color: #f59e0b; }
+
+/* ══════════════════════════════════════════════════════════════════
+   SECTION TRÉSOR (badge moyen sur top 3 exercices)
+   ══════════════════════════════════════════════════════════════════ */
+
+.tresor-section {
+  cursor: pointer;
+}
+
+.tresor-section-badge {
+  width: 220px;
+  height: 220px;
+  max-width: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.55));
+  transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.tresor-section:hover .tresor-section-badge {
+  transform: scale(1.05) rotate(-2deg);
+}
