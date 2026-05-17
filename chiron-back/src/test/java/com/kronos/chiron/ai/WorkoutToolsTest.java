@@ -204,7 +204,7 @@ class WorkoutToolsTest {
     void getUserProgrammes_ownProgrammes_returnsList() {
         Seance prog = new Seance();
         prog.setTitre("My Programme");
-        when(seanceRepository.findByUtilisateurUsernameAndIsModeleFalseOrderByStartTimeDesc(user.getUsername()))
+        when(seanceRepository.findByUtilisateurUsernameAndIsModeleFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername()))
                 .thenReturn(List.of(prog));
 
         String result = workoutTools.getUserProgrammes("1", null);
@@ -214,7 +214,7 @@ class WorkoutToolsTest {
 
     @Test
     void getUserProgrammes_noProgrammes_returnsEmptyMessage() {
-        when(seanceRepository.findByUtilisateurUsernameAndIsModeleFalseOrderByStartTimeDesc(user.getUsername()))
+        when(seanceRepository.findByUtilisateurUsernameAndIsModeleFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername()))
                 .thenReturn(List.of());
 
         String result = workoutTools.getUserProgrammes("1", null);
@@ -405,7 +405,7 @@ class WorkoutToolsTest {
         exo.addSerie(serie);
         prog.addExercice(exo);
 
-        when(seanceRepository.findByUtilisateurUsernameAndIsModeleFalseOrderByStartTimeDesc(user.getUsername()))
+        when(seanceRepository.findByUtilisateurUsernameAndIsModeleFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername()))
                 .thenReturn(List.of(prog));
 
         String result = workoutTools.getProgrammeDetails("1", "Push");
@@ -415,7 +415,7 @@ class WorkoutToolsTest {
 
     @Test
     void getProgrammeDetails_noMatch_returnsNotFound() {
-        when(seanceRepository.findByUtilisateurUsernameAndIsModeleFalseOrderByStartTimeDesc(user.getUsername()))
+        when(seanceRepository.findByUtilisateurUsernameAndIsModeleFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername()))
                 .thenReturn(List.of());
 
         String result = workoutTools.getProgrammeDetails("1", "Unknown");
@@ -428,7 +428,7 @@ class WorkoutToolsTest {
         Seance prog = new Seance();
         prog.setTitre("Empty Programme");
 
-        when(seanceRepository.findByUtilisateurUsernameAndIsModeleFalseOrderByStartTimeDesc(user.getUsername()))
+        when(seanceRepository.findByUtilisateurUsernameAndIsModeleFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername()))
                 .thenReturn(List.of(prog));
 
         String result = workoutTools.getProgrammeDetails("1", "Empty");

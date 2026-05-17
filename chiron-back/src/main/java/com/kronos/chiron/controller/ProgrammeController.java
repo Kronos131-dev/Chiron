@@ -90,6 +90,23 @@ public class ProgrammeController {
     }
 
     /**
+     * Persists a new manual display order for the user's programmes (drag-and-drop reorder).
+     *
+     * @param username   The username of the requester.
+     * @param orderedIds The programme IDs in the desired display order (first ID → top).
+     * @return A standard empty successful ResponseEntity, or an error if unauthorized.
+     */
+    @PutMapping("/order")
+    public ResponseEntity<?> reorderProgrammes(@RequestParam String username, @RequestBody List<Long> orderedIds) {
+        try {
+            programmeService.reorderProgrammes(username, orderedIds);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    /**
      * Deletes a specific workout program.
      *
      * @param id       The ID of the program to delete.

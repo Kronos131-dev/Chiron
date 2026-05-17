@@ -143,4 +143,29 @@ class ProgrammeControllerTest {
         mockMvc.perform(delete("/api/programmes/1").param("username", "alice"))
                 .andExpect(status().isBadRequest());
     }
+
+    @Test
+    void reorderProgrammes_success_returns200_andForwardsOrderedIds() throws Exception {
+        doNothing().when(programmeService).reorderProgrammes(eq("alice"), anyList());
+
+        mockMvc.perform(put("/api/programmes/order")
+                        .param("username", "alice")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("[3, 1, 2]"))
+                .andExpect(status().isOk());
+
+        verify(programmeService).reorderProgrammes("alice", List.of(3L, 1L, 2L));
+    }
+
+    @Test
+    void reorderProgrammes_serviceThrows_returns400() throws Exception {
+        doThrow(new RuntimeException("Access denied"))
+                .when(programmeService).reorderProgrammes(eq("alice"), anyList());
+
+        mockMvc.perform(put("/api/programmes/order")
+                        .param("username", "alice")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("[1]"))
+                .andExpect(status().isBadRequest());
+    }
 }

@@ -36,12 +36,17 @@ class SeanceRepositoryTest {
     }
 
     private Seance makeSeance(String titre, boolean isModele, int weekNumber, LocalDateTime start, LocalDateTime end) {
+        return makeSeance(titre, isModele, weekNumber, start, end, 0);
+    }
+
+    private Seance makeSeance(String titre, boolean isModele, int weekNumber, LocalDateTime start, LocalDateTime end, int displayOrder) {
         Seance s = new Seance();
         s.setTitre(titre);
         s.setModele(isModele);
         s.setWeekNumber(weekNumber);
         s.setStartTime(start);
         s.setEndTime(end);
+        s.setDisplayOrder(displayOrder);
         s.setUtilisateur(user);
         em.persist(s);
         em.flush();
@@ -101,21 +106,35 @@ class SeanceRepositoryTest {
         makeSeance("Template2", false, 0, LocalDateTime.now().minusDays(1), null);
 
         List<Seance> results = seanceRepository
-                .findByUtilisateurUsernameAndIsModeleFalseOrderByStartTimeDesc(user.getUsername());
+                .findByUtilisateurUsernameAndIsModeleFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername());
 
         assertThat(results).hasSize(2);
     }
 
     @Test
-    void findByIsModeleFalse_orderedByStartTimeDesc() {
-        makeSeance("Old Template", false, 0, LocalDateTime.now().minusDays(3), null);
-        makeSeance("New Template", false, 0, LocalDateTime.now(), null);
+    void findByIsModeleFalse_orderedByDisplayOrderAsc() {
+        makeSeance("Third",  false, 0, LocalDateTime.now(),               null, 2);
+        makeSeance("First",  false, 0, LocalDateTime.now().minusDays(5),  null, 0);
+        makeSeance("Second", false, 0, LocalDateTime.now().minusDays(1),  null, 1);
 
         List<Seance> results = seanceRepository
-                .findByUtilisateurUsernameAndIsModeleFalseOrderByStartTimeDesc(user.getUsername());
+                .findByUtilisateurUsernameAndIsModeleFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername());
 
-        assertThat(results.get(0).getTitre()).isEqualTo("New Template");
-        assertThat(results.get(1).getTitre()).isEqualTo("Old Template");
+        assertThat(results).extracting(Seance::getTitre)
+                .containsExactly("First", "Second", "Third");
+    }
+
+    @Test
+    void findByIsModeleFalse_displayOrderTie_fallsBackToStartTimeDesc() {
+        // Same displayOrder → newer startTime wins (so brand-new programmes appear at top).
+        makeSeance("Older Default", false, 0, LocalDateTime.now().minusDays(3), null, 0);
+        makeSeance("Newer Default", false, 0, LocalDateTime.now(),              null, 0);
+
+        List<Seance> results = seanceRepository
+                .findByUtilisateurUsernameAndIsModeleFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername());
+
+        assertThat(results.get(0).getTitre()).isEqualTo("Newer Default");
+        assertThat(results.get(1).getTitre()).isEqualTo("Older Default");
     }
 
     @Test

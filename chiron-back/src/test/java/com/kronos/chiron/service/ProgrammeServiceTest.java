@@ -140,12 +140,108 @@ class ProgrammeServiceTest {
     void getProgrammes_returnsListFromRepository() {
         Seance s = new Seance();
         s.setTitre("My Programme");
-        when(seanceRepository.findByUtilisateurUsernameAndIsModeleFalseOrderByStartTimeDesc("owner"))
+        when(seanceRepository.findByUtilisateurUsernameAndIsModeleFalseOrderByDisplayOrderAscStartTimeDesc("owner"))
                 .thenReturn(List.of(s));
 
         List<Seance> result = programmeService.getProgrammes("owner");
 
         assertThat(result).hasSize(1);
+    }
+
+    // --- reorderProgrammes ---
+
+    @Test
+    void reorderProgrammes_byOwner_assignsContiguousPositions() {
+        Seance s1 = new Seance(); s1.setId(10L); s1.setUtilisateur(owner); s1.setDisplayOrder(5);
+        Seance s2 = new Seance(); s2.setId(20L); s2.setUtilisateur(owner); s2.setDisplayOrder(2);
+        Seance s3 = new Seance(); s3.setId(30L); s3.setUtilisateur(owner); s3.setDisplayOrder(7);
+
+        when(utilisateurRepository.findByUsername("owner")).thenReturn(Optional.of(owner));
+        when(seanceRepository.findAllById(List.of(30L, 10L, 20L))).thenReturn(List.of(s1, s2, s3));
+
+        programmeService.reorderProgrammes("owner", List.of(30L, 10L, 20L));
+
+        assertThat(s3.getDisplayOrder()).isEqualTo(0);
+        assertThat(s1.getDisplayOrder()).isEqualTo(1);
+        assertThat(s2.getDisplayOrder()).isEqualTo(2);
+    }
+
+    @Test
+    void reorderProgrammes_nullOrEmptyList_isNoOp() {
+        programmeService.reorderProgrammes("owner", null);
+        programmeService.reorderProgrammes("owner", List.of());
+
+        verifyNoInteractions(utilisateurRepository);
+        verify(seanceRepository, never()).findAllById(any());
+    }
+
+    @Test
+    void reorderProgrammes_missingProgramme_throwsException() {
+        Seance s1 = new Seance(); s1.setId(10L); s1.setUtilisateur(owner);
+
+        when(utilisateurRepository.findByUsername("owner")).thenReturn(Optional.of(owner));
+        when(seanceRepository.findAllById(List.of(10L, 99L))).thenReturn(List.of(s1));
+
+        assertThatThrownBy(() -> programmeService.reorderProgrammes("owner", List.of(10L, 99L)))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("not found");
+    }
+
+    @Test
+    void reorderProgrammes_byUnauthorizedUser_throwsException() {
+        Seance s1 = new Seance(); s1.setId(10L); s1.setUtilisateur(owner); s1.setDisplayOrder(0);
+
+        when(utilisateurRepository.findByUsername("other")).thenReturn(Optional.of(otherUser));
+        when(seanceRepository.findAllById(List.of(10L))).thenReturn(List.of(s1));
+
+        assertThatThrownBy(() -> programmeService.reorderProgrammes("other", List.of(10L)))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Access denied");
+
+        assertThat(s1.getDisplayOrder()).isEqualTo(0);
+    }
+
+    @Test
+    void reorderProgrammes_byCoach_succeeds() {
+        Utilisateur coach = Utilisateur.builder().id(3L).username("coach").role(Role.USER).build();
+        owner.addCoach(coach);
+
+        Seance s1 = new Seance(); s1.setId(10L); s1.setUtilisateur(owner); s1.setDisplayOrder(7);
+
+        when(utilisateurRepository.findByUsername("coach")).thenReturn(Optional.of(coach));
+        when(seanceRepository.findAllById(List.of(10L))).thenReturn(List.of(s1));
+
+        programmeService.reorderProgrammes("coach", List.of(10L));
+
+        assertThat(s1.getDisplayOrder()).isEqualTo(0);
+    }
+
+    @Test
+    void reorderProgrammes_byAdmin_succeeds() {
+        Utilisateur admin = Utilisateur.builder().id(9L).username("admin").role(Role.ADMIN).build();
+        Seance s1 = new Seance(); s1.setId(10L); s1.setUtilisateur(owner); s1.setDisplayOrder(3);
+        Seance s2 = new Seance(); s2.setId(20L); s2.setUtilisateur(owner); s2.setDisplayOrder(4);
+
+        when(utilisateurRepository.findByUsername("admin")).thenReturn(Optional.of(admin));
+        when(seanceRepository.findAllById(List.of(20L, 10L))).thenReturn(List.of(s1, s2));
+
+        programmeService.reorderProgrammes("admin", List.of(20L, 10L));
+
+        assertThat(s2.getDisplayOrder()).isEqualTo(0);
+        assertThat(s1.getDisplayOrder()).isEqualTo(1);
+    }
+
+    @Test
+    void reorderProgrammes_mixedOwners_rejectsIfAnyUnauthorized() {
+        Seance mine = new Seance(); mine.setId(10L); mine.setUtilisateur(owner); mine.setDisplayOrder(0);
+        Seance theirs = new Seance(); theirs.setId(20L); theirs.setUtilisateur(otherUser); theirs.setDisplayOrder(1);
+
+        when(utilisateurRepository.findByUsername("owner")).thenReturn(Optional.of(owner));
+        when(seanceRepository.findAllById(List.of(10L, 20L))).thenReturn(List.of(mine, theirs));
+
+        assertThatThrownBy(() -> programmeService.reorderProgrammes("owner", List.of(10L, 20L)))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Access denied");
     }
 
     // --- getProgrammeById ---
