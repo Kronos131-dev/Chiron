@@ -98,7 +98,7 @@ class ProgrammeServiceTest {
     }
 
     @Test
-    void sauvegarderProgramme_updateExisting_preservesExerciceOrderFromDto() {
+    void sauvegarderProgramme_updateExisting_assignsDisplayOrderFromDtoPosition() {
         Seance existing = new Seance();
         existing.setId(7L);
         existing.setTitre("Push");
@@ -121,11 +121,15 @@ class ProgrammeServiceTest {
 
         programmeService.sauvegarderProgramme("owner", dto);
 
-        // Hibernate persists @OrderColumn from list position, so the order saved on the
-        // entity's `exercices` list IS the order users see when the seance is reloaded.
+        // The persisted Exercice.displayOrder must match the position in the input DTO list,
+        // otherwise reordering from the front-end is lost on save.
         assertThat(existing.getExercices())
-                .extracting(Exercice::getNom)
-                .containsExactly("Dips", "Bench", "Squat");
+                .extracting(Exercice::getNom, Exercice::getDisplayOrder)
+                .containsExactly(
+                        tuple("Dips",  0),
+                        tuple("Bench", 1),
+                        tuple("Squat", 2)
+                );
     }
 
     @Test

@@ -66,13 +66,13 @@
 
             @if (!isReadonly()) {
               <!-- Drag handle (long-press on mobile, click-and-drag on desktop) -->
-              <div class="drag-handle flex-shrink-0 mb-[1px] cursor-grab active:cursor-grabbing text-secondary/30 hover:text-secondary/70 transition-colors p-2"
+              <div class="drag-handle flex-shrink-0 mb-[1px] cursor-grab active:cursor-grabbing flex items-center justify-center w-10 h-10 rounded-lg bg-white/5 hover:bg-secondary/15 border border-white/10 hover:border-secondary/40 text-secondary/70 hover:text-secondary transition-all"
                    [draggable]="true"
                    (dragstart)="onExoDragStart($event, i, exoCard)"
                    (touchstart)="onExoTouchStart($event, i)"
                    (touchmove)="onExoTouchMove($event)"
                    (touchend)="onExoTouchEnd()"
-                   title="Glisser pour réordonner">
+                   title="Glisser pour réordonner cet exercice">
                 <span class="material-symbols-outlined text-xl select-none">drag_indicator</span>
               </div>
             }

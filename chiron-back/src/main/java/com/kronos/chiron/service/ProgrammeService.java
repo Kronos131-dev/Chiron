@@ -102,10 +102,12 @@ public class ProgrammeService {
         }
 
         if (seanceDto.exercices() != null) {
+            int position = 0;
             for (ExerciceDto exoDto : seanceDto.exercices()) {
                 Exercice exercice = new Exercice();
                 exercice.setNom(exoDto.nom());
                 exercice.setCommentaire(exoDto.commentaire());
+                exercice.setDisplayOrder(position++);
                 if (exoDto.exerciceDefinitionId() != null) {
                     exerciceDefinitionRepository.findById(exoDto.exerciceDefinitionId())
                             .ifPresent(exercice::setDefinition);
@@ -283,11 +285,13 @@ public class ProgrammeService {
         newSeance.setModele(false);
         newSeance.setWeekNumber(0);
 
+        int copyPosition = 0;
         for (Exercice sourceExo : sourceSeance.getExercices()) {
             Exercice newExo = new Exercice();
             newExo.setNom(sourceExo.getNom());
             newExo.setCommentaire(sourceExo.getCommentaire());
             newExo.setDefinition(sourceExo.getDefinition());
+            newExo.setDisplayOrder(copyPosition++);
             
             for (Serie sourceSerie : sourceExo.getSeries()) {
                 Serie newSerie = new Serie();
