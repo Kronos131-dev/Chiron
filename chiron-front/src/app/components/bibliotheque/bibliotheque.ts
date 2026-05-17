@@ -3,11 +3,15 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ChironApi, ExerciceDefinitionDto } from '../../service/chiron-api';
 import { HeaderComponent } from '../shared/header/header';
-
-interface FilterChip {
-  key: string;
-  label: string;
-}
+import {
+  MUSCLES,
+  EQUIPEMENTS,
+  DIFFICULTES,
+  muscleLabel,
+  equipementLabel,
+  difficulteLabel,
+  difficulteClass,
+} from '../../shared/exercise-filters';
 
 @Component({
   selector: 'app-bibliotheque',
@@ -29,37 +33,9 @@ export class Bibliotheque implements OnInit {
 
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
-  readonly muscles: FilterChip[] = [
-    { key: 'PECTORAUX', label: 'Pectoraux' },
-    { key: 'DOS', label: 'Dos' },
-    { key: 'EPAULES', label: 'Épaules' },
-    { key: 'BICEPS', label: 'Biceps' },
-    { key: 'TRICEPS', label: 'Triceps' },
-    { key: 'ABDOMINAUX', label: 'Abdos' },
-    { key: 'QUADRICEPS', label: 'Quadriceps' },
-    { key: 'ISCHIO_JAMBIERS', label: 'Ischio-jamb.' },
-    { key: 'FESSIERS', label: 'Fessiers' },
-    { key: 'MOLLETS', label: 'Mollets' },
-    { key: 'AVANT_BRAS', label: 'Avant-bras' },
-    { key: 'TRAPEZES', label: 'Trapèzes' },
-    { key: 'LOMBAIRES', label: 'Lombaires' },
-  ];
-
-  readonly equipements: FilterChip[] = [
-    { key: 'POIDS_DU_CORPS', label: 'Poids du corps' },
-    { key: 'HALTERES', label: 'Haltères' },
-    { key: 'BARRE', label: 'Barre' },
-    { key: 'MACHINE', label: 'Machine' },
-    { key: 'POULIE', label: 'Poulie' },
-    { key: 'KETTLEBELL', label: 'Kettlebell' },
-    { key: 'ELASTIQUE', label: 'Élastique' },
-  ];
-
-  readonly difficultes: FilterChip[] = [
-    { key: 'DEBUTANT', label: 'Débutant' },
-    { key: 'INTERMEDIAIRE', label: 'Intermédiaire' },
-    { key: 'AVANCE', label: 'Avancé' },
-  ];
+  readonly muscles     = MUSCLES;
+  readonly equipements = EQUIPEMENTS;
+  readonly difficultes = DIFFICULTES;
 
   constructor(private chironApi: ChironApi) {}
 
@@ -120,27 +96,8 @@ export class Bibliotheque implements OnInit {
     this.selectedExercice.set(null);
   }
 
-  muscleLabel(key: string | null): string {
-    if (!key) return '';
-    return this.muscles.find(m => m.key === key)?.label ?? key;
-  }
-
-  equipementLabel(key: string | null): string {
-    if (!key) return '';
-    return this.equipements.find(e => e.key === key)?.label ?? key;
-  }
-
-  difficulteLabel(key: string | null): string {
-    if (!key) return '';
-    return this.difficultes.find(d => d.key === key)?.label ?? key;
-  }
-
-  difficulteClass(key: string | null): string {
-    switch (key) {
-      case 'DEBUTANT': return 'text-emerald-400';
-      case 'INTERMEDIAIRE': return 'text-amber-400';
-      case 'AVANCE': return 'text-red-400';
-      default: return 'text-on-surface-variant';
-    }
-  }
+  muscleLabel     = muscleLabel;
+  equipementLabel = equipementLabel;
+  difficulteLabel = difficulteLabel;
+  difficulteClass = difficulteClass;
 }

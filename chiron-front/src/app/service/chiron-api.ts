@@ -111,12 +111,18 @@ export class ChironApi {
   /**
    * Saves a new or updated workout program for a user.
    *
-   * @param username     The requesting user's username.
+   * @param username     The requesting user's username (authenticated caller).
    * @param programmeDto The data transfer object representing the program.
+   * @param forUsername  Optional athlete the programme is being created for, when a coach
+   *                     creates on someone else's behalf. Ignored on update.
    * @return An Observable emitting the server response confirmation.
    */
-  sauvegarderProgramme(username: string, programmeDto: any) {
-    return this.http.post<string>(`${this.apiUrl}/programmes?username=${encodeURIComponent(username)}`, programmeDto, { responseType: 'text' as 'json' });
+  sauvegarderProgramme(username: string, programmeDto: any, forUsername?: string) {
+    let url = `${this.apiUrl}/programmes?username=${encodeURIComponent(username)}`;
+    if (forUsername && forUsername !== username) {
+      url += `&forUsername=${encodeURIComponent(forUsername)}`;
+    }
+    return this.http.post<string>(url, programmeDto, { responseType: 'text' as 'json' });
   }
 
   /**

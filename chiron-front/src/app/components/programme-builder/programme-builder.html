@@ -1,0 +1,103 @@
+<app-header [title]="programmeId ? 'MODIFIER LE PROGRAMME' : 'NOUVEAU PROGRAMME'"
+            [showBack]="true"
+            [backRoute]="isCoachMode() ? '/profile/' + targetUsername() : '/programme'">
+</app-header>
+
+<main class="min-h-screen pt-20 pb-32 bg-slate-950 heroic-texture">
+
+  <!-- Title + Save -->
+  <section class="px-6 py-8 relative overflow-hidden">
+    <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-slate-800/40 to-transparent pointer-events-none"></div>
+    <div class="max-w-md mx-auto relative z-10 space-y-4">
+
+      @if (isCoachMode()) {
+        <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary/10 border border-secondary/30">
+          <span class="material-symbols-outlined text-secondary text-base">supervisor_account</span>
+          <span class="text-secondary text-xs font-bold tracking-widest uppercase">Coach · {{ targetUsername() }}</span>
+        </div>
+      }
+
+      <div>
+        <p class="text-secondary text-[10px] font-bold tracking-[0.25em] uppercase mb-1">Programme</p>
+        <input type="text"
+               [ngModel]="titre()"
+               (ngModelChange)="titre.set($event)"
+               class="w-full bg-transparent border-b-2 border-transparent hover:border-white/10 focus:border-secondary outline-none font-headline text-3xl md:text-4xl font-black text-white uppercase tracking-tight pb-1 transition-colors"
+               placeholder="NOM DU PROGRAMME" />
+      </div>
+
+      <div class="flex justify-end">
+        <button (click)="save()"
+                [disabled]="isSaving()"
+                class="bg-gradient-to-r from-secondary to-[#c77a30] text-slate-950 font-bold text-xs px-6 py-3 rounded uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg shadow-secondary/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+          <span class="material-symbols-outlined text-sm">save</span>
+          {{ isSaving() ? 'Sauvegarde…' : 'Sauvegarder' }}
+        </button>
+      </div>
+
+      @if (saveStatus()) {
+        <p class="text-secondary text-xs font-bold tracking-widest uppercase text-right pt-1 animate-pulse">
+          {{ saveStatus() }}
+        </p>
+      }
+    </div>
+  </section>
+
+  <!-- Exercises List -->
+  <section class="px-4 md:px-8">
+    <div class="max-w-md mx-auto space-y-6">
+
+      @if (isLoading()) {
+        <div class="flex justify-center py-20">
+          <div class="w-10 h-10 border-4 border-secondary/30 border-t-secondary rounded-full animate-spin"></div>
+        </div>
+      } @else {
+
+        @if (exercices().length === 0) {
+          <div class="flex flex-col items-center justify-center py-12 text-center bg-[#1a1c23]/50 border border-dashed border-white/10 rounded-xl">
+            <span class="material-symbols-outlined text-4xl text-secondary/40 mb-3">fitness_center</span>
+            <p class="text-on-surface-variant text-sm mb-1">Aucun exercice pour l'instant</p>
+            <p class="text-on-surface-variant text-xs opacity-60">Commence par en ajouter un ci-dessous</p>
+          </div>
+        }
+
+        @for (exo of exercices(); track exo.id; let i = $index) {
+          <app-exercice-card
+            [exercice]="exo"
+            [readonly]="false"
+            [index]="i"
+            [isDragging]="dragFromIdx() === i"
+            [isDropTarget]="dragOverIdx() === i && dragFromIdx() !== i"
+            (remove)="removeExercice(exo.id)"
+            (exoDragStart)="onExoDragStart($event.event, i, $event.cardEl)"
+            (exoDragOver)="onExoDragOver($event, i)"
+            (exoDrop)="onExoDrop($event, i)"
+            (exoDragEnd)="onExoDragEnd()"
+            (exoTouchStart)="onExoTouchStart($event, i)"
+            (exoTouchMove)="onExoTouchMove($event)"
+            (exoTouchEnd)="onExoTouchEnd()"
+          />
+        }
+
+        <!-- Add exercise → opens library sheet -->
+        <button (click)="openPicker()"
+                class="w-full mt-4 bg-[#1a1c23]/50 border-2 border-dashed border-secondary/30 rounded-xl p-6 flex flex-col items-center justify-center gap-3 text-secondary hover:bg-secondary/10 hover:border-secondary/60 transition-all group">
+          <div class="w-12 h-12 rounded-full bg-secondary/15 flex items-center justify-center group-hover:bg-secondary/25 group-hover:scale-110 transition-all">
+            <span class="material-symbols-outlined text-2xl">add</span>
+          </div>
+          <span class="text-xs font-bold tracking-[0.2em] uppercase">Ajouter un exercice</span>
+        </button>
+
+      }
+    </div>
+  </section>
+</main>
+
+<app-exercise-picker
+  [open]="pickerOpen()"
+  [addedExercises]="addedExercises()"
+  (closeRequest)="closePicker()"
+  (addFromDefinition)="addExerciceFromDefinition($event)"
+  (addCustom)="addCustomExercice()"
+  (removeAdded)="removeAddedFromPicker($event)"
+/>

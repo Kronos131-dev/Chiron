@@ -112,7 +112,7 @@
                  alt="avatar">
           </div>
 
-          <!-- Tier badge -->
+          <!-- Tier badge (texte) -->
           <div class="absolute -bottom-3 left-1/2 -translate-x-1/2 px-5 py-1.5 rounded-full whitespace-nowrap z-20"
                [ngClass]="getTierBadgeClass()">
             <span class="text-xs font-black tracking-[0.15em] uppercase">{{ getCurrentTierName() }}</span>
@@ -132,8 +132,6 @@
 
           @if (getTierCategory() === 'legend') {
             <span class="laurel-right text-2xl select-none" [ngClass]="getLaurelClass()">❧</span>
-          } @else {
-            <span class="font-normal" [ngClass]="getTierSymbolClass()">{{ getTierSymbol() }}</span>
           }
 
           @if (athleteProfile()?.isAdmin) {
@@ -182,25 +180,26 @@
           </div>
         </div>
 
-        <!-- Trésor link -->
+        <!-- Trésor : badge en grand au centre, légende dessous -->
         <button (click)="goToTresor()"
-                class="mt-5 w-full flex items-center justify-between px-5 py-4 rounded-2xl transition-all group border"
-                [ngClass]="getTresorLinkClass()">
-          <div class="flex items-center gap-3">
-            <span class="material-symbols-outlined text-2xl" [ngClass]="getTresorIconClass()">military_tech</span>
-            <div class="text-left">
-              <p class="text-sm font-black tracking-widest uppercase font-headline" [ngClass]="getTresorTextClass()">Trésor</p>
-              <p class="text-[10px] text-on-surface-variant tracking-widest uppercase">
-                @if (athleteProfile().performanceTier) {
-                  Palier · {{ athleteProfile().performanceTier }}
-                } @else {
-                  Paliers de force & performances
-                }
-              </p>
-            </div>
-          </div>
-          <span class="material-symbols-outlined text-on-surface-variant/30 group-hover:translate-x-1 transition-all"
-                [ngClass]="getTresorIconClass()">chevron_right</span>
+                class="tresor-section mt-6 w-full flex flex-col items-center px-5 pt-6 pb-5 rounded-3xl transition-all group border"
+                [ngClass]="getTresorLinkClass()"
+                [title]="'Voir le Trésor — Palier ' + getCurrentTierName()">
+          <img [src]="getTierBadgeUrl()"
+               [alt]="'Palier ' + getCurrentTierName()"
+               class="tresor-section-badge" />
+          <p class="font-headline text-2xl font-black tracking-[0.25em] uppercase mt-5"
+             [ngClass]="getTresorTextClass()">Trésor</p>
+          <p class="text-[11px] tracking-[0.2em] uppercase mt-1 text-on-surface-variant">
+            @if (athleteProfile().performanceTier) {
+              Palier · <span class="font-bold" [ngClass]="getTresorTextClass()">{{ athleteProfile().performanceTier }}</span>
+            } @else {
+              Paliers de force & performances
+            }
+          </p>
+          <span class="material-symbols-outlined text-on-surface-variant/40 group-hover:translate-y-0.5 transition-all text-base">
+            expand_more
+          </span>
         </button>
 
       </div>
@@ -268,6 +267,14 @@
           <p class="text-on-surface-variant text-sm text-center py-4 bg-slate-900/30 rounded-xl border border-white/5">
             Aucun programme défini.
           </p>
+        }
+
+        @if (!isMyProfile() && athleteProfile().amICoach) {
+          <button (click)="createProgrammeForAthlete()"
+                  class="w-full mt-3 flex items-center justify-center gap-2 bg-secondary/10 text-secondary border-2 border-dashed border-secondary/40 py-3 rounded-lg text-xs font-bold tracking-widest uppercase hover:bg-secondary/20 hover:border-secondary transition-all">
+            <span class="material-symbols-outlined text-base">add</span>
+            Créer un programme pour cet athlète
+          </button>
         }
       </div>
 

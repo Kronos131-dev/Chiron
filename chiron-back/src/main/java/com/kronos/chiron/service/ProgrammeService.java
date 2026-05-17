@@ -50,6 +50,21 @@ public class ProgrammeService {
      */
     @Transactional
     public Seance sauvegarderProgramme(String username, SeanceDto seanceDto) {
+        return sauvegarderProgramme(username, seanceDto, null);
+    }
+
+    /**
+     * Save a programme, optionally on behalf of another user (coach flow).
+     *
+     * @param username       The requester (authenticated user making the call).
+     * @param seanceDto      The programme payload.
+     * @param forUsername    If non-null and different from {@code username}, the programme is
+     *                       saved for that athlete — requires the requester to be one of the
+     *                       athlete's coaches (or an admin). Ignored on update (the owner of
+     *                       the existing programme always takes precedence).
+     */
+    @Transactional
+    public Seance sauvegarderProgramme(String username, SeanceDto seanceDto, String forUsername) {
         Utilisateur requestUser = utilisateurRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -67,7 +82,7 @@ public class ProgrammeService {
                     throw new RuntimeException("Access denied. You are not authorized to modify this program.");
                 }
             }
-            
+
             targetUser = owner;
 
             boolean requestedIsModele = seanceDto.isModele() != null ? seanceDto.isModele() : false;
@@ -82,6 +97,15 @@ public class ProgrammeService {
             }
         } else {
             seance = new Seance();
+            // Coach flow: requester is creating on behalf of `forUsername` (an athlete).
+            if (forUsername != null && !forUsername.equals(username)) {
+                Utilisateur athlete = utilisateurRepository.findByUsername(forUsername)
+                        .orElseThrow(() -> new RuntimeException("Athlete not found: " + forUsername));
+                if (!athlete.getCoaches().contains(requestUser) && requestUser.getRole() != Role.ADMIN) {
+                    throw new RuntimeException("Access denied. You are not a coach of " + forUsername + ".");
+                }
+                targetUser = athlete;
+            }
         }
 
         if (!isUpdate) {

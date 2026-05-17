@@ -44,9 +44,11 @@ public class ProgrammeController {
      * @return A ResponseEntity confirming the save action.
      */
     @PostMapping
-    public ResponseEntity<?> creerProgramme(@RequestParam String username, @RequestBody SeanceDto seanceDto) {
+    public ResponseEntity<?> creerProgramme(@RequestParam String username,
+                                            @RequestParam(required = false) String forUsername,
+                                            @RequestBody SeanceDto seanceDto) {
         try {
-            Seance savedSeance = programmeService.sauvegarderProgramme(username, seanceDto);
+            Seance savedSeance = programmeService.sauvegarderProgramme(username, seanceDto, forUsername);
             return ResponseEntity.ok("Program saved with ID: " + savedSeance.getId());
         } catch (Exception e) {
             e.printStackTrace();
