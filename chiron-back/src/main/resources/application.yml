@@ -57,3 +57,12 @@ jwt:
 chiron:
   uploads-dir: ${UPLOADS_DIR:./uploads/images}
   frontend-url: ${FRONTEND_URL:http://localhost:4200}
+  # Clé AES-256 base64 (32 octets) pour chiffrer les tokens externes (Olympus).
+  # En dev : si vide, le service en génère une éphémère au boot (tokens perdus au redémarrage).
+  # En prod : OBLIGATOIRE via env var CHIRON_SECRET_KEY.
+  secret-key: ${CHIRON_SECRET_KEY:}
+
+olympus:
+  base-url: ${OLYMPUS_BASE_URL:http://localhost:8080}
+  # Durée de vie supposée du JWT Olympus (24h par défaut côté Olympus).
+  token-ttl-seconds: ${OLYMPUS_TOKEN_TTL_SECONDS:86400}

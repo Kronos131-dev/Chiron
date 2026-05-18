@@ -12,6 +12,7 @@ import com.kronos.chiron.entity.Serie;
 import com.kronos.chiron.entity.TypeEquipement;
 import com.kronos.chiron.entity.Utilisateur;
 import com.kronos.chiron.entity.Role;
+import java.time.Period;
 import com.kronos.chiron.repository.ExerciceRepository;
 import com.kronos.chiron.repository.SeanceRepository;
 import com.kronos.chiron.repository.UtilisateurRepository;
@@ -965,6 +966,46 @@ public class WorkoutTools {
                 res.append(", 1RM estimé ").append(exo.getRm1Estime()).append(" kg");
             }
             res.append("\n");
+        }
+        return res.toString();
+    }
+
+    /**
+     * Renvoie le profil complet de l'utilisateur (âge, sexe, niveau, objectif, matériel,
+     * blessures, préférences) tel qu'il a été renseigné via l'onboarding ou la page Profil.
+     * Chiron doit l'appeler au début d'un échange technique pour contextualiser ses réponses.
+     */
+    @Tool("Récupère le profil sportif complet de l'utilisateur : âge, sexe, taille, poids, niveau d'expérience, objectif principal, fréquence visée, matériel disponible, blessures, préférences. À appeler en début d'échange technique ou de création de programme pour personnaliser tes conseils.")
+    public String getUserProfileComplet(@MemoryId String userId) {
+        Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
+                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+
+        if (user.getIsOnboarded() == null || !user.getIsOnboarded()) {
+            return "Le profil sportif de l'utilisateur n'est pas encore renseigné. Encourage-le à compléter son profil pour des conseils plus pertinents.";
+        }
+
+        StringBuilder res = new StringBuilder("Profil sportif :\n");
+        if (user.getDateNaissance() != null) {
+            int age = Period.between(user.getDateNaissance(), java.time.LocalDate.now()).getYears();
+            res.append("- Âge : ").append(age).append(" ans\n");
+        }
+        if (user.getSexe() != null) res.append("- Sexe : ").append(user.getSexe().name().toLowerCase()).append("\n");
+        if (user.getTailleCm() != null) res.append("- Taille : ").append(user.getTailleCm()).append(" cm\n");
+        if (user.getPoidsCorps() != null) res.append("- Poids : ").append(user.getPoidsCorps()).append(" kg\n");
+        if (user.getNiveauExperience() != null) res.append("- Niveau : ").append(user.getNiveauExperience().name().toLowerCase()).append("\n");
+        if (user.getObjectifPrincipal() != null) res.append("- Objectif : ").append(user.getObjectifPrincipal().name().toLowerCase().replace('_', ' ')).append("\n");
+        if (user.getFrequenceVisee() != null) res.append("- Fréquence visée : ").append(user.getFrequenceVisee()).append(" séances/semaine\n");
+        if (user.getMaterielDisponible() != null && !user.getMaterielDisponible().isEmpty()) {
+            String mat = user.getMaterielDisponible().stream()
+                    .map(t -> t.name().toLowerCase().replace('_', ' '))
+                    .collect(Collectors.joining(", "));
+            res.append("- Matériel disponible : ").append(mat).append("\n");
+        }
+        if (user.getBlessures() != null && !user.getBlessures().isBlank()) {
+            res.append("- Blessures / limitations : ").append(user.getBlessures().trim()).append("\n");
+        }
+        if (user.getPreferences() != null && !user.getPreferences().isBlank()) {
+            res.append("- Préférences : ").append(user.getPreferences().trim()).append("\n");
         }
         return res.toString();
     }

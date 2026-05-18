@@ -12,6 +12,7 @@ import { Tresor } from './components/tresor/tresor';
 import { Bibliotheque } from './components/bibliotheque/bibliotheque';
 import { Settings } from './components/settings/settings';
 import { ResetPassword } from './components/reset-password/reset-password';
+import { OnboardingComponent } from './components/onboarding/onboarding';
 
 /**
  * Global routing configuration for the Angular application.
@@ -93,6 +94,12 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   { path: 'reset-password', component: ResetPassword },
+
+  {
+    path: 'onboarding',
+    component: OnboardingComponent,
+    canActivate: [authGuard]
+  },
 
   {
     path: 'exercice/:id',

@@ -318,4 +318,74 @@ export class ChironApi {
   resetPassword(token: string, newPassword: string): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/auth/reset-password`, { token, newPassword });
   }
+
+  // --- Liaison Olympus (nutrition) ---
+
+  getNutritionStatus(): Observable<NutritionLinkStatus> {
+    return this.http.get<NutritionLinkStatus>(`${this.apiUrl}/nutrition/status`);
+  }
+
+  linkOlympus(pseudo: string, password: string): Observable<NutritionLinkStatus> {
+    return this.http.post<NutritionLinkStatus>(`${this.apiUrl}/nutrition/link`, { pseudo, password });
+  }
+
+  unlinkOlympus(): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/nutrition/link`);
+  }
+
+  // --- Profil sportif enrichi ---
+
+  getProfileSetup(): Observable<UserProfileSetup> {
+    return this.http.get<UserProfileSetup>(`${this.apiUrl}/profile-setup`);
+  }
+
+  saveProfileSetup(setup: UserProfileSetup): Observable<UserProfileSetup> {
+    return this.http.put<UserProfileSetup>(`${this.apiUrl}/profile-setup`, setup);
+  }
+}
+
+export interface NutritionLinkStatus {
+  linked: boolean;
+  expired: boolean;
+  olympusUsername: string | null;
+  linkedAt: string | null;
+  expiresAt: string | null;
+}
+
+export type Sexe = 'HOMME' | 'FEMME' | 'AUTRE';
+
+export type NiveauExperience = 'DEBUTANT' | 'INTERMEDIAIRE' | 'AVANCE' | 'EXPERT';
+
+export type ObjectifPrincipal =
+  | 'FORCE'
+  | 'HYPERTROPHIE'
+  | 'ENDURANCE'
+  | 'PERTE_DE_GRAS'
+  | 'MAINTIEN'
+  | 'SANTE_GENERALE';
+
+export type TypeEquipement =
+  | 'POIDS_DU_CORPS'
+  | 'HALTERES'
+  | 'BARRE'
+  | 'MACHINE'
+  | 'POULIE'
+  | 'KETTLEBELL'
+  | 'ELASTIQUE'
+  | 'BARRE_FIXE'
+  | 'ANNEAUX'
+  | 'AUTRE';
+
+export interface UserProfileSetup {
+  isOnboarded: boolean;
+  dateNaissance: string | null;          // ISO YYYY-MM-DD
+  sexe: Sexe | null;
+  tailleCm: number | null;
+  poidsCorps: number | null;
+  niveauExperience: NiveauExperience | null;
+  objectifPrincipal: ObjectifPrincipal | null;
+  frequenceVisee: number | null;
+  materielDisponible: TypeEquipement[];
+  blessures: string | null;
+  preferences: string | null;
 }

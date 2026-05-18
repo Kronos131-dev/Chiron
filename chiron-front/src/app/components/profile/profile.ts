@@ -2,7 +2,7 @@ import { Component, OnInit, signal, ViewChild, ElementRef } from '@angular/core'
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { ChironApi } from '../../service/chiron-api';
+import { ChironApi, NutritionLinkStatus } from '../../service/chiron-api';
 import { AuthService } from '../../service/auth.service';
 import { HeaderComponent } from '../shared/header/header';
 import { tierBadgeUrl } from '../../shared/tier-badges';
@@ -48,6 +48,13 @@ export class Profile implements OnInit {
   /** Indicates whether the currently authenticated user has administrator privileges. */
   isAdmin = signal(false);
 
+  // --- Liaison Olympus ---
+  nutritionStatus = signal<NutritionLinkStatus | null>(null);
+  olympusPseudo = signal('');
+  olympusPassword = signal('');
+  isLinking = signal(false);
+  linkError = signal<string | null>(null);
+
   /**
    * Initializes a new instance of the Profile component.
    *
@@ -92,9 +99,53 @@ export class Profile implements OnInit {
         this.isMyProfile.set(true);
         if (currentUsername) {
           this.loadProfile(currentUsername, currentUsername);
+          this.loadNutritionStatus();
         }
       }
     });
+  }
+
+  loadNutritionStatus() {
+    this.chironApi.getNutritionStatus().subscribe({
+      next: (status) => this.nutritionStatus.set(status),
+      error: () => this.nutritionStatus.set(null)
+    });
+  }
+
+  linkOlympus() {
+    const pseudo = this.olympusPseudo().trim();
+    const password = this.olympusPassword();
+    if (!pseudo || !password) {
+      this.linkError.set('Pseudo et mot de passe requis.');
+      return;
+    }
+    this.isLinking.set(true);
+    this.linkError.set(null);
+    this.chironApi.linkOlympus(pseudo, password).subscribe({
+      next: (status) => {
+        this.nutritionStatus.set(status);
+        this.olympusPseudo.set('');
+        this.olympusPassword.set('');
+        this.isLinking.set(false);
+      },
+      error: (err) => {
+        this.isLinking.set(false);
+        const msg = err?.error?.message ?? 'Échec de la liaison.';
+        this.linkError.set(msg);
+      }
+    });
+  }
+
+  unlinkOlympus() {
+    if (!confirm('Délier votre compte Olympus de Chiron ?')) return;
+    this.chironApi.unlinkOlympus().subscribe({
+      next: () => this.loadNutritionStatus(),
+      error: () => alert('Erreur lors du déliage.')
+    });
+  }
+
+  goToOnboarding() {
+    this.router.navigate(['/onboarding']);
   }
 
   /**
