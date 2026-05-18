@@ -1,6 +1,9 @@
 package com.kronos.chiron.ai;
 
 import com.kronos.chiron.dto.ExerciceDefinitionDto;
+import com.kronos.chiron.dto.ExerciceDto;
+import com.kronos.chiron.dto.SeanceDto;
+import com.kronos.chiron.dto.SerieDto;
 import com.kronos.chiron.entity.Exercice;
 import com.kronos.chiron.entity.MuscleGroup;
 import com.kronos.chiron.entity.NiveauDifficulte;
@@ -12,7 +15,11 @@ import com.kronos.chiron.entity.Role;
 import com.kronos.chiron.repository.ExerciceRepository;
 import com.kronos.chiron.repository.SeanceRepository;
 import com.kronos.chiron.repository.UtilisateurRepository;
+import com.kronos.chiron.dto.ExercisePerformanceDto;
+import com.kronos.chiron.dto.PerformanceSummaryDto;
 import com.kronos.chiron.service.ExerciceDefinitionService;
+import com.kronos.chiron.service.PerformanceService;
+import com.kronos.chiron.service.ProgrammeService;
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.service.MemoryId;
 import lombok.RequiredArgsConstructor;
@@ -21,11 +28,16 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.time.temporal.WeekFields;
 import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -41,6 +53,8 @@ public class WorkoutTools {
     private final UtilisateurRepository utilisateurRepository;
     private final ExerciceRepository exerciceRepository;
     private final ExerciceDefinitionService exerciceDefinitionService;
+    private final ProgrammeService programmeService;
+    private final PerformanceService performanceService;
 
     /**
      * Retrieves the current system date and time.
@@ -707,6 +721,248 @@ public class WorkoutTools {
             }
             if (e.difficulte() != null) {
                 res.append(" / ").append(formatDifficulte(e.difficulte()));
+            }
+            res.append("\n");
+        }
+        return res.toString();
+    }
+
+    /**
+     * Creates a fully-populated training programme (template) for the requesting user.
+     * Each spec's exercise name is resolved against the standardised library: if any name
+     * cannot be matched the programme is NOT created and the AI is told to retry.
+     *
+     * @param userId     The ID of the requesting user (memory id).
+     * @param titre      The title of the new programme.
+     * @param exercices  Ordered list of exercises with target sets and reps.
+     * @return A status message naming the created programme and its exercises, or an error.
+     */
+    @Tool("Crée un programme d'entraînement (modèle) complet avec ses exercices et leurs séries cibles. " +
+          "Chaque nom d'exercice doit correspondre à un exercice de la bibliothèque standardisée — appelle [rechercherExercices] avant " +
+          "pour récupérer les noms exacts. À utiliser quand l'utilisateur demande de créer / générer / construire un programme.")
+    public String creerProgramme(@MemoryId String userId, String titre, List<ProgrammeExerciceSpec> exercices) {
+        Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
+                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+
+        if (titre == null || titre.isBlank()) {
+            return "Le titre du programme est obligatoire.";
+        }
+        if (exercices == null || exercices.isEmpty()) {
+            return "Au moins un exercice est requis pour créer un programme.";
+        }
+
+        List<ExerciceDto> exerciceDtos = new ArrayList<>();
+        List<String> introuvables = new ArrayList<>();
+        List<String> resumeExos = new ArrayList<>();
+
+        for (ProgrammeExerciceSpec spec : exercices) {
+            if (spec == null || spec.nomExercice() == null || spec.nomExercice().isBlank()) {
+                continue;
+            }
+            List<ExerciceDefinitionDto> matches = exerciceDefinitionService.search(spec.nomExercice(), null, null, null);
+            if (matches.isEmpty()) {
+                introuvables.add(spec.nomExercice());
+                continue;
+            }
+            ExerciceDefinitionDto def = matches.get(0);
+            int nbSeries = (spec.nbSeries() != null && spec.nbSeries() > 0) ? spec.nbSeries() : 3;
+            int reps = (spec.reps() != null && spec.reps() > 0) ? spec.reps() : 10;
+
+            List<SerieDto> series = new ArrayList<>();
+            for (int i = 0; i < nbSeries; i++) {
+                series.add(new SerieDto(null, reps, null, null));
+            }
+
+            String nomCanonique = def.nomFr() != null ? def.nomFr() : def.nomEn();
+            exerciceDtos.add(new ExerciceDto(null, nomCanonique, null, def.id(), series));
+            resumeExos.add(nomCanonique + " (" + nbSeries + "x" + reps + ")");
+        }
+
+        if (!introuvables.isEmpty()) {
+            return "Impossible de créer le programme : exercices introuvables dans la bibliothèque standardisée : "
+                    + String.join(", ", introuvables)
+                    + ". Utilise [rechercherExercices] pour obtenir les noms exacts puis réessaie.";
+        }
+
+        if (exerciceDtos.isEmpty()) {
+            return "Aucun exercice valide fourni.";
+        }
+
+        SeanceDto dto = new SeanceDto(null, titre, null, null, 0, false, null, exerciceDtos);
+        Seance saved = programmeService.sauvegarderProgramme(user.getUsername(), dto);
+
+        return "Programme '" + saved.getTitre() + "' créé avec " + exerciceDtos.size() + " exercice(s) : "
+                + String.join(", ", resumeExos)
+                + ". Il est disponible dans l'onglet Programmes.";
+    }
+
+    /**
+     * Aggregates the user's executed sessions over the last N days by primary muscle group.
+     * Reports number of distinct sessions and total sets per muscle, plus muscles that have
+     * not been worked at all in the window.
+     *
+     * @param userId   The ID of the requesting user.
+     * @param nbJours  The look-back window in days (defaults to 7 if null or <=0).
+     * @return A formatted coverage summary, or a message if no session is found.
+     */
+    @Tool("Analyse la couverture musculaire des derniers jours : pour chaque groupe musculaire, combien de séances l'utilisateur a faites et combien de séries au total. Identifie aussi les muscles négligés. À utiliser quand l'utilisateur demande un bilan, ce qu'il a travaillé récemment, s'il est équilibré, ou ce qu'il a négligé.")
+    public String analyserCouvertureMusculaire(@MemoryId String userId, Integer nbJours) {
+        Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
+                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+
+        int window = (nbJours != null && nbJours > 0) ? nbJours : 7;
+        LocalDateTime cutoff = LocalDateTime.now().minusDays(window);
+
+        List<Seance> historique = seanceRepository
+                .findByUtilisateurUsernameAndIsModeleTrueOrderByStartTimeDesc(user.getUsername())
+                .stream()
+                .filter(s -> s.getStartTime() != null && s.getStartTime().isAfter(cutoff))
+                .collect(Collectors.toList());
+
+        if (historique.isEmpty()) {
+            return "Aucune séance exécutée sur les " + window + " derniers jours.";
+        }
+
+        Map<MuscleGroup, Set<Long>> sessionsByMuscle = new EnumMap<>(MuscleGroup.class);
+        Map<MuscleGroup, Integer> seriesByMuscle = new EnumMap<>(MuscleGroup.class);
+
+        for (Seance s : historique) {
+            if (s.getExercices() == null) continue;
+            for (Exercice e : s.getExercices()) {
+                if (e.getDefinition() == null || e.getDefinition().getMusclePrincipal() == null) continue;
+                MuscleGroup m = e.getDefinition().getMusclePrincipal();
+                sessionsByMuscle.computeIfAbsent(m, k -> new HashSet<>()).add(s.getId());
+                int nbSeries = (e.getSeries() != null) ? e.getSeries().size() : 0;
+                seriesByMuscle.merge(m, nbSeries, Integer::sum);
+            }
+        }
+
+        StringBuilder res = new StringBuilder();
+        res.append("Couverture musculaire sur ").append(window).append(" jours (")
+                .append(historique.size()).append(" séance(s) exécutée(s)) :\n");
+
+        if (sessionsByMuscle.isEmpty()) {
+            res.append("- Aucun exercice rattaché à la bibliothèque standardisée [std]. Analyse par muscle impossible.\n");
+        } else {
+            List<MuscleGroup> sorted = sessionsByMuscle.keySet().stream()
+                    .sorted((a, b) -> Integer.compare(
+                            seriesByMuscle.getOrDefault(b, 0),
+                            seriesByMuscle.getOrDefault(a, 0)))
+                    .collect(Collectors.toList());
+
+            for (MuscleGroup m : sorted) {
+                res.append("- ").append(formatMuscle(m)).append(" : ")
+                        .append(sessionsByMuscle.get(m).size()).append(" séance(s), ")
+                        .append(seriesByMuscle.getOrDefault(m, 0)).append(" série(s)\n");
+            }
+        }
+
+        List<MuscleGroup> negliges = new ArrayList<>();
+        for (MuscleGroup m : MuscleGroup.values()) {
+            if (!sessionsByMuscle.containsKey(m)) negliges.add(m);
+        }
+        if (!negliges.isEmpty()) {
+            String missing = negliges.stream().map(this::formatMuscle).collect(Collectors.joining(", "));
+            res.append("Muscles non travaillés sur la période : ").append(missing).append(".");
+        }
+
+        return res.toString();
+    }
+
+    /**
+     * Returns, for each muscle group, the date of the user's most recent executed session
+     * that included an exercise targeting it. Muscles never worked are listed at the end.
+     *
+     * @param userId The ID of the requesting user.
+     * @return A formatted summary sorted by oldest training first (most neglected on top).
+     */
+    @Tool("Retourne la date du dernier entraînement pour chaque groupe musculaire de l'utilisateur, trié du plus ancien au plus récent. Utile pour proposer la prochaine séance ou identifier ce qui a été négligé.")
+    public String getDernierEntrainementParMuscle(@MemoryId String userId) {
+        Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
+                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+
+        List<Seance> historique = seanceRepository
+                .findByUtilisateurUsernameAndIsModeleTrueOrderByStartTimeDesc(user.getUsername());
+
+        if (historique.isEmpty()) {
+            return "Aucune séance dans l'historique de l'utilisateur.";
+        }
+
+        Map<MuscleGroup, LocalDateTime> lastByMuscle = new EnumMap<>(MuscleGroup.class);
+
+        for (Seance s : historique) {
+            if (s.getStartTime() == null || s.getExercices() == null) continue;
+            for (Exercice e : s.getExercices()) {
+                if (e.getDefinition() == null || e.getDefinition().getMusclePrincipal() == null) continue;
+                MuscleGroup m = e.getDefinition().getMusclePrincipal();
+                LocalDateTime existing = lastByMuscle.get(m);
+                if (existing == null || s.getStartTime().isAfter(existing)) {
+                    lastByMuscle.put(m, s.getStartTime());
+                }
+            }
+        }
+
+        StringBuilder res = new StringBuilder("Dernier entraînement par muscle :\n");
+        LocalDateTime now = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.FRANCE);
+
+        List<Map.Entry<MuscleGroup, LocalDateTime>> entries = lastByMuscle.entrySet().stream()
+                .sorted(Map.Entry.comparingByValue())
+                .collect(Collectors.toList());
+
+        for (Map.Entry<MuscleGroup, LocalDateTime> entry : entries) {
+            long jours = ChronoUnit.DAYS.between(entry.getValue().toLocalDate(), now.toLocalDate());
+            res.append("- ").append(formatMuscle(entry.getKey())).append(" : il y a ")
+                    .append(jours).append(" jour(s) (le ").append(entry.getValue().format(formatter)).append(")\n");
+        }
+
+        List<MuscleGroup> jamais = new ArrayList<>();
+        for (MuscleGroup m : MuscleGroup.values()) {
+            if (!lastByMuscle.containsKey(m)) jamais.add(m);
+        }
+        if (!jamais.isEmpty()) {
+            String missing = jamais.stream().map(this::formatMuscle).collect(Collectors.joining(", "));
+            res.append("Jamais travaillés : ").append(missing).append(".");
+        }
+
+        return res.toString();
+    }
+
+    /**
+     * Returns the user's overall performance tier plus the individual tier for each tracked
+     * exercise type (squat, bench, deadlift, pull-up, etc.) based on PerformanceService.
+     *
+     * @param userId The ID of the requesting user.
+     * @return A formatted summary with global tier and per-exercise breakdown.
+     */
+    @Tool("Récupère le palier de performance de l'utilisateur (Éphèbe → Olympien) : palier global et palier par exercice de référence (squat, développé couché, soulevé de terre, tractions...). Utile pour situer le niveau et conseiller un objectif réaliste.")
+    public String getPerformanceTier(@MemoryId String userId) {
+        Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
+                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+
+        PerformanceSummaryDto summary = performanceService.getSummary(user.getUsername());
+
+        StringBuilder res = new StringBuilder();
+        res.append("Palier global : ").append(summary.getOverallTier())
+                .append(" (niveau ").append(summary.getOverallTierLevel())
+                .append(", catégorie ").append(summary.getOverallTierCategorie()).append(")");
+        if (summary.getPoidsCorps() != null) {
+            res.append(" — poids de corps : ").append(summary.getPoidsCorps()).append(" kg");
+        } else {
+            res.append(" — poids de corps non renseigné (limite la précision)");
+        }
+        res.append("\nDétail par exercice :\n");
+
+        if (summary.getExercises() == null || summary.getExercises().isEmpty()) {
+            res.append("- Aucune donnée enregistrée.");
+            return res.toString();
+        }
+
+        for (ExercisePerformanceDto exo : summary.getExercises()) {
+            res.append("- ").append(exo.getNom()).append(" : ").append(exo.getTier())
+                    .append(" (niveau ").append(exo.getTierLevel()).append(")");
+            if (exo.getRm1Estime() != null) {
+                res.append(", 1RM estimé ").append(exo.getRm1Estime()).append(" kg");
             }
             res.append("\n");
         }
