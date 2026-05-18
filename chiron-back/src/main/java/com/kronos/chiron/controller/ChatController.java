@@ -1,10 +1,14 @@
 package com.kronos.chiron.controller;
 
 import com.kronos.chiron.ai.ChironAgent;
+import com.kronos.chiron.entity.ChironMemoryNote;
 import com.kronos.chiron.entity.Role;
 import com.kronos.chiron.entity.Utilisateur;
 import com.kronos.chiron.repository.UtilisateurRepository;
+import com.kronos.chiron.service.MemoryNoteService;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * REST controller for handling chat interactions with the AI coach.
@@ -16,16 +20,19 @@ public class ChatController {
 
     private final ChironAgent chironAgent;
     private final UtilisateurRepository utilisateurRepository;
+    private final MemoryNoteService memoryNoteService;
+
+    private static final int MEMORY_INJECTION_LIMIT = 10;
 
     /**
      * Constructs a new ChatController.
-     *
-     * @param chironAgent           The AI agent interface.
-     * @param utilisateurRepository The repository to fetch user details.
      */
-    public ChatController(ChironAgent chironAgent, UtilisateurRepository utilisateurRepository) {
+    public ChatController(ChironAgent chironAgent,
+                          UtilisateurRepository utilisateurRepository,
+                          MemoryNoteService memoryNoteService) {
         this.chironAgent = chironAgent;
         this.utilisateurRepository = utilisateurRepository;
+        this.memoryNoteService = memoryNoteService;
     }
 
     /**
@@ -53,12 +60,31 @@ public class ChatController {
         Utilisateur user = utilisateurRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        String contextMessage = "SYSTEM CONTEXT - L'utilisateur qui te parle est : " + user.getUsername() 
-                              + ". Son rôle est : " + user.getRole().name() 
-                              + ". S'il est ADMIN, il a le droit de demander des informations sur d'autres utilisateurs.\n"
-                              + "MESSAGE DE L'UTILISATEUR : " + request.getMessage();
+        StringBuilder ctx = new StringBuilder();
+        ctx.append("SYSTEM CONTEXT - L'utilisateur qui te parle est : ").append(user.getUsername())
+                .append(". Son rôle est : ").append(user.getRole().name())
+                .append(". S'il est ADMIN, il a le droit de demander des informations sur d'autres utilisateurs.\n");
 
-        return chironAgent.chat(user.getId().toString(), contextMessage);
+        String memoryBlock = formatMemoryNotes(user);
+        if (!memoryBlock.isEmpty()) {
+            ctx.append(memoryBlock);
+        }
+
+        ctx.append("MESSAGE DE L'UTILISATEUR : ").append(request.getMessage());
+
+        return chironAgent.chat(user.getId().toString(), ctx.toString());
+    }
+
+    private String formatMemoryNotes(Utilisateur user) {
+        List<ChironMemoryNote> notes = memoryNoteService.getRecent(user, MEMORY_INJECTION_LIMIT);
+        if (notes.isEmpty()) return "";
+        StringBuilder sb = new StringBuilder("[MÉMOIRE LONG-TERME — notes durables sur cet utilisateur, à prendre en compte sans les répéter] :\n");
+        for (ChironMemoryNote n : notes) {
+            sb.append("- #").append(n.getId()).append(" [").append(n.getType().name()).append("] ")
+                    .append(n.getContent()).append("\n");
+        }
+        sb.append("\n");
+        return sb.toString();
     }
 
     /**
