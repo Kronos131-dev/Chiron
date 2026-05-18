@@ -1,13 +1,18 @@
 package com.kronos.chiron.ai;
 
+import com.kronos.chiron.dto.ExerciceDefinitionDto;
 import com.kronos.chiron.entity.Exercice;
+import com.kronos.chiron.entity.MuscleGroup;
+import com.kronos.chiron.entity.NiveauDifficulte;
 import com.kronos.chiron.entity.Seance;
 import com.kronos.chiron.entity.Serie;
+import com.kronos.chiron.entity.TypeEquipement;
 import com.kronos.chiron.entity.Utilisateur;
 import com.kronos.chiron.entity.Role;
 import com.kronos.chiron.repository.ExerciceRepository;
 import com.kronos.chiron.repository.SeanceRepository;
 import com.kronos.chiron.repository.UtilisateurRepository;
+import com.kronos.chiron.service.ExerciceDefinitionService;
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.service.MemoryId;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +40,7 @@ public class WorkoutTools {
     private final SeanceRepository seanceRepository;
     private final UtilisateurRepository utilisateurRepository;
     private final ExerciceRepository exerciceRepository;
+    private final ExerciceDefinitionService exerciceDefinitionService;
 
     /**
      * Retrieves the current system date and time.
@@ -610,6 +616,113 @@ public class WorkoutTools {
         return String.format(
                 "Record personnel pour '%s' :\n- Meilleure série : %d reps @ %.1f kg (le %s)\n- 1RM estimé (formule d'Epley) : %.1f kg",
                 nomExercice, bestSet.getNombreReps(), bestSet.getPoids(), dateStr, best1RM);
+    }
+
+    /**
+     * Returns the technical sheet (muscles, equipment, difficulty, French description)
+     * of a standardised exercise found by name.
+     *
+     * @param nomExercice The name (or partial name) of the exercise to look up.
+     * @return A formatted technical description, or an error message if not found.
+     */
+    @Tool("Récupère la fiche technique d'un exercice de la bibliothèque standardisée : muscles ciblés, équipement, niveau de difficulté et description d'exécution en français. À utiliser quand l'utilisateur demande comment faire un exercice, quels muscles il travaille, ou quelle est sa technique.")
+    public String getExerciceTechnique(String nomExercice) {
+        if (nomExercice == null || nomExercice.isBlank()) {
+            return "Nom d'exercice manquant.";
+        }
+
+        List<ExerciceDefinitionDto> results = exerciceDefinitionService.search(nomExercice, null, null, null);
+        if (results.isEmpty()) {
+            return "Aucun exercice standardisé trouvé pour '" + nomExercice + "'. Tu peux proposer à l'utilisateur de chercher autrement.";
+        }
+
+        ExerciceDefinitionDto e = results.get(0);
+        StringBuilder res = new StringBuilder();
+        res.append("Fiche technique : ").append(e.nomFr() != null ? e.nomFr() : e.nomEn()).append("\n");
+        if (e.musclePrincipal() != null) {
+            res.append("Muscle principal : ").append(formatMuscle(e.musclePrincipal())).append("\n");
+        }
+        if (e.musclesSecondaires() != null && !e.musclesSecondaires().isEmpty()) {
+            String secs = e.musclesSecondaires().stream()
+                    .map(this::formatMuscle)
+                    .collect(Collectors.joining(", "));
+            res.append("Muscles secondaires : ").append(secs).append("\n");
+        }
+        if (e.typeEquipement() != null) {
+            res.append("Équipement : ").append(formatEquipement(e.typeEquipement())).append("\n");
+        }
+        if (e.difficulte() != null) {
+            res.append("Difficulté : ").append(formatDifficulte(e.difficulte())).append("\n");
+        }
+        if (e.descriptionFr() != null && !e.descriptionFr().isBlank()) {
+            res.append("Exécution : ").append(e.descriptionFr().trim());
+        }
+        return res.toString();
+    }
+
+    /**
+     * Searches the standardised exercise library by muscle, equipment and/or difficulty.
+     * All filters are optional. Returns up to 10 matching exercises.
+     *
+     * @param muscle      Optional muscle group filter (e.g. "DOS", "PECTORAUX"). Null or empty for any.
+     * @param equipement  Optional equipment filter (e.g. "POIDS_DU_CORPS", "BARRE"). Null or empty for any.
+     * @param difficulte  Optional difficulty filter ("DEBUTANT", "INTERMEDIAIRE", "AVANCE"). Null or empty for any.
+     * @return A formatted list of exercises with their muscle, equipment and difficulty.
+     */
+    @Tool("Recherche dans la bibliothèque standardisée des exercices selon des critères : groupe musculaire, équipement disponible, niveau de difficulté. Tous les paramètres sont optionnels. Valeurs muscle : PECTORAUX, DOS, EPAULES, BICEPS, TRICEPS, ABDOMINAUX, QUADRICEPS, ISCHIO_JAMBIERS, FESSIERS, MOLLETS, AVANT_BRAS, TRAPEZES, LOMBAIRES, ADDUCTEURS, ABDUCTEURS, CARDIO. Valeurs équipement : POIDS_DU_CORPS, HALTERES, BARRE, MACHINE, POULIE, KETTLEBELL, ELASTIQUE, BARRE_FIXE, ANNEAUX, AUTRE. Valeurs difficulté : DEBUTANT, INTERMEDIAIRE, AVANCE.")
+    public String rechercherExercices(String muscle, String equipement, String difficulte) {
+        String muscleArg = (muscle != null && !muscle.isBlank()) ? muscle.trim().toUpperCase() : null;
+        String equipArg = (equipement != null && !equipement.isBlank()) ? equipement.trim().toUpperCase() : null;
+        String diffArg = (difficulte != null && !difficulte.isBlank()) ? difficulte.trim().toUpperCase() : null;
+
+        if (muscleArg == null && equipArg == null && diffArg == null) {
+            return "Aucun critère fourni. Précise au moins un filtre : muscle, équipement ou difficulté.";
+        }
+
+        List<ExerciceDefinitionDto> results;
+        try {
+            results = exerciceDefinitionService.search(null, muscleArg, equipArg, diffArg);
+        } catch (IllegalArgumentException ex) {
+            return "Filtre invalide : " + ex.getMessage() + ". Utilise les valeurs exactes indiquées dans la description de l'outil.";
+        }
+
+        if (results.isEmpty()) {
+            return "Aucun exercice ne correspond à ces critères.";
+        }
+
+        List<ExerciceDefinitionDto> top = results.stream().limit(10).collect(Collectors.toList());
+        StringBuilder res = new StringBuilder();
+        res.append(top.size()).append(" exercice(s) trouvé(s)");
+        if (results.size() > top.size()) {
+            res.append(" (sur ").append(results.size()).append(", premiers résultats)");
+        }
+        res.append(" :\n");
+        for (ExerciceDefinitionDto e : top) {
+            res.append("- ").append(e.nomFr() != null ? e.nomFr() : e.nomEn());
+            if (e.musclePrincipal() != null) {
+                res.append(" — ").append(formatMuscle(e.musclePrincipal()));
+            }
+            if (e.typeEquipement() != null) {
+                res.append(" / ").append(formatEquipement(e.typeEquipement()));
+            }
+            if (e.difficulte() != null) {
+                res.append(" / ").append(formatDifficulte(e.difficulte()));
+            }
+            res.append("\n");
+        }
+        return res.toString();
+    }
+
+    private String formatMuscle(MuscleGroup m) {
+        return m.name().toLowerCase().replace('_', ' ');
+    }
+
+    private String formatEquipement(TypeEquipement t) {
+        return t.name().toLowerCase().replace('_', ' ');
+    }
+
+    private String formatDifficulte(NiveauDifficulte d) {
+        return d.name().toLowerCase();
     }
 
     /**
