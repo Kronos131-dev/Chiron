@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Chiron</string>
+    <string name="title_activity_main">Chiron</string>
+    <string name="package_name">com.kronos.chiron</string>
+    <string name="custom_url_scheme">com.kronos.chiron</string>
+</resources>
