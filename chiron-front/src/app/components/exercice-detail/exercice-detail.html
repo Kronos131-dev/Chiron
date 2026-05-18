@@ -1,0 +1,100 @@
+<div class="min-h-screen bg-slate-950 heroic-texture pb-8">
+
+  <!-- Header -->
+  <div class="sticky top-0 z-20 flex items-center gap-3 px-4 py-4 bg-slate-950/90 backdrop-blur-md border-b border-white/5">
+    <button (click)="retour()"
+            class="text-on-surface-variant hover:text-white transition-colors p-1">
+      <span class="material-symbols-outlined text-2xl">arrow_back</span>
+    </button>
+    @if (exercice()) {
+      <h1 class="text-white font-black font-headline text-lg uppercase tracking-tight line-clamp-1 flex-1">
+        {{ exercice()!.nomFr ?? exercice()!.nomEn }}
+      </h1>
+    }
+  </div>
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="flex justify-center py-24">
+      <div class="w-10 h-10 border-4 border-secondary/30 border-t-secondary rounded-full animate-spin"></div>
+    </div>
+  }
+
+  <!-- Error -->
+  @else if (error()) {
+    <div class="flex flex-col items-center justify-center py-24 text-center px-8">
+      <span class="material-symbols-outlined text-5xl text-on-surface-variant/30 mb-4">error</span>
+      <p class="text-on-surface-variant">Exercice introuvable.</p>
+    </div>
+  }
+
+  <!-- Content -->
+  @else if (exercice()) {
+    <div class="max-w-2xl mx-auto px-4 pt-6 space-y-6">
+
+      <!-- Images -->
+      @if (exercice()!.imageUrl) {
+        <div class="images-container">
+          <div class="image-wrapper">
+            <p class="image-label">Position de départ</p>
+            <img [src]="exercice()!.imageUrl"
+                 [alt]="exercice()!.nomFr ?? exercice()!.nomEn"
+                 class="exercise-image">
+          </div>
+          @if (exercice()!.imageUrl2) {
+            <div class="image-wrapper">
+              <p class="image-label">Position finale</p>
+              <img [src]="exercice()!.imageUrl2"
+                   [alt]="exercice()!.nomFr ?? exercice()!.nomEn"
+                   class="exercise-image">
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Nom EN (sous-titre) -->
+      @if (exercice()!.nomFr && exercice()!.nomEn !== exercice()!.nomFr) {
+        <p class="text-on-surface-variant text-sm italic -mt-2">{{ exercice()!.nomEn }}</p>
+      }
+
+      <!-- Chips musculaires & équipement -->
+      <div class="flex flex-wrap gap-2">
+        @if (exercice()!.musclePrincipal) {
+          <span class="tag tag-muscle">{{ muscleLabel(exercice()!.musclePrincipal) }}</span>
+        }
+        @if (exercice()!.typeEquipement) {
+          <span class="tag tag-equip">{{ equipementLabel(exercice()!.typeEquipement) }}</span>
+        }
+        @if (exercice()!.difficulte) {
+          <span [class]="'tag ' + difficulteClass(exercice()!.difficulte)">
+            {{ difficulteLabel(exercice()!.difficulte) }}
+          </span>
+        }
+      </div>
+
+      <!-- Muscles secondaires -->
+      @if (exercice()!.musclesSecondaires && exercice()!.musclesSecondaires.length) {
+        <section class="section-card">
+          <p class="section-label">Muscles secondaires</p>
+          <div class="flex flex-wrap gap-1.5">
+            @for (m of exercice()!.musclesSecondaires; track m) {
+              <span class="tag tag-secondary">{{ muscleLabel(m) }}</span>
+            }
+          </div>
+        </section>
+      }
+
+      <!-- Description -->
+      @if (exercice()!.descriptionFr ?? exercice()!.descriptionEn) {
+        <section class="section-card">
+          <p class="section-label">Exécution</p>
+          <p class="text-on-surface text-sm leading-relaxed whitespace-pre-line">
+            {{ exercice()!.descriptionFr ?? exercice()!.descriptionEn }}
+          </p>
+        </section>
+      }
+
+    </div>
+  }
+
+</div>
