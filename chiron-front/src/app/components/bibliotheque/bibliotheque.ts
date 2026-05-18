@@ -1,6 +1,7 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { ChironApi, ExerciceDefinitionDto } from '../../service/chiron-api';
 import { HeaderComponent } from '../shared/header/header';
 import {
@@ -37,7 +38,7 @@ export class Bibliotheque implements OnInit {
   readonly equipements = EQUIPEMENTS;
   readonly difficultes = DIFFICULTES;
 
-  constructor(private chironApi: ChironApi) {}
+  constructor(private chironApi: ChironApi, private router: Router) {}
 
   ngOnInit() {}
 
@@ -94,6 +95,11 @@ export class Bibliotheque implements OnInit {
 
   closeDetail() {
     this.selectedExercice.set(null);
+  }
+
+  voirFiche() {
+    const exo = this.selectedExercice();
+    if (exo) this.router.navigate(['/exercice', exo.id]);
   }
 
   muscleLabel     = muscleLabel;

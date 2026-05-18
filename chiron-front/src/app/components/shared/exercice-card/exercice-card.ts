@@ -1,6 +1,7 @@
-import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { ChironApi, ExerciceDefinitionDto } from '../../../service/chiron-api';
 import {
   ExerciceForm,
@@ -21,7 +22,7 @@ import {
   templateUrl: './exercice-card.html',
   styleUrls: ['./exercice-card.css'],
 })
-export class ExerciceCardComponent {
+export class ExerciceCardComponent implements OnInit {
 
   @Input({ required: true }) exercice!: ExerciceForm;
   @Input() readonly = false;
@@ -38,11 +39,27 @@ export class ExerciceCardComponent {
   @Output() exoTouchMove  = new EventEmitter<TouchEvent>();
   @Output() exoTouchEnd   = new EventEmitter<void>();
 
-  suggestions = signal<ExerciceDefinitionDto[]>([]);
+  suggestions  = signal<ExerciceDefinitionDto[]>([]);
   showSuggestions = signal(false);
+  definition   = signal<ExerciceDefinitionDto | null>(null);
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
-  constructor(private chironApi: ChironApi) {}
+  constructor(private chironApi: ChironApi, private router: Router) {}
+
+  ngOnInit() {
+    if (this.exercice.definitionId) {
+      this.chironApi.getExerciceById(this.exercice.definitionId).subscribe({
+        next: (def) => this.definition.set(def),
+        error: () => {},
+      });
+    }
+  }
+
+  voirFiche() {
+    if (this.exercice.definitionId) {
+      this.router.navigate(['/exercice', this.exercice.definitionId]);
+    }
+  }
 
   onNomInput(event: Event) {
     const query = (event.target as HTMLInputElement).value;

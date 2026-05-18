@@ -94,6 +94,12 @@ export const routes: Routes = [
   },
   { path: 'reset-password', component: ResetPassword },
 
+  {
+    path: 'exercice/:id',
+    loadComponent: () => import('./components/exercice-detail/exercice-detail').then(m => m.ExerciceDetailComponent),
+    canActivate: [authGuard],
+  },
+
   { path: '', redirectTo: 'chat', pathMatch: 'full' },
   { path: '**', redirectTo: 'chat' }
 ];

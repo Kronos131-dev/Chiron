@@ -287,6 +287,10 @@ export class ChironApi {
     return this.http.get<ExerciceDefinitionDto[]>(url);
   }
 
+  getExerciceById(id: number): Observable<ExerciceDefinitionDto> {
+    return this.http.get<ExerciceDefinitionDto>(`${this.apiUrl}/exercices/${id}`);
+  }
+
   getExerciceGifUrl(id: number): string {
     return `${this.apiUrl}/exercices/${id}/gif`;
   }
