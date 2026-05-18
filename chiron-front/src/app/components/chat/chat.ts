@@ -68,6 +68,16 @@ export class Chat implements OnInit {
     this.initSpeechRecognition();
 
     this.currentUsername = this.authService.getUsername() || 'Guerrier';
+
+    // Redirige vers l'onboarding si le profil n'a jamais été complété.
+    this.chironApi.getProfileSetup().subscribe({
+      next: (setup) => {
+        if (!setup.isOnboarded) {
+          this.router.navigate(['/onboarding']);
+        }
+      },
+      error: () => { /* silencieux : si l'endpoint échoue, on laisse le chat fonctionner */ }
+    });
   }
 
   /**
@@ -169,27 +179,7 @@ export class Chat implements OnInit {
     });
   }
 
-  /**
-   * Notifies the AI backend to end the current workout session and summarize it.
-   */
-  onEndSession() {
-    if (!this.currentUsername) return;
-
-    this.isLoading.set(true);
-
-    this.chironApi.endSession(this.currentUsername).subscribe({
-      next: (res: any) => {
-        this.addMessage('ai', res.toString());
-        this.isLoading.set(false);
-      },
-      error: (err) => {
-        console.error(err);
-        this.isLoading.set(false);
-      }
-    });
-  }
-
-  /**
+/**
    * Appends a new message to the component's internal chat history signal.
    *
    * @param role    The origin of the message ('user' or 'ai').

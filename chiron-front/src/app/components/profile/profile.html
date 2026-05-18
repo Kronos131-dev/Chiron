@@ -278,6 +278,83 @@
         }
       </div>
 
+      <!-- ═══════ PROFIL SPORTIF — perso uniquement ═══════ -->
+      @if (isMyProfile()) {
+        <div class="mt-10">
+          <h3 class="flex items-center gap-3 text-xl font-black font-headline uppercase tracking-widest mb-5"
+              [ngClass]="getSectionTitleClass()">
+            <span class="material-symbols-outlined text-secondary">tune</span>
+            Profil Sportif
+          </h3>
+          <button (click)="goToOnboarding()"
+                  class="w-full border border-secondary/30 text-secondary py-3 rounded-xl text-xs font-bold tracking-widest uppercase hover:bg-secondary/10 transition-colors flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined text-base">edit</span>
+            Modifier mon profil sportif
+          </button>
+        </div>
+      }
+
+      <!-- ═══════ COMPTE OLYMPUS (nutrition) — perso uniquement ═══════ -->
+      @if (isMyProfile()) {
+        <div class="mt-10">
+          <h3 class="flex items-center gap-3 text-xl font-black font-headline uppercase tracking-widest mb-5"
+              [ngClass]="getSectionTitleClass()">
+            <span class="material-symbols-outlined text-emerald-400">restaurant</span>
+            Compte Olympus
+          </h3>
+
+          @if (nutritionStatus()?.linked && !nutritionStatus()?.expired) {
+            <div class="border border-emerald-500/20 bg-emerald-500/5 p-5 rounded-xl">
+              <div class="flex items-center justify-between mb-3">
+                <div>
+                  <p class="text-emerald-400 text-[10px] font-bold tracking-[0.2em] uppercase">Lié</p>
+                  <p class="text-white font-bold tracking-wide">{{ nutritionStatus()?.olympusUsername }}</p>
+                </div>
+                <span class="material-symbols-outlined text-emerald-400 text-3xl">link</span>
+              </div>
+              <p class="text-on-surface-variant text-xs mb-4">
+                Chiron peut maintenant analyser ton apport nutritionnel pour affiner ses conseils.
+              </p>
+              <button (click)="unlinkOlympus()"
+                      class="w-full border border-red-500/30 text-red-400 py-2 rounded-lg text-xs font-bold tracking-widest uppercase hover:bg-red-500/10 transition-colors">
+                Délier
+              </button>
+            </div>
+          } @else if (nutritionStatus()?.expired) {
+            <div class="border border-amber-500/30 bg-amber-500/5 p-5 rounded-xl mb-4">
+              <p class="text-amber-400 text-[10px] font-bold tracking-[0.2em] uppercase mb-1">Liaison expirée</p>
+              <p class="text-white text-sm">Reconnecte ton compte Olympus pour réactiver le coaching nutrition.</p>
+            </div>
+          }
+
+          @if (!nutritionStatus()?.linked || nutritionStatus()?.expired) {
+            <div class="border border-white/5 bg-slate-900/30 p-5 rounded-xl space-y-3">
+              <p class="text-on-surface-variant text-xs">
+                Connecte ton compte Olympus pour que Chiron puisse devenir ton nutritionniste.
+              </p>
+              <input type="text"
+                     [ngModel]="olympusPseudo()"
+                     (ngModelChange)="olympusPseudo.set($event)"
+                     placeholder="Pseudo Olympus"
+                     class="w-full bg-slate-950/60 text-white px-4 py-2.5 rounded-lg border border-white/10 focus:border-emerald-500/50 outline-none text-sm">
+              <input type="password"
+                     [ngModel]="olympusPassword()"
+                     (ngModelChange)="olympusPassword.set($event)"
+                     placeholder="Mot de passe"
+                     class="w-full bg-slate-950/60 text-white px-4 py-2.5 rounded-lg border border-white/10 focus:border-emerald-500/50 outline-none text-sm">
+              @if (linkError()) {
+                <p class="text-red-400 text-xs">{{ linkError() }}</p>
+              }
+              <button (click)="linkOlympus()"
+                      [disabled]="isLinking()"
+                      class="w-full bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 py-2.5 rounded-lg text-xs font-bold tracking-widest uppercase hover:bg-emerald-500/25 transition-colors disabled:opacity-50">
+                {{ isLinking() ? 'Liaison…' : 'Lier mon compte' }}
+              </button>
+            </div>
+          }
+        </div>
+      }
+
       <!-- ═══════ DERNIÈRES BATAILLES ═══════ -->
       <div class="mt-10">
         <h3 class="flex items-center gap-3 text-xl font-black font-headline uppercase tracking-widest mb-5"

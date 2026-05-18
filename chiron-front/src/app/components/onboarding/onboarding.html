@@ -1,0 +1,201 @@
+<main class="min-h-screen heroic-texture bg-slate-950 px-4 py-10 flex items-start justify-center">
+  <div class="w-full max-w-md">
+
+    <!-- Header / progress -->
+    <div class="mb-8 text-center">
+      <p class="text-secondary text-xs font-bold tracking-[0.25em] uppercase mb-2">Chiron</p>
+      <h1 class="font-headline text-3xl font-black text-white uppercase tracking-tight">Forge ton profil</h1>
+      <p class="text-on-surface-variant text-sm mt-2">
+        Ces informations rendent les conseils de Chiron vraiment personnels.
+      </p>
+
+      <div class="mt-6 flex gap-2 justify-center">
+        @for (i of [1, 2, 3, 4]; track i) {
+          <span class="h-1.5 w-12 rounded-full transition-colors"
+                [class.bg-secondary]="i <= step()"
+                [class.bg-white]="i > step()"
+                [class.opacity-10]="i > step()"></span>
+        }
+      </div>
+      <p class="text-on-surface-variant text-[10px] uppercase tracking-widest mt-3">
+        Étape {{ step() }} / {{ totalSteps }}
+      </p>
+    </div>
+
+    <!-- Step 1 : Basiques -->
+    @if (step() === 1) {
+      <div class="space-y-5">
+        <h2 class="text-white font-bold tracking-wide uppercase text-lg">Ton corps</h2>
+
+        <div>
+          <label class="text-on-surface-variant text-[10px] font-bold tracking-widest uppercase mb-1.5 block">Date de naissance</label>
+          <input type="date"
+                 [ngModel]="dateNaissance()"
+                 (ngModelChange)="dateNaissance.set($event)"
+                 class="w-full bg-slate-900/80 text-white px-4 py-3 rounded-lg border border-white/10 focus:border-secondary outline-none">
+        </div>
+
+        <div>
+          <label class="text-on-surface-variant text-[10px] font-bold tracking-widest uppercase mb-1.5 block">Sexe</label>
+          <div class="grid grid-cols-3 gap-2">
+            @for (s of sexes; track s.value) {
+              <button (click)="sexe.set(s.value)"
+                      [class.bg-secondary]="sexe() === s.value"
+                      [class.text-slate-950]="sexe() === s.value"
+                      [class.bg-slate-900]="sexe() !== s.value"
+                      [class.text-on-surface-variant]="sexe() !== s.value"
+                      class="py-3 rounded-lg border border-white/10 text-xs font-bold uppercase tracking-widest transition-colors">
+                {{ s.label }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-on-surface-variant text-[10px] font-bold tracking-widest uppercase mb-1.5 block">Taille (cm)</label>
+            <input type="number"
+                   [ngModel]="tailleCm()"
+                   (ngModelChange)="tailleCm.set($event)"
+                   class="w-full bg-slate-900/80 text-white px-4 py-3 rounded-lg border border-white/10 focus:border-secondary outline-none">
+          </div>
+          <div>
+            <label class="text-on-surface-variant text-[10px] font-bold tracking-widest uppercase mb-1.5 block">Poids (kg)</label>
+            <input type="number"
+                   [ngModel]="poidsCorps()"
+                   (ngModelChange)="poidsCorps.set($event)"
+                   class="w-full bg-slate-900/80 text-white px-4 py-3 rounded-lg border border-white/10 focus:border-secondary outline-none">
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Step 2 : Niveau + objectif -->
+    @if (step() === 2) {
+      <div class="space-y-6">
+        <h2 class="text-white font-bold tracking-wide uppercase text-lg">Ton niveau & objectif</h2>
+
+        <div>
+          <label class="text-on-surface-variant text-[10px] font-bold tracking-widest uppercase mb-2 block">Niveau d'expérience</label>
+          <div class="grid grid-cols-2 gap-2">
+            @for (n of niveaux; track n.value) {
+              <button (click)="niveauExperience.set(n.value)"
+                      [class.border-secondary]="niveauExperience() === n.value"
+                      [class.bg-secondary]="niveauExperience() === n.value"
+                      [class.text-slate-950]="niveauExperience() === n.value"
+                      [class.border-white]="niveauExperience() !== n.value"
+                      [class.opacity-30]="niveauExperience() !== n.value"
+                      [class.text-white]="niveauExperience() !== n.value"
+                      class="py-3 px-3 rounded-lg border text-left transition-colors">
+                <span class="block text-xs font-bold uppercase tracking-widest">{{ n.label }}</span>
+                <span class="block text-[10px] mt-0.5"
+                      [class.text-slate-950]="niveauExperience() === n.value"
+                      [class.text-on-surface-variant]="niveauExperience() !== n.value">{{ n.hint }}</span>
+              </button>
+            }
+          </div>
+        </div>
+
+        <div>
+          <label class="text-on-surface-variant text-[10px] font-bold tracking-widest uppercase mb-2 block">Objectif principal</label>
+          <div class="grid grid-cols-2 gap-2">
+            @for (o of objectifs; track o.value) {
+              <button (click)="objectifPrincipal.set(o.value)"
+                      [class.bg-secondary]="objectifPrincipal() === o.value"
+                      [class.text-slate-950]="objectifPrincipal() === o.value"
+                      [class.bg-slate-900]="objectifPrincipal() !== o.value"
+                      [class.text-white]="objectifPrincipal() !== o.value"
+                      class="py-3 rounded-lg border border-white/10 text-xs font-bold uppercase tracking-widest transition-colors">
+                {{ o.label }}
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Step 3 : Fréquence + matériel -->
+    @if (step() === 3) {
+      <div class="space-y-6">
+        <h2 class="text-white font-bold tracking-wide uppercase text-lg">Ton terrain de jeu</h2>
+
+        <div>
+          <label class="text-on-surface-variant text-[10px] font-bold tracking-widest uppercase mb-2 block">
+            Séances par semaine ({{ frequenceVisee() }})
+          </label>
+          <input type="range" min="1" max="7" step="1"
+                 [ngModel]="frequenceVisee()"
+                 (ngModelChange)="frequenceVisee.set($event)"
+                 class="w-full accent-secondary">
+          <div class="flex justify-between text-[10px] text-on-surface-variant mt-1 px-1">
+            <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span>
+          </div>
+        </div>
+
+        <div>
+          <label class="text-on-surface-variant text-[10px] font-bold tracking-widest uppercase mb-2 block">Matériel disponible</label>
+          <div class="flex flex-wrap gap-2">
+            @for (m of materiels; track m.value) {
+              <button (click)="toggleMateriel(m.value)"
+                      [class.bg-secondary]="isMaterielSelected(m.value)"
+                      [class.text-slate-950]="isMaterielSelected(m.value)"
+                      [class.border-secondary]="isMaterielSelected(m.value)"
+                      [class.bg-slate-900]="!isMaterielSelected(m.value)"
+                      [class.text-on-surface-variant]="!isMaterielSelected(m.value)"
+                      [class.border-white]="!isMaterielSelected(m.value)"
+                      [class.opacity-10]="!isMaterielSelected(m.value)"
+                      class="px-3 py-2 rounded-full border text-[11px] font-bold uppercase tracking-widest transition-colors">
+                {{ m.label }}
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Step 4 : Blessures + préférences -->
+    @if (step() === 4) {
+      <div class="space-y-5">
+        <h2 class="text-white font-bold tracking-wide uppercase text-lg">Précisions (optionnel)</h2>
+
+        <div>
+          <label class="text-on-surface-variant text-[10px] font-bold tracking-widest uppercase mb-1.5 block">Blessures ou limitations</label>
+          <textarea [ngModel]="blessures()"
+                    (ngModelChange)="blessures.set($event)"
+                    rows="3"
+                    placeholder="Ex : douleur chronique au genou droit ; éviter les flexions profondes"
+                    class="w-full bg-slate-900/80 text-white px-4 py-3 rounded-lg border border-white/10 focus:border-secondary outline-none text-sm"></textarea>
+        </div>
+
+        <div>
+          <label class="text-on-surface-variant text-[10px] font-bold tracking-widest uppercase mb-1.5 block">Préférences</label>
+          <textarea [ngModel]="preferences()"
+                    (ngModelChange)="preferences.set($event)"
+                    rows="3"
+                    placeholder="Ex : j'aime travailler en force ; régime végétarien ; pas de course"
+                    class="w-full bg-slate-900/80 text-white px-4 py-3 rounded-lg border border-white/10 focus:border-secondary outline-none text-sm"></textarea>
+        </div>
+
+        @if (error()) {
+          <p class="text-red-400 text-sm">{{ error() }}</p>
+        }
+      </div>
+    }
+
+    <!-- Navigation -->
+    <div class="mt-10 flex gap-3">
+      @if (step() > 1) {
+        <button (click)="prev()"
+                class="flex-1 border border-white/10 text-on-surface-variant py-3 rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-white/5 transition-colors">
+          Retour
+        </button>
+      }
+      <button (click)="next()"
+              [disabled]="!canGoNext() || saving()"
+              class="flex-[2] bg-gradient-to-r from-secondary to-[#c77a30] text-slate-950 font-bold py-3 rounded-lg text-xs uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-transform disabled:opacity-40 disabled:scale-100 disabled:cursor-not-allowed">
+        {{ saving() ? 'Enregistrement…' : (step() === totalSteps ? 'Forger mon profil' : 'Suivant') }}
+      </button>
+    </div>
+
+  </div>
+</main>

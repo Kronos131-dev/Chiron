@@ -1,6 +1,7 @@
 package com.kronos.chiron.config;
 
 import com.kronos.chiron.ai.ChironAgent;
+import com.kronos.chiron.ai.NutritionTools;
 import com.kronos.chiron.ai.WorkoutTools;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
@@ -38,11 +39,12 @@ public class ChironConfig {
     @Bean
     public ChironAgent chironAgent(ChatModel chatModel,
                                    WorkoutTools workoutTools,
+                                   NutritionTools nutritionTools,
                                    ChatMemoryProvider chatMemoryProvider) {
         return AiServices.builder(ChironAgent.class)
                 .chatModel(chatModel)
                 .chatMemoryProvider(chatMemoryProvider)
-                .tools(workoutTools)
+                .tools(workoutTools, nutritionTools)
                 .build();
     }
 

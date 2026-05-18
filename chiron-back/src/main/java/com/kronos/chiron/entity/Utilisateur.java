@@ -7,8 +7,11 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
@@ -73,6 +76,63 @@ public class Utilisateur implements UserDetails {
 
     @Column(name = "poids_corps")
     private Double poidsCorps;
+
+    @Column(name = "date_naissance")
+    private LocalDate dateNaissance;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "sexe", length = 16)
+    private Sexe sexe;
+
+    @Column(name = "taille_cm")
+    private Double tailleCm;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "niveau_experience", length = 32)
+    private NiveauExperience niveauExperience;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "objectif_principal", length = 32)
+    private ObjectifPrincipal objectifPrincipal;
+
+    @Column(name = "frequence_visee")
+    private Integer frequenceVisee;
+
+    @Column(name = "blessures", columnDefinition = "TEXT")
+    private String blessures;
+
+    @Column(name = "preferences", columnDefinition = "TEXT")
+    private String preferences;
+
+    @Column(name = "is_onboarded", nullable = false)
+    @Builder.Default
+    private Boolean isOnboarded = false;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(
+            name = "utilisateur_materiel",
+            joinColumns = @JoinColumn(name = "utilisateur_id")
+    )
+    @Column(name = "equipement", length = 32)
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private Set<TypeEquipement> materielDisponible = EnumSet.noneOf(TypeEquipement.class);
+
+    @Column(name = "olympus_token_encrypted", columnDefinition = "TEXT")
+    @JsonIgnore
+    private String olympusTokenEncrypted;
+
+    @Column(name = "olympus_token_expires_at")
+    @JsonIgnore
+    private LocalDateTime olympusTokenExpiresAt;
+
+    @Column(name = "olympus_username")
+    @JsonIgnore
+    private String olympusUsername;
+
+    @Column(name = "olympus_linked_at")
+    @JsonIgnore
+    private LocalDateTime olympusLinkedAt;
 
     /**
      * The set of users who act as coaches for this user.
