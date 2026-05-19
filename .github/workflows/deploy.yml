@@ -223,6 +223,10 @@ jobs:
             cat /tmp/chiron.secrets >> /tmp/.env.tmp
             mv /tmp/.env.tmp "$ENV_FILE"
 
+            echo "▶ Vérification du réseau partagé chiron-olympus..."
+            docker network inspect chiron-olympus >/dev/null 2>&1 \
+              || docker network create chiron-olympus
+
             echo "▶ Redémarrage du backend (recréation forcée pour prendre en compte les changements de compose)..."
             cd $CHIRON_DIR
             if command -v docker-compose &> /dev/null; then
