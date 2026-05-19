@@ -34,7 +34,7 @@ public class NutritionController {
                     .body(new ErrorResponse("Identifiants Olympus invalides."));
         } catch (OlympusClient.OlympusUnavailableException e) {
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                    .body(new ErrorResponse("Le service Olympus est indisponible. Réessaie plus tard."));
+                    .body(new ErrorResponse("Olympus indisponible : " + e.getMessage()));
         }
     }
 
