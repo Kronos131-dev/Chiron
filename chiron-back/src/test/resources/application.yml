@@ -23,3 +23,7 @@ jwt:
 
 chiron:
   uploads-dir: /tmp/chiron-test-uploads
+
+olympus:
+  base-url: http://localhost:8080
+  token-ttl-seconds: 86400

@@ -1,54 +1,49 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ChironApi } from '../../service/chiron-api';
 import { AuthService } from '../../service/auth.service';
 import { Router } from '@angular/router';
 import { HeaderComponent } from '../shared/header/header';
 
 /**
- * Component responsible for displaying the user's workout journal history.
- * Fetches, groups, and renders completed workout sessions.
+ * Component responsible for displaying (and now editing) the user's workout journal history.
  */
 @Component({
   selector: 'app-journal',
   standalone: true,
-  imports: [CommonModule, HeaderComponent],
+  imports: [CommonModule, FormsModule, HeaderComponent],
   templateUrl: './journal.html',
   styleUrls: ['./journal.css']
 })
 export class Journal implements OnInit {
-  /** Signal holding the raw list of historical sessions. */
   historique = signal<any[]>([]);
-
-  /** Signal holding the sessions grouped by week for structured rendering. */
   historiqueGrouped = signal<any[]>([]);
-
-  /** Signal indicating whether the data is currently loading. */
   isLoading = signal(true);
 
-  /** The username of the currently authenticated user. */
   currentUsername: string | null = null;
 
-  /** Signal tracking which session ID is currently expanded in the accordion view. */
   expandedSeanceId = signal<number | null>(null);
 
-  /**
-   * Initializes a new instance of the Journal component.
-   *
-   * @param chironApi   Service for backend API interactions.
-   * @param authService Service for authentication state and user details.
-   * @param router      Angular Router for navigation.
-   */
+  /** Id of the session currently in edit mode, null otherwise. */
+  editingSeanceId = signal<number | null>(null);
+
+  /** Local mutable working copy of the session being edited. */
+  editingDraft = signal<any | null>(null);
+
+  /** True while the save request is in flight. */
+  isSaving = signal(false);
+
+  /** Transient status message (success / error). */
+  saveStatus = signal<string | null>(null);
+  private _saveStatusTimer: ReturnType<typeof setTimeout> | null = null;
+
   constructor(
     private chironApi: ChironApi,
     private authService: AuthService,
     private router: Router
   ) {}
 
-  /**
-   * Lifecycle hook that executes upon component initialization.
-   * Determines the current user and triggers the journal data fetch.
-   */
   ngOnInit() {
     this.currentUsername = this.authService.getUsername();
     if (this.currentUsername) {
@@ -59,12 +54,6 @@ export class Journal implements OnInit {
     }
   }
 
-  /**
-   * Fetches the historical workout sessions for the specified user from the backend.
-   * Updates internal signals upon successful retrieval.
-   *
-   * @param username The username for which to load the journal.
-   */
   loadJournal(username: string) {
     this.isLoading.set(true);
 
@@ -81,12 +70,6 @@ export class Journal implements OnInit {
     });
   }
 
-  /**
-   * Processes raw session data and groups it sequentially by week number.
-   * Updates the `historiqueGrouped` signal with the structured data.
-   *
-   * @param data The raw array of historical sessions.
-   */
   groupHistoriqueByWeekAndDay(data: any[]) {
     const groupedByWeek = data.reduce((acc: any, seance: any) => {
       const week = seance.weekNumber;
@@ -109,12 +92,8 @@ export class Journal implements OnInit {
     this.historiqueGrouped.set(result);
   }
 
-  /**
-   * Toggles the accordion state for a specific session to show or hide its details.
-   *
-   * @param id The ID of the session to toggle.
-   */
   toggleSeanceDetails(id: number) {
+    if (this.editingSeanceId() === id) return; // Don't collapse while editing
     if (this.expandedSeanceId() === id) {
       this.expandedSeanceId.set(null);
     } else {
@@ -122,13 +101,6 @@ export class Journal implements OnInit {
     }
   }
 
-  /**
-   * Deletes a specific historical session after user confirmation.
-   * Stops event propagation to prevent the accordion from toggling simultaneously.
-   *
-   * @param seanceId The ID of the session to delete.
-   * @param event    The DOM event triggered by the deletion click.
-   */
   supprimerSeance(seanceId: number, event: Event) {
     event.stopPropagation();
     if (confirm("Es-tu sûr de vouloir supprimer cette entrée de ton journal ?")) {
@@ -147,12 +119,116 @@ export class Journal implements OnInit {
     }
   }
 
-  /**
-   * Formats a raw date string into a localized French date representation.
-   *
-   * @param dateString The raw date string to format.
-   * @return The formatted date string.
-   */
+  /** Enter edit mode: deep-clone the seance into editingDraft. */
+  startEdit(seance: any, event: Event) {
+    event.stopPropagation();
+    this.expandedSeanceId.set(seance.id);
+    this.editingSeanceId.set(seance.id);
+    this.editingDraft.set(this.cloneSeance(seance));
+  }
+
+  cancelEdit(event?: Event) {
+    if (event) event.stopPropagation();
+    this.editingSeanceId.set(null);
+    this.editingDraft.set(null);
+  }
+
+  /** Add a new empty series to the given exercise in the draft. */
+  addSerie(exoIndex: number, event: Event) {
+    event.stopPropagation();
+    const draft = this.editingDraft();
+    if (!draft) return;
+    const exos = [...draft.exercices];
+    const exo = { ...exos[exoIndex], series: [...exos[exoIndex].series] };
+    exo.series.push({ id: null, reps: 0, poids: 0, degressifs: [] });
+    exos[exoIndex] = exo;
+    this.editingDraft.set({ ...draft, exercices: exos });
+  }
+
+  removeSerie(exoIndex: number, serieIndex: number, event: Event) {
+    event.stopPropagation();
+    const draft = this.editingDraft();
+    if (!draft) return;
+    const exos = [...draft.exercices];
+    const exo = { ...exos[exoIndex], series: [...exos[exoIndex].series] };
+    exo.series.splice(serieIndex, 1);
+    exos[exoIndex] = exo;
+    this.editingDraft.set({ ...draft, exercices: exos });
+  }
+
+  /** ngModel two-way bindings need direct mutation — emit a signal write on each blur to keep things tidy. */
+  onFieldChange() {
+    // Trigger an explicit signal write so anything reading editingDraft re-evaluates.
+    this.editingDraft.set({ ...this.editingDraft() });
+  }
+
+  saveEdit(event: Event) {
+    event.stopPropagation();
+    const draft = this.editingDraft();
+    const username = this.authService.getUsername();
+    if (!draft || !username) return;
+
+    const dto = {
+      id: draft.id,
+      titre: draft.titre,
+      weekNumber: draft.weekNumber,
+      startTime: draft.startTime,
+      isModele: true,
+      exercices: draft.exercices.map((exo: any) => ({
+        id: exo.id ?? null,
+        nom: exo.nom,
+        commentaire: exo.commentaire ?? '',
+        exerciceDefinitionId: exo.exerciceDefinitionId ?? null,
+        series: (exo.series || []).map((s: any) => ({
+          id: s.id ?? null,
+          poids: s.poids != null ? Number(s.poids) : 0,
+          reps: s.reps != null ? Number(s.reps) : 0,
+          commentaire: s.commentaire ?? '',
+          degressifs: (s.degressifs || []).map((d: any) => ({
+            id: d.id ?? null,
+            poids: d.poids != null ? Number(d.poids) : 0,
+            reps: d.reps != null ? Number(d.reps) : 0
+          }))
+        }))
+      }))
+    };
+
+    this.isSaving.set(true);
+    this.chironApi.sauvegarderProgramme(username, dto).subscribe({
+      next: () => {
+        this.isSaving.set(false);
+        this.editingSeanceId.set(null);
+        this.editingDraft.set(null);
+        this.flashStatus('Séance mise à jour.');
+        this.loadJournal(username);
+      },
+      error: (err) => {
+        console.error("Erreur lors de la modification", err);
+        this.isSaving.set(false);
+        this.flashStatus('Erreur lors de la mise à jour.');
+      }
+    });
+  }
+
+  private flashStatus(msg: string) {
+    this.saveStatus.set(msg);
+    if (this._saveStatusTimer) clearTimeout(this._saveStatusTimer);
+    this._saveStatusTimer = setTimeout(() => this.saveStatus.set(null), 3000);
+  }
+
+  private cloneSeance(seance: any): any {
+    return {
+      ...seance,
+      exercices: (seance.exercices || []).map((exo: any) => ({
+        ...exo,
+        series: (exo.series || []).map((s: any) => ({
+          ...s,
+          degressifs: (s.degressifs || []).map((d: any) => ({ ...d }))
+        }))
+      }))
+    };
+  }
+
   formatDate(dateString: string): string {
     const options: Intl.DateTimeFormatOptions = {
       weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
