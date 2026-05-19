@@ -17,6 +17,20 @@ import {
 export type { DegressifForm, SerieForm, ExerciceForm } from '../../shared/exercise-forms';
 
 /**
+ * ISO-8601 week number (Monday = first day of the week).
+ * Week 1 is the week containing the year's first Thursday.
+ */
+function getIsoWeekNumber(d: Date): number {
+  const target = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNr = (target.getUTCDay() + 6) % 7;          // Mon=0 .. Sun=6
+  target.setUTCDate(target.getUTCDate() - dayNr + 3);  // jump to nearest Thursday
+  const firstThursday = new Date(Date.UTC(target.getUTCFullYear(), 0, 4));
+  const firstThursdayDayNr = (firstThursday.getUTCDay() + 6) % 7;
+  firstThursday.setUTCDate(firstThursday.getUTCDate() - firstThursdayDayNr + 3);
+  return 1 + Math.round((target.getTime() - firstThursday.getTime()) / (7 * 24 * 3600 * 1000));
+}
+
+/**
  * Component responsible for the execution, creation, and modification of a workout session.
  * Handles both the "Template/Program" mode and the "Active Journal" execution mode.
  */
@@ -321,11 +335,7 @@ export class Session implements OnInit {
     const username = this.authService.getUsername();
     if (!username) return;
 
-    const now = new Date();
-    const start = new Date(now.getFullYear(), 0, 1);
-    const diff = (now.getTime() - start.getTime()) + ((start.getTimezoneOffset() - now.getTimezoneOffset()) * 60000);
-    const oneWeek = 1000 * 60 * 60 * 24 * 7;
-    const currentWeekNumber = Math.floor(diff / oneWeek);
+    const currentWeekNumber = getIsoWeekNumber(new Date());
 
     const exercicesPayload = this.exercices().map(exo => ({
       nom: exo.nom,
