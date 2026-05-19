@@ -22,11 +22,14 @@ import java.util.Map;
 public class OlympusClient {
 
     private final RestClient restClient;
+    private final String baseUrl;
 
     public OlympusClient(@Value("${olympus.base-url}") String baseUrl) {
+        this.baseUrl = baseUrl;
         this.restClient = RestClient.builder()
                 .baseUrl(baseUrl)
                 .build();
+        log.info("OlympusClient configuré sur baseUrl={}", baseUrl);
     }
 
     /**
@@ -59,7 +62,8 @@ public class OlympusClient {
             log.warn("Olympus authenticate a renvoyé {} : {}", status, e.getResponseBodyAsString());
             throw new OlympusUnavailableException("Olympus a renvoyé " + status);
         } catch (org.springframework.web.client.ResourceAccessException e) {
-            throw new OlympusUnavailableException("Olympus injoignable : " + e.getMessage());
+            log.warn("Olympus injoignable sur {} : {}", baseUrl, e.getMessage());
+            throw new OlympusUnavailableException("Olympus injoignable sur " + baseUrl + " : " + e.getMessage());
         }
     }
 
@@ -101,7 +105,8 @@ public class OlympusClient {
             log.warn("Olympus GET {} a renvoyé {} : {}", uri, status, e.getResponseBodyAsString());
             throw new OlympusUnavailableException("Olympus a renvoyé " + status);
         } catch (org.springframework.web.client.ResourceAccessException e) {
-            throw new OlympusUnavailableException("Olympus injoignable : " + e.getMessage());
+            log.warn("Olympus injoignable sur {} : {}", baseUrl, e.getMessage());
+            throw new OlympusUnavailableException("Olympus injoignable sur " + baseUrl + " : " + e.getMessage());
         }
     }
 
