@@ -145,6 +145,8 @@ jobs:
     environment: ${{ inputs.target || 'production' }}
 
     steps:
+      - uses: actions/checkout@v5
+
       - uses: actions/download-artifact@v5
         with:
           name: backend-jar
@@ -174,6 +176,12 @@ jobs:
             -e "ssh -i ~/.ssh/deploy_key" \
             artifacts/frontend/ \
             ${{ secrets.SSH_USER }}@${{ env.SERVER_HOST }}:/tmp/chiron-frontend/
+
+      - name: Upload docker-compose.yml
+        run: |
+          scp -i ~/.ssh/deploy_key \
+            docker-compose.yml \
+            ${{ secrets.SSH_USER }}@${{ env.SERVER_HOST }}:/tmp/chiron-docker-compose.yml
 
       - name: Upload secrets
         run: |
@@ -205,22 +213,25 @@ jobs:
             echo "▶ Mise à jour du frontend..."
             sudo rsync -a --delete /tmp/chiron-frontend/ $DEPLOY_DIR/frontend/
 
+            echo "▶ Mise à jour du docker-compose.yml..."
+            cp /tmp/chiron-docker-compose.yml $CHIRON_DIR/docker-compose.yml
+
             echo "▶ Mise à jour du .env..."
             ENV_FILE=$CHIRON_DIR/.env
             grep -v '^GMAIL_\|^FRONTEND_URL=' "$ENV_FILE" > /tmp/.env.tmp 2>/dev/null || true
             cat /tmp/chiron.secrets >> /tmp/.env.tmp
             mv /tmp/.env.tmp "$ENV_FILE"
 
-            echo "▶ Redémarrage du backend (recréation)..."
+            echo "▶ Redémarrage du backend (recréation forcée pour prendre en compte les changements de compose)..."
             cd $CHIRON_DIR
             if command -v docker-compose &> /dev/null; then
-              docker-compose up -d backend
+              docker-compose up -d --force-recreate backend
             else
-              docker compose up -d backend
+              docker compose up -d --force-recreate backend
             fi
 
             echo "▶ Nettoyage..."
-            rm -f /tmp/chiron-app.jar /tmp/chiron.secrets /tmp/.env.tmp
+            rm -f /tmp/chiron-app.jar /tmp/chiron.secrets /tmp/.env.tmp /tmp/chiron-docker-compose.yml
             rm -rf /tmp/chiron-frontend/
 
             echo "✓ Déploiement terminé"
