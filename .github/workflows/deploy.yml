@@ -207,8 +207,9 @@ jobs:
             docker stop chiron_backend || true
             docker rm chiron_backend || true
 
-            echo "▶ Mise à jour du JAR..."
+            echo "▶ Mise à jour du JAR (les deux chemins : DEPLOY_DIR pour l'archive, CHIRON_DIR pour le mount docker-compose)..."
             sudo cp /tmp/chiron-app.jar $DEPLOY_DIR/app.jar
+            cp /tmp/chiron-app.jar $CHIRON_DIR/app.jar
 
             echo "▶ Mise à jour du frontend..."
             sudo rsync -a --delete /tmp/chiron-frontend/ $DEPLOY_DIR/frontend/

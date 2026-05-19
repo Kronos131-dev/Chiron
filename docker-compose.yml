@@ -24,11 +24,10 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/chiron_db
       - SPRING_DATASOURCE_USERNAME=chiron_user
       - SPRING_DATASOURCE_PASSWORD=chiron_password
-      # Olympus tourne dans un docker-compose séparé. Le port 8080 du conteneur Olympus
-      # est publié sur l'hôte, donc Chiron passe par host.docker.internal pour le joindre.
-      - OLYMPUS_BASE_URL=${OLYMPUS_BASE_URL:-http://host.docker.internal:8080}
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      # Olympus tourne dans son propre docker-compose. Les deux stacks rejoignent
+      # le réseau Docker externe `chiron-olympus` pour communiquer directement
+      # par nom de service.
+      - OLYMPUS_BASE_URL=${OLYMPUS_BASE_URL:-http://olympus-api:8080}
     ports:
       - "9090:9090"
     volumes:
@@ -36,6 +35,9 @@ services:
     command: ["java", "-jar", "/app/app.jar"]
     depends_on:
       - db
+    networks:
+      - default
+      - chiron-olympus
 
   # 3. LE FRONTEND (Ton Nginx à toi)
   frontend:
@@ -66,3 +68,8 @@ services:
 
 volumes:
   chiron_pg_data:
+
+networks:
+  chiron-olympus:
+    external: true
+    name: chiron-olympus
