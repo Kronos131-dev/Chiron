@@ -1,6 +1,6 @@
 package com.kronos.chiron.ai;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import com.kronos.chiron.entity.Utilisateur;
 import com.kronos.chiron.nutrition.NutritionService;
 import com.kronos.chiron.nutrition.OlympusClient;
