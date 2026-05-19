@@ -24,6 +24,11 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/chiron_db
       - SPRING_DATASOURCE_USERNAME=chiron_user
       - SPRING_DATASOURCE_PASSWORD=chiron_password
+      # Olympus tourne dans un docker-compose séparé. Le port 8080 du conteneur Olympus
+      # est publié sur l'hôte, donc Chiron passe par host.docker.internal pour le joindre.
+      - OLYMPUS_BASE_URL=${OLYMPUS_BASE_URL:-http://host.docker.internal:8080}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "9090:9090"
     volumes:
