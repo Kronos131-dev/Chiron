@@ -6,6 +6,7 @@ import com.kronos.chiron.entity.Role;
 import com.kronos.chiron.entity.Utilisateur;
 import com.kronos.chiron.repository.UtilisateurRepository;
 import com.kronos.chiron.security.JwtService;
+import com.kronos.chiron.service.MemoryNoteService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
@@ -34,6 +35,7 @@ class ChatControllerTest {
 
     @MockitoBean private ChironAgent chironAgent;
     @MockitoBean private UtilisateurRepository utilisateurRepository;
+    @MockitoBean private MemoryNoteService memoryNoteService;
     @MockitoBean private JwtService jwtService;
     @MockitoBean private UserDetailsService userDetailsService;
 

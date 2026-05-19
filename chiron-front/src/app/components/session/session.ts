@@ -313,6 +313,8 @@ export class Session implements OnInit {
   /**
    * Persists the current session state to the backend as an executed Historical Session (isModele = true).
    * Calculates the current week number for statistical tracking.
+   * Additionally syncs the source template programme (if the session was started from one)
+   * so the next execution shows the latest reps / weights as presets.
    */
   ajouterAuJournal() {
     if (this.isReadonly()) return;
@@ -325,32 +327,49 @@ export class Session implements OnInit {
     const oneWeek = 1000 * 60 * 60 * 24 * 7;
     const currentWeekNumber = Math.floor(diff / oneWeek);
 
+    const exercicesPayload = this.exercices().map(exo => ({
+      nom: exo.nom,
+      commentaire: "",
+      exerciceDefinitionId: exo.definitionId ?? null,
+      series: exo.series.map(serie => ({
+        poids: serie.poids != null ? Number(serie.poids) : 0,
+        reps: serie.reps != null ? Number(serie.reps) : 0,
+        commentaire: "",
+        degressifs: serie.degressifs.map(deg => ({
+          poids: deg.poids != null ? Number(deg.poids) : 0,
+          reps: deg.reps != null ? Number(deg.reps) : 0
+        }))
+      }))
+    }));
+
     // Always create a new historical session entry (the user can run the same programme
-    // multiple times). The Builder owns updates to the underlying template.
-    const dto = {
+    // multiple times).
+    const journalDto = {
       id: null,
       titre: this.titreRoutine(),
       weekNumber: currentWeekNumber,
       startTime: new Date().toISOString(),
       isModele: true,
-      exercices: this.exercices().map(exo => ({
-        nom: exo.nom,
-        commentaire: "",
-        exerciceDefinitionId: exo.definitionId ?? null,
-        series: exo.series.map(serie => ({
-          poids: serie.poids != null ? Number(serie.poids) : 0,
-          reps: serie.reps != null ? Number(serie.reps) : 0,
-          commentaire: "",
-          degressifs: serie.degressifs.map(deg => ({
-            poids: deg.poids != null ? Number(deg.poids) : 0,
-            reps: deg.reps != null ? Number(deg.reps) : 0
-          }))
-        }))
-      }))
+      exercices: exercicesPayload
     };
 
-    this.chironApi.sauvegarderProgramme(username, dto).subscribe({
-      next: () => this.flashStatus('Séance ajoutée au journal.'),
+    this.chironApi.sauvegarderProgramme(username, journalDto).subscribe({
+      next: () => {
+        this.flashStatus('Séance ajoutée au journal.');
+        // Sync the source template programme so next time the presets show
+        // the latest charges/reps — only when the session was started from a template.
+        if (this.routineId && !this.isReadonly()) {
+          const templateDto = {
+            id: parseInt(this.routineId, 10),
+            titre: this.titreRoutine(),
+            isModele: false,
+            exercices: exercicesPayload
+          };
+          this.chironApi.sauvegarderProgramme(username, templateDto).subscribe({
+            error: () => this.flashStatus('Journal OK, mise à jour du modèle échouée.')
+          });
+        }
+      },
       error: () => this.flashStatus("Erreur lors de l'enregistrement dans le journal."),
     });
   }

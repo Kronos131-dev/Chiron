@@ -29,6 +29,13 @@
       </div>
     }
 
+    <!-- Transient save status -->
+    @if (saveStatus()) {
+      <div class="fixed top-24 left-1/2 -translate-x-1/2 z-50 bg-slate-900 border border-secondary/40 text-on-surface px-6 py-3 rounded-lg shadow-2xl font-body">
+        {{ saveStatus() }}
+      </div>
+    }
+
     <!-- Weekly Grouped Workout History -->
     <div class="space-y-12">
       @for (weekGroup of historiqueGrouped(); track weekGroup.weekNumber) {
@@ -72,8 +79,18 @@
                       {{ seance.exercices?.length || 0 }} Exercices
                     </div>
 
+                    <!-- Edit Session Button -->
+                    @if (editingSeanceId() !== seance.id) {
+                      <button (click)="startEdit(seance, $event)"
+                              title="Modifier"
+                              class="w-8 h-8 rounded bg-secondary/10 flex items-center justify-center text-secondary hover:bg-secondary/30 transition-colors cursor-pointer z-10">
+                        <span class="material-symbols-outlined text-sm">edit</span>
+                      </button>
+                    }
+
                     <!-- Delete Session Button -->
                     <button (click)="supprimerSeance(seance.id, $event)"
+                            title="Supprimer"
                             class="w-8 h-8 rounded bg-red-900/20 flex items-center justify-center text-red-400 hover:bg-red-900/40 transition-colors cursor-pointer z-10">
                       <span class="material-symbols-outlined text-sm">delete</span>
                     </button>
@@ -83,43 +100,120 @@
                 <!-- Expandable Session Details (Exercises and Sets) -->
                 @if (expandedSeanceId() === seance.id) {
                   <div class="p-6 space-y-6 animate-in fade-in slide-in-from-top-4 duration-300">
-                    @for (exo of seance.exercices; track exo.id) {
 
-                      <!-- Individual Exercise Block -->
-                      <div class="bg-slate-950/30 rounded-lg p-4 border border-white/5">
-                        <h4 class="font-headline text-lg text-on-surface mb-3 flex items-center gap-2">
-                          <span class="material-symbols-outlined text-secondary text-lg">fitness_center</span>
-                          {{ exo.nom }}
-                        </h4>
+                    <!-- ─── READ-ONLY VIEW ─── -->
+                    @if (editingSeanceId() !== seance.id) {
+                      @for (exo of seance.exercices; track exo.id) {
+                        <div class="bg-slate-950/30 rounded-lg p-4 border border-white/5">
+                          <h4 class="font-headline text-lg text-on-surface mb-3 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-secondary text-lg">fitness_center</span>
+                            {{ exo.nom }}
+                          </h4>
 
-                        <!-- Sets (Series) Table -->
-                        <div class="overflow-x-auto">
-                          <table class="w-full text-left border-collapse">
-                            <thead>
-                            <tr class="border-b border-secondary/20 text-on-surface-variant font-headline text-sm tracking-wider uppercase">
-                              <th class="py-2 px-4">Série</th>
-                              <th class="py-2 px-4">Reps</th>
-                              <th class="py-2 px-4">Poids (kg)</th>
-                            </tr>
-                            </thead>
-                            <tbody class="font-body text-on-surface">
-                              @for (serie of exo.series; track serie.id; let i = $index) {
-                                <tr class="border-b border-white/5 hover:bg-white/5 transition-colors">
-                                  <td class="py-2 px-4 font-bold text-secondary/80">#{{ i + 1 }}</td>
-                                  <td class="py-2 px-4">{{ serie.reps }}</td>
-                                  <td class="py-2 px-4">{{ serie.poids }}</td>
-                                </tr>
-                                @for (deg of serie.degressifs; track deg.id; let j = $index) {
-                                  <tr class="border-b border-white/5 bg-slate-900/30 hover:bg-white/5 transition-colors">
-                                    <td class="py-2 px-4 pl-8 text-on-surface-variant text-xs">↳ Dég.</td>
-                                    <td class="py-2 px-4 text-sm">{{ deg.reps }}</td>
-                                    <td class="py-2 px-4 text-sm">{{ deg.poids }}</td>
+                          <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                              <thead>
+                              <tr class="border-b border-secondary/20 text-on-surface-variant font-headline text-sm tracking-wider uppercase">
+                                <th class="py-2 px-4">Série</th>
+                                <th class="py-2 px-4">Reps</th>
+                                <th class="py-2 px-4">Poids (kg)</th>
+                              </tr>
+                              </thead>
+                              <tbody class="font-body text-on-surface">
+                                @for (serie of exo.series; track serie.id; let i = $index) {
+                                  <tr class="border-b border-white/5 hover:bg-white/5 transition-colors">
+                                    <td class="py-2 px-4 font-bold text-secondary/80">#{{ i + 1 }}</td>
+                                    <td class="py-2 px-4">{{ serie.reps }}</td>
+                                    <td class="py-2 px-4">{{ serie.poids }}</td>
+                                  </tr>
+                                  @for (deg of serie.degressifs; track deg.id; let j = $index) {
+                                    <tr class="border-b border-white/5 bg-slate-900/30 hover:bg-white/5 transition-colors">
+                                      <td class="py-2 px-4 pl-8 text-on-surface-variant text-xs">↳ Dég.</td>
+                                      <td class="py-2 px-4 text-sm">{{ deg.reps }}</td>
+                                      <td class="py-2 px-4 text-sm">{{ deg.poids }}</td>
+                                    </tr>
+                                  }
+                                }
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      }
+                    }
+
+                    <!-- ─── EDIT VIEW ─── -->
+                    @if (editingSeanceId() === seance.id && editingDraft(); as draft) {
+                      @for (exo of draft.exercices; track $index; let exoIdx = $index) {
+                        <div class="bg-slate-950/30 rounded-lg p-4 border border-secondary/30">
+                          <h4 class="font-headline text-lg text-on-surface mb-3 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-secondary text-lg">fitness_center</span>
+                            {{ exo.nom }}
+                          </h4>
+
+                          <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                              <thead>
+                              <tr class="border-b border-secondary/20 text-on-surface-variant font-headline text-sm tracking-wider uppercase">
+                                <th class="py-2 px-3">Série</th>
+                                <th class="py-2 px-3">Reps</th>
+                                <th class="py-2 px-3">Poids (kg)</th>
+                                <th class="py-2 px-3 w-10"></th>
+                              </tr>
+                              </thead>
+                              <tbody class="font-body text-on-surface">
+                                @for (serie of exo.series; track $index; let serieIdx = $index) {
+                                  <tr class="border-b border-white/5">
+                                    <td class="py-2 px-3 font-bold text-secondary/80">#{{ serieIdx + 1 }}</td>
+                                    <td class="py-2 px-3">
+                                      <input type="number" inputmode="numeric" min="0"
+                                             class="w-20 bg-slate-800 border border-secondary/30 text-on-surface rounded px-2 py-1 focus:outline-none focus:border-secondary"
+                                             [(ngModel)]="serie.reps"
+                                             (blur)="onFieldChange()"
+                                             (click)="$event.stopPropagation()" />
+                                    </td>
+                                    <td class="py-2 px-3">
+                                      <input type="number" inputmode="decimal" min="0" step="0.5"
+                                             class="w-24 bg-slate-800 border border-secondary/30 text-on-surface rounded px-2 py-1 focus:outline-none focus:border-secondary"
+                                             [(ngModel)]="serie.poids"
+                                             (blur)="onFieldChange()"
+                                             (click)="$event.stopPropagation()" />
+                                    </td>
+                                    <td class="py-2 px-3">
+                                      <button (click)="removeSerie(exoIdx, serieIdx, $event)"
+                                              title="Supprimer la série"
+                                              class="w-7 h-7 rounded bg-red-900/20 text-red-400 hover:bg-red-900/40 flex items-center justify-center">
+                                        <span class="material-symbols-outlined text-sm">close</span>
+                                      </button>
+                                    </td>
                                   </tr>
                                 }
-                              }
-                            </tbody>
-                          </table>
+                              </tbody>
+                            </table>
+                          </div>
+
+                          <button (click)="addSerie(exoIdx, $event)"
+                                  class="mt-3 inline-flex items-center gap-2 text-sm bg-secondary/10 text-secondary hover:bg-secondary/30 transition-colors px-3 py-1.5 rounded">
+                            <span class="material-symbols-outlined text-sm">add</span>
+                            Ajouter une série
+                          </button>
                         </div>
+                      }
+
+                      <!-- Save / Cancel bar -->
+                      <div class="flex flex-col md:flex-row items-stretch md:items-center justify-end gap-3 pt-2">
+                        <button (click)="cancelEdit($event)"
+                                [disabled]="isSaving()"
+                                class="px-5 py-2 rounded bg-slate-800 hover:bg-slate-700 text-on-surface font-headline tracking-wider uppercase text-sm disabled:opacity-50">
+                          Annuler
+                        </button>
+                        <button (click)="saveEdit($event)"
+                                [disabled]="isSaving()"
+                                class="px-5 py-2 rounded bg-secondary text-slate-950 hover:bg-secondary/80 font-headline tracking-wider uppercase text-sm font-bold disabled:opacity-50 flex items-center gap-2 justify-center">
+                          @if (isSaving()) {
+                            <span class="w-4 h-4 border-2 border-slate-950/30 border-t-slate-950 rounded-full animate-spin"></span>
+                          }
+                          Sauvegarder
+                        </button>
                       </div>
                     }
                   </div>
