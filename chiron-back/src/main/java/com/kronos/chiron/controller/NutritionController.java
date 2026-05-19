@@ -5,6 +5,7 @@ import com.kronos.chiron.nutrition.NutritionService;
 import com.kronos.chiron.nutrition.OlympusClient;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/nutrition")
 @RequiredArgsConstructor
+@Slf4j
 public class NutritionController {
 
     private final NutritionService nutritionService;
@@ -26,6 +28,9 @@ public class NutritionController {
     @PostMapping("/link")
     public ResponseEntity<?> link(@AuthenticationPrincipal UserDetails userDetails,
                                   @RequestBody LinkRequest req) {
+        log.info("NUTRITION_LINK_CALLED principal={} pseudoLen={}",
+                userDetails != null ? userDetails.getUsername() : "<null>",
+                req != null && req.pseudo() != null ? req.pseudo().length() : -1);
         try {
             NutritionLinkStatus status = nutritionService.link(userDetails.getUsername(), req.pseudo(), req.password());
             return ResponseEntity.ok(status);
