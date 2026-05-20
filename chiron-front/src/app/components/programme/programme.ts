@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { ChironApi } from '../../service/chiron-api';
 import { AuthService } from '../../service/auth.service';
+import { ActiveSessionService } from '../../service/active-session.service';
 import { HeaderComponent } from '../shared/header/header';
 
 export interface Routine {
@@ -39,6 +40,7 @@ export class Programme implements OnInit {
     private router:      Router,
     private chironApi:   ChironApi,
     private authService: AuthService,
+    public  activeSession: ActiveSessionService,
   ) {}
 
   ngOnInit() { this.chargerProgrammes(); }
@@ -62,7 +64,23 @@ export class Programme implements OnInit {
     });
   }
 
-  commencerRoutine(id: string) { this.router.navigate(['/session', id]); }
+  commencerRoutine(id: string) {
+    // Starting a different routine would discard the unsaved progress of the one
+    // currently in progress — ask before throwing it away.
+    if (this.activeSession.hasActiveSession() && !this.activeSession.isActiveFor(id)) {
+      const ok = confirm('Une séance est déjà en cours sur un autre programme. La progression non enregistrée sera perdue. Continuer ?');
+      if (!ok) return;
+      this.activeSession.clear();
+    }
+    this.router.navigate(['/session', id]);
+  }
+
+  /** Resume the session already in progress, restoring all entered reps / charges. */
+  reprendreSession() {
+    const id = this.activeSession.routineId();
+    if (id) this.router.navigate(['/session', id]);
+  }
+
   ajouterRoutine()             { this.router.navigate(['/programme', 'new']); }
   editerRoutine(id: string)    { this.router.navigate(['/programme', id, 'edit']); }
 

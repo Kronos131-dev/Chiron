@@ -1,4 +1,4 @@
-<app-header [title]="'SÉANCE'" [showBack]="true" [backRoute]="'/programmes'"></app-header>
+<app-header [title]="'SÉANCE'" [showBack]="true" [backRoute]="'/programme'"></app-header>
 
 <!-- Main Session Interface -->
 <main class="min-h-screen pt-20 pb-32 bg-slate-950 heroic-texture relative">
@@ -20,27 +20,11 @@
                placeholder="NOM DE LA ROUTINE" />
       </div>
 
-      <!-- Action Buttons (Hidden in Read-only Mode) -->
+      <!-- Last Session Date Display (Hidden in Read-only Mode) -->
       @if (!isReadonly()) {
-        <div class="flex justify-between items-end pt-2">
-          <!-- Last Session Date Display -->
+        <div class="pt-2">
           <p class="text-on-surface-variant text-[10px] font-bold tracking-widest uppercase">Dernière session : {{ derniereSession() }}</p>
-
-          <!-- Save to Journal (History) Button — editing the underlying template lives
-               in the dedicated Builder page now. -->
-          <button (click)="ajouterAuJournal()"
-                  class="bg-gradient-to-r from-blue-500 to-blue-700 text-white font-bold text-xs px-6 py-2 rounded uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2">
-            <span class="material-symbols-outlined text-sm">add_task</span>
-            Ajouter au journal
-          </button>
         </div>
-
-        <!-- Transient status message (auto-clears after 3s) -->
-        @if (saveStatus()) {
-          <p class="text-secondary text-xs font-bold tracking-widest uppercase text-right pt-2 animate-pulse">
-            {{ saveStatus() }}
-          </p>
-        }
       }
     </div>
   </section>
@@ -76,6 +60,25 @@
           </div>
           <span class="text-xs font-bold tracking-[0.2em] uppercase">Ajouter un exercice</span>
         </button>
+      }
+
+      <!-- Save to Journal — primary end-of-session action, placed at the bottom
+           since the session is filled top-to-bottom. -->
+      @if (!isReadonly()) {
+        <div class="pt-4">
+          <button (click)="ajouterAuJournal()"
+                  class="w-full bg-gradient-to-r from-blue-500 to-blue-700 text-white font-bold text-sm px-6 py-4 rounded-xl uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined text-lg">add_task</span>
+            Ajouter au journal
+          </button>
+
+          <!-- Transient status message (auto-clears after 3s) -->
+          @if (saveStatus()) {
+            <p class="text-secondary text-xs font-bold tracking-widest uppercase text-center pt-3 animate-pulse">
+              {{ saveStatus() }}
+            </p>
+          }
+        </div>
       }
 
     </div>
