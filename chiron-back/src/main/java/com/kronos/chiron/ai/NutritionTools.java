@@ -6,7 +6,7 @@ import com.kronos.chiron.nutrition.NutritionService;
 import com.kronos.chiron.nutrition.OlympusClient;
 import com.kronos.chiron.repository.UtilisateurRepository;
 import dev.langchain4j.agent.tool.Tool;
-import dev.langchain4j.service.MemoryId;
+import dev.langchain4j.agent.tool.ToolMemoryId;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -35,7 +35,7 @@ public class NutritionTools {
     private final OlympusClient olympusClient;
 
     @Tool("Récupère l'apport nutritionnel de l'utilisateur pour une date donnée (format YYYY-MM-DD ; null ou vide = aujourd'hui). Retourne calories, protéines, glucides, lipides consommés + cibles + delta + activité du jour. Nécessite que l'utilisateur ait lié son compte Olympus.")
-    public String getApportJournalier(@MemoryId String userId, String date) {
+    public String getApportJournalier(@ToolMemoryId String userId, String date) {
         Utilisateur user = loadUser(userId);
         LocalDate target;
         if (date == null || date.isBlank()) {
@@ -101,7 +101,7 @@ public class NutritionTools {
     }
 
     @Tool("Récupère les objectifs nutritionnels de l'utilisateur : type d'objectif (perte / maintien / prise), cibles calories et macros, poids actuel. Nécessite la liaison Olympus.")
-    public String getObjectifsNutritionnels(@MemoryId String userId) {
+    public String getObjectifsNutritionnels(@ToolMemoryId String userId) {
         Utilisateur user = loadUser(userId);
         try {
             String token = nutritionService.getValidToken(user.getUsername());
@@ -140,7 +140,7 @@ public class NutritionTools {
     }
 
     @Tool("Analyse l'équilibre nutritionnel de l'utilisateur sur les N derniers jours (défaut 7) : moyenne calorique vs cible, répartition moyenne en macros, écart à l'objectif. Détecte les déficits/surplus marqués. Nécessite la liaison Olympus.")
-    public String analyserEquilibreMacros(@MemoryId String userId, Integer nbJours) {
+    public String analyserEquilibreMacros(@ToolMemoryId String userId, Integer nbJours) {
         Utilisateur user = loadUser(userId);
         int window = (nbJours != null && nbJours > 0) ? nbJours : 7;
 
@@ -225,7 +225,7 @@ public class NutritionTools {
     }
 
     @Tool("Récupère l'évolution du poids de l'utilisateur sur les N derniers jours (défaut 30) : première et dernière mesure, tendance (perte / prise / stable). Nécessite la liaison Olympus et que l'utilisateur se pèse régulièrement dans Olympus.")
-    public String getEvolutionPoids(@MemoryId String userId, Integer nbJours) {
+    public String getEvolutionPoids(@ToolMemoryId String userId, Integer nbJours) {
         Utilisateur user = loadUser(userId);
         int window = (nbJours != null && nbJours > 0) ? nbJours : 30;
 

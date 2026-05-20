@@ -6,7 +6,7 @@ import com.kronos.chiron.entity.Utilisateur;
 import com.kronos.chiron.repository.UtilisateurRepository;
 import com.kronos.chiron.service.MemoryNoteService;
 import dev.langchain4j.agent.tool.Tool;
-import dev.langchain4j.service.MemoryId;
+import dev.langchain4j.agent.tool.ToolMemoryId;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -28,7 +28,7 @@ public class MemoryTools {
     private final MemoryNoteService memoryNoteService;
 
     @Tool("Enregistre une note durable concernant l'utilisateur. Types : BLESSURE (douleur, limitation médicale), PREFERENCE (aime/n'aime pas, régime alimentaire), OBJECTIF (objectif précis ou chiffré), ENGAGEMENT (promesse faite par l'utilisateur), NOTE_LIBRE (autre). À appeler dès que l'utilisateur révèle une information structurelle non éphémère que tu devras retenir au-delà de la conversation en cours.")
-    public String enregistrerNote(@MemoryId String userId, String type, String contenu) {
+    public String enregistrerNote(@ToolMemoryId String userId, String type, String contenu) {
         Utilisateur user = loadUser(userId);
         if (contenu == null || contenu.isBlank()) {
             return "Le contenu de la note est vide — rien enregistré.";
@@ -44,7 +44,7 @@ public class MemoryTools {
     }
 
     @Tool("Récupère les notes durables précédemment enregistrées sur l'utilisateur. Si type est fourni (BLESSURE, PREFERENCE, OBJECTIF, ENGAGEMENT, NOTE_LIBRE), filtre par ce type ; sinon retourne les plus récentes (max 20). Utile pour retrouver une info spécifique au-delà du contexte injecté en début de conversation.")
-    public String getMesNotes(@MemoryId String userId, String type) {
+    public String getMesNotes(@ToolMemoryId String userId, String type) {
         Utilisateur user = loadUser(userId);
         List<ChironMemoryNote> notes;
         if (type != null && !type.isBlank()) {
@@ -72,7 +72,7 @@ public class MemoryTools {
     }
 
     @Tool("Supprime une note durable précédemment enregistrée, à partir de son identifiant numérique. À utiliser quand l'utilisateur demande explicitement d'oublier une information.")
-    public String oublierNote(@MemoryId String userId, Long id) {
+    public String oublierNote(@ToolMemoryId String userId, Long id) {
         if (id == null) return "Identifiant de note manquant.";
         Utilisateur user = loadUser(userId);
         boolean removed = memoryNoteService.delete(user, id);
