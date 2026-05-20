@@ -1,9 +1,10 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ChironApi, ExerciceDefinitionDto } from '../../service/chiron-api';
 import { AuthService } from '../../service/auth.service';
+import { ActiveSessionService } from '../../service/active-session.service';
 import { HeaderComponent } from '../shared/header/header';
 import { ExerciceCardComponent } from '../shared/exercice-card/exercice-card';
 import { ExercisePickerComponent } from '../shared/exercise-picker/exercise-picker';
@@ -41,7 +42,7 @@ function getIsoWeekNumber(d: Date): number {
   templateUrl: './session.html',
   styleUrls: ['./session.css']
 })
-export class Session implements OnInit {
+export class Session implements OnInit, OnDestroy {
 
   /** Signal holding the title of the current routine. */
   titreRoutine = signal('Nouvelle Routine');
@@ -98,7 +99,8 @@ export class Session implements OnInit {
     private router: Router,
     private route: ActivatedRoute,
     private chironApi: ChironApi,
-    private authService: AuthService
+    private authService: AuthService,
+    private activeSession: ActiveSessionService
   ) {}
 
   /**
@@ -120,7 +122,15 @@ export class Session implements OnInit {
         this.isExternalView.set(isExternal);
 
         if (this.routineId) {
-          this.chargerRoutine(this.routineId);
+          // Execution mode: if this exact routine is already in progress, rehydrate
+          // the shared in-memory state instead of refetching — keeps every rep /
+          // charge entered so far after navigating away and back.
+          if (!this.isReadonly() && this.activeSession.isActiveFor(this.routineId)) {
+            this.titreRoutine = this.activeSession.titre;
+            this.exercices    = this.activeSession.exercices;
+          } else {
+            this.chargerRoutine(this.routineId);
+          }
         } else {
           // Fallback: someone landed on `/session` without an id. Just show an empty
           // editable template so they can quickly log a one-off workout.
@@ -129,6 +139,26 @@ export class Session implements OnInit {
         }
       });
     });
+  }
+
+  /**
+   * Lifecycle hook triggered when the component is destroyed (e.g. navigating to
+   * another page). Persists the active session so its progress is durable.
+   */
+  ngOnDestroy() {
+    this.persistActiveSession();
+  }
+
+  /**
+   * Snapshots the active session to localStorage when the app is hidden or
+   * backgrounded — covers the Capacitor Android app being swiped away.
+   */
+  @HostListener('window:pagehide')
+  @HostListener('document:visibilitychange')
+  persistActiveSession() {
+    if (!this.isReadonly() && this.routineId && this.activeSession.isActiveFor(this.routineId)) {
+      this.activeSession.snapshot();
+    }
   }
 
   /**
@@ -166,6 +196,15 @@ export class Session implements OnInit {
         }));
 
         this.exercices.set(exosFormates);
+
+        // In execution mode, hand the freshly loaded session to the shared service
+        // and bind the component to its signals so the state survives navigation.
+        if (!this.isReadonly() && this.routineId) {
+          this.activeSession.start(this.routineId, data.titre, exosFormates);
+          this.titreRoutine = this.activeSession.titre;
+          this.exercices    = this.activeSession.exercices;
+        }
+
         this.isLoading.set(false);
       },
       error: (err) => {
@@ -366,6 +405,18 @@ export class Session implements OnInit {
     this.chironApi.sauvegarderProgramme(username, journalDto).subscribe({
       next: () => {
         this.flashStatus('Séance ajoutée au journal.');
+
+        // The session is now logged: detach from the shared "in progress" state
+        // (a fresh start is required next time) while keeping the current view
+        // intact by re-creating local signals holding the same values.
+        if (this.routineId && !this.isReadonly()) {
+          const exos  = this.exercices();
+          const titre = this.titreRoutine();
+          this.activeSession.clear();
+          this.exercices    = signal(exos);
+          this.titreRoutine = signal(titre);
+        }
+
         // Sync the source template programme so next time the presets show
         // the latest charges/reps — only when the session was started from a template.
         if (this.routineId && !this.isReadonly()) {

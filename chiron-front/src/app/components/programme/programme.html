@@ -10,6 +10,21 @@
       <div class="h-1 w-12 bg-secondary mt-2 rounded-full"></div>
     </div>
 
+    <!-- Resume banner — shown while a session is in progress -->
+    @if (activeSession.hasActiveSession()) {
+      <button (click)="reprendreSession()"
+              class="w-full mb-6 bg-gradient-to-r from-secondary/20 to-secondary/5 border border-secondary/40 rounded-2xl p-4 flex items-center gap-4 hover:border-secondary/70 hover:from-secondary/25 transition-all group">
+        <div class="w-11 h-11 rounded-full bg-secondary/20 flex items-center justify-center flex-shrink-0">
+          <span class="material-symbols-outlined text-secondary">play_arrow</span>
+        </div>
+        <div class="flex-1 min-w-0 text-left">
+          <p class="text-secondary text-[10px] font-bold tracking-[0.2em] uppercase">Séance en cours</p>
+          <p class="text-white font-headline font-black text-lg uppercase tracking-tight truncate">{{ activeSession.titre() }}</p>
+        </div>
+        <span class="text-secondary text-xs font-bold uppercase tracking-widest flex-shrink-0 group-hover:translate-x-1 transition-transform">Reprendre →</span>
+      </button>
+    }
+
     <!-- Loading -->
     @if (isLoading()) {
       <div class="flex justify-center py-20">
@@ -74,7 +89,7 @@
               </div>
               <button (click)="commencerRoutine(routine.id)"
                       class="bg-gradient-to-r from-secondary to-[#c77a30] text-slate-950 font-bold text-xs px-6 py-3 rounded-lg uppercase tracking-widest hover:scale-105 active:scale-95 transition-transform shadow-lg shadow-secondary/20">
-                Commencer
+                {{ activeSession.isActiveFor(routine.id) ? 'Reprendre' : 'Commencer' }}
               </button>
             </div>
           </div>
