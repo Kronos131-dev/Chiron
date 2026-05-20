@@ -12,17 +12,26 @@
 
     <!-- Resume banner — shown while a session is in progress -->
     @if (activeSession.hasActiveSession()) {
-      <button (click)="reprendreSession()"
-              class="w-full mb-6 bg-gradient-to-r from-secondary/20 to-secondary/5 border border-secondary/40 rounded-2xl p-4 flex items-center gap-4 hover:border-secondary/70 hover:from-secondary/25 transition-all group">
-        <div class="w-11 h-11 rounded-full bg-secondary/20 flex items-center justify-center flex-shrink-0">
-          <span class="material-symbols-outlined text-secondary">play_arrow</span>
-        </div>
-        <div class="flex-1 min-w-0 text-left">
-          <p class="text-secondary text-[10px] font-bold tracking-[0.2em] uppercase">Séance en cours</p>
-          <p class="text-white font-headline font-black text-lg uppercase tracking-tight truncate">{{ activeSession.titre() }}</p>
-        </div>
-        <span class="text-secondary text-xs font-bold uppercase tracking-widest flex-shrink-0 group-hover:translate-x-1 transition-transform">Reprendre →</span>
-      </button>
+      <div class="w-full mb-6 bg-gradient-to-r from-secondary/20 to-secondary/5 border border-secondary/40 rounded-2xl flex items-center gap-2 pr-3 hover:border-secondary/70 transition-all group">
+        <!-- Resume: tapping the row reopens the session -->
+        <button (click)="reprendreSession()"
+                class="flex-1 min-w-0 flex items-center gap-4 p-4 text-left">
+          <div class="w-11 h-11 rounded-full bg-secondary/20 flex items-center justify-center flex-shrink-0">
+            <span class="material-symbols-outlined text-secondary">play_arrow</span>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-secondary text-[10px] font-bold tracking-[0.2em] uppercase">Séance en cours</p>
+            <p class="text-white font-headline font-black text-lg uppercase tracking-tight truncate">{{ activeSession.titre() }}</p>
+          </div>
+          <span class="text-secondary text-xs font-bold uppercase tracking-widest flex-shrink-0 group-hover:translate-x-1 transition-transform">Reprendre →</span>
+        </button>
+        <!-- Abandon the in-progress session -->
+        <button (click)="abandonnerSession()"
+                aria-label="Abandonner la séance"
+                class="w-9 h-9 rounded-full bg-red-900/20 flex items-center justify-center text-red-400 hover:bg-red-900/40 transition-colors flex-shrink-0">
+          <span class="material-symbols-outlined text-lg">close</span>
+        </button>
+      </div>
     }
 
     <!-- Loading -->

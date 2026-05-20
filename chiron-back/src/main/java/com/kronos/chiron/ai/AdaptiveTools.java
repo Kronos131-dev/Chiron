@@ -11,7 +11,7 @@ import com.kronos.chiron.repository.SeanceRepository;
 import com.kronos.chiron.repository.UtilisateurRepository;
 import com.kronos.chiron.service.ExerciceDefinitionService;
 import dev.langchain4j.agent.tool.Tool;
-import dev.langchain4j.service.MemoryId;
+import dev.langchain4j.agent.tool.ToolMemoryId;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -44,7 +44,7 @@ public class AdaptiveTools {
     private final ExerciceDefinitionService exerciceDefinitionService;
 
     @Tool("Propose la prochaine progression sur un exercice donné en se basant sur la dernière séance historique (cohérence des charges entre séries, drop-off, comparaison N-1). Renvoie une recommandation chiffrée (+2.5 kg, maintien, baisse, ajouter une rep…). À appeler quand l'utilisateur demande 'que mettre la prochaine fois', 'comment progresser sur X', 'dois-je monter la charge'.")
-    public String getProgressionSuggeree(@MemoryId String userId, String nomExercice) {
+    public String getProgressionSuggeree(@ToolMemoryId String userId, String nomExercice) {
         if (nomExercice == null || nomExercice.isBlank()) {
             return "Nom d'exercice manquant.";
         }
@@ -116,7 +116,7 @@ public class AdaptiveTools {
     }
 
     @Tool("Analyse la périodisation sur un exercice : prend les 6 dernières séances historiques, calcule le 1RM estimé (Epley) à chaque séance, compare la moyenne des 3 récentes à celle des 3 plus anciennes. Diagnostique progression continue, plateau (variation < 2 %), ou régression (overreaching → deload conseillé). À appeler quand l'utilisateur demande 'est-ce que je progresse', 'je stagne', 'je régresse', ou pour décider d'un deload.")
-    public String analyserPeriodisation(@MemoryId String userId, String nomExercice) {
+    public String analyserPeriodisation(@ToolMemoryId String userId, String nomExercice) {
         if (nomExercice == null || nomExercice.isBlank()) {
             return "Nom d'exercice manquant.";
         }
@@ -165,7 +165,7 @@ public class AdaptiveTools {
     }
 
     @Tool("Identifie dans les programmes de l'utilisateur les exercices qu'il pratique depuis longtemps (> 8 semaines en historique) et propose pour chacun 1 à 2 alternatives ciblant le même muscle avec un équipement compatible. À appeler quand l'utilisateur demande 'je m'ennuie', 'je veux varier', 'des alternatives à X', 'change-moi le programme', ou lors d'un plateau confirmé. Optionnel : nomProgramme pour cibler un programme spécifique (sinon analyse tous les programmes).")
-    public String proposerRotation(@MemoryId String userId, String nomProgramme) {
+    public String proposerRotation(@ToolMemoryId String userId, String nomProgramme) {
         Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
                 .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
 

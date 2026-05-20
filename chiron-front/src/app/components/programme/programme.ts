@@ -81,6 +81,13 @@ export class Programme implements OnInit {
     if (id) this.router.navigate(['/session', id]);
   }
 
+  /** Abandon the in-progress session, discarding its unsaved progress. */
+  abandonnerSession() {
+    if (confirm('Abandonner la séance en cours ? La progression non enregistrée sera perdue.')) {
+      this.activeSession.clear();
+    }
+  }
+
   ajouterRoutine()             { this.router.navigate(['/programme', 'new']); }
   editerRoutine(id: string)    { this.router.navigate(['/programme', id, 'edit']); }
 
