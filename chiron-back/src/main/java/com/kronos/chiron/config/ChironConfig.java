@@ -2,6 +2,7 @@ package com.kronos.chiron.config;
 
 import com.kronos.chiron.ai.AdaptiveTools;
 import com.kronos.chiron.ai.ChironAgent;
+import com.kronos.chiron.ai.FitbitTools;
 import com.kronos.chiron.ai.MemoryTools;
 import com.kronos.chiron.ai.NutritionTools;
 import com.kronos.chiron.ai.RecoveryTools;
@@ -46,11 +47,12 @@ public class ChironConfig {
                                    MemoryTools memoryTools,
                                    RecoveryTools recoveryTools,
                                    AdaptiveTools adaptiveTools,
+                                   FitbitTools fitbitTools,
                                    ChatMemoryProvider chatMemoryProvider) {
         return AiServices.builder(ChironAgent.class)
                 .chatModel(chatModel)
                 .chatMemoryProvider(chatMemoryProvider)
-                .tools(workoutTools, nutritionTools, memoryTools, recoveryTools, adaptiveTools)
+                .tools(workoutTools, nutritionTools, memoryTools, recoveryTools, adaptiveTools, fitbitTools)
                 .build();
     }
 
