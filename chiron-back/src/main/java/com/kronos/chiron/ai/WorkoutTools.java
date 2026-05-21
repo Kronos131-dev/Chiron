@@ -5,6 +5,7 @@ import com.kronos.chiron.dto.ExerciceDto;
 import com.kronos.chiron.dto.SeanceDto;
 import com.kronos.chiron.dto.SerieDto;
 import com.kronos.chiron.entity.Exercice;
+import com.kronos.chiron.entity.ExerciceDefinition;
 import com.kronos.chiron.entity.MuscleGroup;
 import com.kronos.chiron.entity.NiveauDifficulte;
 import com.kronos.chiron.entity.Seance;
@@ -13,6 +14,7 @@ import com.kronos.chiron.entity.TypeEquipement;
 import com.kronos.chiron.entity.Utilisateur;
 import com.kronos.chiron.entity.Role;
 import java.time.Period;
+import com.kronos.chiron.repository.ExerciceDefinitionRepository;
 import com.kronos.chiron.repository.ExerciceRepository;
 import com.kronos.chiron.repository.SeanceRepository;
 import com.kronos.chiron.repository.UtilisateurRepository;
@@ -54,6 +56,7 @@ public class WorkoutTools {
     private final UtilisateurRepository utilisateurRepository;
     private final ExerciceRepository exerciceRepository;
     private final ExerciceDefinitionService exerciceDefinitionService;
+    private final ExerciceDefinitionRepository exerciceDefinitionRepository;
     private final ProgrammeService programmeService;
     private final PerformanceService performanceService;
 
@@ -252,8 +255,17 @@ public class WorkoutTools {
                 .max()
                 .orElse(-1) + 1;
 
+        // Relie l'exercice à la bibliothèque standardisée si le nom y correspond.
+        // Sans ce lien, les outils d'analyse ([getFullExerciseHistory], [getPersonalRecord]…)
+        // considèrent l'exercice comme non [std] et refusent toute analyse de progression.
+        ExerciceDefinition definition = exerciceDefinitionService.search(nomExercice, null, null, null)
+                .stream().findFirst()
+                .flatMap(dto -> exerciceDefinitionRepository.findById(dto.id()))
+                .orElse(null);
+
         Exercice exercice = Exercice.builder()
                 .nom(nomExercice)
+                .definition(definition)
                 .startTime(LocalDateTime.now())
                 .displayOrder(nextPosition)
                 .build();

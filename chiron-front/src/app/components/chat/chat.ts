@@ -186,6 +186,27 @@ export class Chat implements OnInit {
    * @param content The text content of the message.
    */
   private addMessage(role: 'user' | 'ai', content: string) {
-    this.messages.update(anciensMessages => [...anciensMessages, { role, content }]);
+    const clean = role === 'ai' ? this.stripMarkdown(content) : content;
+    this.messages.update(anciensMessages => [...anciensMessages, { role, content: clean }]);
+  }
+
+  /**
+   * Strips Markdown markers from an AI response. Chiron is instructed not to emit
+   * Markdown, but the model occasionally does anyway — this removes the leftover
+   * markers (**bold**, *italic*, headings, backticks, bullets) so the chat bubble
+   * stays clean plain text.
+   *
+   * @param text The raw AI response.
+   * @return The same text without Markdown formatting.
+   */
+  private stripMarkdown(text: string): string {
+    return text
+      .replace(/\*\*(.*?)\*\*/g, '$1')       // **gras**
+      .replace(/__(.*?)__/g, '$1')           // __gras__
+      .replace(/\*([^*\n]+)\*/g, '$1')       // *italique*
+      .replace(/`+([^`]*)`+/g, '$1')         // `code`
+      .replace(/^\s{0,3}#{1,6}\s+/gm, '')    // # titres
+      .replace(/^\s*[-*+]\s+/gm, '• ')       // puces -, *, + → •
+      .trim();
   }
 }

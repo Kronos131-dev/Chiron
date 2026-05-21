@@ -81,7 +81,15 @@ public class NutritionService {
                 && user.getOlympusTokenExpiresAt().isBefore(LocalDateTime.now())) {
             throw new ExpiredException();
         }
-        return tokenService.decrypt(user.getOlympusTokenEncrypted());
+        try {
+            return tokenService.decrypt(user.getOlympusTokenEncrypted());
+        } catch (RuntimeException e) {
+            // Token illisible (clé de chiffrement changée depuis le link, ex: CHIRON_SECRET_KEY
+            // absente → clé éphémère régénérée au boot). On traite comme une liaison à refaire
+            // au lieu de laisser l'exception faire planter l'outil Chiron.
+            log.warn("OLYMPUS_TOKEN_UNDECRYPTABLE user={} : {}", chironUsername, e.getMessage());
+            throw new ExpiredException();
+        }
     }
 
     /**
