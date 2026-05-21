@@ -67,6 +67,21 @@ olympus:
   # Durée de vie supposée du JWT Olympus (24h par défaut côté Olympus).
   token-ttl-seconds: ${OLYMPUS_TOKEN_TTL_SECONDS:86400}
 
+# Intégration Fitbit (OAuth2 Authorization Code + PKCE).
+# client-id / client-secret : à créer sur https://dev.fitbit.com/apps (type "Server").
+# redirect-uri : doit correspondre EXACTEMENT à la Callback URL enregistrée chez Fitbit.
+# Données santé Fitbit, exposées via la Google Health API (l'API Fitbit Web
+# legacy est arrêtée en sept. 2026). client-id/secret viennent d'un projet
+# Google Cloud (console Google Cloud), pas de dev.fitbit.com.
+fitbit:
+  client-id: ${FITBIT_CLIENT_ID:}
+  client-secret: ${FITBIT_CLIENT_SECRET:}
+  redirect-uri: ${FITBIT_REDIRECT_URI:http://localhost:9090/api/fitbit/callback}
+  authorize-url: https://accounts.google.com/o/oauth2/v2/auth
+  token-url: https://oauth2.googleapis.com/token
+  api-base-url: https://health.googleapis.com
+  scope: ${FITBIT_SCOPE:https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly https://www.googleapis.com/auth/googlehealth.sleep.readonly https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly}
+
 # Debug temporaire — pour diagnostiquer 403 sur /api/nutrition/link.
 logging:
   level:

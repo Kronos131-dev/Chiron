@@ -1,8 +1,8 @@
-import { Component, OnInit, signal, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { ChironApi, NutritionLinkStatus } from '../../service/chiron-api';
+import { ChironApi, NutritionLinkStatus, FitbitLinkStatus } from '../../service/chiron-api';
 import { AuthService } from '../../service/auth.service';
 import { HeaderComponent } from '../shared/header/header';
 import { tierBadgeUrl } from '../../shared/tier-badges';
@@ -19,7 +19,7 @@ import { tierBadgeUrl } from '../../shared/tier-badges';
   templateUrl: './profile.html',
   styleUrls: ['./profile.css']
 })
-export class Profile implements OnInit {
+export class Profile implements OnInit, OnDestroy {
 
   /** Reference to the hidden file input element used for avatar uploads. */
   @ViewChild('fileInput') fileInput!: ElementRef;
@@ -54,6 +54,12 @@ export class Profile implements OnInit {
   olympusPassword = signal('');
   isLinking = signal(false);
   linkError = signal<string | null>(null);
+
+  // --- Liaison Fitbit ---
+  fitbitStatus = signal<FitbitLinkStatus | null>(null);
+  isFitbitConnecting = signal(false);
+  fitbitError = signal<string | null>(null);
+  private fitbitPollHandle: ReturnType<typeof setInterval> | null = null;
 
   /**
    * Initializes a new instance of the Profile component.
@@ -100,6 +106,7 @@ export class Profile implements OnInit {
         if (currentUsername) {
           this.loadProfile(currentUsername, currentUsername);
           this.loadNutritionStatus();
+          this.loadFitbitStatus();
         }
       }
     });
@@ -142,6 +149,80 @@ export class Profile implements OnInit {
       next: () => this.loadNutritionStatus(),
       error: () => alert('Erreur lors du déliage.')
     });
+  }
+
+  // --- Liaison Fitbit ---
+
+  loadFitbitStatus() {
+    this.chironApi.getFitbitStatus().subscribe({
+      next: (status) => this.fitbitStatus.set(status),
+      error: () => this.fitbitStatus.set(null)
+    });
+  }
+
+  /**
+   * Démarre le flux OAuth Fitbit : ouvre la page de consentement dans le
+   * navigateur, puis sonde le statut jusqu'à ce que la liaison soit effective.
+   */
+  connectFitbit() {
+    this.fitbitError.set(null);
+    this.isFitbitConnecting.set(true);
+    this.chironApi.getFitbitAuthorizeUrl().subscribe({
+      next: ({ authorizeUrl }) => {
+        window.open(authorizeUrl, '_blank');
+        this.startFitbitPolling();
+      },
+      error: () => {
+        this.isFitbitConnecting.set(false);
+        this.fitbitError.set('Impossible de démarrer la connexion Fitbit.');
+      }
+    });
+  }
+
+  disconnectFitbit() {
+    if (!confirm('Déconnecter ton compte Fitbit de Chiron ?')) return;
+    this.chironApi.unlinkFitbit().subscribe({
+      next: () => this.loadFitbitStatus(),
+      error: () => alert('Erreur lors de la déconnexion.')
+    });
+  }
+
+  goToFitbitDashboard() {
+    this.router.navigate(['/fitbit']);
+  }
+
+  /** Sonde /fitbit/status toutes les 3 s ; s'arrête à la liaison ou après 3 min. */
+  private startFitbitPolling() {
+    this.stopFitbitPolling();
+    let elapsedSeconds = 0;
+    this.fitbitPollHandle = setInterval(() => {
+      elapsedSeconds += 3;
+      this.chironApi.getFitbitStatus().subscribe({
+        next: (status) => {
+          if (status.linked) {
+            this.fitbitStatus.set(status);
+            this.isFitbitConnecting.set(false);
+            this.stopFitbitPolling();
+          }
+        },
+        error: () => {}
+      });
+      if (elapsedSeconds >= 180) {
+        this.isFitbitConnecting.set(false);
+        this.stopFitbitPolling();
+      }
+    }, 3000);
+  }
+
+  private stopFitbitPolling() {
+    if (this.fitbitPollHandle != null) {
+      clearInterval(this.fitbitPollHandle);
+      this.fitbitPollHandle = null;
+    }
+  }
+
+  ngOnDestroy() {
+    this.stopFitbitPolling();
   }
 
   goToOnboarding() {

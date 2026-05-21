@@ -1,9 +1,12 @@
 package com.kronos.chiron.ai;
 
 import com.kronos.chiron.entity.*;
+import com.kronos.chiron.repository.ExerciceDefinitionRepository;
 import com.kronos.chiron.repository.ExerciceRepository;
 import com.kronos.chiron.repository.SeanceRepository;
 import com.kronos.chiron.repository.UtilisateurRepository;
+import com.kronos.chiron.service.ExerciceDefinitionService;
+import com.kronos.chiron.service.ProgrammeService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,6 +32,9 @@ class WorkoutToolsTest {
     @Mock private SeanceRepository seanceRepository;
     @Mock private UtilisateurRepository utilisateurRepository;
     @Mock private ExerciceRepository exerciceRepository;
+    @Mock private ExerciceDefinitionService exerciceDefinitionService;
+    @Mock private ExerciceDefinitionRepository exerciceDefinitionRepository;
+    @Mock private ProgrammeService programmeService;
 
     @InjectMocks
     private WorkoutTools workoutTools;

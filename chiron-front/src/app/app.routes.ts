@@ -107,6 +107,12 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
 
+  {
+    path: 'fitbit',
+    loadComponent: () => import('./components/fitbit-dashboard/fitbit-dashboard').then(m => m.FitbitDashboard),
+    canActivate: [authGuard],
+  },
+
   { path: '', redirectTo: 'chat', pathMatch: 'full' },
   { path: '**', redirectTo: 'chat' }
 ];

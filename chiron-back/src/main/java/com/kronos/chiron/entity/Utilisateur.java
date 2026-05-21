@@ -134,6 +134,31 @@ public class Utilisateur implements UserDetails {
     @JsonIgnore
     private LocalDateTime olympusLinkedAt;
 
+    // Liaison Fitbit (OAuth2). Tokens chiffrés AES-256-GCM via TokenCipherService.
+    @Column(name = "fitbit_access_token_encrypted", columnDefinition = "TEXT")
+    @JsonIgnore
+    private String fitbitAccessTokenEncrypted;
+
+    @Column(name = "fitbit_refresh_token_encrypted", columnDefinition = "TEXT")
+    @JsonIgnore
+    private String fitbitRefreshTokenEncrypted;
+
+    @Column(name = "fitbit_token_expires_at")
+    @JsonIgnore
+    private LocalDateTime fitbitTokenExpiresAt;
+
+    @Column(name = "fitbit_user_id", length = 64)
+    @JsonIgnore
+    private String fitbitUserId;
+
+    @Column(name = "fitbit_scope")
+    @JsonIgnore
+    private String fitbitScope;
+
+    @Column(name = "fitbit_linked_at")
+    @JsonIgnore
+    private LocalDateTime fitbitLinkedAt;
+
     /**
      * The set of users who act as coaches for this user.
      * These coaches have access to this user's programs.

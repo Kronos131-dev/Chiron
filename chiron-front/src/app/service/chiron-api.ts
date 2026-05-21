@@ -333,6 +333,24 @@ export class ChironApi {
     return this.http.delete<void>(`${this.apiUrl}/nutrition/link`);
   }
 
+  // --- Liaison Fitbit (données santé) ---
+
+  getFitbitStatus(): Observable<FitbitLinkStatus> {
+    return this.http.get<FitbitLinkStatus>(`${this.apiUrl}/fitbit/status`);
+  }
+
+  getFitbitAuthorizeUrl(): Observable<{ authorizeUrl: string }> {
+    return this.http.get<{ authorizeUrl: string }>(`${this.apiUrl}/fitbit/authorize-url`);
+  }
+
+  unlinkFitbit(): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/fitbit/link`);
+  }
+
+  getFitbitDashboard(days: number = 7): Observable<FitbitDashboard> {
+    return this.http.get<FitbitDashboard>(`${this.apiUrl}/fitbit/dashboard?days=${days}`);
+  }
+
   // --- Profil sportif enrichi ---
 
   getProfileSetup(): Observable<UserProfileSetup> {
@@ -350,6 +368,33 @@ export interface NutritionLinkStatus {
   olympusUsername: string | null;
   linkedAt: string | null;
   expiresAt: string | null;
+}
+
+export interface FitbitLinkStatus {
+  linked: boolean;
+  needsReconnect: boolean;
+  fitbitUserId: string | null;
+  scope: string | null;
+  linkedAt: string | null;
+}
+
+export interface FitbitDayPoint {
+  date: string;
+  steps: number | null;
+  sleepHours: number | null;
+}
+
+export interface FitbitDashboard {
+  linked: boolean;
+  needsReconnect: boolean;
+  dataAvailable: boolean;
+  stepsToday: number | null;
+  activeMinutesToday: number | null;
+  distanceTodayKm: number | null;
+  caloriesToday: number | null;
+  sleepHoursLastNight: number | null;
+  restingHeartRate: number | null;
+  days: FitbitDayPoint[];
 }
 
 export type Sexe = 'HOMME' | 'FEMME' | 'AUTRE';

@@ -86,6 +86,8 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/swagger-ui.html"
                         ).permitAll()
+                        // Retour OAuth Fitbit : le navigateur y est redirigé sans JWT.
+                        .requestMatchers(HttpMethod.GET, "/api/fitbit/callback").permitAll()
                         // Import exercice dataset — admin seulement
                         .requestMatchers(HttpMethod.POST, "/api/exercices/import").hasRole("ADMIN")
                         // All other requests must be authenticated
