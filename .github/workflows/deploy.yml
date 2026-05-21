@@ -203,16 +203,21 @@ jobs:
             DEPLOY_DIR=/opt/chiron
             CHIRON_DIR=~/chiron
 
+            # docker-compose (v1) ou docker compose (v2)
+            if command -v docker-compose &> /dev/null; then COMPOSE="docker-compose"; else COMPOSE="docker compose"; fi
+
             echo "▶ Arrêt et suppression du backend..."
             docker stop chiron_backend || true
             docker rm chiron_backend || true
 
-            echo "▶ Mise à jour du JAR (les deux chemins : DEPLOY_DIR pour l'archive, CHIRON_DIR pour le mount docker-compose)..."
+            echo "▶ Mise à jour du JAR (DEPLOY_DIR = archive, CHIRON_DIR = mount docker-compose)..."
             sudo cp /tmp/chiron-app.jar $DEPLOY_DIR/app.jar
             cp /tmp/chiron-app.jar $CHIRON_DIR/app.jar
 
-            echo "▶ Mise à jour du frontend..."
+            echo "▶ Mise à jour du frontend (DEPLOY_DIR + chemin réellement monté par docker-compose)..."
             sudo rsync -a --delete /tmp/chiron-frontend/ $DEPLOY_DIR/frontend/
+            mkdir -p $CHIRON_DIR/dist/chiron-front/browser
+            rsync -a --delete /tmp/chiron-frontend/ $CHIRON_DIR/dist/chiron-front/browser/
 
             echo "▶ Mise à jour du docker-compose.yml..."
             cp /tmp/chiron-docker-compose.yml $CHIRON_DIR/docker-compose.yml
@@ -227,13 +232,34 @@ jobs:
             docker network inspect chiron-olympus >/dev/null 2>&1 \
               || docker network create chiron-olympus
 
-            echo "▶ Redémarrage du backend (recréation forcée pour prendre en compte les changements de compose)..."
+            echo "▶ Recréation des conteneurs backend + frontend..."
             cd $CHIRON_DIR
-            if command -v docker-compose &> /dev/null; then
-              docker-compose up -d --force-recreate backend
-            else
-              docker compose up -d --force-recreate backend
+            if ! $COMPOSE up -d --force-recreate backend frontend; then
+              echo "✗ ÉCHEC : '$COMPOSE up' n'a pas pu démarrer les conteneurs."
+              docker ps -a
+              echo "--- qui occupe le port 9090 ---"
+              sudo ss -ltnp 2>/dev/null | grep ':9090' || true
+              echo "--- service systemd chiron-back (concurrent éventuel) ---"
+              systemctl is-active chiron-back 2>/dev/null || echo "absent/inactif"
+              exit 1
             fi
+
+            echo "▶ Vérification : le conteneur tourne bien le JAR qu'on vient de déployer..."
+            sleep 3
+            EXPECTED_SHA=$(sha256sum /tmp/chiron-app.jar | awk '{print $1}')
+            RUNNING_SHA=$(docker exec chiron_backend sha256sum /app/app.jar 2>/dev/null | awk '{print $1}' || echo "indisponible")
+            if [ "$EXPECTED_SHA" != "$RUNNING_SHA" ]; then
+              echo "✗ ÉCHEC : le conteneur backend ne tourne PAS le JAR déployé."
+              echo "  attendu   = $EXPECTED_SHA"
+              echo "  conteneur = $RUNNING_SHA"
+              echo "--- qui occupe le port 9090 ---"
+              sudo ss -ltnp 2>/dev/null | grep ':9090' || true
+              echo "--- service systemd chiron-back (concurrent éventuel) ---"
+              systemctl is-active chiron-back 2>/dev/null || echo "absent/inactif"
+              docker logs --tail 30 chiron_backend 2>&1 || true
+              exit 1
+            fi
+            echo "✓ Conteneur backend aligné sur le JAR déployé."
 
             echo "▶ Nettoyage..."
             rm -f /tmp/chiron-app.jar /tmp/chiron.secrets /tmp/.env.tmp /tmp/chiron-docker-compose.yml
@@ -244,12 +270,18 @@ jobs:
 
       - name: Health check
         run: |
-          echo "Attente démarrage Spring Boot (20s)..."
-          sleep 20
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-            http://${{ env.SERVER_HOST }}:9090/actuator/health || echo "000")
-          if [ "$STATUS" = "200" ]; then
-            echo "✓ Backend UP"
-          else
-            echo "⚠ Health check: HTTP $STATUS"
-          fi
+          HEALTH_URL="http://${{ env.SERVER_HOST }}:9090/actuator/health"
+          echo "Attente du démarrage du backend (max 120s) sur $HEALTH_URL"
+          STATUS=000
+          for i in $(seq 1 24); do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$HEALTH_URL" || echo "000")
+            if [ "$STATUS" = "200" ]; then
+              echo "✓ Backend UP — HTTP 200 après ~$((i * 5))s"
+              exit 0
+            fi
+            echo "  tentative $i/24 : HTTP $STATUS — nouvelle tentative dans 5s..."
+            sleep 5
+          done
+          echo "✗ ÉCHEC : /actuator/health ne renvoie pas 200 (dernier code : HTTP $STATUS)."
+          echo "  HTTP 403 ici = le backend actif n'est pas le nouveau code (ancien JAR encore en mémoire)."
+          exit 1

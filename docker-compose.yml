@@ -28,10 +28,15 @@ services:
       # le réseau Docker externe `chiron-olympus` pour communiquer directement
       # par nom de service.
       - OLYMPUS_BASE_URL=${OLYMPUS_BASE_URL:-http://olympus-api:8080}
+      # Dossier des photos de profil — pointé sur le volume persistant ci-dessous
+      - UPLOADS_DIR=/app/uploads/images
     ports:
       - "9090:9090"
     volumes:
       - ./app.jar:/app/app.jar
+      # Persiste les photos de profil hors du conteneur :
+      # sans ce volume elles sont effacées à chaque recréation du conteneur.
+      - ./uploads/images:/app/uploads/images
     command: ["java", "-jar", "/app/app.jar"]
     depends_on:
       - db
