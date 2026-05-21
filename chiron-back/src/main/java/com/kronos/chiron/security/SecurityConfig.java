@@ -74,6 +74,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // Define public endpoints that do not require authentication
                         .requestMatchers(
+                                // Spring forwarde toute erreur (404/500/…) vers /error : sans cette
+                                // règle, la moindre erreur applicative est masquée par un 403.
+                                "/error",
                                 "/api/auth/**",
                                 "/api/images/**",
                                 "/images/**",
