@@ -294,6 +294,76 @@ public class NutritionTools {
         }
     }
 
+    @Tool("Récupère le planning de repas hebdomadaire de l'utilisateur (repas prévus jour par jour) ainsi que la liste de ses repas pré-enregistrés avec leurs valeurs nutritionnelles. Nécessite la liaison Olympus.")
+    public String getPlanningRepas(@ToolMemoryId String userId) {
+        Utilisateur user = loadUser(userId);
+        try {
+            String token = nutritionService.getValidToken(user.getUsername());
+            JsonNode plan = olympusClient.getWeeklyPlan(token);
+            JsonNode presets = olympusClient.getMealPresets(token);
+
+            StringBuilder res = new StringBuilder("Planning hebdomadaire des repas :\n");
+            JsonNode entries = (plan != null) ? plan.get("entries") : null;
+            if (entries == null || !entries.isArray() || entries.isEmpty()) {
+                res.append("Aucun repas planifié pour le moment.\n");
+            } else {
+                String[] jours = {"MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"};
+                String[] joursFr = {"Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"};
+                for (int i = 0; i < jours.length; i++) {
+                    StringBuilder ligne = new StringBuilder();
+                    for (JsonNode e : entries) {
+                        String jour = e.hasNonNull("dayOfWeek") ? e.get("dayOfWeek").asText() : "";
+                        if (!jours[i].equals(jour)) continue;
+                        if (ligne.length() > 0) ligne.append(", ");
+                        ligne.append(nomEntreePlanifiee(e));
+                    }
+                    if (ligne.length() > 0) {
+                        res.append("- ").append(joursFr[i]).append(" : ").append(ligne).append("\n");
+                    }
+                }
+            }
+
+            res.append("\nRepas pré-enregistrés :\n");
+            if (presets == null || !presets.isArray() || presets.isEmpty()) {
+                res.append("Aucun repas pré-enregistré.");
+            } else {
+                for (JsonNode p : presets) {
+                    String nom = p.hasNonNull("name") ? p.get("name").asText() : "Repas";
+                    res.append("- ").append(nom).append(" : ")
+                            .append(fmt(asDouble(p, "totalKcal"))).append(" kcal, ")
+                            .append(fmt(asDouble(p, "totalProteins"))).append(" g prot, ")
+                            .append(fmt(asDouble(p, "totalCarbs"))).append(" g glu, ")
+                            .append(fmt(asDouble(p, "totalFats"))).append(" g lip\n");
+                }
+            }
+            return res.toString();
+        } catch (NutritionService.NotLinkedException e) {
+            return MSG_NON_LIE;
+        } catch (NutritionService.ExpiredException e) {
+            return MSG_EXPIRE;
+        } catch (OlympusClient.OlympusUnauthorizedException e) {
+            nutritionService.invalidateLink(user.getUsername());
+            return MSG_EXPIRE;
+        } catch (OlympusClient.OlympusUnavailableException e) {
+            return MSG_INDISPO;
+        }
+    }
+
+    /** Nom lisible d'une entrée de planning : aliment (+ quantité) ou repas pré-enregistré. */
+    private String nomEntreePlanifiee(JsonNode entry) {
+        JsonNode food = entry.get("foodItem");
+        if (food != null && food.hasNonNull("name")) {
+            String n = food.get("name").asText();
+            return entry.hasNonNull("quantityGrams")
+                    ? n + " (" + fmt(entry.get("quantityGrams").asDouble()) + " g)" : n;
+        }
+        JsonNode preset = entry.get("mealPreset");
+        if (preset != null && preset.hasNonNull("name")) {
+            return preset.get("name").asText();
+        }
+        return "Repas";
+    }
+
     private String fmtKg(double kg) {
         return String.format(java.util.Locale.FRANCE, "%.1f kg", kg);
     }

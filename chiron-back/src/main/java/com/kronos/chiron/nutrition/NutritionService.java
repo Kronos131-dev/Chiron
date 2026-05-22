@@ -4,7 +4,6 @@ import com.kronos.chiron.entity.Utilisateur;
 import com.kronos.chiron.repository.UtilisateurRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,7 +11,11 @@ import java.time.LocalDateTime;
 
 /**
  * Façade autour de la liaison Olympus d'un utilisateur Chiron.
- * Vague A : gère uniquement le cycle de vie de la liaison (link / status / unlink).
+ *
+ * <p>La liaison s'appuie sur un token d'intégration PERMANENT fourni par Olympus :
+ * une fois le compte lié, il le reste indéfiniment — aucune ré-authentification
+ * n'est nécessaire. La liaison n'est rompue que par un unlink explicite, ou si
+ * Olympus rejette le token (lien révoqué côté Olympus).</p>
  */
 @Service
 @RequiredArgsConstructor
@@ -22,9 +25,6 @@ public class NutritionService {
     private final UtilisateurRepository utilisateurRepository;
     private final OlympusClient olympusClient;
     private final OlympusTokenService tokenService;
-
-    @Value("${olympus.token-ttl-seconds}")
-    private long olympusTokenTtlSeconds;
 
     /**
      * Lie le compte Olympus d'un utilisateur. Renvoie le statut résultant.
@@ -40,11 +40,11 @@ public class NutritionService {
             throw new InvalidCredentialsException("Identifiants Olympus refusés.");
         }
 
-        LocalDateTime now = LocalDateTime.now();
         user.setOlympusTokenEncrypted(tokenService.encrypt(result.token()));
-        user.setOlympusTokenExpiresAt(now.plusSeconds(olympusTokenTtlSeconds));
+        // Token d'intégration permanent : aucune date d'expiration.
+        user.setOlympusTokenExpiresAt(null);
         user.setOlympusUsername(result.olympusUsername());
-        user.setOlympusLinkedAt(now);
+        user.setOlympusLinkedAt(LocalDateTime.now());
         utilisateurRepository.save(user);
         log.info("OLYMPUS_LINKED user={} olympusUsername={}", chironUsername, result.olympusUsername());
 
@@ -67,8 +67,9 @@ public class NutritionService {
     }
 
     /**
-     * Renvoie un token Olympus utilisable (déchiffré) pour cet utilisateur Chiron.
-     * Lève NotLinkedException si pas lié, ExpiredException si la fenêtre TTL est dépassée.
+     * Renvoie le token de liaison Olympus (déchiffré) de cet utilisateur Chiron.
+     * Le token étant permanent, il n'expire jamais : seule l'absence de liaison
+     * lève une {@link NotLinkedException}.
      */
     @Transactional(readOnly = true)
     public String getValidToken(String chironUsername) {
@@ -76,10 +77,6 @@ public class NutritionService {
                 .orElseThrow(() -> new IllegalArgumentException("Utilisateur Chiron introuvable : " + chironUsername));
         if (user.getOlympusTokenEncrypted() == null) {
             throw new NotLinkedException();
-        }
-        if (user.getOlympusTokenExpiresAt() != null
-                && user.getOlympusTokenExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new ExpiredException();
         }
         try {
             return tokenService.decrypt(user.getOlympusTokenEncrypted());
@@ -115,11 +112,10 @@ public class NutritionService {
         if (user.getOlympusTokenEncrypted() == null) {
             return NutritionLinkStatus.notLinked();
         }
-        boolean expired = user.getOlympusTokenExpiresAt() != null
-                && user.getOlympusTokenExpiresAt().isBefore(LocalDateTime.now());
+        // Token permanent : une liaison existante n'est jamais « expirée ».
         return new NutritionLinkStatus(
                 true,
-                expired,
+                false,
                 user.getOlympusUsername(),
                 user.getOlympusLinkedAt(),
                 user.getOlympusTokenExpiresAt()
