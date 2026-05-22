@@ -78,11 +78,6 @@ public class NutritionService {
         if (user.getOlympusTokenEncrypted() == null) {
             throw new NotLinkedException();
         }
-<<<<<<< Updated upstream
-        if (user.getOlympusTokenExpiresAt() != null
-                && user.getOlympusTokenExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new ExpiredException();
-        }
         try {
             return tokenService.decrypt(user.getOlympusTokenEncrypted());
         } catch (RuntimeException e) {
@@ -92,9 +87,6 @@ public class NutritionService {
             log.warn("OLYMPUS_TOKEN_UNDECRYPTABLE user={} : {}", chironUsername, e.getMessage());
             throw new ExpiredException();
         }
-=======
-        return tokenService.decrypt(user.getOlympusTokenEncrypted());
->>>>>>> Stashed changes
     }
 
     /**

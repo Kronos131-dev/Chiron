@@ -295,7 +295,7 @@ public class NutritionTools {
     }
 
     @Tool("Récupère le planning de repas hebdomadaire de l'utilisateur (repas prévus jour par jour) ainsi que la liste de ses repas pré-enregistrés avec leurs valeurs nutritionnelles. Nécessite la liaison Olympus.")
-    public String getPlanningRepas(@MemoryId String userId) {
+    public String getPlanningRepas(@ToolMemoryId String userId) {
         Utilisateur user = loadUser(userId);
         try {
             String token = nutritionService.getValidToken(user.getUsername());
