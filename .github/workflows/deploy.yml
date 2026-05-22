@@ -22,6 +22,10 @@ env:
   # Force les actions JS (upload-artifact@v5, etc.) à tourner sur Node 24
   # plutôt que sur Node 20 — déprécié sur les runners GitHub depuis 09/2025.
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+  # Redirect URI OAuth Fitbit/Google Health. Non secrète (visible dans l'URL de
+  # consentement). Doit correspondre EXACTEMENT à l'« Authorized redirect URI »
+  # enregistrée dans la console Google Cloud.
+  FITBIT_REDIRECT_URI: 'https://chiron-sanctuaire.duckdns.org/api/fitbit/callback'
 
 jobs:
 
@@ -185,10 +189,13 @@ jobs:
 
       - name: Upload secrets
         run: |
-          printf 'GMAIL_USERNAME=%s\nGMAIL_APP_PASSWORD=%s\nFRONTEND_URL=%s\n' \
+          printf 'GMAIL_USERNAME=%s\nGMAIL_APP_PASSWORD=%s\nFRONTEND_URL=%s\nFITBIT_CLIENT_ID=%s\nFITBIT_CLIENT_SECRET=%s\nFITBIT_REDIRECT_URI=%s\n' \
             '${{ secrets.GMAIL_USERNAME }}' \
             '${{ secrets.GMAIL_APP_PASSWORD }}' \
             '${{ secrets.FRONTEND_URL }}' \
+            '${{ secrets.FITBIT_CLIENT_ID }}' \
+            '${{ secrets.FITBIT_CLIENT_SECRET }}' \
+            '${{ env.FITBIT_REDIRECT_URI }}' \
             > /tmp/chiron.secrets
           scp -i ~/.ssh/deploy_key /tmp/chiron.secrets \
             ${{ secrets.SSH_USER }}@${{ env.SERVER_HOST }}:/tmp/chiron.secrets
@@ -224,7 +231,7 @@ jobs:
 
             echo "▶ Mise à jour du .env..."
             ENV_FILE=$CHIRON_DIR/.env
-            grep -v '^GMAIL_\|^FRONTEND_URL=' "$ENV_FILE" > /tmp/.env.tmp 2>/dev/null || true
+            grep -v '^GMAIL_\|^FRONTEND_URL=\|^FITBIT_' "$ENV_FILE" > /tmp/.env.tmp 2>/dev/null || true
             cat /tmp/chiron.secrets >> /tmp/.env.tmp
             mv /tmp/.env.tmp "$ENV_FILE"
 

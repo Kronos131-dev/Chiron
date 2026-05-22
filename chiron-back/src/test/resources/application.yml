@@ -27,3 +27,14 @@ chiron:
 olympus:
   base-url: http://localhost:8080
   token-ttl-seconds: 86400
+
+# Valeurs factices : FitbitClient/FitbitService ne font aucun appel réseau au
+# chargement du contexte, ils ne font que stocker ces propriétés.
+fitbit:
+  client-id: test-client-id
+  client-secret: test-client-secret
+  redirect-uri: http://localhost:9090/api/fitbit/callback
+  authorize-url: https://accounts.google.com/o/oauth2/v2/auth
+  token-url: https://oauth2.googleapis.com/token
+  api-base-url: https://health.googleapis.com
+  scope: https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly
