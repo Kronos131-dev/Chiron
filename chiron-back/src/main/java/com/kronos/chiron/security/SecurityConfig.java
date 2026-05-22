@@ -44,7 +44,11 @@ public class SecurityConfig {
                 "http://localhost:4200",
                 "http://localhost:9090",
                 "http://46.224.227.209",
-                "https://chiron-sanctuaire.duckdns.org"
+                "https://chiron-sanctuaire.duckdns.org",
+                // Origines des WebViews Capacitor (apps mobiles natives)
+                "https://localhost",
+                "http://localhost",
+                "capacitor://localhost"
         ));
 
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));

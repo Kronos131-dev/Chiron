@@ -3,7 +3,6 @@ package com.kronos.chiron.nutrition;
 import tools.jackson.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
@@ -14,8 +13,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
 /**
- * Client HTTP minimal vers l'API Olympus. Vague A : seulement l'authentification.
- * Les méthodes de lecture (daily-logs, analytics, profile) viendront en Vague B.
+ * Client HTTP vers l'API Olympus. La liaison de compte se fait une seule fois via
+ * {@link #authenticate} : Olympus renvoie alors un token de liaison PERMANENT que
+ * Chiron conserve et présente, dans l'en-tête {@code X-Integration-Token}, sur tous
+ * les appels de lecture (journal, profil, analytics, planning, repas).
  */
 @Component
 @Slf4j
@@ -33,25 +34,26 @@ public class OlympusClient {
     }
 
     /**
-     * Authentifie un utilisateur Olympus avec son pseudo et son mot de passe.
-     * Renvoie un token JWT Olympus si succès. Renvoie null en cas d'identifiants invalides (401).
-     * Toute autre erreur HTTP remonte une {@link OlympusUnavailableException}.
+     * Lie le compte Olympus de l'utilisateur (pseudo + mot de passe) et récupère le
+     * token de liaison PERMANENT. Ce token ne expire jamais : la liaison faite une
+     * fois reste valable indéfiniment. Renvoie null si les identifiants sont
+     * invalides (401) ; toute autre erreur HTTP remonte une {@link OlympusUnavailableException}.
      */
     public AuthenticationResult authenticate(String pseudo, String password) {
         try {
             JsonNode body = restClient.post()
-                    .uri("/api/v1/auth/login")
+                    .uri("/api/v1/integration/chiron/link")
                     .body(Map.of("email", pseudo, "password", password))
                     .retrieve()
                     .body(JsonNode.class);
 
-            if (body == null || !body.hasNonNull("token")) {
-                throw new OlympusUnavailableException("Réponse Olympus invalide : token absent.");
+            if (body == null || !body.hasNonNull("linkToken")) {
+                throw new OlympusUnavailableException("Réponse Olympus invalide : linkToken absent.");
             }
 
-            String token = body.get("token").asText();
-            JsonNode user = body.get("user");
-            String olympusUsername = (user != null && user.hasNonNull("email")) ? user.get("email").asText() : pseudo;
+            String token = body.get("linkToken").asText();
+            String olympusUsername = body.hasNonNull("olympusUsername")
+                    ? body.get("olympusUsername").asText() : pseudo;
 
             return new AuthenticationResult(token, olympusUsername);
         } catch (HttpClientErrorException e) {
@@ -90,11 +92,21 @@ public class OlympusClient {
         return doGet(token, uri);
     }
 
+    /** Récupère l'emploi du temps de repas hebdomadaire planifié de l'utilisateur. */
+    public JsonNode getWeeklyPlan(String token) {
+        return doGet(token, "/api/v1/meal-plans/weekly");
+    }
+
+    /** Récupère les repas pré-enregistrés (modèles de repas) de l'utilisateur. */
+    public JsonNode getMealPresets(String token) {
+        return doGet(token, "/api/v1/meal-presets");
+    }
+
     private JsonNode doGet(String token, String uri) {
         try {
             return restClient.get()
                     .uri(uri)
-                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                    .header("X-Integration-Token", token)
                     .retrieve()
                     .body(JsonNode.class);
         } catch (HttpClientErrorException e) {

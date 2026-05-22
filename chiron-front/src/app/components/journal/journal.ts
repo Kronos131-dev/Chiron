@@ -6,6 +6,17 @@ import { AuthService } from '../../service/auth.service';
 import { Router } from '@angular/router';
 import { HeaderComponent } from '../shared/header/header';
 
+/** ISO-8601 week number (lundi = 1er jour de la semaine, semaine 1 = celle du premier jeudi). */
+function getIsoWeekNumber(d: Date): number {
+  const target = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNr = (target.getUTCDay() + 6) % 7;
+  target.setUTCDate(target.getUTCDate() - dayNr + 3);
+  const firstThursday = new Date(Date.UTC(target.getUTCFullYear(), 0, 4));
+  const firstThursdayDayNr = (firstThursday.getUTCDay() + 6) % 7;
+  firstThursday.setUTCDate(firstThursday.getUTCDate() - firstThursdayDayNr + 3);
+  return 1 + Math.round((target.getTime() - firstThursday.getTime()) / (7 * 24 * 3600 * 1000));
+}
+
 /**
  * Component responsible for displaying (and now editing) the user's workout journal history.
  */
@@ -71,23 +82,26 @@ export class Journal implements OnInit {
   }
 
   groupHistoriqueByWeekAndDay(data: any[]) {
-    const groupedByWeek = data.reduce((acc: any, seance: any) => {
-      const week = seance.weekNumber;
-      if (!acc[week]) {
-        acc[week] = [];
-      }
-      acc[week].push(seance);
-      return acc;
-    }, {});
+    // Regroupement basé sur la date ISO-8601 (lundi-dimanche), pas sur le champ
+    // weekNumber stocké en base — d'anciennes séances ont un numéro hérité d'un
+    // calcul JS naïf qui ne s'alignait pas sur le lundi.
+    const groupedByWeek: Record<string, any[]> = {};
+    for (const seance of data) {
+      const d = new Date(seance.startTime);
+      const week = getIsoWeekNumber(d);
+      const key = String(week);
+      if (!groupedByWeek[key]) groupedByWeek[key] = [];
+      groupedByWeek[key].push(seance);
+    }
 
     const result = Object.keys(groupedByWeek)
       .sort((a, b) => parseInt(b) - parseInt(a))
-      .map(week => {
-        return {
-          weekNumber: week,
-          seances: groupedByWeek[week]
-        };
-      });
+      .map(week => ({
+        weekNumber: week,
+        seances: groupedByWeek[week].sort((a, b) =>
+          new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
+        )
+      }));
 
     this.historiqueGrouped.set(result);
   }
