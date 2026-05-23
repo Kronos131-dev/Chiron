@@ -1,8 +1,8 @@
-import { Component, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { ChironApi } from '../../service/chiron-api';
+import { ChironApi, NutritionLinkStatus, FitbitLinkStatus } from '../../service/chiron-api';
 import { AuthService } from '../../service/auth.service';
 import { HeaderComponent } from '../shared/header/header';
 
@@ -12,7 +12,7 @@ import { HeaderComponent } from '../shared/header/header';
   imports: [CommonModule, FormsModule, HeaderComponent],
   templateUrl: './settings.html',
 })
-export class Settings {
+export class Settings implements OnInit, OnDestroy {
   username: string;
   currentEmail = signal<string | null>(null);
 
@@ -34,6 +34,19 @@ export class Settings {
   errorMessage = signal('');
   isLoading = signal(false);
 
+  // --- Liaison Olympus ---
+  nutritionStatus = signal<NutritionLinkStatus | null>(null);
+  olympusPseudo = signal('');
+  olympusPassword = signal('');
+  isLinking = signal(false);
+  linkError = signal<string | null>(null);
+
+  // --- Liaison Fitbit ---
+  fitbitStatus = signal<FitbitLinkStatus | null>(null);
+  isFitbitConnecting = signal(false);
+  fitbitError = signal<string | null>(null);
+  private fitbitPollHandle: ReturnType<typeof setInterval> | null = null;
+
   constructor(
     private chironApi: ChironApi,
     private authService: AuthService,
@@ -47,6 +60,15 @@ export class Settings {
         this.newEmail = info.email ?? '';
       }
     });
+  }
+
+  ngOnInit() {
+    this.loadNutritionStatus();
+    this.loadFitbitStatus();
+  }
+
+  ngOnDestroy() {
+    this.stopFitbitPolling();
   }
 
   toggle(section: 'password' | 'email' | 'username' | 'delete') {
@@ -129,5 +151,117 @@ export class Settings {
         this.errorMessage.set('Erreur lors de la suppression du compte.');
       }
     });
+  }
+
+  // --- Profil sportif ---
+
+  goToOnboarding() {
+    this.router.navigate(['/onboarding']);
+  }
+
+  // --- Liaison Olympus ---
+
+  loadNutritionStatus() {
+    this.chironApi.getNutritionStatus().subscribe({
+      next: (status) => this.nutritionStatus.set(status),
+      error: () => this.nutritionStatus.set(null)
+    });
+  }
+
+  linkOlympus() {
+    const pseudo = this.olympusPseudo().trim();
+    const password = this.olympusPassword();
+    if (!pseudo || !password) {
+      this.linkError.set('Pseudo et mot de passe requis.');
+      return;
+    }
+    this.isLinking.set(true);
+    this.linkError.set(null);
+    this.chironApi.linkOlympus(pseudo, password).subscribe({
+      next: (status) => {
+        this.nutritionStatus.set(status);
+        this.olympusPseudo.set('');
+        this.olympusPassword.set('');
+        this.isLinking.set(false);
+      },
+      error: (err) => {
+        this.isLinking.set(false);
+        const msg = err?.error?.message ?? 'Échec de la liaison.';
+        this.linkError.set(msg);
+      }
+    });
+  }
+
+  unlinkOlympus() {
+    if (!confirm('Délier votre compte Olympus de Chiron ?')) return;
+    this.chironApi.unlinkOlympus().subscribe({
+      next: () => this.loadNutritionStatus(),
+      error: () => alert('Erreur lors du déliage.')
+    });
+  }
+
+  // --- Liaison Fitbit ---
+
+  loadFitbitStatus() {
+    this.chironApi.getFitbitStatus().subscribe({
+      next: (status) => this.fitbitStatus.set(status),
+      error: () => this.fitbitStatus.set(null)
+    });
+  }
+
+  connectFitbit() {
+    this.fitbitError.set(null);
+    this.isFitbitConnecting.set(true);
+    this.chironApi.getFitbitAuthorizeUrl().subscribe({
+      next: ({ authorizeUrl }) => {
+        window.open(authorizeUrl, '_blank');
+        this.startFitbitPolling();
+      },
+      error: () => {
+        this.isFitbitConnecting.set(false);
+        this.fitbitError.set('Impossible de démarrer la connexion Fitbit.');
+      }
+    });
+  }
+
+  disconnectFitbit() {
+    if (!confirm('Déconnecter ton compte Fitbit de Chiron ?')) return;
+    this.chironApi.unlinkFitbit().subscribe({
+      next: () => this.loadFitbitStatus(),
+      error: () => alert('Erreur lors de la déconnexion.')
+    });
+  }
+
+  goToFitbitDashboard() {
+    this.router.navigate(['/fitbit']);
+  }
+
+  private startFitbitPolling() {
+    this.stopFitbitPolling();
+    let elapsedSeconds = 0;
+    this.fitbitPollHandle = setInterval(() => {
+      elapsedSeconds += 3;
+      this.chironApi.getFitbitStatus().subscribe({
+        next: (status) => {
+          if (status.linked) {
+            this.fitbitStatus.set(status);
+            this.isFitbitConnecting.set(false);
+            this.stopFitbitPolling();
+          }
+        },
+        error: () => {}
+      });
+      if (elapsedSeconds >= 180) {
+        this.isFitbitConnecting.set(false);
+        this.stopFitbitPolling();
+      }
+    }, 3000);
+  }
+
+  private stopFitbitPolling() {
+    if (this.fitbitPollHandle != null) {
+      clearInterval(this.fitbitPollHandle);
+      this.fitbitPollHandle = null;
+    }
   }
 }
