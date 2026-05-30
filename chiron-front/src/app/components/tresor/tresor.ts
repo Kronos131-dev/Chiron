@@ -6,17 +6,7 @@ import { ChironApi } from '../../service/chiron-api';
 import { AuthService } from '../../service/auth.service';
 import { HeaderComponent } from '../shared/header/header';
 import { tierBadgeUrl } from '../../shared/tier-badges';
-
-const TIERS = [
-  { level: 1, name: 'Éphèbe',    cat: 'Novice'  },
-  { level: 2, name: 'Argonaute', cat: 'Novice'  },
-  { level: 3, name: 'Hoplite',   cat: 'Athlète' },
-  { level: 4, name: 'Myrmidon',  cat: 'Athlète' },
-  { level: 5, name: 'Spartiate', cat: 'Athlète' },
-  { level: 6, name: 'Héros',     cat: 'Légende' },
-  { level: 7, name: 'Demi-Dieu', cat: 'Légende' },
-  { level: 8, name: 'Olympien',  cat: 'Légende' },
-];
+import { TIERS, Tier } from '../../shared/tiers';
 
 const THRESHOLDS: Record<string, number[]> = {
   DEVELOPPE_COUCHE: [0.70, 0.85, 1.00, 1.15, 1.30, 1.45, 1.60],
@@ -62,6 +52,15 @@ export class Tresor implements OnInit {
   showModal        = signal(false);
   editingExercise  = signal<any>(null);
   isSaving         = signal(false);
+
+  // ── Tiers scale modal ──────────────────────────────────────────────────────
+  showTiersModal = signal(false);
+  readonly tierGroups: { cat: Tier['cat']; tiers: Tier[] }[] = (() => {
+    const order: Tier['cat'][] = ['Novice', 'Athlète', 'Légende'];
+    return order.map(cat => ({ cat, tiers: TIERS.filter(t => t.cat === cat) }));
+  })();
+  openTiersModal()  { this.showTiersModal.set(true); }
+  closeTiersModal() { this.showTiersModal.set(false); }
 
   // Gear wheel values
   weightValue = signal(60);

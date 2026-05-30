@@ -11,7 +11,7 @@ public enum PerformanceTier {
     MYRMIDON(4, "Myrmidon", "Athlète"),
     SPARTIATE(5, "Spartiate", "Athlète"),
     HEROS(6, "Héros", "Légende"),
-    DEMI_DIEU(7, "Demi-Dieu", "Légende"),
+    DIEU(7, "Dieu", "Légende"),
     OLYMPIEN(8, "Olympien", "Légende");
 
     private final int level;

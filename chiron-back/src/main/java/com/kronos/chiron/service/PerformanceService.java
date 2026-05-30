@@ -202,7 +202,7 @@ public class PerformanceService {
                 PerformanceTier.MYRMIDON,
                 PerformanceTier.SPARTIATE,
                 PerformanceTier.HEROS,
-                PerformanceTier.DEMI_DIEU,
+                PerformanceTier.DIEU,
                 PerformanceTier.OLYMPIEN
         };
 
