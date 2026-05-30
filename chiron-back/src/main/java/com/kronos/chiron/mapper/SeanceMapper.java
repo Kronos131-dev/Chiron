@@ -75,7 +75,9 @@ public class SeanceMapper {
                 exercice.getNom(),
                 exercice.getCommentaire(),
                 definitionId,
-                seriesDto
+                seriesDto,
+                exercice.getBlockId(),
+                exercice.getBlockType()
         );
     }
 

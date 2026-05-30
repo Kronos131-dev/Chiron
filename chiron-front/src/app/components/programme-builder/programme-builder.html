@@ -61,22 +61,63 @@
           </div>
         }
 
-        @for (exo of exercices(); track exo.id; let i = $index) {
-          <app-exercice-card
-            [exercice]="exo"
-            [readonly]="false"
-            [index]="i"
-            [isDragging]="dragFromIdx() === i"
-            [isDropTarget]="dragOverIdx() === i && dragFromIdx() !== i"
-            (remove)="removeExercice(exo.id)"
-            (exoDragStart)="onExoDragStart($event.event, i, $event.cardEl)"
-            (exoDragOver)="onExoDragOver($event, i)"
-            (exoDrop)="onExoDrop($event, i)"
-            (exoDragEnd)="onExoDragEnd()"
-            (exoTouchStart)="onExoTouchStart($event, i)"
-            (exoTouchMove)="onExoTouchMove($event)"
-            (exoTouchEnd)="onExoTouchEnd()"
-          />
+        @for (item of renderedItems(); track item.kind === 'block' ? 'b-' + item.blockId : 's-' + item.exo.id) {
+          @if (item.kind === 'single') {
+            <app-exercice-card
+              [exercice]="item.exo"
+              [readonly]="false"
+              [index]="item.index"
+              [isDragging]="dragFromIdx() === item.index"
+              [isDropTarget]="dragOverIdx() === item.index && dragFromIdx() !== item.index"
+              [inBlock]="false"
+              [hasNext]="canGroupWithNext(item.index)"
+              (remove)="removeExercice(item.exo.id)"
+              (groupWithNext)="groupWithNext(item.index, $event)"
+              (exoDragStart)="onExoDragStart($event.event, item.index, $event.cardEl)"
+              (exoDragOver)="onExoDragOver($event, item.index)"
+              (exoDrop)="onExoDrop($event, item.index)"
+              (exoDragEnd)="onExoDragEnd()"
+              (exoTouchStart)="onExoTouchStart($event, item.index)"
+              (exoTouchMove)="onExoTouchMove($event)"
+              (exoTouchEnd)="onExoTouchEnd()"
+            />
+          } @else {
+            <div class="superset-container">
+              <div class="superset-header">
+                <div class="flex items-center gap-2">
+                  <span class="material-symbols-outlined text-secondary text-base">link</span>
+                  <span class="text-secondary text-[10px] font-black tracking-[0.3em] uppercase">{{ item.blockType === 'BISET' ? 'Biset' : 'Superset' }} {{ item.label }}</span>
+                </div>
+                <button (click)="dissociateBlock(item.blockId)"
+                        class="text-on-surface-variant hover:text-red-400 transition-colors text-[10px] font-bold tracking-widest uppercase flex items-center gap-1"
+                        [title]="'Dissocier ce ' + (item.blockType === 'BISET' ? 'biset' : 'superset')">
+                  <span class="material-symbols-outlined text-sm">link_off</span>
+                  Dissocier
+                </button>
+              </div>
+              <div class="superset-body space-y-3">
+                @for (member of item.items; track member.exo.id) {
+                  <app-exercice-card
+                    [exercice]="member.exo"
+                    [readonly]="false"
+                    [index]="member.index"
+                    [isDragging]="dragFromIdx() === member.index"
+                    [isDropTarget]="dragOverIdx() === member.index && dragFromIdx() !== member.index"
+                    [inBlock]="true"
+                    [hasNext]="false"
+                    (remove)="removeExercice(member.exo.id)"
+                    (exoDragStart)="onExoDragStart($event.event, member.index, $event.cardEl)"
+                    (exoDragOver)="onExoDragOver($event, member.index)"
+                    (exoDrop)="onExoDrop($event, member.index)"
+                    (exoDragEnd)="onExoDragEnd()"
+                    (exoTouchStart)="onExoTouchStart($event, member.index)"
+                    (exoTouchMove)="onExoTouchMove($event)"
+                    (exoTouchEnd)="onExoTouchEnd()"
+                  />
+                }
+              </div>
+            </div>
+          }
         }
 
         <!-- Add exercise → opens library sheet -->

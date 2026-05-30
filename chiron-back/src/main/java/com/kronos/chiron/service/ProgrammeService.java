@@ -132,6 +132,8 @@ public class ProgrammeService {
                 exercice.setNom(exoDto.nom());
                 exercice.setCommentaire(exoDto.commentaire());
                 exercice.setDisplayOrder(position++);
+                exercice.setBlockId(exoDto.blockId());
+                exercice.setBlockType(exoDto.blockType());
                 if (exoDto.exerciceDefinitionId() != null) {
                     exerciceDefinitionRepository.findById(exoDto.exerciceDefinitionId())
                             .ifPresent(exercice::setDefinition);
@@ -316,6 +318,8 @@ public class ProgrammeService {
             newExo.setCommentaire(sourceExo.getCommentaire());
             newExo.setDefinition(sourceExo.getDefinition());
             newExo.setDisplayOrder(copyPosition++);
+            newExo.setBlockId(sourceExo.getBlockId());
+            newExo.setBlockType(sourceExo.getBlockType());
             
             for (Serie sourceSerie : sourceExo.getSeries()) {
                 Serie newSerie = new Serie();
