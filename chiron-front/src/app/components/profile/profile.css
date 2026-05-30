@@ -192,18 +192,18 @@
 
 /* Novice levels (1-2) */
 .avatar-img-lvl-1 { border: 3px solid rgba(71,85,105,0.5);   box-shadow: 0 0 12px rgba(0,0,0,0.7); }
-.avatar-img-lvl-2 { border: 3px solid rgba(160,110,50,0.55); box-shadow: 0 0 16px rgba(160,110,50,0.2); }
+.avatar-img-lvl-2 { border: 3px solid rgba(203,213,225,0.55); box-shadow: 0 0 16px rgba(203,213,225,0.2); }
 
-/* Athlete levels (3-4-5) */
-.avatar-img-lvl-3 { border: 3px solid rgba(148,163,184,0.6); box-shadow: 0 0 20px rgba(100,140,200,0.3); }
-.avatar-img-lvl-4 { border: 3px solid rgba(96,165,250,0.7);  box-shadow: 0 0 24px rgba(59,130,246,0.45); }
+/* Athlete levels (3-4-5) — bleu → indigo → violet */
+.avatar-img-lvl-3 { border: 3px solid rgba(96,165,250,0.7);  box-shadow: 0 0 22px rgba(96,165,250,0.4); }
+.avatar-img-lvl-4 { border: 3px solid rgba(99,102,241,0.75); box-shadow: 0 0 24px rgba(99,102,241,0.45); }
 .avatar-img-lvl-5 {
-  border: 3px solid #60a5fa;
+  border: 3px solid #a855f7;
   box-shadow:
-    0 0 0 2px rgba(96,165,250,0.2),
-    0 0 30px rgba(96,165,250,0.7),
-    0 0 60px rgba(59,130,246,0.3),
-    inset 0 0 20px rgba(96,165,250,0.08);
+    0 0 0 2px rgba(168,85,247,0.2),
+    0 0 30px rgba(168,85,247,0.7),
+    0 0 60px rgba(126,34,206,0.3),
+    inset 0 0 20px rgba(168,85,247,0.08);
 }
 
 /* Legend levels (6-7-8) */
@@ -237,36 +237,36 @@
   mask-image:         radial-gradient(circle at center, transparent 54%, black 60%, black 100%);
 }
 
-/* Level 3 (Hoplite) - subtle, 8 spikes */
+/* Level 3 (Hoplite) - subtle, 8 spikes — bleu clair */
 .athlete-spike-3 {
   inset: -22px;
   background: repeating-conic-gradient(
-    rgba(148, 163, 184, 0) 0deg 18deg,
-    rgba(148, 163, 184, 0.4) 18deg 27deg,
-    rgba(148, 163, 184, 0) 27deg 45deg
+    rgba(96, 165, 250, 0)   0deg 18deg,
+    rgba(96, 165, 250, 0.4) 18deg 27deg,
+    rgba(96, 165, 250, 0)   27deg 45deg
   );
   animation: spin-spikes 25s linear infinite;
 }
 
-/* Level 4 (Myrmidon) - medium, 8 spikes blue */
+/* Level 4 (Myrmidon) - medium, 8 spikes — indigo */
 .athlete-spike-4 {
   inset: -26px;
   background: repeating-conic-gradient(
-    rgba(96, 165, 250, 0)   0deg 17deg,
-    rgba(96, 165, 250, 0.5) 17deg 28deg,
-    rgba(96, 165, 250, 0)   28deg 45deg
+    rgba(99, 102, 241, 0)   0deg 17deg,
+    rgba(99, 102, 241, 0.5) 17deg 28deg,
+    rgba(99, 102, 241, 0)   28deg 45deg
   );
   animation: spin-spikes 18s linear infinite;
 }
 
-/* Level 5 (Spartiate) - full, 12 sharp bright spikes */
+/* Level 5 (Spartiate) - full, 12 sharp bright spikes — violet */
 .athlete-spike-5 {
   inset: -30px;
   background:
     repeating-conic-gradient(
-      rgba(96, 165, 250, 0)   0deg 12deg,
-      rgba(96, 165, 250, 0.7) 12deg 18deg,
-      rgba(96, 165, 250, 0)   18deg 30deg
+      rgba(168, 85, 247, 0)   0deg 12deg,
+      rgba(168, 85, 247, 0.7) 12deg 18deg,
+      rgba(168, 85, 247, 0)   18deg 30deg
     );
   animation: spin-spikes 14s linear infinite;
   filter: blur(0.5px);
@@ -277,12 +277,12 @@
   border-radius: 50%;
   border: 1px solid;
 }
-.athlete-outer-3 { inset: -26px; border-color: rgba(148,163,184,0.2); }
-.athlete-outer-4 { inset: -30px; border-color: rgba(96,165,250,0.25); }
+.athlete-outer-3 { inset: -26px; border-color: rgba(96,165,250,0.25); }
+.athlete-outer-4 { inset: -30px; border-color: rgba(99,102,241,0.28); }
 .athlete-outer-5 {
   inset: -36px;
-  border-color: rgba(96,165,250,0.3);
-  box-shadow: 0 0 20px rgba(96,165,250,0.15), inset 0 0 20px rgba(96,165,250,0.05);
+  border-color: rgba(168,85,247,0.3);
+  box-shadow: 0 0 20px rgba(168,85,247,0.15), inset 0 0 20px rgba(168,85,247,0.05);
 }
 
 /* Avatar wrapper ring (rendered inside .relative.z-10) */
@@ -323,14 +323,14 @@
    ══════════════════════════════════════════════════════════════════ */
 
 .tier-badge-lvl-1 { background: rgba(10,18,35,0.95); border: 2px solid rgba(71,85,105,0.55);  color: #94a3b8; }
-.tier-badge-lvl-2 { background: rgba(10,18,35,0.95); border: 2px solid rgba(160,110,50,0.55); color: #cd7f32; }
-.tier-badge-lvl-3 { background: rgba(6,12,28,0.95);  border: 2px solid rgba(148,163,184,0.55); color: #cbd5e1; }
-.tier-badge-lvl-4 { background: rgba(6,12,28,0.95);  border: 2px solid rgba(96,165,250,0.6);  color: #60a5fa; }
+.tier-badge-lvl-2 { background: rgba(10,18,35,0.95); border: 2px solid rgba(203,213,225,0.55); color: #cbd5e1; }
+.tier-badge-lvl-3 { background: rgba(6,12,28,0.95);  border: 2px solid rgba(96,165,250,0.6);  color: #93c5fd; }
+.tier-badge-lvl-4 { background: rgba(6,12,28,0.95);  border: 2px solid rgba(99,102,241,0.65); color: #a5b4fc; }
 .tier-badge-lvl-5 {
   background: rgba(6,12,28,0.97);
-  border: 2px solid rgba(96,165,250,0.85);
-  color: #93c5fd;
-  box-shadow: 0 0 16px rgba(96,165,250,0.45), inset 0 0 10px rgba(96,165,250,0.08);
+  border: 2px solid rgba(168,85,247,0.85);
+  color: #d8b4fe;
+  box-shadow: 0 0 16px rgba(168,85,247,0.45), inset 0 0 10px rgba(168,85,247,0.08);
 }
 .tier-badge-lvl-6 {
   background: rgba(14,9,2,0.97);
@@ -372,7 +372,7 @@
 
 /* Tier symbols beside username */
 .tier-symbol-novice-sm  { color: rgba(71,85,105,0.5);    font-size: 0.75em; }
-.tier-symbol-novice-lg  { color: rgba(160,110,50,0.55);  font-size: 0.75em; }
+.tier-symbol-novice-lg  { color: rgba(203,213,225,0.65); font-size: 0.75em; }
 .tier-symbol-athlete-sm { color: rgba(148,163,184,0.65); font-size: 0.8em; }
 .tier-symbol-athlete-md { color: rgba(96,165,250,0.75);  font-size: 0.85em; }
 .tier-symbol-athlete-lg {

@@ -82,6 +82,13 @@ fitbit:
   api-base-url: https://health.googleapis.com
   scope: ${FITBIT_SCOPE:https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly https://www.googleapis.com/auth/googlehealth.sleep.readonly https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly}
 
+# Désactive la sonde de santé SMTP : sans creds Gmail en dev, MailHealthIndicator
+# tente une connexion SMTP et pollue les logs avec une AuthenticationFailedException.
+management:
+  health:
+    mail:
+      enabled: false
+
 # Debug temporaire — pour diagnostiquer 403 sur /api/nutrition/link.
 logging:
   level:

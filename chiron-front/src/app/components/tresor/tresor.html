@@ -69,7 +69,16 @@
              [style.background]="'radial-gradient(circle at 50% 80%, var(--tier-bg, rgba(255,183,121,0.15)) 0%, transparent 70%)'"
              [class]="tierClass(summary().overallTierLevel)"></div>
 
-        <p class="text-[10px] font-bold tracking-[0.25em] text-on-surface-variant uppercase mb-3 relative z-10">Ton Palier Global</p>
+        <div class="flex items-center justify-center gap-2 mb-3 relative z-10">
+          <p class="text-[10px] font-bold tracking-[0.25em] text-on-surface-variant uppercase">Ton Palier Global</p>
+          <button type="button"
+                  (click)="openTiersModal()"
+                  aria-label="Échelle des paliers"
+                  title="Voir l'échelle des paliers"
+                  class="tiers-info-btn">
+            <span class="material-symbols-outlined text-sm">info</span>
+          </button>
+        </div>
 
         <!-- Badge image (moyenne sur les 3 meilleurs exos) -->
         <div class="flex justify-center mb-5 relative z-10">
@@ -369,6 +378,48 @@
             @if (isSaving()) { … } @else { Confirmer }
           </button>
         </div>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ═══════════════ MODAL ÉCHELLE DES PALIERS ═══════════════ -->
+@if (showTiersModal()) {
+  <div class="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4"
+       (click)="closeTiersModal()">
+
+    <div class="absolute inset-0 bg-slate-950/85 backdrop-blur-sm"></div>
+
+    <div class="relative w-full max-w-sm bg-slate-900 border border-secondary/25 rounded-3xl overflow-hidden shadow-2xl animate-in slide-in-from-bottom-4 duration-300 max-h-[80vh] flex flex-col"
+         (click)="$event.stopPropagation()">
+
+      <div class="flex items-center justify-between px-6 pt-6 pb-4 border-b border-white/5 shrink-0">
+        <div>
+          <p class="text-[10px] text-on-surface-variant tracking-[0.2em] uppercase mb-0.5">Échelle</p>
+          <h3 class="text-lg font-black text-white tracking-widest uppercase font-headline">Les 8 paliers</h3>
+        </div>
+        <button (click)="closeTiersModal()" class="text-on-surface-variant hover:text-white transition-colors">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <div class="p-6 overflow-y-auto">
+        @for (group of tierGroups; track group.cat) {
+          <div class="mb-5 last:mb-0">
+            <p class="text-on-surface-variant text-[9px] uppercase tracking-widest font-bold mb-2">{{ group.cat }}</p>
+            <div class="space-y-2">
+              @for (t of group.tiers; track t.level) {
+                <div [class]="'tier-row tier-' + t.level">
+                  <img [src]="tierBadge(t.level)" [alt]="t.name" class="tier-row-badge">
+                  <div class="flex-1 min-w-0">
+                    <p class="font-black font-headline text-sm uppercase tracking-wide" [style.color]="'var(--tier-color)'">{{ t.name }}</p>
+                    <p class="text-on-surface-variant text-[10px] uppercase tracking-wider">Palier {{ t.level }}/8</p>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
       </div>
     </div>
   </div>

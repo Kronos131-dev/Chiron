@@ -154,6 +154,46 @@
 
 .tresor-badge-img-lg:hover { transform: scale(1.04) rotate(-2deg); }
 
+/* ══════════════════════════════════════════════════════════════════
+   ÉCHELLE DES PALIERS (modale)
+   ══════════════════════════════════════════════════════════════════ */
+
+.tiers-info-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.04);
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.tiers-info-btn:hover {
+  border-color: rgba(255, 183, 121, 0.5);
+  color: #ffb779;
+}
+
+.tier-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--tier-bg, rgba(255,255,255,0.04));
+  border: 1px solid var(--tier-border, rgba(255,255,255,0.08));
+}
+
+.tier-row-badge {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5));
+}
+
 /* Badge dans chaque carte exercice — placé en haut, légèrement débordant. */
 .exercise-badge {
   width: 140px;
