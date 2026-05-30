@@ -47,6 +47,14 @@ export class Chat implements OnInit {
   /** The username of the currently authenticated user. */
   currentUsername: string = '';
 
+  /** Quick-action chips shown in the welcome banner when the conversation is empty. */
+  readonly welcomePrompts: { label: string; prompt: string }[] = [
+    { label: 'Présente-moi l\'app',         prompt: 'Présente-moi l\'app et ce que je peux faire avec toi.' },
+    { label: 'Ma première séance',          prompt: 'Comment j\'enregistre ma première séance avec toi ?' },
+    { label: 'C\'est quoi le Trésor ?',     prompt: 'Explique-moi comment fonctionne le Trésor et les paliers.' },
+    { label: 'Créer un programme',          prompt: 'Comment je crée un programme d\'entraînement avec supersets ?' },
+  ];
+
   /**
    * Initializes a new instance of the Chat component.
    *
@@ -158,6 +166,12 @@ export class Chat implements OnInit {
   /**
    * Sends the current user input text to the AI backend and awaits a response.
    */
+  /** Pre-fills the input with the given prompt and sends it immediately. */
+  usePrompt(prompt: string) {
+    this.userInput.set(prompt);
+    this.onSend();
+  }
+
   onSend() {
     const message = this.userInput().trim();
     if (!message || !this.currentUsername) return;

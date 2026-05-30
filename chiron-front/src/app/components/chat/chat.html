@@ -42,6 +42,28 @@
       }
     </div>
 
+    <!-- Welcome Banner — visible only when no conversation yet -->
+    @if (messages().length === 0 && !isLoading()) {
+      <div class="welcome-banner w-full">
+        <div class="welcome-banner-row">
+          <span class="material-symbols-outlined welcome-banner-icon">military_tech</span>
+          <p class="welcome-banner-text">
+            Salut guerrier. Je suis <strong>Chiron</strong>, ton coach et ton guide.
+            Demande-moi tout sur l'app ou ton entraînement.
+          </p>
+        </div>
+        <div class="welcome-chips">
+          @for (item of welcomePrompts; track item.label) {
+            <button type="button"
+                    class="welcome-chip"
+                    (click)="usePrompt(item.prompt)">
+              {{ item.label }}
+            </button>
+          }
+        </div>
+      </div>
+    }
+
     <!-- Input Controls Section -->
     <div class="w-full flex flex-col items-center gap-6 mt-auto">
 
