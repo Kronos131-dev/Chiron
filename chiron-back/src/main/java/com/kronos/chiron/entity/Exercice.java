@@ -42,6 +42,20 @@ public class Exercice {
     private int displayOrder;
 
     /**
+     * Groupage en superset/biset : exercices consécutifs partageant le même {@code blockId}
+     * sont enchaînés sans repos. NULL = exercice isolé.
+     */
+    @Column(name = "block_id")
+    private Long blockId;
+
+    /**
+     * Nature du groupage : {@code "SUPERSET"} (exos antagonistes) ou {@code "BISET"}
+     * (même groupe musculaire). NULL quand l'exercice est isolé.
+     */
+    @Column(name = "block_type", length = 16)
+    private String blockType;
+
+    /**
      * The start time of the exercise.
      */
     private LocalDateTime startTime;

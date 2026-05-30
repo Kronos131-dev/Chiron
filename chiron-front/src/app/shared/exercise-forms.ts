@@ -18,11 +18,20 @@ export interface SerieForm {
   degressifs: DegressifForm[];
 }
 
+export type BlockType = 'SUPERSET' | 'BISET';
+
 export interface ExerciceForm {
   id: number | string;
   nom: string;
   definitionId?: number;
   series: SerieForm[];
+  /**
+   * Identifiant de groupe (superset/biset). Deux exercices consécutifs partageant
+   * le même {@code blockId} sont enchaînés sans repos. Absent ou null = exo isolé.
+   */
+  blockId?: number | null;
+  /** Nature du groupage. Cohérent entre tous les membres d'un même bloc. */
+  blockType?: BlockType | null;
 }
 
 /**

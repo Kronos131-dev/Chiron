@@ -1,10 +1,11 @@
-import { Component, EventEmitter, Input, OnInit, Output, signal } from '@angular/core';
+import { Component, ElementRef, EventEmitter, HostListener, Input, OnInit, Output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ChironApi, ExerciceDefinitionDto } from '../../../service/chiron-api';
 import {
   ExerciceForm,
+  BlockType,
   makeEmptySerie,
   makeEmptyDegressif,
 } from '../../../shared/exercise-forms';
@@ -29,8 +30,13 @@ export class ExerciceCardComponent implements OnInit {
   @Input() index = 0;
   @Input() isDragging = false;
   @Input() isDropTarget = false;
+  /** Indique si l'exo est déjà dans un superset (cache le bouton "Grouper"). */
+  @Input() inBlock = false;
+  /** Indique s'il existe un exo suivant — désactive le bouton "Grouper" sur le dernier. */
+  @Input() hasNext = false;
 
   @Output() remove = new EventEmitter<void>();
+  @Output() groupWithNext = new EventEmitter<BlockType>();
   @Output() exoDragStart = new EventEmitter<{ event: DragEvent; cardEl: HTMLElement }>();
   @Output() exoDragOver  = new EventEmitter<DragEvent>();
   @Output() exoDrop      = new EventEmitter<DragEvent>();
@@ -42,9 +48,30 @@ export class ExerciceCardComponent implements OnInit {
   suggestions  = signal<ExerciceDefinitionDto[]>([]);
   showSuggestions = signal(false);
   definition   = signal<ExerciceDefinitionDto | null>(null);
+  groupMenuOpen = signal(false);
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
-  constructor(private chironApi: ChironApi, private router: Router) {}
+  constructor(private chironApi: ChironApi, private router: Router, private host: ElementRef<HTMLElement>) {}
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    if (!this.groupMenuOpen()) return;
+    const target = event.target as HTMLElement;
+    const menuRoot = this.host.nativeElement.querySelector('.group-menu-root');
+    if (menuRoot && !menuRoot.contains(target)) {
+      this.groupMenuOpen.set(false);
+    }
+  }
+
+  toggleGroupMenu(event: MouseEvent) {
+    event.stopPropagation();
+    this.groupMenuOpen.update(v => !v);
+  }
+
+  chooseGroupType(type: BlockType) {
+    this.groupMenuOpen.set(false);
+    this.groupWithNext.emit(type);
+  }
 
   ngOnInit() {
     if (this.exercice.definitionId) {

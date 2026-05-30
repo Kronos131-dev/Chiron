@@ -7,5 +7,7 @@ public record ExerciceDto(
         String nom,
         String commentaire,
         Long exerciceDefinitionId,
-        List<SerieDto> series
+        List<SerieDto> series,
+        Long blockId,
+        String blockType
 ) {}

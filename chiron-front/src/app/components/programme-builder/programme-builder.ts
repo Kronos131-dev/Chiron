@@ -9,9 +9,24 @@ import { ExerciceCardComponent } from '../shared/exercice-card/exercice-card';
 import { ExercisePickerComponent } from '../shared/exercise-picker/exercise-picker';
 import {
   ExerciceForm,
+  BlockType,
   makeEmptyExercice,
   generateFormId,
 } from '../../shared/exercise-forms';
+
+/**
+ * Élément rendu dans la liste — soit un exercice isolé, soit un superset/biset
+ * (carte conteneur regroupant ≥2 exos consécutifs partageant un blockId).
+ */
+export type RenderedItem =
+  | { kind: 'single'; exo: ExerciceForm; index: number }
+  | {
+      kind: 'block';
+      label: string;
+      blockId: number;
+      blockType: BlockType;
+      items: { exo: ExerciceForm; index: number }[];
+    };
 
 /**
  * Standalone editor for a workout programme (template, i.e. isModele=false).
@@ -110,6 +125,8 @@ export class ProgrammeBuilder implements OnInit {
           id: exo.id ?? generateFormId(),
           nom: exo.nom,
           definitionId: exo.exerciceDefinitionId ?? undefined,
+          blockId: exo.blockId ?? null,
+          blockType: exo.blockType ?? null,
           series: (exo.series ?? []).map((serie: any) => ({
             id: serie.id ?? generateFormId(),
             poids: serie.poids,
@@ -121,7 +138,7 @@ export class ProgrammeBuilder implements OnInit {
             })),
           })),
         }));
-        this.exercices.set(exos);
+        this.exercices.set(this.normalizeBlocks(exos));
         this.isLoading.set(false);
       },
       error: () => {
@@ -149,8 +166,115 @@ export class ProgrammeBuilder implements OnInit {
   }
 
   removeExercice(exoId: number | string) {
-    this.exercices.update(list => list.filter(e => e.id !== exoId));
+    this.exercices.update(list => this.normalizeBlocks(list.filter(e => e.id !== exoId)));
     this.addedExercises.update(list => list.filter(e => e.id !== exoId));
+  }
+
+  // ── Supersets / bisets ─────────────────────────────────────────────────────
+
+  /**
+   * Construit la liste d'affichage : exercices consécutifs partageant un même
+   * blockId sont regroupés en une carte "Superset X". Les blocs orphelins (1
+   * seul membre) retombent en single. Les labels A/B/C… sont attribués dans
+   * l'ordre d'apparition.
+   */
+  renderedItems = computed<RenderedItem[]>(() => {
+    const list = this.exercices();
+    const out: RenderedItem[] = [];
+    const labelByBlockId = new Map<number, string>();
+    let nextCode = 'A'.charCodeAt(0);
+
+    let i = 0;
+    while (i < list.length) {
+      const cur = list[i];
+      const bid = cur.blockId ?? null;
+      if (bid == null) {
+        out.push({ kind: 'single', exo: cur, index: i });
+        i++;
+        continue;
+      }
+      const items: { exo: ExerciceForm; index: number }[] = [];
+      let j = i;
+      while (j < list.length && (list[j].blockId ?? null) === bid) {
+        items.push({ exo: list[j], index: j });
+        j++;
+      }
+      if (items.length < 2) {
+        out.push({ kind: 'single', exo: cur, index: i });
+      } else {
+        let label = labelByBlockId.get(bid);
+        if (!label) {
+          label = String.fromCharCode(nextCode++);
+          labelByBlockId.set(bid, label);
+        }
+        const blockType: BlockType = (cur.blockType ?? 'SUPERSET') as BlockType;
+        out.push({ kind: 'block', label, blockId: bid, blockType, items });
+      }
+      i = j;
+    }
+    return out;
+  });
+
+  /**
+   * Fusionne l'exercice à `index` avec celui qui le suit dans le même superset/biset.
+   * Le type passé écrase celui d'un bloc existant si la jonction se fait avec un bloc déjà nommé.
+   */
+  groupWithNext(index: number, type: BlockType) {
+    const list = this.exercices();
+    if (index < 0 || index >= list.length - 1) return;
+    const cur = list[index];
+    const next = list[index + 1];
+    const targetBlockId =
+      cur.blockId != null  ? cur.blockId  :
+      next.blockId != null ? next.blockId :
+      this.generateBlockId();
+    this.exercices.update(arr => this.normalizeBlocks(
+      arr.map((e, i) => {
+        if (i === index || i === index + 1 || (e.blockId != null && e.blockId === targetBlockId)) {
+          return { ...e, blockId: targetBlockId, blockType: type };
+        }
+        return e;
+      })
+    ));
+  }
+
+  /** Retire un seul exercice de son superset (le bloc se résorbe si <2 membres). */
+  ungroupExercise(index: number) {
+    this.exercices.update(arr => this.normalizeBlocks(
+      arr.map((e, i) => i === index ? { ...e, blockId: null, blockType: null } : e)
+    ));
+  }
+
+  /** Dissocie tout un superset : tous les exos du bloc redeviennent isolés. */
+  dissociateBlock(blockId: number) {
+    this.exercices.update(arr =>
+      arr.map(e => e.blockId === blockId ? { ...e, blockId: null, blockType: null } : e)
+    );
+  }
+
+  /** Indique si `groupWithNext(index)` aurait un effet utile (un suivant existe). */
+  canGroupWithNext(index: number): boolean {
+    return index >= 0 && index < this.exercices().length - 1;
+  }
+
+  /**
+   * Nettoie les blockId qui ne sont plus en bloc consécutif après un changement
+   * d'ordre (réordonnancement, suppression, ungroup) : un membre sans voisin
+   * partageant son blockId redevient isolé.
+   */
+  private normalizeBlocks(list: ExerciceForm[]): ExerciceForm[] {
+    return list.map((exo, i) => {
+      if (exo.blockId == null) return exo;
+      const prev = list[i - 1];
+      const next = list[i + 1];
+      const hasNeighbor = (prev?.blockId === exo.blockId) || (next?.blockId === exo.blockId);
+      return hasNeighbor ? exo : { ...exo, blockId: null, blockType: null };
+    });
+  }
+
+  /** Identifiant de bloc côté front — entier positif suffisamment unique. */
+  private generateBlockId(): number {
+    return Math.floor(Date.now() * 1000 + Math.random() * 1000);
   }
 
   // ── Library picker (bottom sheet) ──────────────────────────────────────────
@@ -189,6 +313,8 @@ export class ProgrammeBuilder implements OnInit {
         nom: exo.nom,
         commentaire: '',
         exerciceDefinitionId: exo.definitionId ?? null,
+        blockId: exo.blockId ?? null,
+        blockType: exo.blockType ?? null,
         series: exo.series.map(serie => ({
           poids: serie.poids != null ? Number(serie.poids) : 0,
           reps:  serie.reps  != null ? Number(serie.reps)  : 0,
@@ -315,7 +441,7 @@ export class ProgrammeBuilder implements OnInit {
       const next = [...list];
       const [moved] = next.splice(from, 1);
       next.splice(to, 0, moved);
-      return next;
+      return this.normalizeBlocks(next);
     });
   }
 }

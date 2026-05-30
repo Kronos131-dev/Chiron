@@ -1,1 +1,19 @@
 /* Picker styles now live in the shared ExercisePickerComponent. */
+
+.superset-container {
+  position: relative;
+  border: 1px solid rgba(255, 183, 121, 0.35);
+  background: rgba(255, 183, 121, 0.04);
+  border-radius: 16px;
+  padding: 14px 12px 12px;
+}
+
+.superset-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px 12px;
+  border-bottom: 1px dashed rgba(255, 183, 121, 0.22);
+  margin-bottom: 12px;
+  font-family: "Space Grotesk", sans-serif;
+}

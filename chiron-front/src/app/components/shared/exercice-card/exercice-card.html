@@ -73,6 +73,37 @@
         </button>
       }
 
+      @if (!readonly && !inBlock && hasNext) {
+        <div class="group-menu-root relative mb-[1px]">
+          <button type="button"
+                  (click)="toggleGroupMenu($event)"
+                  class="bg-slate-950/50 border p-3 rounded transition-all"
+                  [class.border-white/10]="!groupMenuOpen()"
+                  [class.text-on-surface-variant]="!groupMenuOpen()"
+                  [class.hover:text-secondary]="!groupMenuOpen()"
+                  [class.hover:border-secondary/40]="!groupMenuOpen()"
+                  [class.text-secondary]="groupMenuOpen()"
+                  [class.border-secondary/60]="groupMenuOpen()"
+                  title="Grouper avec l'exercice suivant">
+            <span class="material-symbols-outlined text-xl">link</span>
+          </button>
+          @if (groupMenuOpen()) {
+            <div class="absolute right-0 top-full mt-1 z-30 w-32 bg-[#1a1c23] border border-white/10 rounded-lg shadow-xl overflow-hidden">
+              <button type="button"
+                      (click)="chooseGroupType('SUPERSET')"
+                      class="w-full text-left px-3 py-2 text-[11px] font-bold tracking-widest uppercase text-on-surface hover:bg-secondary/10 hover:text-secondary transition-colors">
+                Superset
+              </button>
+              <button type="button"
+                      (click)="chooseGroupType('BISET')"
+                      class="w-full text-left px-3 py-2 text-[11px] font-bold tracking-widest uppercase text-on-surface hover:bg-secondary/10 hover:text-secondary transition-colors border-t border-white/5">
+                Biset
+              </button>
+            </div>
+          }
+        </div>
+      }
+
       @if (!readonly) {
         <button (click)="remove.emit()" class="bg-slate-950/50 border border-white/10 p-3 rounded text-on-surface-variant hover:text-red-400 hover:border-red-400/30 transition-all mb-[1px]">
           <span class="material-symbols-outlined text-xl">delete</span>
