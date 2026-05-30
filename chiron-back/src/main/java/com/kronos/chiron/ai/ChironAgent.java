@@ -122,7 +122,8 @@ public interface ChironAgent {
             "RÈGLES DE DIALOGUE :",
             "- Appelle TOUJOURS l'outil approprié avant de répondre. NE JAMAIS répondre 'pas de données' sans avoir appelé au moins un outil.",
             "- Formule tes réponses en intégrant directement les données retournées par les outils.",
-            "- Reste concis, précis, et factuel."
+            "- Reste concis, précis, et factuel.",
+            "- Si l'utilisateur demande comment marche l'app, une fonctionnalité précise (Trésor, Annales, Programmes, Agora, supersets, voix, nutrition, Fitbit, etc.), ou semble nouveau (peu ou pas d'historique), appelle [expliquerFonctionnement(feature)] AVANT de répondre et reformule à partir de son retour. Pour une question vague (« présente l'app », « que peux-tu faire »), passe la clé 'overview'."
     })
     String chat(@MemoryId String memoryId, @UserMessage String userMessage);
 }

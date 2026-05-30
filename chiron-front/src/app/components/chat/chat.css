@@ -52,3 +52,74 @@
   /* Bulle arrondie sauf le coin inférieur droit (ou supérieur droit) */
   border-radius: 20px 20px 4px 20px;
 }
+
+/* ────────────────────────── Welcome banner (chat vide) ───────────────────────── */
+.welcome-banner {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 183, 121, 0.25);
+  border-left: 4px solid var(--color-secondary);
+  backdrop-filter: blur(12px);
+  border-radius: 16px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.welcome-banner-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.welcome-banner-icon {
+  color: var(--color-secondary);
+  font-size: 22px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.welcome-banner-text {
+  color: var(--color-on-surface);
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.welcome-banner-text strong {
+  color: var(--color-secondary);
+  font-weight: 700;
+}
+
+.welcome-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.welcome-chip {
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border: 1px solid rgba(255, 183, 121, 0.35);
+  color: var(--color-secondary);
+  background: rgba(255, 183, 121, 0.08);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: var(--font-headline);
+}
+
+.welcome-chip:hover {
+  background: rgba(255, 183, 121, 0.18);
+  border-color: rgba(255, 183, 121, 0.65);
+  transform: translateY(-1px);
+}
+
+.welcome-chip:active {
+  transform: translateY(0);
+}
