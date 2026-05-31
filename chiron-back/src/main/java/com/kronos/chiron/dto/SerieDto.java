@@ -15,5 +15,10 @@ public record SerieDto(
         Double poids,
         Integer reps,
         String commentaire,
-        List<DegressifDto> degressifs
+        List<DegressifDto> degressifs,
+        Double dureeMin,
+        Double distanceM,
+        Double allureKmh,
+        Double pentePct,
+        Double calories
 ) {}

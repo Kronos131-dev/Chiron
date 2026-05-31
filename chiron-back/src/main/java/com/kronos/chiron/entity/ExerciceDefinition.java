@@ -51,6 +51,11 @@ public class ExerciceDefinition {
     @Enumerated(EnumType.STRING)
     private NiveauDifficulte difficulte;
 
+    /** Type de cardio — null pour un exercice de musculation classique. */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "cardio_type", length = 32)
+    private CardioType cardioType;
+
     // ID originel dans le dataset exercisedb-pro — garantit l'idempotence de l'import
     @Column(unique = true)
     private String externalId;

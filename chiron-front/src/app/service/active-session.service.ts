@@ -9,6 +9,7 @@ interface StoredSession {
   routineId: string;
   titre: string;
   exercices: ExerciceForm[];
+  startedAt: string | null;
 }
 
 /**
@@ -31,6 +32,9 @@ export class ActiveSessionService {
 
   /** Exercises of the active session — same references the Session UI mutates. */
   readonly exercices = signal<ExerciceForm[]>([]);
+
+  /** ISO timestamp of when the session was started ("Commencer"), or null. */
+  readonly startedAt = signal<string | null>(null);
 
   constructor() {
     this.restoreFromStorage();
@@ -58,6 +62,7 @@ export class ActiveSessionService {
     this.routineId.set(routineId);
     this.titre.set(titre);
     this.exercices.set(exercices);
+    this.startedAt.set(new Date().toISOString());
     this.snapshot();
   }
 
@@ -70,6 +75,7 @@ export class ActiveSessionService {
       routineId: id,
       titre: this.titre(),
       exercices: this.exercices(),
+      startedAt: this.startedAt(),
     };
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -83,6 +89,7 @@ export class ActiveSessionService {
     this.routineId.set(null);
     this.titre.set('');
     this.exercices.set([]);
+    this.startedAt.set(null);
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch {
@@ -106,6 +113,7 @@ export class ActiveSessionService {
         this.routineId.set(data.routineId);
         this.titre.set(data.titre ?? '');
         this.exercices.set(data.exercices);
+        this.startedAt.set(data.startedAt ?? null);
       }
     } catch {
       /* corrupt payload — ignore */

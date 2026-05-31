@@ -125,12 +125,18 @@ export class ProgrammeBuilder implements OnInit {
           id: exo.id ?? generateFormId(),
           nom: exo.nom,
           definitionId: exo.exerciceDefinitionId ?? undefined,
+          cardioType: exo.cardioType ?? null,
           blockId: exo.blockId ?? null,
           blockType: exo.blockType ?? null,
           series: (exo.series ?? []).map((serie: any) => ({
             id: serie.id ?? generateFormId(),
             poids: serie.poids,
             reps: serie.reps,
+            dureeMin: serie.dureeMin ?? null,
+            distanceM: serie.distanceM ?? null,
+            allureKmh: serie.allureKmh ?? null,
+            pentePct: serie.pentePct ?? null,
+            calories: serie.calories ?? null,
             degressifs: (serie.degressifs ?? []).map((deg: any) => ({
               id: deg.id ?? generateFormId(),
               poids: deg.poids,
@@ -154,7 +160,7 @@ export class ProgrammeBuilder implements OnInit {
   /** Append an exercise to the programme — from a library card OR as a blank custom one. */
   addExerciceFromDefinition(def: ExerciceDefinitionDto) {
     const nom = def.nomFr ?? def.nomEn;
-    const exo = makeEmptyExercice(nom, def.id);
+    const exo = makeEmptyExercice(nom, def.id, def.cardioType as ExerciceForm['cardioType']);
     this.exercices.update(list => [...list, exo]);
     this.addedExercises.update(list => [...list, exo]);
   }
@@ -319,6 +325,10 @@ export class ProgrammeBuilder implements OnInit {
           poids: serie.poids != null ? Number(serie.poids) : 0,
           reps:  serie.reps  != null ? Number(serie.reps)  : 0,
           commentaire: '',
+          dureeMin:  serie.dureeMin  != null ? Number(serie.dureeMin)  : null,
+          distanceM: serie.distanceM != null ? Number(serie.distanceM) : null,
+          allureKmh: serie.allureKmh != null ? Number(serie.allureKmh) : null,
+          pentePct:  serie.pentePct  != null ? Number(serie.pentePct)  : null,
           degressifs: serie.degressifs.map(deg => ({
             poids: deg.poids != null ? Number(deg.poids) : 0,
             reps:  deg.reps  != null ? Number(deg.reps)  : 0,

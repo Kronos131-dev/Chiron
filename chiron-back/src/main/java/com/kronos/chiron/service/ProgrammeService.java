@@ -4,7 +4,9 @@ import com.kronos.chiron.dto.ExerciceDto;
 import com.kronos.chiron.dto.SeanceDto;
 import com.kronos.chiron.dto.SerieDto;
 import com.kronos.chiron.dto.DegressifDto;
+import com.kronos.chiron.entity.CardioType;
 import com.kronos.chiron.entity.Exercice;
+import com.kronos.chiron.entity.ExerciceDefinition;
 import com.kronos.chiron.entity.Role;
 import com.kronos.chiron.entity.Seance;
 import com.kronos.chiron.entity.Serie;
@@ -39,6 +41,7 @@ public class ProgrammeService {
     private final SeanceRepository seanceRepository;
     private final UtilisateurRepository utilisateurRepository;
     private final ExerciceDefinitionRepository exerciceDefinitionRepository;
+    private final CardioCalorieService cardioCalorieService;
 
     /**
      * Saves a new workout program or updates an existing one based on the provided DTO.
@@ -111,6 +114,7 @@ public class ProgrammeService {
         if (!isUpdate) {
             seance.setUtilisateur(targetUser);
             seance.setStartTime(seanceDto.startTime() != null ? seanceDto.startTime() : LocalDateTime.now());
+            seance.setEndTime(seanceDto.endTime());
         }
 
         seance.setTitre(seanceDto.titre());
@@ -134,10 +138,14 @@ public class ProgrammeService {
                 exercice.setDisplayOrder(position++);
                 exercice.setBlockId(exoDto.blockId());
                 exercice.setBlockType(exoDto.blockType());
+
+                ExerciceDefinition definition = null;
                 if (exoDto.exerciceDefinitionId() != null) {
-                    exerciceDefinitionRepository.findById(exoDto.exerciceDefinitionId())
-                            .ifPresent(exercice::setDefinition);
+                    definition = exerciceDefinitionRepository.findById(exoDto.exerciceDefinitionId()).orElse(null);
+                    if (definition != null) exercice.setDefinition(definition);
                 }
+                CardioType cardioType = definition != null ? definition.getCardioType() : null;
+                double poidsCorps = targetUser.getPoidsCorps() != null ? targetUser.getPoidsCorps() : 0.0;
 
                 if (exoDto.series() != null) {
                     for (SerieDto serieDto : exoDto.series()) {
@@ -145,7 +153,18 @@ public class ProgrammeService {
                         serie.setPoids(serieDto.poids() != null ? serieDto.poids() : 0.0);
                         serie.setNombreReps(serieDto.reps() != null ? serieDto.reps() : 0);
                         serie.setCommentaire(serieDto.commentaire());
-                        
+
+                        // Paramètres cardio + calories (uniquement pour les exercices cardio)
+                        serie.setDureeMin(serieDto.dureeMin());
+                        serie.setDistanceM(serieDto.distanceM());
+                        serie.setAllureKmh(serieDto.allureKmh());
+                        serie.setPentePct(serieDto.pentePct());
+                        if (cardioType != null) {
+                            serie.setCalories(cardioCalorieService.estimate(
+                                    cardioType, serieDto.dureeMin(), serieDto.allureKmh(),
+                                    serieDto.pentePct(), serieDto.distanceM(), poidsCorps));
+                        }
+
                         if (serieDto.degressifs() != null) {
                             for (DegressifDto degDto : serieDto.degressifs()) {
                                 Degressif degressif = new Degressif();
@@ -326,6 +345,11 @@ public class ProgrammeService {
                 newSerie.setPoids(sourceSerie.getPoids());
                 newSerie.setNombreReps(sourceSerie.getNombreReps());
                 newSerie.setCommentaire(sourceSerie.getCommentaire());
+                newSerie.setDureeMin(sourceSerie.getDureeMin());
+                newSerie.setDistanceM(sourceSerie.getDistanceM());
+                newSerie.setAllureKmh(sourceSerie.getAllureKmh());
+                newSerie.setPentePct(sourceSerie.getPentePct());
+                newSerie.setCalories(sourceSerie.getCalories());
                 
                 for (Degressif sourceDegressif : sourceSerie.getDegressifs()) {
                     Degressif newDegressif = new Degressif();

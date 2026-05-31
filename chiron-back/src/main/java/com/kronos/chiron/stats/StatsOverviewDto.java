@@ -20,5 +20,6 @@ public record StatsOverviewDto(
         Double poidsCorps,
         String tier,
         int tierLevel,
-        String tierCategorie
+        String tierCategorie,
+        Double dureeMoyenneMin
 ) {}

@@ -22,6 +22,7 @@ export const MUSCLES: FilterChip[] = [
   { key: 'AVANT_BRAS',      label: 'Avant-bras' },
   { key: 'TRAPEZES',        label: 'Trapèzes' },
   { key: 'LOMBAIRES',       label: 'Lombaires' },
+  { key: 'CARDIO',          label: 'Cardio' },
 ];
 
 export const EQUIPEMENTS: FilterChip[] = [

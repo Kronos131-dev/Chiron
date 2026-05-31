@@ -6,6 +6,7 @@ import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartData } from 'chart.js';
 import { HeaderComponent } from '../shared/header/header';
 import { AuthService } from '../../service/auth.service';
+import { formatDuration } from '../../util/duration';
 import {
   ChironApi,
   StatsOverview,
@@ -38,6 +39,9 @@ type ProgressMetric = 'e1rm' | 'chargeMax' | 'volume';
 })
 export class Statistics implements OnInit {
   private api = inject(ChironApi);
+
+  /** Exposé au template pour formater les durées (« 72 min » / « — »). */
+  protected formatDuration = formatDuration;
   private auth = inject(AuthService);
   private router = inject(Router);
 
@@ -287,6 +291,22 @@ export class Statistics implements OnInit {
         data: v.map((p) => p.nbSeances),
         label: 'Séances',
         backgroundColor: this.hexA(this.COL.cyan, 0.55),
+        borderRadius: 4,
+      }],
+    };
+  });
+
+  /** Vrai si au moins une semaine a une durée moyenne renseignée. */
+  hasDuree = computed<boolean>(() => this.volume().some((p) => p.dureeMoyenneMin != null));
+
+  dureeChart = computed<ChartData<'bar'>>(() => {
+    const v = this.volume();
+    return {
+      labels: v.map((p) => p.label),
+      datasets: [{
+        data: v.map((p) => p.dureeMoyenneMin ?? 0),
+        label: 'Durée moyenne (min)',
+        backgroundColor: this.hexA(this.COL.indigo, 0.55),
         borderRadius: 4,
       }],
     };

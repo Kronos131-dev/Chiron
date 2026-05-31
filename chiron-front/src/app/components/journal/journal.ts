@@ -5,6 +5,7 @@ import { ChironApi } from '../../service/chiron-api';
 import { AuthService } from '../../service/auth.service';
 import { Router } from '@angular/router';
 import { HeaderComponent } from '../shared/header/header';
+import { durationMinutes, formatDuration } from '../../util/duration';
 
 /** ISO-8601 week number (lundi = 1er jour de la semaine, semaine 1 = celle du premier jeudi). */
 function getIsoWeekNumber(d: Date): number {
@@ -248,5 +249,17 @@ export class Journal implements OnInit {
       weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
     };
     return new Date(dateString).toLocaleDateString('fr-FR', options);
+  }
+
+  /**
+   * Durée formatée d'une séance (« 72 min »), ou null si non chronométrée.
+   *
+   * @param startTime Heure de début (ISO) de la séance.
+   * @param endTime   Heure de fin (ISO) de la séance.
+   * @return La durée formatée, ou null si la durée n'est pas calculable.
+   */
+  dureeSeance(startTime: string | null, endTime?: string | null): string | null {
+    const min = durationMinutes(startTime, endTime);
+    return min == null ? null : formatDuration(min);
   }
 }

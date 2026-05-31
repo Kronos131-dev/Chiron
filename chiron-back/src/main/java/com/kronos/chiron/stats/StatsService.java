@@ -68,6 +68,14 @@ public class StatsService {
 
         PerformanceSummaryDto perf = performanceService.getSummary(username);
 
+        double dureeSum = 0;
+        int dureeCount = 0;
+        for (Seance s : sessions) {
+            Double dm = sessionDurationMin(s);
+            if (dm != null) { dureeSum += dm; dureeCount++; }
+        }
+        Double dureeMoyenneMin = dureeCount > 0 ? round1(dureeSum / dureeCount) : null;
+
         return new StatsOverviewDto(
                 (int) seances30,
                 sessions.size(),
@@ -76,7 +84,8 @@ public class StatsService {
                 perf.getPoidsCorps(),
                 perf.getOverallTier(),
                 perf.getOverallTierLevel(),
-                perf.getOverallTierCategorie());
+                perf.getOverallTierCategorie(),
+                dureeMoyenneMin);
     }
 
     // ------------------------------------------------------------------ Volume
@@ -94,6 +103,8 @@ public class StatsService {
             double tonnage = 0;
             int nbSeances = 0;
             int nbSeries = 0;
+            double dureeSum = 0;
+            int dureeCount = 0;
             for (Seance s : sessions) {
                 if (s.getStartTime() == null) continue;
                 LocalDate d = s.getStartTime().toLocalDate();
@@ -101,9 +112,12 @@ public class StatsService {
                 nbSeances++;
                 tonnage += sessionTonnage(s);
                 nbSeries += sessionSeriesCount(s);
+                Double dm = sessionDurationMin(s);
+                if (dm != null) { dureeSum += dm; dureeCount++; }
             }
+            Double dureeMoyenneMin = dureeCount > 0 ? round1(dureeSum / dureeCount) : null;
             result.add(new WeeklyVolumePointDto(
-                    weekStart, weekStart.format(LABEL), round1(tonnage), nbSeances, nbSeries));
+                    weekStart, weekStart.format(LABEL), round1(tonnage), nbSeances, nbSeries, dureeMoyenneMin));
         }
         return result;
     }
@@ -288,6 +302,13 @@ public class StatsService {
         int c = 0;
         for (Exercice e : s.getExercices()) c += e.getSeries().size();
         return c;
+    }
+
+    /** Durée d'une séance en minutes, ou null si début/fin manquants ou incohérents. */
+    private Double sessionDurationMin(Seance s) {
+        if (s.getStartTime() == null || s.getEndTime() == null) return null;
+        long min = java.time.Duration.between(s.getStartTime(), s.getEndTime()).toMinutes();
+        return min > 0 ? (double) min : null;
     }
 
     /** 1RM estimé (Epley), reps bornées à [1,36] pour éviter une division par zéro. */

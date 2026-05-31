@@ -16,5 +16,6 @@ public record WeeklyVolumePointDto(
         String label,
         double tonnage,
         int nbSeances,
-        int nbSeries
+        int nbSeries,
+        Double dureeMoyenneMin
 ) {}

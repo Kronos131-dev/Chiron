@@ -38,6 +38,28 @@ public class Serie {
      */
     private String commentaire;
 
+    // ── Paramètres cardio (nullable — renseignés uniquement pour les exercices cardio) ──
+
+    /** Durée de l'effort en minutes (marche, course, rameur, SkiErg). */
+    @Column(name = "duree_min")
+    private Double dureeMin;
+
+    /** Distance parcourue en mètres (rameur, SkiErg). */
+    @Column(name = "distance_m")
+    private Double distanceM;
+
+    /** Vitesse en km/h (marche, course). */
+    @Column(name = "allure_kmh")
+    private Double allureKmh;
+
+    /** Pente en pourcentage (marche, course). */
+    @Column(name = "pente_pct")
+    private Double pentePct;
+
+    /** Calories brûlées estimées, calculées côté serveur à la sauvegarde. */
+    @Column(name = "calories")
+    private Double calories;
+
     /**
      * The exercise to which this set belongs.
      * Ignored during JSON serialization to prevent infinite recursion.
