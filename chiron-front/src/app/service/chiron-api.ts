@@ -360,6 +360,40 @@ export class ChironApi {
   saveProfileSetup(setup: UserProfileSetup): Observable<UserProfileSetup> {
     return this.http.put<UserProfileSetup>(`${this.apiUrl}/profile-setup`, setup);
   }
+
+  // --- Statistiques ---
+
+  getStatsOverview(): Observable<StatsOverview> {
+    return this.http.get<StatsOverview>(`${this.apiUrl}/stats/overview`);
+  }
+
+  getStatsVolume(weeks: number = 12): Observable<WeeklyVolumePoint[]> {
+    return this.http.get<WeeklyVolumePoint[]>(`${this.apiUrl}/stats/volume?weeks=${weeks}`);
+  }
+
+  getStatsMuscles(days: number = 30): Observable<MuscleStats> {
+    return this.http.get<MuscleStats>(`${this.apiUrl}/stats/muscles?days=${days}`);
+  }
+
+  getStatsExercises(): Observable<ExerciseListItem[]> {
+    return this.http.get<ExerciseListItem[]>(`${this.apiUrl}/stats/exercises`);
+  }
+
+  getStatsExerciseProgress(nom: string): Observable<ExerciseProgressPoint[]> {
+    return this.http.get<ExerciseProgressPoint[]>(`${this.apiUrl}/stats/exercises/progress?nom=${encodeURIComponent(nom)}`);
+  }
+
+  getStatsNutrition(days: number = 30): Observable<NutritionStats> {
+    return this.http.get<NutritionStats>(`${this.apiUrl}/stats/nutrition?days=${days}`);
+  }
+
+  getStatsBodyweight(days: number = 90): Observable<BodyweightStats> {
+    return this.http.get<BodyweightStats>(`${this.apiUrl}/stats/bodyweight?days=${days}`);
+  }
+
+  getRecovery(days: number = 30): Observable<RecoveryPoint[]> {
+    return this.http.get<RecoveryPoint[]>(`${this.apiUrl}/etat-journalier/recent?days=${days}`);
+  }
 }
 
 export interface NutritionLinkStatus {
@@ -433,4 +467,111 @@ export interface UserProfileSetup {
   materielDisponible: TypeEquipement[];
   blessures: string | null;
   preferences: string | null;
+}
+
+// --- Statistiques ---
+
+export interface StatsOverview {
+  seances30: number;
+  seancesTotal: number;
+  tonnageSemaine: number;
+  streakSemaines: number;
+  poidsCorps: number | null;
+  tier: string;
+  tierLevel: number;
+  tierCategorie: string;
+}
+
+export interface WeeklyVolumePoint {
+  semaine: string;   // date ISO du lundi
+  label: string;     // « jj/MM »
+  tonnage: number;
+  nbSeances: number;
+  nbSeries: number;
+}
+
+export interface MuscleStat {
+  muscle: string;
+  tonnage: number;
+  nbSeries: number;
+  nbSeances: number;
+}
+
+export interface MuscleStats {
+  muscles: MuscleStat[];
+  negliges: string[];
+}
+
+export interface ExerciseListItem {
+  nom: string;
+  nbSeances: number;
+  derniereSeance: string | null;
+}
+
+export interface ExerciseProgressPoint {
+  date: string;
+  chargeMax: number;
+  e1rm: number;
+  volume: number;
+}
+
+export interface NutritionPoint {
+  date: string;
+  kcal: number | null;
+  proteines: number | null;
+  glucides: number | null;
+  lipides: number | null;
+  targetKcal: number | null;
+  pas: number | null;
+}
+
+export interface NutritionStats {
+  linked: boolean;
+  jours: NutritionPoint[];
+  moyKcal: number | null;
+  moyProteines: number | null;
+  moyGlucides: number | null;
+  moyLipides: number | null;
+  moyTargetKcal: number | null;
+}
+
+export interface BodyweightPoint {
+  date: string;
+  poids: number;
+}
+
+export interface BodyweightStats {
+  linked: boolean;
+  points: BodyweightPoint[];
+}
+
+export interface RecoveryPoint {
+  date: string;
+  sommeilHeures: number | null;
+  fatigue: number | null;
+  courbatures: number | null;
+  stress: number | null;
+  energie: number | null;
+  notes: string | null;
+}
+
+export interface PerformanceExercise {
+  exerciseType: string;
+  nom: string;
+  poids: number | null;
+  nombreReps: number | null;
+  rm1Estime: number | null;
+  ratioPerformance: number | null;
+  tier: string;
+  tierLevel: number;
+  tierCategorie: string;
+  recordedAt: string | null;
+}
+
+export interface PerformanceSummary {
+  overallTier: string;
+  overallTierLevel: number;
+  overallTierCategorie: string;
+  poidsCorps: number | null;
+  exercises: PerformanceExercise[];
 }

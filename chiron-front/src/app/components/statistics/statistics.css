@@ -1,0 +1,8 @@
+/* Masque la barre de défilement des rangées d'onglets/chips (scroll horizontal) */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
