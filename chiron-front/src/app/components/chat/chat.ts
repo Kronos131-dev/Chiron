@@ -17,37 +17,29 @@ export interface ChatMessage {
 declare var webkitSpeechRecognition: any;
 declare var SpeechRecognition: any;
 
+/** localStorage flag : l'utilisateur a déjà vu (ou ignoré) l'intro de l'app. */
+const STORAGE_INTRO = 'chiron.introSeen';
+
 /**
- * Présentation préfaite (texte brut) affichée quand l'utilisateur clique sur
- * « Présente-moi l'application ». Volontairement NON envoyée à l'IA : elle décrit
- * l'app dans sa globalité sans déclencher d'outils ni d'appel réseau. Le chat
- * affiche du texte brut (CSS `white-space: pre-line`), donc pas de markdown ici.
+ * Présentation préfaite (texte brut) affichée quand un nouvel utilisateur clique sur
+ * « Présente-moi l'application ». Volontairement NON envoyée à l'IA : décrit l'app
+ * dans sa globalité, sans déclencher d'outils ni d'appel réseau. Le chat affiche du
+ * texte brut (CSS `white-space: pre-line`), donc pas de markdown ici.
  */
 const APP_PRESENTATION = `Bienvenue dans Chiron ⚔️
 
 Chiron est ton sanctuaire d'entraînement : un coach IA doublé d'une suite d'outils pour progresser. Voici tout ce que tu peux faire.
 
-🗣️ Le Sanctuaire (ce chat) — parle-moi à la voix ou au clavier pour enregistrer tes séances, poser des questions et obtenir des conseils. Je comprends le langage naturel.
-
-📖 Les Annales — l'historique de toutes tes séances réalisées (séries, reps, charges), semaine par semaine.
-
+🗣️ Le chat (ici) — parle-moi à la voix ou au clavier pour enregistrer tes séances, poser des questions et obtenir des conseils.
+📖 Les Annales — l'historique de toutes tes séances réalisées (séries, reps, charges, durée).
 📋 Les Programmes — crée et réutilise des modèles de séances, avec supersets et bisets.
-
-🏋️ La Séance — ton interface d'entraînement en direct : ajoute tes exercices, log tes séries et enregistre la séance.
-
-💎 Le Trésor — tes records personnels (1RM, PR) et ton poids de corps, classés par rangs et paliers de force.
-
-🏛️ L'Agora — l'espace social : découvre les autres athlètes, leurs rangs et leurs profils.
-
-📊 Statistiques — tes graphes de progression : force, volume, répartition musculaire, poids, nutrition et récupération.
-
-❤️ Données Fitbit — ton tableau de bord santé : sommeil, fréquence cardiaque au repos, pas…
-
-🍽️ Nutrition (Olympus) — lie ton compte Olympus dans les Réglages pour suivre calories, macros et poids de corps.
-
-👥 Coaching — désigne un coach, ou entraîne tes élèves et accède à leurs programmes.
-
-👤 Profil & Réglages — gère tes infos, ta photo, ta confidentialité et tes liaisons.
+🏋️ La Séance — ton interface d'entraînement en direct.
+💎 Le Trésor — tes records (1RM, PR) et ton poids de corps, classés par paliers de force.
+🏛️ L'Agora — l'espace social : découvre les autres athlètes.
+📊 Statistiques — tes graphes de progression : force, volume, muscles, poids, nutrition, récup.
+❤️ Données Fitbit — ton tableau de bord santé (sommeil, FC repos, pas…).
+🍽️ Nutrition (Olympus) — lie ton compte Olympus dans les Réglages pour suivre calories et macros.
+👤 Profil & Réglages — gère tes infos et tes liaisons.
 
 Prêt ? Dis-moi par exemple : « J'ai fait 4x8 au développé couché à 80 kg ».`;
 
@@ -81,6 +73,9 @@ export class Chat implements OnInit {
   /** The username of the currently authenticated user. */
   currentUsername: string = '';
 
+  /** Vrai uniquement pour les nouveaux utilisateurs : affiche un bouton d'intro discret. */
+  showIntro = signal(false);
+
   /**
    * Initializes a new instance of the Chat component.
    *
@@ -102,6 +97,13 @@ export class Chat implements OnInit {
     this.initSpeechRecognition();
 
     this.currentUsername = this.authService.getUsername() || 'Guerrier';
+
+    // L'intro n'est proposée qu'aux nouveaux utilisateurs (jamais vue/ignorée).
+    try {
+      this.showIntro.set(!localStorage.getItem(STORAGE_INTRO));
+    } catch {
+      this.showIntro.set(false);
+    }
 
     // Redirige vers l'onboarding si le profil n'a jamais été complété.
     this.chironApi.getProfileSetup().subscribe({
@@ -190,17 +192,22 @@ export class Chat implements OnInit {
   }
 
   /**
-   * Affiche la présentation préfaite de l'application sans passer par l'IA :
-   * ajoute une bulle utilisateur « Présente-moi l'application » puis la réponse
-   * écrite en dur. Aucun appel réseau, aucun outil déclenché.
+   * Affiche une présentation préfaite de l'app (sans appel IA), pour les nouveaux
+   * utilisateurs. Marque l'intro comme vue pour ne plus l'afficher ensuite.
    */
   presentApp() {
-    if (this.isLoading()) return;
     this.messages.update(prev => [
       ...prev,
       { role: 'user', content: 'Présente-moi l\'application' },
       { role: 'ai', content: APP_PRESENTATION },
     ]);
+    this.markIntroSeen();
+  }
+
+  /** N'affiche plus le bouton d'intro (après un clic ou la première interaction). */
+  private markIntroSeen() {
+    this.showIntro.set(false);
+    try { localStorage.setItem(STORAGE_INTRO, '1'); } catch { /* ignore */ }
   }
 
   /**
@@ -210,6 +217,7 @@ export class Chat implements OnInit {
     const message = this.userInput().trim();
     if (!message || !this.currentUsername) return;
 
+    this.markIntroSeen();
     this.addMessage('user', message);
     this.userInput.set('');
     this.isLoading.set(true);
