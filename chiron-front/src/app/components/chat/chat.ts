@@ -18,6 +18,40 @@ declare var webkitSpeechRecognition: any;
 declare var SpeechRecognition: any;
 
 /**
+ * Présentation préfaite (texte brut) affichée quand l'utilisateur clique sur
+ * « Présente-moi l'application ». Volontairement NON envoyée à l'IA : elle décrit
+ * l'app dans sa globalité sans déclencher d'outils ni d'appel réseau. Le chat
+ * affiche du texte brut (CSS `white-space: pre-line`), donc pas de markdown ici.
+ */
+const APP_PRESENTATION = `Bienvenue dans Chiron ⚔️
+
+Chiron est ton sanctuaire d'entraînement : un coach IA doublé d'une suite d'outils pour progresser. Voici tout ce que tu peux faire.
+
+🗣️ Le Sanctuaire (ce chat) — parle-moi à la voix ou au clavier pour enregistrer tes séances, poser des questions et obtenir des conseils. Je comprends le langage naturel.
+
+📖 Les Annales — l'historique de toutes tes séances réalisées (séries, reps, charges), semaine par semaine.
+
+📋 Les Programmes — crée et réutilise des modèles de séances, avec supersets et bisets.
+
+🏋️ La Séance — ton interface d'entraînement en direct : ajoute tes exercices, log tes séries et enregistre la séance.
+
+💎 Le Trésor — tes records personnels (1RM, PR) et ton poids de corps, classés par rangs et paliers de force.
+
+🏛️ L'Agora — l'espace social : découvre les autres athlètes, leurs rangs et leurs profils.
+
+📊 Statistiques — tes graphes de progression : force, volume, répartition musculaire, poids, nutrition et récupération.
+
+❤️ Données Fitbit — ton tableau de bord santé : sommeil, fréquence cardiaque au repos, pas…
+
+🍽️ Nutrition (Olympus) — lie ton compte Olympus dans les Réglages pour suivre calories, macros et poids de corps.
+
+👥 Coaching — désigne un coach, ou entraîne tes élèves et accède à leurs programmes.
+
+👤 Profil & Réglages — gère tes infos, ta photo, ta confidentialité et tes liaisons.
+
+Prêt ? Dis-moi par exemple : « J'ai fait 4x8 au développé couché à 80 kg ».`;
+
+/**
  * Main AI Chat component (Chiron Interface).
  * Handles voice and text interactions, session management, and UI logic.
  */
@@ -46,14 +80,6 @@ export class Chat implements OnInit {
 
   /** The username of the currently authenticated user. */
   currentUsername: string = '';
-
-  /** Quick-action chips shown in the welcome banner when the conversation is empty. */
-  readonly welcomePrompts: { label: string; prompt: string }[] = [
-    { label: 'Présente-moi l\'app',         prompt: 'Présente-moi l\'app et ce que je peux faire avec toi.' },
-    { label: 'Ma première séance',          prompt: 'Comment j\'enregistre ma première séance avec toi ?' },
-    { label: 'C\'est quoi le Trésor ?',     prompt: 'Explique-moi comment fonctionne le Trésor et les paliers.' },
-    { label: 'Créer un programme',          prompt: 'Comment je crée un programme d\'entraînement avec supersets ?' },
-  ];
 
   /**
    * Initializes a new instance of the Chat component.
@@ -164,14 +190,22 @@ export class Chat implements OnInit {
   }
 
   /**
-   * Sends the current user input text to the AI backend and awaits a response.
+   * Affiche la présentation préfaite de l'application sans passer par l'IA :
+   * ajoute une bulle utilisateur « Présente-moi l'application » puis la réponse
+   * écrite en dur. Aucun appel réseau, aucun outil déclenché.
    */
-  /** Pre-fills the input with the given prompt and sends it immediately. */
-  usePrompt(prompt: string) {
-    this.userInput.set(prompt);
-    this.onSend();
+  presentApp() {
+    if (this.isLoading()) return;
+    this.messages.update(prev => [
+      ...prev,
+      { role: 'user', content: 'Présente-moi l\'application' },
+      { role: 'ai', content: APP_PRESENTATION },
+    ]);
   }
 
+  /**
+   * Sends the current user input text to the AI backend and awaits a response.
+   */
   onSend() {
     const message = this.userInput().trim();
     if (!message || !this.currentUsername) return;
@@ -193,7 +227,7 @@ export class Chat implements OnInit {
     });
   }
 
-/**
+  /**
    * Appends a new message to the component's internal chat history signal.
    *
    * @param role    The origin of the message ('user' or 'ai').
