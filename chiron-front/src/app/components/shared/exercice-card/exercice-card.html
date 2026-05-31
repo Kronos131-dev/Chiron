@@ -111,6 +111,7 @@
       }
     </div>
 
+    @if (!isCardio()) {
     <!-- Sets Table Headers -->
     <div class="grid grid-cols-12 gap-3 mb-2 px-1">
       <div class="col-span-3 text-on-surface-variant text-[9px] font-bold tracking-widest uppercase">Série</div>
@@ -184,12 +185,64 @@
         }
       }
     </div>
+    } @else {
+    <!-- Cardio: paramètres d'effort -->
+    <div class="space-y-3 mb-5">
+      @for (serie of exercice.series; track serie.id; let i = $index) {
+        <div class="bg-slate-950/40 border border-white/5 rounded-lg p-3">
+          @if (exercice.series.length > 1) {
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-secondary font-bold font-headline text-sm">Intervalle {{ i + 1 }}</span>
+              @if (!readonly) {
+                <button (click)="supprimerSerie(serie.id)" class="text-on-surface-variant hover:text-red-400 transition-colors" title="Supprimer l'intervalle">
+                  <span class="material-symbols-outlined text-sm">close</span>
+                </button>
+              }
+            </div>
+          }
+          <div class="grid grid-cols-2 gap-3">
+            <!-- Durée : commun à tous les cardios -->
+            <div>
+              <label class="text-on-surface-variant text-[9px] font-bold tracking-widest uppercase block mb-1">Durée (min)</label>
+              <input type="number" inputmode="decimal" min="0" [(ngModel)]="serie.dureeMin" [readOnly]="readonly"
+                     class="w-full bg-slate-950/80 border border-white/5 rounded p-2.5 text-white font-body text-center outline-none focus:border-secondary/50 transition-colors">
+            </div>
+
+            @if (exercice.cardioType === 'MARCHE_PENTE' || exercice.cardioType === 'COURSE') {
+              <div>
+                <label class="text-on-surface-variant text-[9px] font-bold tracking-widest uppercase block mb-1">Vitesse (km/h)</label>
+                <input type="number" inputmode="decimal" min="0" step="0.1" [(ngModel)]="serie.allureKmh" [readOnly]="readonly"
+                       class="w-full bg-slate-950/80 border border-white/5 rounded p-2.5 text-white font-body text-center outline-none focus:border-secondary/50 transition-colors">
+              </div>
+              <div>
+                <label class="text-on-surface-variant text-[9px] font-bold tracking-widest uppercase block mb-1">Pente (%)</label>
+                <input type="number" inputmode="decimal" min="0" step="0.5" [(ngModel)]="serie.pentePct" [readOnly]="readonly"
+                       class="w-full bg-slate-950/80 border border-white/5 rounded p-2.5 text-white font-body text-center outline-none focus:border-secondary/50 transition-colors">
+              </div>
+            } @else {
+              <div>
+                <label class="text-on-surface-variant text-[9px] font-bold tracking-widest uppercase block mb-1">Distance (m)</label>
+                <input type="number" inputmode="numeric" min="0" [(ngModel)]="serie.distanceM" [readOnly]="readonly"
+                       class="w-full bg-slate-950/80 border border-white/5 rounded p-2.5 text-white font-body text-center outline-none focus:border-secondary/50 transition-colors">
+              </div>
+            }
+          </div>
+
+          @if (serie.calories) {
+            <p class="text-secondary text-xs font-bold mt-2 flex items-center gap-1">
+              <span>🔥</span> {{ serie.calories | number:'1.0-0' }} kcal
+            </p>
+          }
+        </div>
+      }
+    </div>
+    }
 
     <!-- Add Set Button -->
     @if (!readonly) {
       <button (click)="ajouterSerie()"
               class="w-full border border-dashed border-white/10 rounded py-3 flex items-center justify-center gap-2 text-on-surface-variant text-[10px] font-bold tracking-widest uppercase hover:text-secondary hover:bg-white/5 transition-colors">
-        <span class="text-lg leading-none">+</span> Ajouter une série
+        <span class="text-lg leading-none">+</span> {{ isCardio() ? 'Ajouter un intervalle' : 'Ajouter une série' }}
       </button>
     }
 

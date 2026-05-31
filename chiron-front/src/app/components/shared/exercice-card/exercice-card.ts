@@ -7,6 +7,7 @@ import {
   ExerciceForm,
   BlockType,
   makeEmptySerie,
+  makeEmptyCardioSerie,
   makeEmptyDegressif,
 } from '../../../shared/exercise-forms';
 
@@ -53,6 +54,17 @@ export class ExerciceCardComponent implements OnInit {
 
   constructor(private chironApi: ChironApi, private router: Router, private host: ElementRef<HTMLElement>) {}
 
+  /** Vrai si l'exercice est un cardio (saisie durée/vitesse/pente/distance au lieu de poids/reps). */
+  isCardio(): boolean {
+    return !!this.exercice.cardioType;
+  }
+
+  /** Total des calories brûlées de l'exercice (somme des séries), ou null si aucune. */
+  caloriesTotales(): number | null {
+    const total = this.exercice.series.reduce((sum, s) => sum + (s.calories ?? 0), 0);
+    return total > 0 ? Math.round(total) : null;
+  }
+
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
     if (!this.groupMenuOpen()) return;
@@ -92,6 +104,7 @@ export class ExerciceCardComponent implements OnInit {
     const query = (event.target as HTMLInputElement).value;
     this.exercice.nom = query;
     this.exercice.definitionId = undefined;
+    this.exercice.cardioType = null;
 
     if (this.debounceTimer) clearTimeout(this.debounceTimer);
 
@@ -115,6 +128,11 @@ export class ExerciceCardComponent implements OnInit {
   selectDefinition(def: ExerciceDefinitionDto) {
     this.exercice.nom = def.nomFr ?? def.nomEn;
     this.exercice.definitionId = def.id;
+    this.exercice.cardioType = (def.cardioType as ExerciceForm['cardioType']) ?? null;
+    // Bascule la première série en mode cardio si besoin (et inversement).
+    if (this.exercice.cardioType && this.exercice.series.length > 0 && this.exercice.series[0].dureeMin === undefined) {
+      this.exercice.series = [makeEmptyCardioSerie()];
+    }
     this.suggestions.set([]);
     this.showSuggestions.set(false);
   }
@@ -126,7 +144,8 @@ export class ExerciceCardComponent implements OnInit {
 
   ajouterSerie() {
     if (this.readonly) return;
-    this.exercice.series = [...this.exercice.series, makeEmptySerie()];
+    const nouvelle = this.isCardio() ? makeEmptyCardioSerie() : makeEmptySerie();
+    this.exercice.series = [...this.exercice.series, nouvelle];
   }
 
   supprimerSerie(serieId: number | string) {

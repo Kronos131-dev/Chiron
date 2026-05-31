@@ -15,6 +15,7 @@ export interface ExerciceDefinitionDto {
   difficulte: string | null;
   descriptionFr: string | null;
   descriptionEn: string | null;
+  cardioType: string | null;
 }
 
 /**
@@ -480,6 +481,7 @@ export interface StatsOverview {
   tier: string;
   tierLevel: number;
   tierCategorie: string;
+  dureeMoyenneMin: number | null;
 }
 
 export interface WeeklyVolumePoint {
@@ -488,6 +490,7 @@ export interface WeeklyVolumePoint {
   tonnage: number;
   nbSeances: number;
   nbSeries: number;
+  dureeMoyenneMin: number | null;
 }
 
 export interface MuscleStat {

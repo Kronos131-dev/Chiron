@@ -69,6 +69,9 @@ public class SeanceMapper {
                 .collect(Collectors.toList());
 
         Long definitionId = exercice.getDefinition() != null ? exercice.getDefinition().getId() : null;
+        String cardioType = (exercice.getDefinition() != null && exercice.getDefinition().getCardioType() != null)
+                ? exercice.getDefinition().getCardioType().name()
+                : null;
 
         return new ExerciceDto(
                 exercice.getId(),
@@ -77,7 +80,8 @@ public class SeanceMapper {
                 definitionId,
                 seriesDto,
                 exercice.getBlockId(),
-                exercice.getBlockType()
+                exercice.getBlockType(),
+                cardioType
         );
     }
 
@@ -98,7 +102,12 @@ public class SeanceMapper {
                 serie.getPoids(),
                 serie.getNombreReps(),
                 serie.getCommentaire(),
-                degressifsDto
+                degressifsDto,
+                serie.getDureeMin(),
+                serie.getDistanceM(),
+                serie.getAllureKmh(),
+                serie.getPentePct(),
+                serie.getCalories()
         );
     }
 

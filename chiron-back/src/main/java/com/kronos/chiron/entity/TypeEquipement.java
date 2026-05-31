@@ -10,5 +10,6 @@ public enum TypeEquipement {
     ELASTIQUE,
     BARRE_FIXE,
     ANNEAUX,
+    CARDIO,
     AUTRE
 }

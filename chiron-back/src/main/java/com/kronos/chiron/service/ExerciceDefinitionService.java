@@ -85,7 +85,8 @@ public class ExerciceDefinitionService {
                 e.getTypeEquipement(),
                 e.getDifficulte(),
                 e.getDescriptionFr(),
-                e.getDescriptionEn()
+                e.getDescriptionEn(),
+                e.getCardioType()
         );
     }
 }

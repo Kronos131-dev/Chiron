@@ -9,5 +9,6 @@ public record ExerciceDto(
         Long exerciceDefinitionId,
         List<SerieDto> series,
         Long blockId,
-        String blockType
+        String blockType,
+        String cardioType
 ) {}

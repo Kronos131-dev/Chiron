@@ -7,16 +7,12 @@
   <main class="chat-stream" #scrollContainer>
     <div class="chat-stream-inner">
 
-      <!-- État vide : carte d'accueil -->
-      @if (messages().length === 0 && !isLoading()) {
-        <div class="welcome-card">
-          <div class="welcome-orb">
-            <span class="material-symbols-outlined">neurology</span>
-          </div>
-          <h2 class="welcome-title">Bienvenue dans le Sanctuaire</h2>
-          <button type="button" class="welcome-cta" (click)="presentApp()">
+      <!-- Intro discrète — nouveaux utilisateurs uniquement, conversation vide -->
+      @if (messages().length === 0 && !isLoading() && showIntro()) {
+        <div class="intro-row">
+          <button type="button" class="intro-pill" (click)="presentApp()">
             <span class="material-symbols-outlined">auto_stories</span>
-            <span>Présente-moi l'application</span>
+            Découvrir l'application
           </button>
         </div>
       }

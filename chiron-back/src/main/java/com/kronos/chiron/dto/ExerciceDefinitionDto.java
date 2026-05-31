@@ -1,5 +1,6 @@
 package com.kronos.chiron.dto;
 
+import com.kronos.chiron.entity.CardioType;
 import com.kronos.chiron.entity.MuscleGroup;
 import com.kronos.chiron.entity.NiveauDifficulte;
 import com.kronos.chiron.entity.TypeEquipement;
@@ -17,5 +18,6 @@ public record ExerciceDefinitionDto(
         TypeEquipement typeEquipement,
         NiveauDifficulte difficulte,
         String descriptionFr,
-        String descriptionEn
+        String descriptionEn,
+        CardioType cardioType
 ) {}
