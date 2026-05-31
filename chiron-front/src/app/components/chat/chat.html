@@ -1,108 +1,90 @@
 <!-- Top Navigation Header via Shared Component -->
 <app-header [title]="'CHIRON'" [showBack]="false"></app-header>
 
-<!-- Main Chat Interface -->
-<main class="min-h-screen pt-24 pb-32 heroic-texture flex flex-col items-center px-6 relative">
-  <section class="w-full max-w-4xl flex flex-col items-center gap-8 z-10">
+<div class="chat-shell heroic-texture">
 
-    <!-- Status Indicator (Recording or Ready) -->
-    <div class="text-center space-y-2 mb-4">
-      <div class="flex items-center justify-center gap-2">
-        <span class="flex h-2 w-2 rounded-full bg-secondary" [class.animate-pulse]="isRecording()"></span>
-        <span class="text-secondary font-headline uppercase tracking-[0.3em] text-xs font-bold">
-          {{ isRecording() ? 'Chiron t\'écoute...' : 'Prêt pour l\'effort' }}
-        </span>
-      </div>
-    </div>
+  <!-- Fil de discussion -->
+  <main class="chat-stream" #scrollContainer>
+    <div class="chat-stream-inner">
 
-    <!-- Conversation History Display -->
-    <div class="chat-container w-full overflow-y-auto max-h-[50vh] pr-2 custom-scrollbar">
-
-      @for (msg of messages(); track $index) {
-        <div class="message-wrapper"
-             [ngClass]="{'user-message': msg.role === 'user', 'chiron-message': msg.role === 'ai'}">
-          <div class="message-bubble animate-in fade-in slide-in-from-bottom-2 duration-300">
-            {{ msg.content }}
+      <!-- État vide : carte d'accueil -->
+      @if (messages().length === 0 && !isLoading()) {
+        <div class="welcome-card">
+          <div class="welcome-orb">
+            <span class="material-symbols-outlined">neurology</span>
           </div>
+          <h2 class="welcome-title">Bienvenue dans le Sanctuaire</h2>
+          <button type="button" class="welcome-cta" (click)="presentApp()">
+            <span class="material-symbols-outlined">auto_stories</span>
+            <span>Présente-moi l'application</span>
+          </button>
         </div>
       }
 
-      <!-- Loading Animation while waiting for AI response -->
-      @if (isLoading()) {
-        <div class="message-wrapper chiron-message">
-          <div class="message-bubble bg-slate-800/50 border-dashed border-secondary/30 text-secondary/60 italic flex items-center gap-3">
-            <span class="flex gap-1">
-              <span class="w-1.5 h-1.5 bg-secondary rounded-full animate-bounce"></span>
-              <span class="w-1.5 h-1.5 bg-secondary rounded-full animate-bounce [animation-delay:0.2s]"></span>
-              <span class="w-1.5 h-1.5 bg-secondary rounded-full animate-bounce [animation-delay:0.4s]"></span>
-            </span>
-            Chiron analyse tes performances...
+      <!-- Messages -->
+      <div class="msg-list">
+        @for (msg of messages(); track $index) {
+          <div class="msg-row"
+               [class.msg-user]="msg.role === 'user'"
+               [class.msg-ai]="msg.role === 'ai'">
+            @if (msg.role === 'ai') {
+              <div class="msg-avatar">
+                <span class="material-symbols-outlined">neurology</span>
+              </div>
+            }
+            <div class="msg-bubble">
+              <div class="msg-content">{{ msg.content }}</div>
+            </div>
           </div>
-        </div>
-      }
-    </div>
-
-    <!-- Welcome Banner — visible only when no conversation yet -->
-    @if (messages().length === 0 && !isLoading()) {
-      <div class="welcome-banner w-full">
-        <div class="welcome-banner-row">
-          <span class="material-symbols-outlined welcome-banner-icon">military_tech</span>
-          <p class="welcome-banner-text">
-            Salut guerrier. Je suis <strong>Chiron</strong>, ton coach et ton guide.
-            Demande-moi tout sur l'app ou ton entraînement.
-          </p>
-        </div>
-        <div class="welcome-chips">
-          @for (item of welcomePrompts; track item.label) {
-            <button type="button"
-                    class="welcome-chip"
-                    (click)="usePrompt(item.prompt)">
-              {{ item.label }}
-            </button>
-          }
-        </div>
-      </div>
-    }
-
-    <!-- Input Controls Section -->
-    <div class="w-full flex flex-col items-center gap-6 mt-auto">
-
-      <!-- Text Input Field -->
-      <div class="w-full relative group">
-        <div class="relative bg-slate-900/60 border border-secondary/20 backdrop-blur-2xl rounded-xl p-1 shadow-2xl transition-all duration-300 group-focus-within:border-secondary/50">
-          <input [(ngModel)]="userInput"
-                 (keyup.enter)="onSend()"
-                 class="w-full bg-transparent border-none focus:ring-0 py-6 px-8 text-xl font-headline placeholder:text-slate-600 text-on-surface outline-none"
-                 placeholder="Tape ou parle..."
-                 type="text"/>
-
-          <!-- Send Button -->
-          <div class="absolute right-6 top-1/2 -translate-y-1/2 flex items-center gap-4">
-            <button (click)="onSend()" class="material-symbols-outlined text-secondary text-3xl hover:scale-110 transition-transform">send</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Voice Recording Button -->
-      <div class="relative group">
-        @if (isRecording()) {
-          <div class="absolute -inset-4 bg-red-500/30 rounded-full blur-2xl animate-pulse"></div>
         }
 
-        <button (click)="toggleRecording()"
-                class="relative w-28 h-28 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-[#ffb779] to-[#955200] flex items-center justify-center bronze-glow transition-all duration-500 hover:scale-110 active:scale-95 border-4 border-slate-950"
-                [class.border-red-500]="isRecording()">
-          <span class="material-symbols-outlined text-4xl md:text-5xl transition-colors duration-300"
-                [class.text-red-900]="isRecording()"
-                [class.animate-pulse]="isRecording()"
-                [class.text-slate-950]="!isRecording()"
-                style="font-variation-settings: 'FILL' 1;">
-            mic
-          </span>
-        </button>
+        <!-- Indicateur « Chiron réfléchit… » -->
+        @if (isLoading()) {
+          <div class="msg-row msg-ai">
+            <div class="msg-avatar">
+              <span class="material-symbols-outlined">neurology</span>
+            </div>
+            <div class="msg-bubble typing-bubble">
+              <div class="typing-dots"><span></span><span></span><span></span></div>
+              <span class="typing-text">Chiron réfléchit…</span>
+            </div>
+          </div>
+        }
       </div>
 
     </div>
+  </main>
 
-  </section>
-</main>
+  <!-- Zone de saisie -->
+  <footer class="chat-composer">
+    <div class="composer-inner">
+      <button
+        type="button"
+        class="composer-mic"
+        [class.recording]="isRecording()"
+        (click)="toggleRecording()"
+        [disabled]="isLoading()"
+        aria-label="Dicter">
+        <span class="material-symbols-outlined">{{ isRecording() ? 'stop_circle' : 'mic' }}</span>
+      </button>
+
+      <input
+        class="composer-input"
+        [ngModel]="userInput()"
+        (ngModelChange)="userInput.set($event)"
+        (keyup.enter)="onSend()"
+        placeholder="Parle à Chiron…"
+        type="text"
+        [disabled]="isLoading()" />
+
+      <button
+        type="button"
+        class="composer-send"
+        (click)="onSend()"
+        [disabled]="isLoading() || !userInput().trim()"
+        aria-label="Envoyer">
+        <span class="material-symbols-outlined">arrow_upward</span>
+      </button>
+    </div>
+  </footer>
+</div>

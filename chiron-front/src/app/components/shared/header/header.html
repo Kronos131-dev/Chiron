@@ -22,8 +22,11 @@
 
     <div class="relative">
       <button (click)="toggleSettings()"
-              class="material-symbols-outlined text-[#f8fafc] hover:text-secondary transition-colors duration-200 cursor-pointer">
-        settings
+              aria-label="Menu"
+              [attr.aria-expanded]="showSettings()"
+              class="material-symbols-outlined transition-colors duration-200 cursor-pointer hover:text-secondary"
+              [ngClass]="showSettings() ? 'text-secondary' : 'text-[#f8fafc]'">
+        {{ showSettings() ? 'close' : 'menu' }}
       </button>
 
       @if (showSettings()) {
@@ -52,6 +55,9 @@
           </a>
           <a href="/fitbit" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-white/5 transition-colors cursor-pointer">
             <span class="material-symbols-outlined text-sm text-secondary">watch</span> Données Fitbit
+          </a>
+          <a href="/statistics" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-white/5 transition-colors cursor-pointer">
+            <span class="material-symbols-outlined text-sm text-secondary">monitoring</span> Statistiques
           </a>
           <a href="/settings" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-white/5 transition-colors cursor-pointer">
             <span class="material-symbols-outlined text-sm text-secondary">manage_accounts</span> Paramètres
