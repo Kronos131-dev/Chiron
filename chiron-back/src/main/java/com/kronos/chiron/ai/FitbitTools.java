@@ -61,8 +61,10 @@ public class FitbitTools {
         } catch (FitbitService.ExpiredException e) {
             return MSG_EXPIRE;
         } catch (FitbitClient.FitbitUnauthorizedException e) {
-            fitbitService.invalidateLink(user.getUsername());
-            return MSG_EXPIRE;
+            // Token rejeté par l'API data : le compte reste lié (refresh token
+            // intact), on ne le délie pas. Cf. FitbitService.getDashboard.
+            log.warn("FITBIT_TOOL_UNAUTHORIZED user={} : {}", user.getUsername(), e.getMessage());
+            return MSG_INDISPO;
         } catch (FitbitClient.FitbitUnavailableException e) {
             return MSG_INDISPO;
         }
@@ -110,8 +112,10 @@ public class FitbitTools {
         } catch (FitbitService.ExpiredException e) {
             return MSG_EXPIRE;
         } catch (FitbitClient.FitbitUnauthorizedException e) {
-            fitbitService.invalidateLink(user.getUsername());
-            return MSG_EXPIRE;
+            // Token rejeté par l'API data : le compte reste lié (refresh token
+            // intact), on ne le délie pas. Cf. FitbitService.getDashboard.
+            log.warn("FITBIT_TOOL_UNAUTHORIZED user={} : {}", user.getUsername(), e.getMessage());
+            return MSG_INDISPO;
         } catch (FitbitClient.FitbitUnavailableException e) {
             return MSG_INDISPO;
         }
@@ -148,8 +152,10 @@ public class FitbitTools {
         } catch (FitbitService.ExpiredException e) {
             return MSG_EXPIRE;
         } catch (FitbitClient.FitbitUnauthorizedException e) {
-            fitbitService.invalidateLink(user.getUsername());
-            return MSG_EXPIRE;
+            // Token rejeté par l'API data : le compte reste lié (refresh token
+            // intact), on ne le délie pas. Cf. FitbitService.getDashboard.
+            log.warn("FITBIT_TOOL_UNAUTHORIZED user={} : {}", user.getUsername(), e.getMessage());
+            return MSG_INDISPO;
         } catch (FitbitClient.FitbitUnavailableException e) {
             return MSG_INDISPO;
         }
@@ -207,8 +213,10 @@ public class FitbitTools {
         } catch (FitbitService.ExpiredException e) {
             return MSG_EXPIRE;
         } catch (FitbitClient.FitbitUnauthorizedException e) {
-            fitbitService.invalidateLink(user.getUsername());
-            return MSG_EXPIRE;
+            // Token rejeté par l'API data : le compte reste lié (refresh token
+            // intact), on ne le délie pas. Cf. FitbitService.getDashboard.
+            log.warn("FITBIT_TOOL_UNAUTHORIZED user={} : {}", user.getUsername(), e.getMessage());
+            return MSG_INDISPO;
         } catch (FitbitClient.FitbitUnavailableException e) {
             return MSG_INDISPO;
         }

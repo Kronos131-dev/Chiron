@@ -189,7 +189,7 @@ jobs:
 
       - name: Upload secrets
         run: |
-          printf 'GMAIL_USERNAME=%s\nGMAIL_APP_PASSWORD=%s\nFRONTEND_URL=%s\nFITBIT_CLIENT_ID=%s\nFITBIT_CLIENT_SECRET=%s\nFITBIT_REDIRECT_URI=%s\nOLYMPUS_DB_URL=%s\nOLYMPUS_DB_USERNAME=%s\nOLYMPUS_DB_PASSWORD=%s\n' \
+          printf 'GMAIL_USERNAME=%s\nGMAIL_APP_PASSWORD=%s\nFRONTEND_URL=%s\nFITBIT_CLIENT_ID=%s\nFITBIT_CLIENT_SECRET=%s\nFITBIT_REDIRECT_URI=%s\nOLYMPUS_DB_URL=%s\nOLYMPUS_DB_USERNAME=%s\nOLYMPUS_DB_PASSWORD=%s\nVISBODY_MAILBOX_ENABLED=%s\n' \
             '${{ secrets.GMAIL_USERNAME }}' \
             '${{ secrets.GMAIL_APP_PASSWORD }}' \
             '${{ secrets.FRONTEND_URL }}' \
@@ -199,6 +199,7 @@ jobs:
             '${{ secrets.OLYMPUS_DB_URL }}' \
             '${{ secrets.OLYMPUS_DB_USERNAME }}' \
             '${{ secrets.OLYMPUS_DB_PASSWORD }}' \
+            '${{ secrets.VISBODY_MAILBOX_ENABLED }}' \
             > /tmp/chiron.secrets
           scp -i ~/.ssh/deploy_key /tmp/chiron.secrets \
             ${{ secrets.SSH_USER }}@${{ env.SERVER_HOST }}:/tmp/chiron.secrets
@@ -234,7 +235,7 @@ jobs:
 
             echo "▶ Mise à jour du .env..."
             ENV_FILE=$CHIRON_DIR/.env
-            grep -v '^GMAIL_\|^FRONTEND_URL=\|^FITBIT_\|^OLYMPUS_DB_' "$ENV_FILE" > /tmp/.env.tmp 2>/dev/null || true
+            grep -v '^GMAIL_\|^FRONTEND_URL=\|^FITBIT_\|^OLYMPUS_DB_\|^VISBODY_MAILBOX_ENABLED=' "$ENV_FILE" > /tmp/.env.tmp 2>/dev/null || true
             cat /tmp/chiron.secrets >> /tmp/.env.tmp
             mv /tmp/.env.tmp "$ENV_FILE"
 
