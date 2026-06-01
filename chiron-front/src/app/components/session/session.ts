@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -65,6 +65,27 @@ export class Session implements OnInit, OnDestroy {
   /** Loading state indicator. */
   isLoading = signal(false);
 
+  /** Wall-clock tick (ms), refreshed every second to drive the live session timer. */
+  private readonly now = signal(Date.now());
+  private _timer: ReturnType<typeof setInterval> | null = null;
+
+  /**
+   * Live elapsed time since the session was started ("Commencer"), formatted
+   * "H:MM:SS" (or "MM:SS" under an hour). `null` when there is no active session
+   * to time (read-only view, or session not started) — the banner stays hidden.
+   */
+  readonly elapsed = computed(() => {
+    const started = this.activeSession.startedAt();
+    if (!started || this.isReadonly()) return null;
+    const ms = this.now() - new Date(started).getTime();
+    if (ms < 0) return null;
+    const totalSec = Math.floor(ms / 1000);
+    const h = Math.floor(totalSec / 3600);
+    const mm = Math.floor((totalSec % 3600) / 60).toString().padStart(2, '0');
+    const ss = (totalSec % 60).toString().padStart(2, '0');
+    return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
+  });
+
   /** The username of the athlete who owns the currently loaded session. */
   targetUsername = signal<string | null>(null);
 
@@ -109,6 +130,9 @@ export class Session implements OnInit, OnDestroy {
    * and loads the requested session data.
    */
   ngOnInit() {
+    // Tick once a second to keep the live session timer up to date.
+    this._timer = setInterval(() => this.now.set(Date.now()), 1000);
+
     this.route.paramMap.subscribe(params => {
       this.routineId = params.get('id');
 
@@ -146,6 +170,7 @@ export class Session implements OnInit, OnDestroy {
    * another page). Persists the active session so its progress is durable.
    */
   ngOnDestroy() {
+    if (this._timer) clearInterval(this._timer);
     this.persistActiveSession();
   }
 
