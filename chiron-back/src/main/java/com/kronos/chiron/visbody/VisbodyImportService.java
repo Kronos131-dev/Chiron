@@ -10,8 +10,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Importe un rapport Visbody (PDF) : parse les métriques, identifie l'utilisateur
@@ -78,55 +76,56 @@ public class VisbodyImportService {
 
     // ----------------------------------------------------------------- Matching
 
-    /** Stratégie de match, par ordre de fiabilité décroissante. */
+    /**
+     * Stratégie de match. Visbody envoie toujours les rapports depuis sa propre
+     * adresse ({@code no_reply@email.visbody.com}) et l'email du PDF est tronqué
+     * (peu fiable). Le critère <b>principal et fiable est donc le champ « ID »</b>
+     * du rapport (nom / prénom de l'utilisateur). L'expéditeur ne sert que de repli
+     * pour un éventuel envoi manuel depuis l'email du compte.
+     */
     Optional<Utilisateur> resolveUser(VisbodyReport report, String senderEmail) {
-        // 1) Adresse expéditeur exacte.
+        // 1) Champ « ID » du rapport comparé au nom / prénom du compte.
+        Optional<Utilisateur> byName = matchByName(report.getIdLabel());
+        if (byName.isPresent()) return byName;
+
+        // 2) Repli : envoi manuel depuis l'adresse exacte d'un compte.
         if (senderEmail != null && !senderEmail.isBlank()) {
             Optional<Utilisateur> bySender = utilisateurRepo.findByEmail(senderEmail.trim().toLowerCase());
             if (bySender.isPresent()) return bySender;
-        }
-        // 2) Email masqué du PDF (préfixe…suffixe@domaine).
-        Optional<Utilisateur> byMasked = matchMaskedEmail(report.getMaskedEmail());
-        if (byMasked.isPresent()) return byMasked;
-
-        // 3) Nom du champ « ID » comparé à nom / prénom.
-        if (report.getIdLabel() != null && !report.getIdLabel().isBlank()) {
-            String id = report.getIdLabel().trim();
-            List<Utilisateur> byName = utilisateurRepo.findByNomIgnoreCaseOrPrenomIgnoreCase(id, id);
-            if (byName.size() == 1) return Optional.of(byName.get(0));
-            if (byName.size() > 1) {
-                log.warn("Visbody : nom « {} » ambigu ({} utilisateurs)", id, byName.size());
-            }
         }
         return Optional.empty();
     }
 
     /**
-     * Compare un email masqué « octa****n1er@gmail... » aux emails connus :
-     * même domaine (préfixe avant le point), préfixe et suffixe de la partie locale.
+     * Résout l'utilisateur à partir du champ « ID » du rapport. Gère un ID à un seul
+     * mot (« Tellier » → nom ou prénom) comme un ID « Prénom Nom ». N'enregistre pas
+     * si l'ID est ambigu (plusieurs comptes correspondent).
      */
-    private Optional<Utilisateur> matchMaskedEmail(String masked) {
-        if (masked == null || !masked.contains("@") || !masked.contains("*")) return Optional.empty();
-        String local = masked.substring(0, masked.indexOf('@'));
-        String domainPart = masked.substring(masked.indexOf('@') + 1).toLowerCase(); // "gmail..."
-        Matcher m = Pattern.compile("^([^*]+)\\*+([^*]+)$").matcher(local);
-        if (!m.matches()) return Optional.empty();
-        String prefix = m.group(1).toLowerCase();
-        String suffix = m.group(2).toLowerCase();
-        String domainStem = domainPart.replaceAll("[^a-z0-9.].*$", "").replaceAll("\\.+$", "");
+    private Optional<Utilisateur> matchByName(String idLabel) {
+        if (idLabel == null || idLabel.isBlank()) return Optional.empty();
+        String id = idLabel.trim();
 
-        List<Utilisateur> candidates = utilisateurRepo.findByEmailIsNotNull().stream()
-                .filter(u -> {
-                    String e = u.getEmail().toLowerCase();
-                    int at = e.indexOf('@');
-                    if (at < 0) return false;
-                    String eLocal = e.substring(0, at);
-                    String eDomain = e.substring(at + 1);
-                    return eLocal.startsWith(prefix) && eLocal.endsWith(suffix)
-                            && eDomain.startsWith(domainStem);
-                })
-                .toList();
-        return candidates.size() == 1 ? Optional.of(candidates.get(0)) : Optional.empty();
+        // ID complet == nom OU prénom.
+        List<Utilisateur> matches = utilisateurRepo.findByNomIgnoreCaseOrPrenomIgnoreCase(id, id);
+
+        // ID « Prénom Nom » : essaie la combinaison, puis le dernier mot seul.
+        if (matches.isEmpty() && id.contains(" ")) {
+            String[] parts = id.split("\\s+");
+            String first = parts[0];
+            String last = parts[parts.length - 1];
+            matches = utilisateurRepo.findByPrenomIgnoreCaseAndNomIgnoreCase(first, last);
+            if (matches.isEmpty()) {
+                matches = utilisateurRepo.findByNomIgnoreCaseOrPrenomIgnoreCase(last, last);
+            }
+        }
+
+        if (matches.size() == 1) return Optional.of(matches.get(0));
+        if (matches.size() > 1) {
+            log.warn("Visbody : ID « {} » ambigu ({} comptes correspondent) — scan non enregistré", id, matches.size());
+        } else {
+            log.warn("Visbody : aucun compte avec nom/prénom « {} »", id);
+        }
+        return Optional.empty();
     }
 
     // ----------------------------------------------------------------- Persist
