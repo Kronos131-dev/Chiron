@@ -63,11 +63,10 @@ chiron:
   secret-key: ${CHIRON_SECRET_KEY:}
 
 olympus:
-  base-url: ${OLYMPUS_BASE_URL:http://localhost:8080}
-  # Durée de vie supposée du JWT Olympus (24h par défaut côté Olympus).
-  token-ttl-seconds: ${OLYMPUS_TOKEN_TTL_SECONDS:86400}
-  # Accès direct (lecture seule) à la base Olympus pour les graphes nutrition/poids
-  # de la page Statistiques. Le pool tolère l'indisponibilité d'Olympus (mode dégradé).
+  # Accès direct (lecture seule) à la base Olympus : source unique des données
+  # nutrition / poids / profil. La liaison vérifie les identifiants contre cette base
+  # (hash BCrypt) puis tout est lu par olympus_user_id — aucune dépendance à l'API HTTP.
+  # Le pool tolère l'indisponibilité d'Olympus (mode dégradé sur la page Statistiques).
   db:
     url: ${OLYMPUS_DB_URL:jdbc:postgresql://olympus-db:5432/olympus_db}
     username: ${OLYMPUS_DB_USERNAME:olympus_user}

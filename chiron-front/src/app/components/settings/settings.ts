@@ -183,6 +183,7 @@ export class Settings implements OnInit, OnDestroy {
         this.olympusPseudo.set('');
         this.olympusPassword.set('');
         this.isLinking.set(false);
+        this.successMessage.set('Compte Olympus lié. Ton tableau de bord nutrition est maintenant disponible.');
       },
       error: (err) => {
         this.isLinking.set(false);

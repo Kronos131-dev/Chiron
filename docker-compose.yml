@@ -26,9 +26,7 @@ services:
       - SPRING_DATASOURCE_PASSWORD=chiron_password
       # Olympus tourne dans son propre docker-compose. Les deux stacks rejoignent
       # le réseau Docker externe `chiron-olympus` pour communiquer directement
-      # par nom de service.
-      - OLYMPUS_BASE_URL=${OLYMPUS_BASE_URL:-http://olympus-api:8080}
-      # Accès direct (lecture seule) à la base Olympus pour les graphes nutrition/poids.
+      # par nom de service. Chiron lit toute la nutrition directement en base Olympus.
       # ⚠️ Le service `olympus-db` doit rejoindre le réseau externe `chiron-olympus`
       # (côté docker-compose Olympus) pour être joignable par nom de service ici.
       - OLYMPUS_DB_URL=${OLYMPUS_DB_URL:-jdbc:postgresql://olympus-db:5432/olympus_db}

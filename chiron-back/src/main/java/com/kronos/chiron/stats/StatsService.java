@@ -266,13 +266,7 @@ public class StatsService {
     }
 
     private Optional<Long> resolveOlympusUser(String username) {
-        String token;
-        try {
-            token = nutritionService.getValidToken(username);
-        } catch (NutritionService.NotLinkedException | NutritionService.ExpiredException e) {
-            return Optional.empty();
-        }
-        return olympusDao.resolveUserId(token);
+        return nutritionService.getOlympusUserId(username);
     }
 
     // ----------------------------------------------------------------- Helpers

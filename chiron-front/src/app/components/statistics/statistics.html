@@ -212,7 +212,7 @@
             <div class="text-center py-8">
               <span class="material-symbols-outlined text-5xl text-secondary/40 mb-3">link_off</span>
               <p class="text-on-surface-variant mb-4">Lie ton compte Olympus pour voir l'évolution de ton poids.</p>
-              <button (click)="goToProfile()" class="bg-secondary/15 border border-secondary/40 text-secondary px-5 py-2 rounded-lg text-xs font-bold tracking-widest uppercase hover:bg-secondary/25 transition-colors">Aller au profil</button>
+              <button (click)="goToSettings()" class="bg-secondary/15 border border-secondary/40 text-secondary px-5 py-2 rounded-lg text-xs font-bold tracking-widest uppercase hover:bg-secondary/25 transition-colors">Lier mon compte Olympus</button>
             </div>
           } @else if (b.points.length > 1) {
             <div class="h-64"><canvas baseChart [type]="'line'" [data]="bodyweightChart()" [options]="lineOptions"></canvas></div>
@@ -231,7 +231,7 @@
             <span class="material-symbols-outlined text-6xl text-secondary/40 mb-4">restaurant</span>
             <h3 class="text-xl font-headline text-on-surface">Compte Olympus non lié</h3>
             <p class="text-on-surface-variant mb-5">Lie ton compte Olympus pour suivre tes calories et macros ici.</p>
-            <button (click)="goToProfile()" class="bg-secondary/15 border border-secondary/40 text-secondary px-6 py-2.5 rounded-lg text-xs font-bold tracking-widest uppercase hover:bg-secondary/25 transition-colors">Aller au profil</button>
+            <button (click)="goToSettings()" class="bg-secondary/15 border border-secondary/40 text-secondary px-6 py-2.5 rounded-lg text-xs font-bold tracking-widest uppercase hover:bg-secondary/25 transition-colors">Lier mon compte Olympus</button>
           </div>
         } @else if (n.jours.length === 0) {
           <p class="text-center text-on-surface-variant mt-10">Aucune donnée nutritionnelle sur la période.</p>
