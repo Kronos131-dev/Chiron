@@ -300,8 +300,12 @@ export class ChironApi {
     return this.http.put<void>(`${this.apiUrl}/settings/password`, req);
   }
 
-  getSettingsInfo(): Observable<{ username: string; email: string | null }> {
-    return this.http.get<{ username: string; email: string | null }>(`${this.apiUrl}/settings/me`);
+  getSettingsInfo(): Observable<{ username: string; email: string | null; prenom: string | null; nom: string | null }> {
+    return this.http.get<{ username: string; email: string | null; prenom: string | null; nom: string | null }>(`${this.apiUrl}/settings/me`);
+  }
+
+  changeIdentity(req: { prenom: string | null; nom: string | null }): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/settings/identity`, req);
   }
 
   changeEmail(req: { newEmail: string }): Observable<void> {
