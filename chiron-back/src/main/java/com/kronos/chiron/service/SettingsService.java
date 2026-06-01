@@ -55,6 +55,15 @@ public class SettingsService {
     }
 
     @Transactional
+    public void changeIdentity(String username, String prenom, String nom) {
+        Utilisateur user = utilisateurRepository.findByUsername(username)
+                .orElseThrow(() -> new NoSuchElementException("Utilisateur introuvable"));
+        user.setPrenom(prenom == null || prenom.isBlank() ? null : prenom.trim());
+        user.setNom(nom == null || nom.isBlank() ? null : nom.trim());
+        utilisateurRepository.save(user);
+    }
+
+    @Transactional
     public String changeUsername(String username, String newUsername) {
         Utilisateur user = utilisateurRepository.findByUsername(username)
                 .orElseThrow(() -> new NoSuchElementException("Utilisateur introuvable"));

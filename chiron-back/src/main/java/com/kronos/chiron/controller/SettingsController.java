@@ -2,6 +2,7 @@ package com.kronos.chiron.controller;
 
 import com.kronos.chiron.dto.auth.AuthenticationResponse;
 import com.kronos.chiron.dto.settings.ChangeEmailRequest;
+import com.kronos.chiron.dto.settings.ChangeIdentityRequest;
 import com.kronos.chiron.dto.settings.ChangePasswordRequest;
 import com.kronos.chiron.dto.settings.ChangeUsernameRequest;
 import com.kronos.chiron.dto.settings.UserInfoResponse;
@@ -23,7 +24,18 @@ public class SettingsController {
     @GetMapping("/me")
     public ResponseEntity<UserInfoResponse> getMe(@AuthenticationPrincipal UserDetails userDetails) {
         String email = (userDetails instanceof Utilisateur u) ? u.getEmail() : null;
-        return ResponseEntity.ok(new UserInfoResponse(userDetails.getUsername(), email));
+        String prenom = (userDetails instanceof Utilisateur u) ? u.getPrenom() : null;
+        String nom = (userDetails instanceof Utilisateur u) ? u.getNom() : null;
+        return ResponseEntity.ok(new UserInfoResponse(userDetails.getUsername(), email, prenom, nom));
+    }
+
+    @PutMapping("/identity")
+    public ResponseEntity<Void> changeIdentity(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody ChangeIdentityRequest request
+    ) {
+        settingsService.changeIdentity(userDetails.getUsername(), request.prenom(), request.nom());
+        return ResponseEntity.ok().build();
     }
 
     @PutMapping("/password")
