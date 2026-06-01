@@ -74,6 +74,14 @@ public class Utilisateur implements UserDetails {
     @Column(unique = true)
     private String email;
 
+    /** Prénom de l'utilisateur (sert à identifier le destinataire d'un rapport Visbody). */
+    @Column(name = "prenom", length = 100)
+    private String prenom;
+
+    /** Nom de l'utilisateur (sert à identifier le destinataire d'un rapport Visbody). */
+    @Column(name = "nom", length = 100)
+    private String nom;
+
     @Column(name = "poids_corps")
     private Double poidsCorps;
 

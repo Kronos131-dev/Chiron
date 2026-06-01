@@ -34,4 +34,10 @@ public interface UtilisateurRepository extends JpaRepository<Utilisateur, Long> 
     Optional<Utilisateur> findByEmail(String email);
 
     Optional<Utilisateur> findByUsernameIgnoreCase(String username);
+
+    /** Match d'identité pour l'import Visbody : le champ « ID » du rapport (nom ou prénom). */
+    List<Utilisateur> findByNomIgnoreCaseOrPrenomIgnoreCase(String nom, String prenom);
+
+    /** Match d'identité Visbody quand l'ID contient « Prénom Nom ». */
+    List<Utilisateur> findByPrenomIgnoreCaseAndNomIgnoreCase(String prenom, String nom);
 }

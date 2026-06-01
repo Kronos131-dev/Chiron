@@ -15,8 +15,10 @@ import { HeaderComponent } from '../shared/header/header';
 export class Settings implements OnInit, OnDestroy {
   username: string;
   currentEmail = signal<string | null>(null);
+  currentPrenom = signal<string | null>(null);
+  currentNom = signal<string | null>(null);
 
-  openSection = signal<'password' | 'email' | 'username' | 'delete' | null>(null);
+  openSection = signal<'password' | 'email' | 'username' | 'identity' | 'delete' | null>(null);
 
   // Champs password
   currentPasswordForPwd = '';
@@ -26,6 +28,10 @@ export class Settings implements OnInit, OnDestroy {
   // Champs email / username
   newEmail = '';
   newUsername = '';
+
+  // Champs identité (prénom / nom)
+  newPrenom = '';
+  newNom = '';
 
   // Suppression
   deleteConfirm = '';
@@ -58,6 +64,10 @@ export class Settings implements OnInit, OnDestroy {
       next: (info) => {
         this.currentEmail.set(info.email);
         this.newEmail = info.email ?? '';
+        this.currentPrenom.set(info.prenom);
+        this.currentNom.set(info.nom);
+        this.newPrenom = info.prenom ?? '';
+        this.newNom = info.nom ?? '';
       }
     });
   }
@@ -71,7 +81,7 @@ export class Settings implements OnInit, OnDestroy {
     this.stopFitbitPolling();
   }
 
-  toggle(section: 'password' | 'email' | 'username' | 'delete') {
+  toggle(section: 'password' | 'email' | 'username' | 'identity' | 'delete') {
     this.openSection.set(this.openSection() === section ? null : section);
     this.clearFeedback();
   }
@@ -115,6 +125,25 @@ export class Settings implements OnInit, OnDestroy {
       error: (err) => {
         this.isLoading.set(false);
         this.errorMessage.set(err.error?.message || 'Erreur lors du changement d\'email.');
+      }
+    });
+  }
+
+  onChangeIdentity() {
+    this.isLoading.set(true);
+    this.clearFeedback();
+    const prenom = this.newPrenom.trim() || null;
+    const nom = this.newNom.trim() || null;
+    this.chironApi.changeIdentity({ prenom, nom }).subscribe({
+      next: () => {
+        this.isLoading.set(false);
+        this.currentPrenom.set(prenom);
+        this.currentNom.set(nom);
+        this.successMessage.set('Identité mise à jour.');
+      },
+      error: (err) => {
+        this.isLoading.set(false);
+        this.errorMessage.set(err.error?.message || 'Erreur lors de la mise à jour de l\'identité.');
       }
     });
   }
@@ -264,5 +293,32 @@ export class Settings implements OnInit, OnDestroy {
       clearInterval(this.fitbitPollHandle);
       this.fitbitPollHandle = null;
     }
+  }
+
+  // --- Import manuel d'un rapport Visbody (PDF) ---
+  visbodyUploading = signal(false);
+  visbodyMessage = signal<string | null>(null);
+  visbodyError = signal(false);
+
+  uploadVisbody(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    this.visbodyUploading.set(true);
+    this.visbodyMessage.set(null);
+    this.chironApi.uploadVisbodyPdf(file).subscribe({
+      next: (res) => {
+        this.visbodyUploading.set(false);
+        this.visbodyError.set(res.outcome === 'INVALID' || res.outcome === 'USER_NOT_FOUND');
+        this.visbodyMessage.set(res.detail);
+        input.value = '';
+      },
+      error: (err) => {
+        this.visbodyUploading.set(false);
+        this.visbodyError.set(true);
+        this.visbodyMessage.set(err?.error?.detail ?? "Échec de l'import du rapport.");
+        input.value = '';
+      },
+    });
   }
 }

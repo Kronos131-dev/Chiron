@@ -8,6 +8,9 @@
   display: flex;
   flex-direction: column;
   height: 100dvh;
+  /* Réserve la hauteur de la barre de navigation fixe du bas (app.html) pour que
+     le composer ne soit pas masqué derrière elle. box-sizing: border-box (Tailwind). */
+  padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
   background:
     radial-gradient(120% 80% at 50% -10%, rgba(255, 183, 121, 0.08), transparent 60%),
     #0a0e14;
@@ -40,6 +43,12 @@
   display: flex;
   justify-content: center;
   margin-bottom: 0.75rem;
+  /* Toujours visible en haut du fil, même quand la conversation défile. */
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  padding: 0.25rem 0;
+  background: linear-gradient(#0a0e14 70%, transparent);
 }
 
 .intro-pill {

@@ -17,9 +17,6 @@ export interface ChatMessage {
 declare var webkitSpeechRecognition: any;
 declare var SpeechRecognition: any;
 
-/** localStorage flag : l'utilisateur a déjà vu (ou ignoré) l'intro de l'app. */
-const STORAGE_INTRO = 'chiron.introSeen';
-
 /**
  * Présentation préfaite (texte brut) affichée quand un nouvel utilisateur clique sur
  * « Présente-moi l'application ». Volontairement NON envoyée à l'IA : décrit l'app
@@ -73,9 +70,6 @@ export class Chat implements OnInit {
   /** The username of the currently authenticated user. */
   currentUsername: string = '';
 
-  /** Vrai uniquement pour les nouveaux utilisateurs : affiche un bouton d'intro discret. */
-  showIntro = signal(false);
-
   /**
    * Initializes a new instance of the Chat component.
    *
@@ -97,13 +91,6 @@ export class Chat implements OnInit {
     this.initSpeechRecognition();
 
     this.currentUsername = this.authService.getUsername() || 'Guerrier';
-
-    // L'intro n'est proposée qu'aux nouveaux utilisateurs (jamais vue/ignorée).
-    try {
-      this.showIntro.set(!localStorage.getItem(STORAGE_INTRO));
-    } catch {
-      this.showIntro.set(false);
-    }
 
     // Redirige vers l'onboarding si le profil n'a jamais été complété.
     this.chironApi.getProfileSetup().subscribe({
@@ -192,8 +179,9 @@ export class Chat implements OnInit {
   }
 
   /**
-   * Affiche une présentation préfaite de l'app (sans appel IA), pour les nouveaux
-   * utilisateurs. Marque l'intro comme vue pour ne plus l'afficher ensuite.
+   * Affiche une présentation préfaite de l'app (sans appel IA) : ajoute une bulle
+   * utilisateur « Présente-moi l'application » puis la réponse écrite en dur. Aucun
+   * appel réseau, aucun outil déclenché.
    */
   presentApp() {
     this.messages.update(prev => [
@@ -201,13 +189,6 @@ export class Chat implements OnInit {
       { role: 'user', content: 'Présente-moi l\'application' },
       { role: 'ai', content: APP_PRESENTATION },
     ]);
-    this.markIntroSeen();
-  }
-
-  /** N'affiche plus le bouton d'intro (après un clic ou la première interaction). */
-  private markIntroSeen() {
-    this.showIntro.set(false);
-    try { localStorage.setItem(STORAGE_INTRO, '1'); } catch { /* ignore */ }
   }
 
   /**
@@ -217,7 +198,6 @@ export class Chat implements OnInit {
     const message = this.userInput().trim();
     if (!message || !this.currentUsername) return;
 
-    this.markIntroSeen();
     this.addMessage('user', message);
     this.userInput.set('');
     this.isLoading.set(true);

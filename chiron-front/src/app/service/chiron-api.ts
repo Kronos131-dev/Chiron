@@ -300,8 +300,12 @@ export class ChironApi {
     return this.http.put<void>(`${this.apiUrl}/settings/password`, req);
   }
 
-  getSettingsInfo(): Observable<{ username: string; email: string | null }> {
-    return this.http.get<{ username: string; email: string | null }>(`${this.apiUrl}/settings/me`);
+  getSettingsInfo(): Observable<{ username: string; email: string | null; prenom: string | null; nom: string | null }> {
+    return this.http.get<{ username: string; email: string | null; prenom: string | null; nom: string | null }>(`${this.apiUrl}/settings/me`);
+  }
+
+  changeIdentity(req: { prenom: string | null; nom: string | null }): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/settings/identity`, req);
   }
 
   changeEmail(req: { newEmail: string }): Observable<void> {
@@ -394,6 +398,17 @@ export class ChironApi {
 
   getRecovery(days: number = 30): Observable<RecoveryPoint[]> {
     return this.http.get<RecoveryPoint[]>(`${this.apiUrl}/etat-journalier/recent?days=${days}`);
+  }
+
+  getStatsBodyComposition(days: number = 180): Observable<BodyCompositionStats> {
+    return this.http.get<BodyCompositionStats>(`${this.apiUrl}/stats/body-composition?days=${days}`);
+  }
+
+  /** Upload manuel d'un rapport PDF Visbody (test / fallback de l'ingestion par email). */
+  uploadVisbodyPdf(file: File): Observable<VisbodyImportResult> {
+    const form = new FormData();
+    form.append('file', file);
+    return this.http.post<VisbodyImportResult>(`${this.apiUrl}/visbody/import`, form);
   }
 }
 
@@ -546,6 +561,50 @@ export interface BodyweightPoint {
 export interface BodyweightStats {
   linked: boolean;
   points: BodyweightPoint[];
+}
+
+export interface BodyCompositionPoint {
+  date: string;
+  note: number | null;
+  poids: number | null;
+  masseMusculaire: number | null;
+  mms: number | null;
+  mgc: number | null;
+  mmc: number | null;
+  tgcPct: number | null;
+  imc: number | null;
+  rth: number | null;
+  mbKcal: number | null;
+  ageMetabolique: number | null;
+  graisseViscerale: number | null;
+  eauTotale: number | null;
+  eauIntra: number | null;
+  eauExtra: number | null;
+  ratioEcwTbw: number | null;
+  masseProteine: number | null;
+  selInorganique: number | null;
+  // Masse grasse par segment (kg).
+  mgcBrasGauche: number | null;
+  mgcBrasDroit: number | null;
+  mgcTronc: number | null;
+  mgcJambeGauche: number | null;
+  mgcJambeDroite: number | null;
+  // Masse musculaire par segment (kg).
+  muscleBrasGauche: number | null;
+  muscleBrasDroit: number | null;
+  muscleTronc: number | null;
+  muscleJambeGauche: number | null;
+  muscleJambeDroite: number | null;
+}
+
+export interface BodyCompositionStats {
+  hasData: boolean;
+  points: BodyCompositionPoint[];
+}
+
+export interface VisbodyImportResult {
+  outcome: 'IMPORTED' | 'DUPLICATE' | 'USER_NOT_FOUND' | 'INVALID';
+  detail: string;
 }
 
 export interface RecoveryPoint {

@@ -187,8 +187,17 @@ public class FitbitClient {
 
     private RuntimeException mapHttpError(String call, HttpClientErrorException e) {
         HttpStatusCode status = e.getStatusCode();
-        if (status.value() == 401 || status.value() == 403) {
-            return new FitbitUnauthorizedException("Token Google Health rejeté (" + status.value() + ")");
+        // 401 = access token rejeté → vrai problème de token.
+        // 403 = requête interdite : API Google Health non activée sur le projet,
+        // scope OAuth absent, ou endpoint erroné. Ce n'est PAS une expiration de
+        // token et ne doit jamais entraîner la suppression de la liaison OAuth.
+        if (status.value() == 401) {
+            return new FitbitUnauthorizedException("Token Google Health rejeté (401)");
+        }
+        if (status.value() == 403) {
+            log.warn("Google Health {} a renvoyé 403 (accès refusé — API activée sur le projet ? scopes accordés ?) : {}",
+                    call, e.getResponseBodyAsString());
+            return new FitbitUnavailableException("Accès Google Health refusé (403)");
         }
         if (status.value() == 429) {
             return new FitbitUnavailableException("Quota Google Health dépassé, réessaie plus tard.");
