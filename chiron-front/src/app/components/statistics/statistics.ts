@@ -15,14 +15,13 @@ import {
   ExerciseListItem,
   ExerciseProgressPoint,
   NutritionStats,
-  BodyweightStats,
   BodyCompositionStats,
   RecoveryPoint,
   PerformanceSummary,
   PerformanceExercise,
 } from '../../service/chiron-api';
 
-type Tab = 'overview' | 'force' | 'exercices' | 'volume' | 'corps' | 'composition' | 'nutrition' | 'recup';
+type Tab = 'overview' | 'force' | 'exercices' | 'volume' | 'composition' | 'nutrition' | 'recup';
 type Periode = 30 | 90 | 365 | 3650;
 type ProgressMetric = 'e1rm' | 'chargeMax' | 'volume';
 
@@ -66,7 +65,6 @@ export class Statistics implements OnInit {
     { id: 'force', label: 'Force', icon: 'fitness_center' },
     { id: 'exercices', label: 'Exercices', icon: 'show_chart' },
     { id: 'volume', label: 'Volume', icon: 'bar_chart' },
-    { id: 'corps', label: 'Corps', icon: 'monitor_weight' },
     { id: 'composition', label: 'Composition', icon: 'accessibility_new' },
     { id: 'nutrition', label: 'Nutrition', icon: 'restaurant' },
     { id: 'recup', label: 'Récup', icon: 'bedtime' },
@@ -98,7 +96,6 @@ export class Statistics implements OnInit {
   volume = signal<WeeklyVolumePoint[]>([]);
   muscles = signal<MuscleStats | null>(null);
 
-  bodyweight = signal<BodyweightStats | null>(null);
   bodyComposition = signal<BodyCompositionStats | null>(null);
   /** Schéma corporel : afficher la masse musculaire ou la masse grasse par segment. */
   bodySegMode = signal<'muscle' | 'graisse'>('muscle');
@@ -107,7 +104,7 @@ export class Statistics implements OnInit {
 
   // États de chargement / erreur, par onglet
   loading = signal<Record<Tab, boolean>>({
-    overview: false, force: false, exercices: false, volume: false, corps: false, composition: false, nutrition: false, recup: false,
+    overview: false, force: false, exercices: false, volume: false, composition: false, nutrition: false, recup: false,
   });
   private loaded = new Set<Tab>();
 
@@ -128,7 +125,7 @@ export class Statistics implements OnInit {
     if (p === this.periode()) return;
     this.periode.set(p);
     // Les onglets dépendant de la période doivent être rechargés.
-    const dependents: Tab[] = ['volume', 'corps', 'composition', 'nutrition', 'recup'];
+    const dependents: Tab[] = ['volume', 'composition', 'nutrition', 'recup'];
     for (const t of dependents) this.loaded.delete(t);
     this.loadTab(this.activeTab());
   }
@@ -180,12 +177,6 @@ export class Statistics implements OnInit {
         this.api.getStatsMuscles(this.days()).subscribe({ next: (d) => { this.muscles.set(d); fin(); }, error: fin });
         break;
       }
-      case 'corps':
-        this.api.getStatsBodyweight(this.days()).subscribe({
-          next: (d) => { this.bodyweight.set(d); this.done(tab); },
-          error: () => this.done(tab),
-        });
-        break;
       case 'composition':
         this.api.getStatsBodyComposition(this.days()).subscribe({
           next: (d) => { this.bodyComposition.set(d); this.done(tab); },
@@ -342,23 +333,6 @@ export class Statistics implements OnInit {
     };
   });
 
-  // ----------------------------------------------------------- Corps
-
-  bodyweightChart = computed<ChartData<'line'>>(() => {
-    const pts = this.bodyweight()?.points ?? [];
-    return {
-      labels: pts.map((p) => this.dateLabel(p.date)),
-      datasets: [{
-        data: pts.map((p) => p.poids),
-        label: 'Poids (kg)',
-        borderColor: this.COL.green,
-        backgroundColor: this.hexA(this.COL.green, 0.15),
-        fill: true,
-        tension: 0.3,
-        pointRadius: 2,
-      }],
-    };
-  });
 
   // ----------------------------------------------------- Composition (Visbody)
 
