@@ -109,14 +109,6 @@ public class FitbitService {
         log.info("FITBIT_UNLINKED user={}", chironUsername);
     }
 
-    @Transactional
-    public void invalidateLink(String chironUsername) {
-        utilisateurRepository.findByUsername(chironUsername).ifPresent(u -> {
-            clearLink(u);
-            log.info("FITBIT_EXPIRED user={}", chironUsername);
-        });
-    }
-
     /**
      * Renvoie un access token Fitbit valide, en le rafraîchissant si nécessaire.
      *
@@ -210,8 +202,11 @@ public class FitbitService {
                     mostRecent(hrByDate),
                     dayPoints);
         } catch (FitbitClient.FitbitUnauthorizedException e) {
-            invalidateLink(chironUsername);
-            return FitbitDashboardDto.reconnectNeeded();
+            // L'API data a rejeté le token, mais le refresh token reste valable :
+            // on NE délie PAS le compte ici. Seul un refresh rejeté (getValidToken)
+            // prouve que le grant OAuth est révoqué et justifie une reconnexion.
+            log.warn("FITBIT_DASHBOARD_UNAUTHORIZED user={} : {}", chironUsername, e.getMessage());
+            return FitbitDashboardDto.unavailable();
         } catch (FitbitClient.FitbitUnavailableException e) {
             log.warn("FITBIT_DASHBOARD_UNAVAILABLE user={} : {}", chironUsername, e.getMessage());
             return FitbitDashboardDto.unavailable();

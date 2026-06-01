@@ -107,4 +107,40 @@ class FitbitServiceTest {
         assertThat(status.linked()).isTrue();
         assertThat(status.fitbitUserId()).isEqualTo("FBUSER");
     }
+
+    @Test
+    void getDashboard_dataCallForbidden_keepsLinkAndReportsUnavailable() {
+        user.setFitbitAccessTokenEncrypted("enc-access");
+        user.setFitbitRefreshTokenEncrypted("enc-refresh");
+        user.setFitbitTokenExpiresAt(LocalDateTime.now().plusHours(2));
+        when(tokenCipher.decrypt("enc-access")).thenReturn("plain-access");
+        when(fitbitClient.rollUpDailySteps(eq("plain-access"), any(), any()))
+                .thenThrow(new FitbitClient.FitbitUnavailableException("Accès Google Health refusé (403)"));
+
+        FitbitDashboardDto dto = fitbitService.getDashboard("athlete", 7);
+
+        assertThat(dto.linked()).isTrue();
+        assertThat(dto.needsReconnect()).isFalse();
+        assertThat(dto.dataAvailable()).isFalse();
+        // Cœur du bug : un échec d'appel data ne doit PAS effacer les tokens OAuth.
+        assertThat(user.getFitbitAccessTokenEncrypted()).isEqualTo("enc-access");
+        assertThat(user.getFitbitRefreshTokenEncrypted()).isEqualTo("enc-refresh");
+    }
+
+    @Test
+    void getDashboard_dataCallUnauthorized_keepsLink() {
+        user.setFitbitAccessTokenEncrypted("enc-access");
+        user.setFitbitRefreshTokenEncrypted("enc-refresh");
+        user.setFitbitTokenExpiresAt(LocalDateTime.now().plusHours(2));
+        when(tokenCipher.decrypt("enc-access")).thenReturn("plain-access");
+        when(fitbitClient.rollUpDailySteps(eq("plain-access"), any(), any()))
+                .thenThrow(new FitbitClient.FitbitUnauthorizedException("Token Google Health rejeté (401)"));
+
+        FitbitDashboardDto dto = fitbitService.getDashboard("athlete", 7);
+
+        assertThat(dto.needsReconnect()).isFalse();
+        assertThat(dto.dataAvailable()).isFalse();
+        // Un 401 sur un appel data ne révoque pas le grant : le refresh token survit.
+        assertThat(user.getFitbitRefreshTokenEncrypted()).isEqualTo("enc-refresh");
+    }
 }
