@@ -3,6 +3,18 @@
 <!-- Main Session Interface -->
 <main class="min-h-screen pt-20 pb-32 bg-slate-950 heroic-texture relative">
 
+  <!-- Live session timer: thin pill just under the header, stays on scroll.
+       pointer-events-none on the bar lets taps pass through to the page; only
+       the small pill itself is opaque so it never blocks data entry. -->
+  @if (elapsed()) {
+    <div class="sticky top-16 z-40 flex justify-center px-4 pointer-events-none">
+      <div class="pointer-events-auto inline-flex items-center gap-1.5 bg-slate-900/85 backdrop-blur-md border border-secondary/25 rounded-full pl-3 pr-3.5 py-1 shadow-lg shadow-black/30">
+        <span class="material-symbols-outlined text-secondary text-base leading-none">timer</span>
+        <span class="font-headline text-sm font-bold text-white tabular-nums tracking-wider leading-none">{{ elapsed() }}</span>
+      </div>
+    </div>
+  }
+
   <!-- Session Title and Global Actions Section -->
   <section class="px-6 py-10 relative overflow-hidden">
     <!-- Decorative Gradient -->
