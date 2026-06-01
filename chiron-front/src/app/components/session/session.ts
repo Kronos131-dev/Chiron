@@ -71,19 +71,18 @@ export class Session implements OnInit, OnDestroy {
 
   /**
    * Live elapsed time since the session was started ("Commencer"), formatted
-   * "H:MM:SS" (or "MM:SS" under an hour). `null` when there is no active session
-   * to time (read-only view, or session not started) — the banner stays hidden.
+   * "HH:MM" (hours:minutes). `null` when there is no active session to time
+   * (read-only view, or session not started) — the banner stays hidden.
    */
   readonly elapsed = computed(() => {
     const started = this.activeSession.startedAt();
     if (!started || this.isReadonly()) return null;
     const ms = this.now() - new Date(started).getTime();
     if (ms < 0) return null;
-    const totalSec = Math.floor(ms / 1000);
-    const h = Math.floor(totalSec / 3600);
-    const mm = Math.floor((totalSec % 3600) / 60).toString().padStart(2, '0');
-    const ss = (totalSec % 60).toString().padStart(2, '0');
-    return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
+    const totalMin = Math.floor(ms / 60000);
+    const hh = Math.floor(totalMin / 60).toString().padStart(2, '0');
+    const mm = (totalMin % 60).toString().padStart(2, '0');
+    return `${hh}:${mm}`;
   });
 
   /** The username of the athlete who owns the currently loaded session. */

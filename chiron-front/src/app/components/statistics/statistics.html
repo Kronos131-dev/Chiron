@@ -223,6 +223,113 @@
       </div>
     }
 
+    <!-- ====================== COMPOSITION CORPORELLE (Visbody) ====================== -->
+    @if (activeTab() === 'composition' && !loading().composition) {
+      @if (bodyComposition(); as c) {
+        @if (!c.hasData) {
+          <div class="bg-slate-900/40 border border-white/5 rounded-xl p-6 text-center py-10">
+            <span class="material-symbols-outlined text-5xl text-secondary/40 mb-3">scale</span>
+            <p class="text-on-surface-variant">Aucun scan de composition corporelle sur la période.</p>
+            <p class="text-on-surface-variant/70 text-xs mt-2">Envoie le PDF de ton scan Visbody par email pour le voir apparaître ici.</p>
+          </div>
+        } @else {
+          <div class="space-y-6">
+
+            <!-- Schéma corporel : segments avec switch muscle / graisse -->
+            @if (latestComposition(); as last) {
+              <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4 md:p-6">
+                <div class="flex items-center justify-between mb-2 flex-wrap gap-2">
+                  <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant">Schéma corporel</h3>
+                  <!-- Switch muscle / graisse -->
+                  <div class="inline-flex rounded-lg border border-white/10 overflow-hidden text-[11px] font-bold tracking-widest uppercase">
+                    <button (click)="setBodySegMode('muscle')"
+                            [class]="bodySegMode() === 'muscle' ? 'bg-green-500/20 text-green-300 px-4 py-1.5' : 'text-on-surface-variant px-4 py-1.5 hover:bg-white/5'">Muscle</button>
+                    <button (click)="setBodySegMode('graisse')"
+                            [class]="bodySegMode() === 'graisse' ? 'bg-secondary/20 text-secondary px-4 py-1.5' : 'text-on-surface-variant px-4 py-1.5 hover:bg-white/5'">Graisse</button>
+                  </div>
+                </div>
+                <p class="text-on-surface-variant/60 text-xs mb-3">
+                  {{ bodySegMode() === 'muscle' ? 'Masse musculaire' : 'Masse grasse' }} par segment (kg) — scan du {{ dateLabel(last.date) }}
+                </p>
+
+                @if (bodySegments(); as seg) {
+                  <div class="flex justify-center">
+                    <svg viewBox="0 0 220 320" class="w-full max-w-[320px]" aria-label="Schéma corporel">
+                      <!-- Silhouette -->
+                      <g [attr.fill]="bodySegFill()" [attr.stroke]="bodySegColor()" stroke-width="1.5">
+                        <circle cx="110" cy="26" r="19" />
+                        <rect x="84" y="50" width="52" height="100" rx="16" />
+                        <rect x="52" y="56" width="18" height="86" rx="9" />
+                        <rect x="150" y="56" width="18" height="86" rx="9" />
+                        <rect x="86" y="152" width="20" height="120" rx="10" />
+                        <rect x="114" y="152" width="20" height="120" rx="10" />
+                      </g>
+                      <!-- Valeurs par segment -->
+                      <g [attr.fill]="bodySegColor()" font-size="13" font-weight="700" text-anchor="middle">
+                        <text x="34"  y="100">{{ fmt(seg.brasG) }}</text>
+                        <text x="186" y="100">{{ fmt(seg.brasD) }}</text>
+                        <text x="110" y="104">{{ fmt(seg.tronc) }}</text>
+                        <text x="64"  y="232">{{ fmt(seg.jambeG) }}</text>
+                        <text x="156" y="232">{{ fmt(seg.jambeD) }}</text>
+                      </g>
+                      <!-- Libellés des segments -->
+                      <g fill="#94a3b8" font-size="8" font-weight="700" text-anchor="middle" letter-spacing="0.5">
+                        <text x="34"  y="112">BRAS G</text>
+                        <text x="186" y="112">BRAS D</text>
+                        <text x="110" y="116">TRONC</text>
+                        <text x="64"  y="244">JAMBE G</text>
+                        <text x="156" y="244">JAMBE D</text>
+                      </g>
+                    </svg>
+                  </div>
+                }
+              </div>
+
+              <!-- Toutes les valeurs du dernier scan -->
+              <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4 md:p-6">
+                <div class="flex items-center justify-between mb-4">
+                  <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant">Dernier scan</h3>
+                  @if (last.note != null) {
+                    <span class="text-secondary font-headline text-lg font-black">Note {{ last.note }}</span>
+                  }
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  @for (m of compositionMetrics(last); track m.label) {
+                    <div class="bg-slate-950/40 border border-white/5 rounded-lg px-3 py-2">
+                      <p class="text-[9px] font-bold tracking-widest uppercase text-on-surface-variant">{{ m.label }}</p>
+                      <p class="text-white font-headline text-base">{{ m.value }}</p>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+
+            <!-- Courbes d'évolution -->
+            <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4 md:p-6">
+              <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-4">Poids, muscle &amp; graisse (kg)</h3>
+              <div class="h-64"><canvas baseChart [type]="'line'" [data]="compositionMassChart()" [options]="compositionOptions"></canvas></div>
+            </div>
+            <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4 md:p-6">
+              <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-4">Muscle squelettique, masse maigre &amp; protéines (kg)</h3>
+              <div class="h-64"><canvas baseChart [type]="'line'" [data]="compositionMuscleChart()" [options]="compositionOptions"></canvas></div>
+            </div>
+            <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4 md:p-6">
+              <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-4">Taux de graisse, IMC &amp; viscérale</h3>
+              <div class="h-64"><canvas baseChart [type]="'line'" [data]="compositionFatChart()" [options]="compositionOptions"></canvas></div>
+            </div>
+            <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4 md:p-6">
+              <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-4">Eau corporelle (kg)</h3>
+              <div class="h-64"><canvas baseChart [type]="'line'" [data]="compositionWaterChart()" [options]="compositionOptions"></canvas></div>
+            </div>
+            <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4 md:p-6">
+              <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-4">Métabolisme de base (kcal/j)</h3>
+              <div class="h-64"><canvas baseChart [type]="'line'" [data]="compositionMbChart()" [options]="compositionOptions"></canvas></div>
+            </div>
+          </div>
+        }
+      }
+    }
+
     <!-- ====================== NUTRITION ====================== -->
     @if (activeTab() === 'nutrition' && !loading().nutrition) {
       @if (nutrition(); as n) {

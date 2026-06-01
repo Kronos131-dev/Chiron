@@ -60,4 +60,10 @@ public class StatsController {
             @RequestParam(defaultValue = "90") int days, Authentication auth) {
         return ResponseEntity.ok(statsService.getBodyweight(auth.getName(), days));
     }
+
+    @GetMapping("/body-composition")
+    public ResponseEntity<BodyCompositionStatsDto> bodyComposition(
+            @RequestParam(defaultValue = "180") int days, Authentication auth) {
+        return ResponseEntity.ok(statsService.getBodyComposition(auth.getName(), days));
+    }
 }

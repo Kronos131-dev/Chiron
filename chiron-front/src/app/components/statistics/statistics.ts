@@ -16,12 +16,13 @@ import {
   ExerciseProgressPoint,
   NutritionStats,
   BodyweightStats,
+  BodyCompositionStats,
   RecoveryPoint,
   PerformanceSummary,
   PerformanceExercise,
 } from '../../service/chiron-api';
 
-type Tab = 'overview' | 'force' | 'exercices' | 'volume' | 'corps' | 'nutrition' | 'recup';
+type Tab = 'overview' | 'force' | 'exercices' | 'volume' | 'corps' | 'composition' | 'nutrition' | 'recup';
 type Periode = 30 | 90 | 365 | 3650;
 type ProgressMetric = 'e1rm' | 'chargeMax' | 'volume';
 
@@ -66,6 +67,7 @@ export class Statistics implements OnInit {
     { id: 'exercices', label: 'Exercices', icon: 'show_chart' },
     { id: 'volume', label: 'Volume', icon: 'bar_chart' },
     { id: 'corps', label: 'Corps', icon: 'monitor_weight' },
+    { id: 'composition', label: 'Composition', icon: 'accessibility_new' },
     { id: 'nutrition', label: 'Nutrition', icon: 'restaurant' },
     { id: 'recup', label: 'Récup', icon: 'bedtime' },
   ];
@@ -97,12 +99,15 @@ export class Statistics implements OnInit {
   muscles = signal<MuscleStats | null>(null);
 
   bodyweight = signal<BodyweightStats | null>(null);
+  bodyComposition = signal<BodyCompositionStats | null>(null);
+  /** Schéma corporel : afficher la masse musculaire ou la masse grasse par segment. */
+  bodySegMode = signal<'muscle' | 'graisse'>('muscle');
   nutrition = signal<NutritionStats | null>(null);
   recovery = signal<RecoveryPoint[]>([]);
 
   // États de chargement / erreur, par onglet
   loading = signal<Record<Tab, boolean>>({
-    overview: false, force: false, exercices: false, volume: false, corps: false, nutrition: false, recup: false,
+    overview: false, force: false, exercices: false, volume: false, corps: false, composition: false, nutrition: false, recup: false,
   });
   private loaded = new Set<Tab>();
 
@@ -123,7 +128,7 @@ export class Statistics implements OnInit {
     if (p === this.periode()) return;
     this.periode.set(p);
     // Les onglets dépendant de la période doivent être rechargés.
-    const dependents: Tab[] = ['volume', 'corps', 'nutrition', 'recup'];
+    const dependents: Tab[] = ['volume', 'corps', 'composition', 'nutrition', 'recup'];
     for (const t of dependents) this.loaded.delete(t);
     this.loadTab(this.activeTab());
   }
@@ -178,6 +183,12 @@ export class Statistics implements OnInit {
       case 'corps':
         this.api.getStatsBodyweight(this.days()).subscribe({
           next: (d) => { this.bodyweight.set(d); this.done(tab); },
+          error: () => this.done(tab),
+        });
+        break;
+      case 'composition':
+        this.api.getStatsBodyComposition(this.days()).subscribe({
+          next: (d) => { this.bodyComposition.set(d); this.done(tab); },
           error: () => this.done(tab),
         });
         break;
@@ -349,6 +360,134 @@ export class Statistics implements OnInit {
     };
   });
 
+  // ----------------------------------------------------- Composition (Visbody)
+
+  /** Poids / masse musculaire / masse grasse (kg) sur le même graphe. */
+  compositionMassChart = computed<ChartData<'line'>>(() => {
+    const pts = this.bodyComposition()?.points ?? [];
+    const labels = pts.map((p) => this.dateLabel(p.date));
+    return {
+      labels,
+      datasets: [
+        { data: pts.map((p) => p.poids), label: 'Poids (kg)', borderColor: this.COL.orange, backgroundColor: this.hexA(this.COL.orange, 0.12), fill: false, tension: 0.3, pointRadius: 3, spanGaps: true },
+        { data: pts.map((p) => p.masseMusculaire), label: 'Masse musculaire (kg)', borderColor: this.COL.green, backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 3, spanGaps: true },
+        { data: pts.map((p) => p.mgc), label: 'Masse grasse (kg)', borderColor: this.COL.red, backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 3, spanGaps: true },
+      ],
+    };
+  });
+
+  /** Indices : taux de graisse (%), IMC, graisse viscérale. */
+  compositionFatChart = computed<ChartData<'line'>>(() => {
+    const pts = this.bodyComposition()?.points ?? [];
+    return {
+      labels: pts.map((p) => this.dateLabel(p.date)),
+      datasets: [
+        { data: pts.map((p) => p.tgcPct), label: 'Taux de graisse (%)', borderColor: this.COL.amber, backgroundColor: this.hexA(this.COL.amber, 0.15), fill: true, tension: 0.3, pointRadius: 3, spanGaps: true },
+        { data: pts.map((p) => p.imc), label: 'IMC', borderColor: this.COL.cyan, backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 3, spanGaps: true },
+        { data: pts.map((p) => p.graisseViscerale), label: 'Graisse viscérale', borderColor: this.COL.violet, backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 3, spanGaps: true },
+      ],
+    };
+  });
+
+  /** Masse musculaire squelettique (MMS) et masse maigre (MMC). */
+  compositionMuscleChart = computed<ChartData<'line'>>(() => {
+    const pts = this.bodyComposition()?.points ?? [];
+    return {
+      labels: pts.map((p) => this.dateLabel(p.date)),
+      datasets: [
+        { data: pts.map((p) => p.mms), label: 'Musculaire squelettique (kg)', borderColor: this.COL.green, backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 3, spanGaps: true },
+        { data: pts.map((p) => p.mmc), label: 'Masse maigre (kg)', borderColor: this.COL.indigo, backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 3, spanGaps: true },
+        { data: pts.map((p) => p.masseProteine), label: 'Protéines (kg)', borderColor: this.COL.violet, backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 3, spanGaps: true },
+      ],
+    };
+  });
+
+  /** Eau corporelle : totale, intra et extracellulaire (kg). */
+  compositionWaterChart = computed<ChartData<'line'>>(() => {
+    const pts = this.bodyComposition()?.points ?? [];
+    return {
+      labels: pts.map((p) => this.dateLabel(p.date)),
+      datasets: [
+        { data: pts.map((p) => p.eauTotale), label: 'Eau totale (kg)', borderColor: this.COL.cyan, backgroundColor: this.hexA(this.COL.cyan, 0.15), fill: true, tension: 0.3, pointRadius: 3, spanGaps: true },
+        { data: pts.map((p) => p.eauIntra), label: 'Intracellulaire (kg)', borderColor: this.COL.green, backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 3, spanGaps: true },
+        { data: pts.map((p) => p.eauExtra), label: 'Extracellulaire (kg)', borderColor: this.COL.indigo, backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 3, spanGaps: true },
+      ],
+    };
+  });
+
+  /** Métabolisme de base (kcal/j). */
+  compositionMbChart = computed<ChartData<'line'>>(() => {
+    const pts = this.bodyComposition()?.points ?? [];
+    return {
+      labels: pts.map((p) => this.dateLabel(p.date)),
+      datasets: [{
+        data: pts.map((p) => p.mbKcal),
+        label: 'Métabolisme de base (kcal/j)',
+        borderColor: this.COL.orange,
+        backgroundColor: this.hexA(this.COL.orange, 0.15),
+        fill: true,
+        tension: 0.3,
+        pointRadius: 3,
+        spanGaps: true,
+      }],
+    };
+  });
+
+  // ----- Schéma corporel (dernier scan) -----
+
+  /** Dernier scan disponible (le plus récent). */
+  latestComposition = computed<BodyCompositionStats['points'][number] | null>(() => {
+    const pts = this.bodyComposition()?.points ?? [];
+    return pts.length ? pts[pts.length - 1] : null;
+  });
+
+  setBodySegMode(m: 'muscle' | 'graisse'): void {
+    this.bodySegMode.set(m);
+  }
+
+  /** Valeurs des 5 segments selon le mode (muscle / graisse) pour le dernier scan. */
+  bodySegments = computed(() => {
+    const p = this.latestComposition();
+    if (!p) return null;
+    return this.bodySegMode() === 'muscle'
+      ? { brasG: p.muscleBrasGauche, brasD: p.muscleBrasDroit, tronc: p.muscleTronc, jambeG: p.muscleJambeGauche, jambeD: p.muscleJambeDroite }
+      : { brasG: p.mgcBrasGauche, brasD: p.mgcBrasDroit, tronc: p.mgcTronc, jambeG: p.mgcJambeGauche, jambeD: p.mgcJambeDroite };
+  });
+
+  /** Couleur du schéma selon le mode. */
+  bodySegColor = computed<string>(() => this.bodySegMode() === 'muscle' ? this.COL.green : this.COL.orange);
+
+  bodySegFill = computed<string>(() => this.hexA(this.bodySegColor(), 0.22));
+
+  /** Formate une valeur numérique (2 décimales max) ou « — » si absente. */
+  fmt(v: number | null | undefined, suffix = ''): string {
+    if (v == null) return '—';
+    return (Math.round(v * 100) / 100) + suffix;
+  }
+
+  /** Toutes les métriques scalaires du dernier scan, pour la grille « Dernier scan ». */
+  compositionMetrics(p: BodyCompositionStats['points'][number]): { label: string; value: string }[] {
+    return [
+      { label: 'Poids', value: this.fmt(p.poids, ' kg') },
+      { label: 'Masse musculaire', value: this.fmt(p.masseMusculaire, ' kg') },
+      { label: 'Musc. squelettique', value: this.fmt(p.mms, ' kg') },
+      { label: 'Masse maigre', value: this.fmt(p.mmc, ' kg') },
+      { label: 'Masse grasse', value: this.fmt(p.mgc, ' kg') },
+      { label: 'Taux de graisse', value: this.fmt(p.tgcPct, ' %') },
+      { label: 'IMC', value: this.fmt(p.imc) },
+      { label: 'Ratio taille/hanche', value: this.fmt(p.rth) },
+      { label: 'Métabolisme base', value: this.fmt(p.mbKcal, ' kcal') },
+      { label: 'Âge métabolique', value: this.fmt(p.ageMetabolique) },
+      { label: 'Graisse viscérale', value: this.fmt(p.graisseViscerale) },
+      { label: 'Eau totale', value: this.fmt(p.eauTotale, ' kg') },
+      { label: 'Eau intracellulaire', value: this.fmt(p.eauIntra, ' kg') },
+      { label: 'Eau extracellulaire', value: this.fmt(p.eauExtra, ' kg') },
+      { label: 'Ratio ECW/TBW', value: this.fmt(p.ratioEcwTbw) },
+      { label: 'Protéines', value: this.fmt(p.masseProteine, ' kg') },
+      { label: 'Sel inorganique', value: this.fmt(p.selInorganique, ' kg') },
+    ];
+  }
+
   // ----------------------------------------------------------- Nutrition
 
   caloriesChart = computed<ChartData<'line'>>(() => {
@@ -482,6 +621,18 @@ export class Statistics implements OnInit {
     responsive: true,
     maintainAspectRatio: false,
     plugins: { legend: { position: 'bottom', labels: { color: this.COL.text, boxWidth: 12, font: { size: 11 } } } },
+  };
+
+  /** Comme lineOptions mais Y auto-échelle (les masses ne partent pas de 0). */
+  compositionOptions: ChartConfiguration<'line'>['options'] = {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: { legend: { labels: { color: this.COL.text, boxWidth: 12, font: { size: 11 } } } },
+    scales: {
+      x: { ticks: { color: this.COL.text, maxRotation: 0, autoSkip: true, maxTicksLimit: 8 }, grid: { color: this.COL.grid } },
+      y: { ticks: { color: this.COL.text }, grid: { color: this.COL.grid }, beginAtZero: false },
+    },
   };
 
   // ----------------------------------------------------------- Helpers

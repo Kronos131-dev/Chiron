@@ -9,7 +9,11 @@ import com.kronos.chiron.entity.Serie;
 import com.kronos.chiron.nutrition.NutritionService;
 import com.kronos.chiron.nutrition.olympusdb.OlympusNutritionDao;
 import com.kronos.chiron.repository.SeanceRepository;
+import com.kronos.chiron.repository.UtilisateurRepository;
 import com.kronos.chiron.service.PerformanceService;
+import com.kronos.chiron.entity.Utilisateur;
+import com.kronos.chiron.visbody.BodyCompositionRecord;
+import com.kronos.chiron.visbody.BodyCompositionRecordRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,6 +48,8 @@ public class StatsService {
     private final PerformanceService performanceService;
     private final NutritionService nutritionService;
     private final OlympusNutritionDao olympusDao;
+    private final BodyCompositionRecordRepository bodyCompositionRepo;
+    private final UtilisateurRepository utilisateurRepository;
 
     // ---------------------------------------------------------------- Overview
 
@@ -263,6 +269,36 @@ public class StatsService {
         LocalDate end = LocalDate.now();
         LocalDate start = end.minusDays(n - 1L);
         return new BodyweightStatsDto(true, olympusDao.weightHistory(userId.get(), start, end));
+    }
+
+    // ------------------------------------------------- Composition corporelle (Visbody)
+
+    @Transactional(readOnly = true)
+    public BodyCompositionStatsDto getBodyComposition(String username, int days) {
+        int n = Math.min(Math.max(days, 1), 1825);
+        Optional<Utilisateur> user = utilisateurRepository.findByUsername(username);
+        if (user.isEmpty()) return BodyCompositionStatsDto.empty();
+
+        LocalDateTime since = LocalDateTime.now().minusDays(n);
+        List<BodyCompositionRecord> records =
+                bodyCompositionRepo.findByUtilisateurAndMesureLeAfterOrderByMesureLeAsc(user.get(), since);
+        if (records.isEmpty()) return BodyCompositionStatsDto.empty();
+
+        List<BodyCompositionPointDto> points = new ArrayList<>();
+        for (BodyCompositionRecord r : records) {
+            points.add(new BodyCompositionPointDto(
+                    r.getMesureLe().toLocalDate(),
+                    r.getNote(),
+                    r.getPoids(), r.getMasseMusculaire(), r.getMms(), r.getMgc(), r.getMmc(),
+                    r.getTgcPct(), r.getImc(), r.getRth(), r.getMbKcal(), r.getAgeMetabolique(),
+                    r.getGraisseViscerale(), r.getEauTotale(), r.getEauIntra(), r.getEauExtra(),
+                    r.getRatioEcwTbw(), r.getMasseProteine(), r.getSelInorganique(),
+                    r.getMgcBrasGauche(), r.getMgcBrasDroit(), r.getMgcTronc(),
+                    r.getMgcJambeGauche(), r.getMgcJambeDroite(),
+                    r.getMuscleBrasGauche(), r.getMuscleBrasDroit(), r.getMuscleTronc(),
+                    r.getMuscleJambeGauche(), r.getMuscleJambeDroite()));
+        }
+        return new BodyCompositionStatsDto(true, points);
     }
 
     private Optional<Long> resolveOlympusUser(String username) {
