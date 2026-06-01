@@ -254,15 +254,21 @@ public class StatsService {
             return NutritionStatsDto.unavailable();
         }
 
+        // On ignore les jours sans apport réel (kcal nulle ou 0) : une journée non renseignée
+        // ne doit ni tirer les moyennes vers le bas, ni creuser les courbes à zéro.
+        List<NutritionPointDto> joursRenseignes = jours.stream()
+                .filter(j -> j.kcal() != null && j.kcal() > 0)
+                .toList();
+
         double sumK = 0, sumP = 0, sumG = 0, sumL = 0, sumT = 0;
         int nK = 0, nT = 0;
-        for (NutritionPointDto j : jours) {
-            if (j.kcal() != null) { sumK += j.kcal(); sumP += orZero(j.proteines()); sumG += orZero(j.glucides()); sumL += orZero(j.lipides()); nK++; }
+        for (NutritionPointDto j : joursRenseignes) {
+            sumK += j.kcal(); sumP += orZero(j.proteines()); sumG += orZero(j.glucides()); sumL += orZero(j.lipides()); nK++;
             if (j.targetKcal() != null) { sumT += j.targetKcal(); nT++; }
         }
 
         return new NutritionStatsDto(
-                true, true, jours,
+                true, true, joursRenseignes,
                 nK > 0 ? round1(sumK / nK) : null,
                 nK > 0 ? round1(sumP / nK) : null,
                 nK > 0 ? round1(sumG / nK) : null,
