@@ -264,4 +264,31 @@ export class Settings implements OnInit, OnDestroy {
       this.fitbitPollHandle = null;
     }
   }
+
+  // --- Import manuel d'un rapport Visbody (PDF) ---
+  visbodyUploading = signal(false);
+  visbodyMessage = signal<string | null>(null);
+  visbodyError = signal(false);
+
+  uploadVisbody(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    this.visbodyUploading.set(true);
+    this.visbodyMessage.set(null);
+    this.chironApi.uploadVisbodyPdf(file).subscribe({
+      next: (res) => {
+        this.visbodyUploading.set(false);
+        this.visbodyError.set(res.outcome === 'INVALID' || res.outcome === 'USER_NOT_FOUND');
+        this.visbodyMessage.set(res.detail);
+        input.value = '';
+      },
+      error: (err) => {
+        this.visbodyUploading.set(false);
+        this.visbodyError.set(true);
+        this.visbodyMessage.set(err?.error?.detail ?? "Échec de l'import du rapport.");
+        input.value = '';
+      },
+    });
+  }
 }

@@ -62,6 +62,19 @@ chiron:
   # En prod : OBLIGATOIRE via env var CHIRON_SECRET_KEY.
   secret-key: ${CHIRON_SECRET_KEY:}
 
+  # Import des rapports de composition corporelle Visbody (PDF reçus par email).
+  # La boîte est relevée en IMAP en réutilisant le compte Gmail de spring.mail
+  # (mêmes GMAIL_USERNAME / GMAIL_APP_PASSWORD). Désactivé par défaut.
+  visbody:
+    mailbox:
+      enabled: ${VISBODY_MAILBOX_ENABLED:false}
+      host: ${VISBODY_IMAP_HOST:imap.gmail.com}
+      port: ${VISBODY_IMAP_PORT:993}
+      username: ${GMAIL_USERNAME:}
+      password: ${GMAIL_APP_PASSWORD:}
+      folder: ${VISBODY_IMAP_FOLDER:INBOX}
+      poll-interval-ms: ${VISBODY_POLL_INTERVAL_MS:300000}
+
 olympus:
   base-url: ${OLYMPUS_BASE_URL:http://localhost:8080}
   # Durée de vie supposée du JWT Olympus (24h par défaut côté Olympus).
