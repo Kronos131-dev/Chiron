@@ -56,6 +56,14 @@ public class Exercice {
     private String blockType;
 
     /**
+     * Exercice réalisé en unilatéral (un membre à la fois, reps saisies par bras).
+     * Utilisé par le calcul du tonnage : facteur ×2 car les deux côtés sont travaillés.
+     */
+    @Column(name = "unilateral", nullable = false)
+    @Builder.Default
+    private boolean unilateral = false;
+
+    /**
      * The start time of the exercise.
      */
     private LocalDateTime startTime;

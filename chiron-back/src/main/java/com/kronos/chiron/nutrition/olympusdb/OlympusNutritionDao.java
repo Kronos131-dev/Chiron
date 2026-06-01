@@ -219,19 +219,16 @@ public class OlympusNutritionDao {
                 """;
         MapSqlParameterSource p = new MapSqlParameterSource()
                 .addValue("uid", userId).addValue("start", start).addValue("end", end);
-        try {
-            return jdbc.query(sql, p, (rs, i) -> new NutritionPointDto(
-                    rs.getObject("target_date", LocalDate.class),
-                    nullableDouble(rs, "total_kcal"),
-                    nullableDouble(rs, "total_proteins"),
-                    nullableDouble(rs, "total_carbs"),
-                    nullableDouble(rs, "total_fats"),
-                    nullableDouble(rs, "target_kcal"),
-                    nullableInt(rs, "step_count")));
-        } catch (DataAccessException e) {
-            log.warn("Olympus DB injoignable (dailyNutrition) : {}", e.getMessage());
-            return Collections.emptyList();
-        }
+        // Erreur volontairement propagée : StatsService la convertit en état « indisponible »
+        // (au lieu d'un silencieux « aucune donnée » indiscernable).
+        return jdbc.query(sql, p, (rs, i) -> new NutritionPointDto(
+                rs.getObject("target_date", LocalDate.class),
+                nullableDouble(rs, "total_kcal"),
+                nullableDouble(rs, "total_proteins"),
+                nullableDouble(rs, "total_carbs"),
+                nullableDouble(rs, "total_fats"),
+                nullableDouble(rs, "target_kcal"),
+                nullableInt(rs, "step_count")));
     }
 
     /** Historique des mesures de poids de corps ({@code user_metrics}). Tolérant aux pannes. */
@@ -243,14 +240,9 @@ public class OlympusNutritionDao {
                 """;
         MapSqlParameterSource p = new MapSqlParameterSource()
                 .addValue("uid", userId).addValue("start", start).addValue("end", end);
-        try {
-            return jdbc.query(sql, p, (rs, i) -> new BodyweightPointDto(
-                    rs.getObject("recorded_date", LocalDate.class),
-                    rs.getDouble("weight_kg")));
-        } catch (DataAccessException e) {
-            log.warn("Olympus DB injoignable (weightHistory) : {}", e.getMessage());
-            return Collections.emptyList();
-        }
+        return jdbc.query(sql, p, (rs, i) -> new BodyweightPointDto(
+                rs.getObject("recorded_date", LocalDate.class),
+                rs.getDouble("weight_kg")));
     }
 
     // ------------------------------------------------------------ Records (lignes)

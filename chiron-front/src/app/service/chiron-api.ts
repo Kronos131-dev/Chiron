@@ -316,6 +316,14 @@ export class ChironApi {
     return this.http.put<{ token: string }>(`${this.apiUrl}/settings/username`, req);
   }
 
+  getTrainingPrefs(): Observable<TrainingPrefs> {
+    return this.http.get<TrainingPrefs>(`${this.apiUrl}/settings/training-prefs`);
+  }
+
+  updateTrainingPrefs(prefs: TrainingPrefs): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/settings/training-prefs`, prefs);
+  }
+
   forgotPassword(email: string): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/auth/forgot-password`, { email });
   }
@@ -545,6 +553,8 @@ export interface NutritionPoint {
 
 export interface NutritionStats {
   linked: boolean;
+  /** false = compte lié mais base Olympus injoignable (mode dégradé). */
+  available: boolean;
   jours: NutritionPoint[];
   moyKcal: number | null;
   moyProteines: number | null;
@@ -560,7 +570,13 @@ export interface BodyweightPoint {
 
 export interface BodyweightStats {
   linked: boolean;
+  available: boolean;
   points: BodyweightPoint[];
+}
+
+export interface TrainingPrefs {
+  repsParBras: boolean;
+  poidsMachineParCote: boolean;
 }
 
 export interface BodyCompositionPoint {

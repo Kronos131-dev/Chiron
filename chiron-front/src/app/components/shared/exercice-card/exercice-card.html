@@ -66,6 +66,25 @@
           } @else {
             <p class="w-full mt-1 bg-slate-950/50 border border-white/10 rounded p-3 text-white font-headline text-lg break-words">{{ exercice.nom }}</p>
           }
+
+          <!-- Marqueur unilatéral (très discret) — masqué pour le cardio -->
+          @if (!isCardio() && (!readonly || exercice.unilateral)) {
+            <button type="button"
+                    [disabled]="readonly"
+                    (click)="toggleUnilateral()"
+                    class="mt-1.5 ml-1 inline-flex items-center gap-1 text-[9px] font-bold tracking-[0.15em] uppercase px-2 py-0.5 rounded-full border transition-colors"
+                    [class.border-secondary]="exercice.unilateral"
+                    [class.text-secondary]="exercice.unilateral"
+                    [class.bg-secondary]="false"
+                    [class.border-white/10]="!exercice.unilateral"
+                    [class.text-on-surface-variant]="!exercice.unilateral"
+                    title="Exercice réalisé un membre à la fois (reps par bras)">
+              <span class="material-symbols-outlined text-[13px] leading-none">
+                {{ exercice.unilateral ? 'check_circle' : 'radio_button_unchecked' }}
+              </span>
+              Unilatéral
+            </button>
+          }
         </div>
       </div>
 

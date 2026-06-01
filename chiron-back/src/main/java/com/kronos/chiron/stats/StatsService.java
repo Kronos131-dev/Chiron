@@ -64,11 +64,12 @@ public class StatsService {
                 .filter(s -> s.getStartTime() != null && s.getStartTime().isAfter(now.minusDays(30)))
                 .count();
 
+        boolean machinePerSide = machinePerSide(username);
         String currentWeekKey = weekKey(today);
         double tonnageSemaine = sessions.stream()
                 .filter(s -> s.getStartTime() != null)
                 .filter(s -> weekKey(s.getStartTime().toLocalDate()).equals(currentWeekKey))
-                .mapToDouble(this::sessionTonnage)
+                .mapToDouble(s -> sessionTonnage(s, machinePerSide))
                 .sum();
 
         int streak = computeWeekStreak(sessions, today);
@@ -101,6 +102,7 @@ public class StatsService {
     public List<WeeklyVolumePointDto> getWeeklyVolume(String username, int weeks) {
         int n = Math.min(Math.max(weeks, 1), 52);
         List<Seance> sessions = realSessions(username);
+        boolean machinePerSide = machinePerSide(username);
         LocalDate monday = LocalDate.now().with(ISO.dayOfWeek(), 1);
 
         List<WeeklyVolumePointDto> result = new ArrayList<>();
@@ -117,7 +119,7 @@ public class StatsService {
                 LocalDate d = s.getStartTime().toLocalDate();
                 if (d.isBefore(weekStart) || d.isAfter(weekEnd)) continue;
                 nbSeances++;
-                tonnage += sessionTonnage(s);
+                tonnage += sessionTonnage(s, machinePerSide);
                 nbSeries += sessionSeriesCount(s);
                 Double dm = sessionDurationMin(s);
                 if (dm != null) { dureeSum += dm; dureeCount++; }
@@ -136,6 +138,7 @@ public class StatsService {
         int n = Math.min(Math.max(days, 1), 365);
         LocalDateTime since = LocalDateTime.now().minusDays(n);
         List<Seance> sessions = realSessions(username);
+        boolean machinePerSide = machinePerSide(username);
 
         Map<MuscleGroup, double[]> tonnageAndSeries = new EnumMap<>(MuscleGroup.class); // [tonnage, nbSeries]
         Map<MuscleGroup, Set<Long>> seancesByMuscle = new EnumMap<>(MuscleGroup.class);
@@ -146,7 +149,7 @@ public class StatsService {
                 MuscleGroup mg = (e.getDefinition() != null) ? e.getDefinition().getMusclePrincipal() : null;
                 if (mg == null) continue;
                 double[] acc = tonnageAndSeries.computeIfAbsent(mg, k -> new double[2]);
-                acc[0] += exerciseTonnage(e);
+                acc[0] += exerciseTonnage(e, machinePerSide);
                 acc[1] += e.getSeries().size();
                 seancesByMuscle.computeIfAbsent(mg, k -> new java.util.HashSet<>()).add(s.getId());
             }
@@ -205,6 +208,7 @@ public class StatsService {
         if (nom == null || nom.isBlank()) return List.of();
         String target = nom.trim().toLowerCase();
         List<Seance> sessions = realSessions(username);
+        boolean machinePerSide = machinePerSide(username);
 
         // sessions est trié décroissant : on parcourt en ordre chronologique croissant.
         List<Seance> chronological = new ArrayList<>(sessions);
@@ -223,7 +227,7 @@ public class StatsService {
                     chargeMax = Math.max(chargeMax, serie.getPoids());
                     e1rm = Math.max(e1rm, oneRepMaxEstimator.generic(serie.getPoids(), serie.getNombreReps()));
                 }
-                volume += exerciseTonnage(e);
+                volume += exerciseTonnage(e, machinePerSide);
             }
             if (found) {
                 points.add(new ExerciseProgressPointDto(
@@ -243,7 +247,12 @@ public class StatsService {
 
         LocalDate end = LocalDate.now();
         LocalDate start = end.minusDays(n - 1L);
-        List<NutritionPointDto> jours = olympusDao.dailyNutrition(userId.get(), start, end);
+        List<NutritionPointDto> jours;
+        try {
+            jours = olympusDao.dailyNutrition(userId.get(), start, end);
+        } catch (org.springframework.dao.DataAccessException e) {
+            return NutritionStatsDto.unavailable();
+        }
 
         double sumK = 0, sumP = 0, sumG = 0, sumL = 0, sumT = 0;
         int nK = 0, nT = 0;
@@ -253,7 +262,7 @@ public class StatsService {
         }
 
         return new NutritionStatsDto(
-                true, jours,
+                true, true, jours,
                 nK > 0 ? round1(sumK / nK) : null,
                 nK > 0 ? round1(sumP / nK) : null,
                 nK > 0 ? round1(sumG / nK) : null,
@@ -269,7 +278,11 @@ public class StatsService {
 
         LocalDate end = LocalDate.now();
         LocalDate start = end.minusDays(n - 1L);
-        return new BodyweightStatsDto(true, olympusDao.weightHistory(userId.get(), start, end));
+        try {
+            return new BodyweightStatsDto(true, true, olympusDao.weightHistory(userId.get(), start, end));
+        } catch (org.springframework.dao.DataAccessException e) {
+            return BodyweightStatsDto.unavailable();
+        }
     }
 
     // ------------------------------------------------- Composition corporelle (Visbody)
@@ -312,21 +325,43 @@ public class StatsService {
         return seanceRepository.findByUtilisateurUsernameAndIsModeleTrueOrderByStartTimeDesc(username);
     }
 
-    private double sessionTonnage(Seance s) {
+    private double sessionTonnage(Seance s, boolean machinePerSide) {
         double t = 0;
-        for (Exercice e : s.getExercices()) t += exerciseTonnage(e);
+        for (Exercice e : s.getExercices()) t += exerciseTonnage(e, machinePerSide);
         return t;
     }
 
-    private double exerciseTonnage(Exercice e) {
+    /**
+     * Tonnage d'un exercice = poids × reps, multiplié par le facteur unilatéral/haltères :
+     * ×2 si l'exercice est unilatéral (deux côtés travaillés), réalisé aux haltères (on saisit
+     * le poids d'une seule haltère pour deux), ou sur machine réglée « par côté » ; sinon ×1.
+     */
+    private double exerciseTonnage(Exercice e, boolean machinePerSide) {
+        int factor = tonnageFactor(e, machinePerSide);
         double t = 0;
         for (Serie serie : e.getSeries()) {
-            t += serie.getPoids() * serie.getNombreReps();
+            t += factor * serie.getPoids() * serie.getNombreReps();
             for (Degressif d : serie.getDegressifs()) {
-                t += d.getPoids() * d.getNombreReps();
+                t += factor * d.getPoids() * d.getNombreReps();
             }
         }
         return t;
+    }
+
+    private int tonnageFactor(Exercice e, boolean machinePerSide) {
+        com.kronos.chiron.entity.TypeEquipement equip =
+                (e.getDefinition() != null) ? e.getDefinition().getTypeEquipement() : null;
+        boolean doubler = e.isUnilateral()
+                || equip == com.kronos.chiron.entity.TypeEquipement.HALTERES
+                || (equip == com.kronos.chiron.entity.TypeEquipement.MACHINE && machinePerSide);
+        return doubler ? 2 : 1;
+    }
+
+    /** Lit la préférence « poids machine par côté » de l'utilisateur (défaut false). */
+    private boolean machinePerSide(String username) {
+        return utilisateurRepository.findByUsername(username)
+                .map(com.kronos.chiron.entity.Utilisateur::isPoidsMachineParCote)
+                .orElse(false);
     }
 
     private int sessionSeriesCount(Seance s) {
