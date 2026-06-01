@@ -38,7 +38,8 @@ public class OlympusDbConfig implements DisposableBean {
         cfg.setDriverClassName("org.postgresql.Driver");
         cfg.setReadOnly(true);
         cfg.setPoolName("olympus-ro-pool");
-        cfg.setMaximumPoolSize(2);
+        // Toutes les lectures nutrition (stats + outils IA + liaison) passent par ce pool.
+        cfg.setMaximumPoolSize(5);
         cfg.setMinimumIdle(0);
         cfg.setConnectionTimeout(4000);
         cfg.setValidationTimeout(2000);

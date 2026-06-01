@@ -118,13 +118,12 @@ public class Utilisateur implements UserDetails {
     @Builder.Default
     private Set<TypeEquipement> materielDisponible = EnumSet.noneOf(TypeEquipement.class);
 
-    @Column(name = "olympus_token_encrypted", columnDefinition = "TEXT")
+    // Identifiant de l'utilisateur côté Olympus, résolu une fois à la liaison
+    // (vérification pseudo + mot de passe BCrypt contre la base Olympus). Toutes
+    // les lectures nutrition/poids se font ensuite directement en base par cet id.
+    @Column(name = "olympus_user_id")
     @JsonIgnore
-    private String olympusTokenEncrypted;
-
-    @Column(name = "olympus_token_expires_at")
-    @JsonIgnore
-    private LocalDateTime olympusTokenExpiresAt;
+    private Long olympusUserId;
 
     @Column(name = "olympus_username")
     @JsonIgnore

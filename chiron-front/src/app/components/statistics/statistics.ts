@@ -182,7 +182,7 @@ export class Statistics implements OnInit {
         });
         break;
       case 'nutrition':
-        this.api.getStatsNutrition(Math.min(this.days(), 365)).subscribe({
+        this.api.getStatsNutrition(this.days()).subscribe({
           next: (d) => { this.nutrition.set(d); this.done(tab); },
           error: () => this.done(tab),
         });
@@ -486,8 +486,8 @@ export class Statistics implements OnInit {
 
   // ----------------------------------------------------------- Helpers
 
-  goToProfile(): void {
-    this.router.navigate(['/profile']);
+  goToSettings(): void {
+    this.router.navigate(['/settings']);
   }
 
   tierClass(level: number | undefined | null): string {

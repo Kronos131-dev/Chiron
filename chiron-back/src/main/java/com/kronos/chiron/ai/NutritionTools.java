@@ -1,22 +1,30 @@
 package com.kronos.chiron.ai;
 
-import tools.jackson.databind.JsonNode;
 import com.kronos.chiron.entity.Utilisateur;
 import com.kronos.chiron.nutrition.NutritionService;
-import com.kronos.chiron.nutrition.OlympusClient;
+import com.kronos.chiron.nutrition.olympusdb.OlympusNutritionCalculator;
+import com.kronos.chiron.nutrition.olympusdb.OlympusNutritionCalculator.NutritionTargets;
+import com.kronos.chiron.nutrition.olympusdb.OlympusNutritionDao;
 import com.kronos.chiron.repository.UtilisateurRepository;
+import com.kronos.chiron.stats.BodyweightPointDto;
+import com.kronos.chiron.stats.NutritionPointDto;
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agent.tool.ToolMemoryId;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.List;
+import java.util.Optional;
 
 /**
- * Outils LangChain4j donnant à Chiron accès aux données nutritionnelles
- * de l'utilisateur via son compte Olympus lié.
+ * Outils LangChain4j donnant à Chiron accès aux données nutritionnelles de l'utilisateur.
+ *
+ * <p>Toutes les lectures se font directement en base Olympus (via {@link OlympusNutritionDao}),
+ * par l'{@code olympus_user_id} résolu à la liaison — aucune dépendance à l'API HTTP d'Olympus.</p>
  */
 @Component
 @RequiredArgsConstructor
@@ -24,15 +32,14 @@ import java.time.format.DateTimeParseException;
 public class NutritionTools {
 
     private static final String MSG_NON_LIE =
-            "L'utilisateur n'a pas lié son compte Olympus à Chiron. Demande-lui de le faire depuis la page Profil.";
-    private static final String MSG_EXPIRE =
-            "La liaison Olympus de l'utilisateur a expiré. Demande-lui de se relier depuis la page Profil.";
+            "L'utilisateur n'a pas lié son compte Olympus à Chiron. Demande-lui de le faire depuis la page Réglages.";
     private static final String MSG_INDISPO =
-            "Le service Olympus est temporairement injoignable. Réessaie plus tard.";
+            "Le service de nutrition est temporairement indisponible. Réessaie plus tard.";
 
     private final UtilisateurRepository utilisateurRepository;
     private final NutritionService nutritionService;
-    private final OlympusClient olympusClient;
+    private final OlympusNutritionDao olympusDao;
+    private final OlympusNutritionCalculator calculator;
 
     @Tool("Récupère l'apport nutritionnel de l'utilisateur pour une date donnée (format YYYY-MM-DD ; null ou vide = aujourd'hui). Retourne calories, protéines, glucides, lipides consommés + cibles + delta + activité du jour. Nécessite que l'utilisateur ait lié son compte Olympus.")
     public String getApportJournalier(@ToolMemoryId String userId, String date) {
@@ -48,36 +55,35 @@ public class NutritionTools {
             }
         }
 
+        Optional<Long> oid = nutritionService.getOlympusUserId(user.getUsername());
+        if (oid.isEmpty()) return MSG_NON_LIE;
+
         try {
-            String token = nutritionService.getValidToken(user.getUsername());
-            JsonNode log = olympusClient.getDailyLog(token, target);
-            JsonNode profile = olympusClient.getUserProfile(token);
+            Optional<OlympusNutritionDao.DailyLogRow> logOpt = olympusDao.dailyLog(oid.get(), target);
+            if (logOpt.isEmpty()) {
+                return "Aucun apport enregistré le " + target + ".";
+            }
+            OlympusNutritionDao.DailyLogRow log = logOpt.get();
+            NutritionTargets cible = olympusDao.profile(oid.get())
+                    .map(calculator::computeTargets).orElse(NutritionTargets.EMPTY);
 
-            double consoKcal = asDouble(log, "totalKcal");
-            double consoProt = asDouble(log, "totalProteins");
-            double consoGlu  = asDouble(log, "totalCarbs");
-            double consoLip  = asDouble(log, "totalFats");
-            Integer pas = log.hasNonNull("stepCount") ? log.get("stepCount").asInt() : null;
-            Integer dureeMin = log.hasNonNull("workoutDurationMinutes") ? log.get("workoutDurationMinutes").asInt() : null;
-            double extraBrul = asDouble(log, "extraKcalBurned");
-
-            double cibleKcal = asDouble(profile, "targetKcal");
-            double cibleProt = asDouble(profile, "targetProteins");
-            double cibleGlu  = asDouble(profile, "targetCarbs");
-            double cibleLip  = asDouble(profile, "targetFats");
-            String goal = profile.hasNonNull("goal") ? profile.get("goal").asText() : null;
+            double consoKcal = orZero(log.totalKcal());
+            double cibleKcal = orZero(cible.kcal());
 
             StringBuilder res = new StringBuilder();
             res.append("Apport du ").append(target).append(" :\n");
             res.append("- Calories : ").append(fmt(consoKcal)).append(" / ").append(fmt(cibleKcal))
                     .append(" kcal (").append(formatDelta(consoKcal - cibleKcal, "kcal")).append(")\n");
-            res.append("- Protéines : ").append(fmt(consoProt)).append(" / ").append(fmt(cibleProt)).append(" g\n");
-            res.append("- Glucides : ").append(fmt(consoGlu)).append(" / ").append(fmt(cibleGlu)).append(" g\n");
-            res.append("- Lipides : ").append(fmt(consoLip)).append(" / ").append(fmt(cibleLip)).append(" g\n");
-            if (goal != null) {
-                res.append("Objectif déclaré : ").append(goal).append("\n");
-            }
-            if (pas != null) {
+            res.append("- Protéines : ").append(fmt(orZero(log.totalProteins()))).append(" / ")
+                    .append(fmt(orZero(cible.proteins()))).append(" g\n");
+            res.append("- Glucides : ").append(fmt(orZero(log.totalCarbs()))).append(" / ")
+                    .append(fmt(orZero(cible.carbs()))).append(" g\n");
+            res.append("- Lipides : ").append(fmt(orZero(log.totalFats()))).append(" / ")
+                    .append(fmt(orZero(cible.fats()))).append(" g\n");
+            Integer pas = log.stepCount();
+            Integer dureeMin = log.workoutDurationMinutes();
+            double extraBrul = orZero(log.extraKcalBurned());
+            if (pas != null && pas > 0) {
                 res.append("Activité : ").append(pas).append(" pas");
                 if (dureeMin != null && dureeMin > 0) {
                     res.append(", ").append(dureeMin).append(" min d'entraînement");
@@ -88,14 +94,7 @@ public class NutritionTools {
                 res.append("\n");
             }
             return res.toString();
-        } catch (NutritionService.NotLinkedException e) {
-            return MSG_NON_LIE;
-        } catch (NutritionService.ExpiredException e) {
-            return MSG_EXPIRE;
-        } catch (OlympusClient.OlympusUnauthorizedException e) {
-            nutritionService.invalidateLink(user.getUsername());
-            return MSG_EXPIRE;
-        } catch (OlympusClient.OlympusUnavailableException e) {
+        } catch (DataAccessException e) {
             return MSG_INDISPO;
         }
     }
@@ -103,75 +102,65 @@ public class NutritionTools {
     @Tool("Récupère les objectifs nutritionnels de l'utilisateur : type d'objectif (perte / maintien / prise), cibles calories et macros, poids actuel. Nécessite la liaison Olympus.")
     public String getObjectifsNutritionnels(@ToolMemoryId String userId) {
         Utilisateur user = loadUser(userId);
-        try {
-            String token = nutritionService.getValidToken(user.getUsername());
-            JsonNode profile = olympusClient.getUserProfile(token);
+        Optional<Long> oid = nutritionService.getOlympusUserId(user.getUsername());
+        if (oid.isEmpty()) return MSG_NON_LIE;
 
-            String goal = profile.hasNonNull("goal") ? profile.get("goal").asText() : "non défini";
-            String activity = profile.hasNonNull("activityLevel") ? profile.get("activityLevel").asText() : null;
-            double poids = asDouble(profile, "currentWeightKg");
-            double taille = asDouble(profile, "heightCm");
-            double cibleKcal = asDouble(profile, "targetKcal");
-            double cibleProt = asDouble(profile, "targetProteins");
-            double cibleGlu  = asDouble(profile, "targetCarbs");
-            double cibleLip  = asDouble(profile, "targetFats");
+        try {
+            Optional<OlympusNutritionDao.ProfileRow> profOpt = olympusDao.profile(oid.get());
+            if (profOpt.isEmpty()) return "Profil Olympus introuvable.";
+            OlympusNutritionDao.ProfileRow prof = profOpt.get();
+            NutritionTargets cible = calculator.computeTargets(prof);
 
             StringBuilder res = new StringBuilder("Profil nutritionnel :\n");
-            res.append("- Objectif : ").append(goal).append("\n");
-            if (poids > 0) res.append("- Poids actuel : ").append(fmt(poids)).append(" kg\n");
-            if (taille > 0) res.append("- Taille : ").append(fmt(taille)).append(" cm\n");
-            if (activity != null) res.append("- Niveau d'activité : ").append(activity).append("\n");
+            res.append("- Objectif : ").append(goalFr(prof.goal())).append("\n");
+            if (prof.currentWeightKg() != null && prof.currentWeightKg() > 0)
+                res.append("- Poids actuel : ").append(fmt(prof.currentWeightKg())).append(" kg\n");
+            if (prof.heightCm() != null && prof.heightCm() > 0)
+                res.append("- Taille : ").append(fmt(prof.heightCm())).append(" cm\n");
+            if (prof.activityLevel() != null)
+                res.append("- Niveau d'activité : ").append(activityFr(prof.activityLevel())).append("\n");
             res.append("Cibles journalières :\n");
-            res.append("- Calories : ").append(fmt(cibleKcal)).append(" kcal\n");
-            res.append("- Protéines : ").append(fmt(cibleProt)).append(" g\n");
-            res.append("- Glucides : ").append(fmt(cibleGlu)).append(" g\n");
-            res.append("- Lipides : ").append(fmt(cibleLip)).append(" g");
+            res.append("- Calories : ").append(fmt(orZero(cible.kcal()))).append(" kcal\n");
+            res.append("- Protéines : ").append(fmt(orZero(cible.proteins()))).append(" g\n");
+            res.append("- Glucides : ").append(fmt(orZero(cible.carbs()))).append(" g\n");
+            res.append("- Lipides : ").append(fmt(orZero(cible.fats()))).append(" g");
             return res.toString();
-        } catch (NutritionService.NotLinkedException e) {
-            return MSG_NON_LIE;
-        } catch (NutritionService.ExpiredException e) {
-            return MSG_EXPIRE;
-        } catch (OlympusClient.OlympusUnauthorizedException e) {
-            nutritionService.invalidateLink(user.getUsername());
-            return MSG_EXPIRE;
-        } catch (OlympusClient.OlympusUnavailableException e) {
+        } catch (DataAccessException e) {
             return MSG_INDISPO;
         }
     }
 
-    @Tool("Analyse l'équilibre nutritionnel de l'utilisateur sur les N derniers jours (défaut 7) : moyenne calorique vs cible, répartition moyenne en macros, écart à l'objectif. Détecte les déficits/surplus marqués. Nécessite la liaison Olympus.")
+    @Tool("Analyse l'équilibre nutritionnel de l'utilisateur sur les N derniers jours (défaut 7) : moyenne calorique vs cible, répartition moyenne en macros, écart à l'objectif, perte de graisse estimée. Nécessite la liaison Olympus.")
     public String analyserEquilibreMacros(@ToolMemoryId String userId, Integer nbJours) {
         Utilisateur user = loadUser(userId);
         int window = (nbJours != null && nbJours > 0) ? nbJours : 7;
+        Optional<Long> oid = nutritionService.getOlympusUserId(user.getUsername());
+        if (oid.isEmpty()) return MSG_NON_LIE;
 
         try {
-            String token = nutritionService.getValidToken(user.getUsername());
             LocalDate end = LocalDate.now();
             LocalDate start = end.minusDays(window - 1L);
-            JsonNode analytics = olympusClient.getAnalytics(token, start, end);
+            List<NutritionPointDto> jours = olympusDao.dailyNutrition(oid.get(), start, end);
 
-            double avgKcal = asDouble(analytics, "averageKcal");
-            double avgWeight = asDouble(analytics, "averageWeight");
-            double fatLossG = asDouble(analytics, "estimatedFatLossGrams");
-
-            JsonNode daily = analytics.get("dailyData");
             int joursAvecDonnees = 0;
-            double sumProt = 0, sumGlu = 0, sumLip = 0;
+            double sumKcal = 0, sumProt = 0, sumGlu = 0, sumLip = 0;
             double sumCibleKcal = 0;
             int joursAvecCible = 0;
-            if (daily != null && daily.isArray()) {
-                for (JsonNode pt : daily) {
-                    boolean hasIntake = pt.hasNonNull("totalKcal");
-                    if (hasIntake) {
-                        sumProt += asDouble(pt, "totalProteins");
-                        sumGlu  += asDouble(pt, "totalCarbs");
-                        sumLip  += asDouble(pt, "totalFats");
-                        joursAvecDonnees++;
+            double totalDeficit = 0; // somme (cible - conso) sur les jours ayant les deux
+            for (NutritionPointDto pt : jours) {
+                if (pt.kcal() != null) {
+                    sumKcal += pt.kcal();
+                    sumProt += orZero(pt.proteines());
+                    sumGlu += orZero(pt.glucides());
+                    sumLip += orZero(pt.lipides());
+                    joursAvecDonnees++;
+                    if (pt.targetKcal() != null) {
+                        totalDeficit += pt.targetKcal() - pt.kcal();
                     }
-                    if (pt.hasNonNull("targetKcal")) {
-                        sumCibleKcal += pt.get("targetKcal").asDouble();
-                        joursAvecCible++;
-                    }
+                }
+                if (pt.targetKcal() != null) {
+                    sumCibleKcal += pt.targetKcal();
+                    joursAvecCible++;
                 }
             }
 
@@ -179,13 +168,14 @@ public class NutritionTools {
                 return "Aucun apport enregistré sur les " + window + " derniers jours.";
             }
 
+            double avgKcal = sumKcal / joursAvecDonnees;
             double avgProt = sumProt / joursAvecDonnees;
-            double avgGlu  = sumGlu  / joursAvecDonnees;
-            double avgLip  = sumLip  / joursAvecDonnees;
-            double totalGrammes = avgProt + avgGlu + avgLip;
-            double pctProt = totalGrammes > 0 ? (avgProt * 4.0) / (avgProt * 4 + avgGlu * 4 + avgLip * 9) * 100 : 0;
-            double pctGlu  = totalGrammes > 0 ? (avgGlu  * 4.0) / (avgProt * 4 + avgGlu * 4 + avgLip * 9) * 100 : 0;
-            double pctLip  = totalGrammes > 0 ? (avgLip  * 9.0) / (avgProt * 4 + avgGlu * 4 + avgLip * 9) * 100 : 0;
+            double avgGlu = sumGlu / joursAvecDonnees;
+            double avgLip = sumLip / joursAvecDonnees;
+            double denom = avgProt * 4 + avgGlu * 4 + avgLip * 9;
+            double pctProt = denom > 0 ? (avgProt * 4.0) / denom * 100 : 0;
+            double pctGlu = denom > 0 ? (avgGlu * 4.0) / denom * 100 : 0;
+            double pctLip = denom > 0 ? (avgLip * 9.0) / denom * 100 : 0;
 
             StringBuilder res = new StringBuilder();
             res.append("Bilan nutrition sur ").append(window).append(" jours (")
@@ -197,8 +187,7 @@ public class NutritionTools {
                 double ecartPct = avgCible > 0 ? Math.abs(ecart) / avgCible * 100.0 : 0;
                 res.append(" (cible ~").append(fmt(avgCible)).append(", ")
                         .append(formatDelta(ecart, "kcal")).append(", ")
-                        .append(String.format(java.util.Locale.FRANCE, "%.0f", ecartPct))
-                        .append(" %)");
+                        .append(String.format(java.util.Locale.FRANCE, "%.0f", ecartPct)).append(" %)");
             }
             res.append("\n");
             res.append("- Répartition moyenne : ")
@@ -207,19 +196,13 @@ public class NutritionTools {
                     .append(String.format(java.util.Locale.FRANCE, "%.0f", pctLip)).append(" % lip\n");
             res.append("- Macros moyens : ").append(fmt(avgProt)).append(" g prot, ")
                     .append(fmt(avgGlu)).append(" g glu, ").append(fmt(avgLip)).append(" g lip / jour\n");
-            if (avgWeight > 0) res.append("- Poids moyen : ").append(fmt(avgWeight)).append(" kg\n");
-            if (Math.abs(fatLossG) > 0.1) {
+            if (Math.abs(totalDeficit) > 50) {
+                // 1 kg de graisse ≈ 7700 kcal → grammes = déficit kcal / 7.7
+                double fatLossG = totalDeficit / 7.7;
                 res.append("- Perte de graisse estimée sur la période : ").append(fmt(fatLossG)).append(" g");
             }
             return res.toString();
-        } catch (NutritionService.NotLinkedException e) {
-            return MSG_NON_LIE;
-        } catch (NutritionService.ExpiredException e) {
-            return MSG_EXPIRE;
-        } catch (OlympusClient.OlympusUnauthorizedException e) {
-            nutritionService.invalidateLink(user.getUsername());
-            return MSG_EXPIRE;
-        } catch (OlympusClient.OlympusUnavailableException e) {
+        } catch (DataAccessException e) {
             return MSG_INDISPO;
         }
     }
@@ -228,68 +211,44 @@ public class NutritionTools {
     public String getEvolutionPoids(@ToolMemoryId String userId, Integer nbJours) {
         Utilisateur user = loadUser(userId);
         int window = (nbJours != null && nbJours > 0) ? nbJours : 30;
+        Optional<Long> oid = nutritionService.getOlympusUserId(user.getUsername());
+        if (oid.isEmpty()) return MSG_NON_LIE;
 
         try {
-            String token = nutritionService.getValidToken(user.getUsername());
             LocalDate end = LocalDate.now();
             LocalDate start = end.minusDays(window - 1L);
-            JsonNode analytics = olympusClient.getAnalytics(token, start, end);
-
-            JsonNode daily = analytics.get("dailyData");
-            if (daily == null || !daily.isArray() || daily.isEmpty()) {
+            List<BodyweightPointDto> mesures = olympusDao.weightHistory(oid.get(), start, end);
+            if (mesures.isEmpty()) {
                 return "Aucune mesure de poids enregistrée sur les " + window + " derniers jours.";
             }
 
-            String premiereDate = null, derniereDate = null;
-            double premierPoids = 0, dernierPoids = 0;
-            int nbMesures = 0;
-            double sommePoids = 0;
-            double poidsMin = Double.MAX_VALUE, poidsMax = -Double.MAX_VALUE;
-
-            for (JsonNode pt : daily) {
-                if (!pt.hasNonNull("weightKg")) continue;
-                double w = pt.get("weightKg").asDouble();
-                String d = pt.hasNonNull("date") ? pt.get("date").asText() : null;
-                if (premiereDate == null) { premiereDate = d; premierPoids = w; }
-                derniereDate = d;
-                dernierPoids = w;
-                sommePoids += w;
-                nbMesures++;
-                if (w < poidsMin) poidsMin = w;
-                if (w > poidsMax) poidsMax = w;
+            BodyweightPointDto premiere = mesures.get(0);
+            BodyweightPointDto derniere = mesures.get(mesures.size() - 1);
+            double sommePoids = 0, poidsMin = Double.MAX_VALUE, poidsMax = -Double.MAX_VALUE;
+            for (BodyweightPointDto m : mesures) {
+                sommePoids += m.poids();
+                poidsMin = Math.min(poidsMin, m.poids());
+                poidsMax = Math.max(poidsMax, m.poids());
             }
 
-            if (nbMesures == 0) {
-                return "Aucune mesure de poids enregistrée sur les " + window + " derniers jours.";
-            }
-
-            double delta = dernierPoids - premierPoids;
-            String tendance;
-            if (Math.abs(delta) < 0.3) tendance = "stable";
-            else if (delta < 0) tendance = "perte";
-            else tendance = "prise";
+            double delta = derniere.poids() - premiere.poids();
+            String tendance = Math.abs(delta) < 0.3 ? "stable" : (delta < 0 ? "perte" : "prise");
+            int nbMesures = mesures.size();
 
             StringBuilder res = new StringBuilder();
             res.append("Évolution du poids sur ").append(window).append(" jours (")
                     .append(nbMesures).append(" mesure(s)) :\n");
-            res.append("- Première mesure : ").append(fmtKg(premierPoids))
-                    .append(premiereDate != null ? " (le " + premiereDate + ")" : "").append("\n");
-            res.append("- Dernière mesure : ").append(fmtKg(dernierPoids))
-                    .append(derniereDate != null ? " (le " + derniereDate + ")" : "").append("\n");
+            res.append("- Première mesure : ").append(fmtKg(premiere.poids()))
+                    .append(" (le ").append(premiere.date()).append(")\n");
+            res.append("- Dernière mesure : ").append(fmtKg(derniere.poids()))
+                    .append(" (le ").append(derniere.date()).append(")\n");
             res.append("- Variation : ").append(formatDeltaKg(delta)).append(" (").append(tendance).append(")\n");
             if (nbMesures >= 3) {
                 res.append("- Moyenne période : ").append(fmtKg(sommePoids / nbMesures)).append("\n");
                 res.append("- Min/Max : ").append(fmtKg(poidsMin)).append(" / ").append(fmtKg(poidsMax));
             }
             return res.toString();
-        } catch (NutritionService.NotLinkedException e) {
-            return MSG_NON_LIE;
-        } catch (NutritionService.ExpiredException e) {
-            return MSG_EXPIRE;
-        } catch (OlympusClient.OlympusUnauthorizedException e) {
-            nutritionService.invalidateLink(user.getUsername());
-            return MSG_EXPIRE;
-        } catch (OlympusClient.OlympusUnavailableException e) {
+        } catch (DataAccessException e) {
             return MSG_INDISPO;
         }
     }
@@ -297,23 +256,23 @@ public class NutritionTools {
     @Tool("Récupère le planning de repas hebdomadaire de l'utilisateur (repas prévus jour par jour) ainsi que la liste de ses repas pré-enregistrés avec leurs valeurs nutritionnelles. Nécessite la liaison Olympus.")
     public String getPlanningRepas(@ToolMemoryId String userId) {
         Utilisateur user = loadUser(userId);
+        Optional<Long> oid = nutritionService.getOlympusUserId(user.getUsername());
+        if (oid.isEmpty()) return MSG_NON_LIE;
+
         try {
-            String token = nutritionService.getValidToken(user.getUsername());
-            JsonNode plan = olympusClient.getWeeklyPlan(token);
-            JsonNode presets = olympusClient.getMealPresets(token);
+            List<OlympusNutritionDao.PlannedEntryRow> entries = olympusDao.weeklyPlan(oid.get());
+            List<OlympusNutritionDao.MealPresetRow> presets = olympusDao.mealPresets(oid.get());
 
             StringBuilder res = new StringBuilder("Planning hebdomadaire des repas :\n");
-            JsonNode entries = (plan != null) ? plan.get("entries") : null;
-            if (entries == null || !entries.isArray() || entries.isEmpty()) {
+            if (entries.isEmpty()) {
                 res.append("Aucun repas planifié pour le moment.\n");
             } else {
                 String[] jours = {"MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"};
                 String[] joursFr = {"Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"};
                 for (int i = 0; i < jours.length; i++) {
                     StringBuilder ligne = new StringBuilder();
-                    for (JsonNode e : entries) {
-                        String jour = e.hasNonNull("dayOfWeek") ? e.get("dayOfWeek").asText() : "";
-                        if (!jours[i].equals(jour)) continue;
+                    for (OlympusNutritionDao.PlannedEntryRow e : entries) {
+                        if (!jours[i].equalsIgnoreCase(e.dayOfWeek())) continue;
                         if (ligne.length() > 0) ligne.append(", ");
                         ligne.append(nomEntreePlanifiee(e));
                     }
@@ -324,44 +283,92 @@ public class NutritionTools {
             }
 
             res.append("\nRepas pré-enregistrés :\n");
-            if (presets == null || !presets.isArray() || presets.isEmpty()) {
+            if (presets.isEmpty()) {
                 res.append("Aucun repas pré-enregistré.");
             } else {
-                for (JsonNode p : presets) {
-                    String nom = p.hasNonNull("name") ? p.get("name").asText() : "Repas";
-                    res.append("- ").append(nom).append(" : ")
-                            .append(fmt(asDouble(p, "totalKcal"))).append(" kcal, ")
-                            .append(fmt(asDouble(p, "totalProteins"))).append(" g prot, ")
-                            .append(fmt(asDouble(p, "totalCarbs"))).append(" g glu, ")
-                            .append(fmt(asDouble(p, "totalFats"))).append(" g lip\n");
+                for (OlympusNutritionDao.MealPresetRow p : presets) {
+                    res.append("- ").append(p.name()).append(" : ")
+                            .append(fmt(p.kcal())).append(" kcal, ")
+                            .append(fmt(p.proteins())).append(" g prot, ")
+                            .append(fmt(p.carbs())).append(" g glu, ")
+                            .append(fmt(p.fats())).append(" g lip\n");
                 }
             }
             return res.toString();
-        } catch (NutritionService.NotLinkedException e) {
-            return MSG_NON_LIE;
-        } catch (NutritionService.ExpiredException e) {
-            return MSG_EXPIRE;
-        } catch (OlympusClient.OlympusUnauthorizedException e) {
-            nutritionService.invalidateLink(user.getUsername());
-            return MSG_EXPIRE;
-        } catch (OlympusClient.OlympusUnavailableException e) {
+        } catch (DataAccessException e) {
             return MSG_INDISPO;
         }
     }
 
-    /** Nom lisible d'une entrée de planning : aliment (+ quantité) ou repas pré-enregistré. */
-    private String nomEntreePlanifiee(JsonNode entry) {
-        JsonNode food = entry.get("foodItem");
-        if (food != null && food.hasNonNull("name")) {
-            String n = food.get("name").asText();
-            return entry.hasNonNull("quantityGrams")
-                    ? n + " (" + fmt(entry.get("quantityGrams").asDouble()) + " g)" : n;
+    @Tool("Récupère le détail repas par repas de ce que l'utilisateur a réellement mangé une journée donnée (format YYYY-MM-DD ; null ou vide = aujourd'hui) : chaque aliment ou repas avec sa quantité et ses calories/macros. Nécessite la liaison Olympus.")
+    public String getDetailRepasJournalier(@ToolMemoryId String userId, String date) {
+        Utilisateur user = loadUser(userId);
+        LocalDate target;
+        if (date == null || date.isBlank()) {
+            target = LocalDate.now();
+        } else {
+            try {
+                target = LocalDate.parse(date.trim());
+            } catch (DateTimeParseException e) {
+                return "Date invalide '" + date + "'. Utilise le format AAAA-MM-JJ ou laisse vide pour aujourd'hui.";
+            }
         }
-        JsonNode preset = entry.get("mealPreset");
-        if (preset != null && preset.hasNonNull("name")) {
-            return preset.get("name").asText();
+
+        Optional<Long> oid = nutritionService.getOlympusUserId(user.getUsername());
+        if (oid.isEmpty()) return MSG_NON_LIE;
+
+        try {
+            List<OlympusNutritionDao.LogEntryRow> entries = olympusDao.logEntries(oid.get(), target);
+            if (entries.isEmpty()) {
+                return "Aucun aliment enregistré le " + target + ".";
+            }
+            StringBuilder res = new StringBuilder("Détail des repas du ").append(target).append(" :\n");
+            for (OlympusNutritionDao.LogEntryRow e : entries) {
+                res.append("- ").append(e.name());
+                if (e.quantityGrams() != null && e.quantityGrams() > 0) {
+                    res.append(" (").append(fmt(e.quantityGrams())).append(" g)");
+                }
+                res.append(" : ").append(fmt(e.kcal())).append(" kcal, ")
+                        .append(fmt(e.proteins())).append(" g prot, ")
+                        .append(fmt(e.carbs())).append(" g glu, ")
+                        .append(fmt(e.fats())).append(" g lip\n");
+            }
+            return res.toString();
+        } catch (DataAccessException ex) {
+            return MSG_INDISPO;
         }
+    }
+
+    // ------------------------------------------------------------------- Helpers
+
+    private String nomEntreePlanifiee(OlympusNutritionDao.PlannedEntryRow e) {
+        if (e.foodName() != null) {
+            return e.quantityGrams() != null
+                    ? e.foodName() + " (" + fmt(e.quantityGrams()) + " g)" : e.foodName();
+        }
+        if (e.presetName() != null) return e.presetName();
         return "Repas";
+    }
+
+    private String goalFr(String goal) {
+        if (goal == null) return "non défini";
+        return switch (goal.toUpperCase()) {
+            case "LOSE_WEIGHT" -> "perte de poids";
+            case "MAINTAIN" -> "maintien";
+            case "GAIN_MUSCLE" -> "prise de muscle";
+            default -> goal;
+        };
+    }
+
+    private String activityFr(String activity) {
+        if (activity == null) return "non défini";
+        return switch (activity.toUpperCase()) {
+            case "SEDENTARY" -> "sédentaire";
+            case "LIGHT" -> "léger";
+            case "MODERATE" -> "modéré";
+            case "INTENSE" -> "intense";
+            default -> activity;
+        };
     }
 
     private String fmtKg(double kg) {
@@ -379,8 +386,8 @@ public class NutritionTools {
                 .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
     }
 
-    private double asDouble(JsonNode node, String field) {
-        return (node != null && node.hasNonNull(field)) ? node.get(field).asDouble() : 0.0;
+    private double orZero(Double v) {
+        return v == null ? 0.0 : v;
     }
 
     private String fmt(double v) {
