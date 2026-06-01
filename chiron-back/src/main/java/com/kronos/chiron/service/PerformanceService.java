@@ -22,6 +22,7 @@ public class PerformanceService {
 
     private final PerformanceRecordRepository performanceRecordRepository;
     private final UtilisateurRepository utilisateurRepository;
+    private final OneRepMaxEstimator estimator;
 
     /**
      * Returns the full performance summary for a user:
@@ -58,8 +59,9 @@ public class PerformanceService {
         }
 
         Double poidsCorps = user.getPoidsCorps();
-        double rm1 = calculateRm1(type, dto.getPoids(), dto.getNombreReps(), poidsCorps);
-        Double ratio = (poidsCorps != null && poidsCorps > 0) ? computeRatio(rm1, poidsCorps) : null;
+        double rm1 = estimator.display(type, dto.getPoids(), dto.getNombreReps(), poidsCorps);
+        Double ratio = (poidsCorps != null && poidsCorps > 0)
+                ? estimator.ratio(type, dto.getPoids(), dto.getNombreReps(), poidsCorps) : null;
 
         PerformanceRecord record = PerformanceRecord.builder()
                 .utilisateur(user)
@@ -111,9 +113,10 @@ public class PerformanceService {
                 .stream()
                 .map(r -> {
                     Double ratio = (poidsCorps != null && poidsCorps > 0)
-                            ? round2(computeRatio(r.getRm1Estime(), poidsCorps))
-                            : r.getRatioPerformance();
-                    return toDto(r, tierForRatio(type, ratio), ratio);
+                            ? round2(estimator.ratio(type, r.getPoids(), r.getNombreReps(), poidsCorps))
+                            : null;
+                    double displayRm1 = estimator.display(type, r.getPoids(), r.getNombreReps(), poidsCorps);
+                    return toDto(r, tierForRatio(type, ratio), ratio, displayRm1);
                 })
                 .collect(Collectors.toList());
     }
@@ -146,22 +149,24 @@ public class PerformanceService {
 
         PerformanceRecord r = best.get();
 
-        // Always use current bodyweight for ratio/tier (not the snapshot stored in the record)
+        // Recalcul à la lecture depuis la charge + reps bruts et le poids de corps courant
+        // (la correction de formule s'applique ainsi rétroactivement, sans migration).
         Double currentRatio = (poidsCorps != null && poidsCorps > 0)
-                ? round2(computeRatio(r.getRm1Estime(), poidsCorps))
+                ? round2(estimator.ratio(type, r.getPoids(), r.getNombreReps(), poidsCorps))
                 : null;
+        double displayRm1 = estimator.display(type, r.getPoids(), r.getNombreReps(), poidsCorps);
 
         PerformanceTier tier = tierForRatio(type, currentRatio);
-        return toDto(r, tier, currentRatio);
+        return toDto(r, tier, currentRatio, displayRm1);
     }
 
-    private ExercisePerformanceDto toDto(PerformanceRecord r, PerformanceTier tier, Double ratio) {
+    private ExercisePerformanceDto toDto(PerformanceRecord r, PerformanceTier tier, Double ratio, double displayRm1) {
         return ExercisePerformanceDto.builder()
                 .exerciseType(r.getExerciseType().name())
                 .nom(r.getExerciseType().getNom())
                 .poids(r.getPoids())
                 .nombreReps(r.getNombreReps())
-                .rm1Estime(round2(r.getRm1Estime()))
+                .rm1Estime(round2(displayRm1))
                 .ratioPerformance(ratio)
                 .poidsCorporel(r.getPoidsCorporel())
                 .tier(tier.getNom())
@@ -169,27 +174,6 @@ public class PerformanceService {
                 .tierCategorie(tier.getCategorie())
                 .recordedAt(r.getRecordedAt())
                 .build();
-    }
-
-    /**
-     * 1RM formula: effectiveWeight × (36 / (37 − reps)).
-     * For bodyweight exercises: effectiveWeight = lest + poidsCorps.
-     * For barbell exercises:    effectiveWeight = poids (bar weight).
-     */
-    double calculateRm1(ExerciseType type, double poids, int reps, Double poidsCorps) {
-        // Cap reps at 10 for bodyweight exercises without added weight (lest=0)
-        int effectiveReps = (type.isBodyweightExercise() && poids == 0.0) ? Math.min(reps, 10) : reps;
-        double effectiveWeight = (type.isBodyweightExercise() && poidsCorps != null)
-                ? poids + poidsCorps
-                : poids;
-        return effectiveWeight * (36.0 / (37 - effectiveReps));
-    }
-
-    /**
-     * Ratio = 1RM / poidsCorps. Same formula for all exercise types.
-     */
-    private double computeRatio(double rm1, double poidsCorps) {
-        return rm1 / poidsCorps;
     }
 
     PerformanceTier tierForRatio(ExerciseType type, Double ratio) {

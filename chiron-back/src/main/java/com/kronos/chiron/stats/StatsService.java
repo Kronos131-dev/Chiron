@@ -48,6 +48,7 @@ public class StatsService {
     private final PerformanceService performanceService;
     private final NutritionService nutritionService;
     private final OlympusNutritionDao olympusDao;
+    private final com.kronos.chiron.service.OneRepMaxEstimator oneRepMaxEstimator;
     private final BodyCompositionRecordRepository bodyCompositionRepo;
     private final UtilisateurRepository utilisateurRepository;
 
@@ -220,7 +221,7 @@ public class StatsService {
                 found = true;
                 for (Serie serie : e.getSeries()) {
                     chargeMax = Math.max(chargeMax, serie.getPoids());
-                    e1rm = Math.max(e1rm, epley(serie.getPoids(), serie.getNombreReps()));
+                    e1rm = Math.max(e1rm, oneRepMaxEstimator.generic(serie.getPoids(), serie.getNombreReps()));
                 }
                 volume += exerciseTonnage(e);
             }
@@ -339,12 +340,6 @@ public class StatsService {
         if (s.getStartTime() == null || s.getEndTime() == null) return null;
         long min = java.time.Duration.between(s.getStartTime(), s.getEndTime()).toMinutes();
         return min > 0 ? (double) min : null;
-    }
-
-    /** 1RM estimé (Epley), reps bornées à [1,36] pour éviter une division par zéro. */
-    private double epley(double poids, int reps) {
-        int r = Math.min(Math.max(reps, 1), 36);
-        return poids * (36.0 / (37 - r));
     }
 
     private int computeWeekStreak(List<Seance> sessions, LocalDate today) {

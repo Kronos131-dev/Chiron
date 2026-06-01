@@ -164,7 +164,9 @@
                   <p class="text-lg font-black font-headline text-white">{{ exercise.nombreReps }}</p>
                 </div>
                 <div class="bg-slate-950/50 rounded-xl p-3 text-center">
-                  <p class="text-[9px] text-on-surface-variant tracking-widest uppercase mb-1">1RM Est.</p>
+                  <p class="text-[9px] text-on-surface-variant tracking-widest uppercase mb-1">
+                    {{ isBodyweightExercise(exercise.exerciseType) ? '1RM lesté' : '1RM Est.' }}
+                  </p>
                   <p class="text-lg font-black font-headline" [style.color]="'var(--tier-color)'">
                     {{ exercise.rm1Estime }}<span class="text-xs font-normal">kg</span>
                   </p>
@@ -176,7 +178,7 @@
                 <div class="mb-4">
                   <div class="flex items-center justify-between mb-1.5">
                     <span class="text-[10px] text-on-surface-variant tracking-widest uppercase">
-                      Ratio 1RM/PC
+                      {{ isBodyweightExercise(exercise.exerciseType) ? 'Ratio total/PC' : 'Ratio 1RM/PC' }}
                     </span>
                     <span class="text-xs font-black" [style.color]="'var(--tier-color)'">
                       {{ exercise.ratioPerformance }}×
@@ -337,12 +339,22 @@
           Glisse ou tape pour ajuster
         </p>
 
+        <!-- Fiabilité : l'estimation est plafonnée à 10 reps -->
+        @if (repsValue() > 10) {
+          <p class="text-[9px] text-amber-400/80 text-center flex items-center justify-center gap-1">
+            <span class="material-symbols-outlined text-sm">info</span>
+            Estimation plafonnée à 10 reps — pour un max fiable, vise 3-6 reps proches de l'échec.
+          </p>
+        }
+
         <!-- Live preview -->
         @if (preview1RM()) {
           <div class="bg-slate-950/60 rounded-2xl p-4 border border-secondary/15">
             <div class="grid grid-cols-2 gap-4 text-center">
               <div>
-                <p class="text-[9px] text-on-surface-variant tracking-widest uppercase mb-1">1RM Estimé</p>
+                <p class="text-[9px] text-on-surface-variant tracking-widest uppercase mb-1">
+                  {{ isBodyweightExercise(editingExercise()?.exerciseType) ? '1RM lesté' : '1RM Estimé' }}
+                </p>
                 <p class="text-2xl font-black font-headline text-white">
                   {{ preview1RM() }}<span class="text-xs font-normal text-on-surface-variant">kg</span>
                 </p>
