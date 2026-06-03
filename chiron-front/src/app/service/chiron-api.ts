@@ -338,6 +338,11 @@ export class ChironApi {
     return this.http.delete<void>(`${this.apiUrl}/nutrition/link`);
   }
 
+  /** Token de liaison pour l'entrée directe (« handoff ») dans la PWA Olympus. */
+  getOlympusHandoff(): Observable<OlympusHandoff> {
+    return this.http.get<OlympusHandoff>(`${this.apiUrl}/nutrition/handoff`);
+  }
+
   // --- Liaison Fitbit (données santé) ---
 
   getFitbitStatus(): Observable<FitbitLinkStatus> {
@@ -425,6 +430,10 @@ export interface NutritionLinkStatus {
   olympusUsername: string | null;
   linkedAt: string | null;
   expiresAt: string | null;
+}
+
+export interface OlympusHandoff {
+  token: string;
 }
 
 export interface FitbitLinkStatus {

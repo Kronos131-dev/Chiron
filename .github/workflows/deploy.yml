@@ -141,6 +141,124 @@ jobs:
           path: chiron-back/target/failsafe-reports/
           retention-days: 7
 
+  # ── 1c. Build backend Olympus (repo séparé, Java 17) ─────────────────────────
+  build-olympus-backend:
+    name: Build Olympus Backend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Olympus
+        uses: actions/checkout@v5
+        with:
+          repository: Kronos131-dev/olympus
+          token: ${{ secrets.OLYMPUS_PAT }}
+          path: olympus
+
+      - uses: actions/setup-java@v5
+        with:
+          java-version: '17'   # Olympus cible Java 17 (Chiron est en 21)
+          distribution: temurin
+          cache: maven
+
+      - name: Package JAR
+        working-directory: olympus/olympus-back
+        run: |
+          chmod +x mvnw
+          ./mvnw package -DskipTests -B --no-transfer-progress
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: olympus-backend-jar
+          path: olympus/olympus-back/target/olympus-0.0.1-SNAPSHOT.jar
+          retention-days: 1
+
+  # ── 1d. Build front PWA Olympus (Node) ───────────────────────────────────────
+  build-olympus-frontend:
+    name: Build Olympus PWA
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Olympus
+        uses: actions/checkout@v5
+        with:
+          repository: Kronos131-dev/olympus
+          token: ${{ secrets.OLYMPUS_PAT }}
+          path: olympus
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: olympus/olympus-pwa/package-lock.json
+
+      - name: Install & build
+        working-directory: olympus/olympus-pwa
+        run: |
+          npm ci
+          npm run build
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: olympus-frontend-dist
+          path: olympus/olympus-pwa/dist/
+          retention-days: 1
+
+  # ── 3c. Tests Olympus (unitaires + intégration, Java 17 + PostgreSQL) ─────────
+  test-olympus:
+    name: Olympus Tests
+    runs-on: ubuntu-latest
+    needs: [build-olympus-backend, build-olympus-frontend]
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: olympus_user
+          POSTGRES_PASSWORD: olympus_password
+          POSTGRES_DB: olympus_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U olympus_user -d olympus_db"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Checkout Olympus
+        uses: actions/checkout@v5
+        with:
+          repository: Kronos131-dev/olympus
+          token: ${{ secrets.OLYMPUS_PAT }}
+          path: olympus
+
+      - uses: actions/setup-java@v5
+        with:
+          java-version: '17'
+          distribution: temurin
+          cache: maven
+
+      - name: Create PostgreSQL extensions
+        run: |
+          PGPASSWORD=olympus_password psql -h localhost -U olympus_user -d olympus_db \
+            -c 'CREATE EXTENSION IF NOT EXISTS unaccent; CREATE EXTENSION IF NOT EXISTS pg_trgm;'
+
+      - name: Run tests (Surefire + Failsafe via verify)
+        working-directory: olympus/olympus-back
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/olympus_db
+          SPRING_DATASOURCE_USERNAME: olympus_user
+          SPRING_DATASOURCE_PASSWORD: olympus_password
+        run: |
+          chmod +x mvnw
+          ./mvnw -B verify --no-transfer-progress
+
+      - name: Upload Olympus test reports
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: olympus-test-results
+          path: |
+            olympus/olympus-back/target/surefire-reports/
+            olympus/olympus-back/target/failsafe-reports/
+          retention-days: 7
+
   # ── 4. Deploy SSH ─────────────────────────────────────────────────────────────
   deploy:
     name: Deploy → ${{ inputs.target }}
@@ -308,4 +426,148 @@ jobs:
             docker ps -a || true
             echo "=== docker logs chiron_backend (200 dernières lignes) ==="
             docker logs --tail 200 chiron_backend 2>&1 || true
+          ENDSSH
+
+  # ── 5. Deploy Olympus SSH (modèle « artefacts montés », après Chiron) ─────────
+  #     Le réseau partagé chiron-olympus est créé par le job `deploy` ci-dessus.
+  deploy-olympus:
+    name: Deploy Olympus → ${{ inputs.target }}
+    runs-on: ubuntu-latest
+    needs: [deploy, build-olympus-backend, build-olympus-frontend, test-olympus]
+    environment: ${{ inputs.target || 'production' }}
+
+    steps:
+      - name: Checkout Olympus (compose + nginx.conf)
+        uses: actions/checkout@v5
+        with:
+          repository: Kronos131-dev/olympus
+          token: ${{ secrets.OLYMPUS_PAT }}
+          path: olympus
+
+      - uses: actions/download-artifact@v5
+        with:
+          name: olympus-backend-jar
+          path: olympus-artifacts/
+
+      - uses: actions/download-artifact@v5
+        with:
+          name: olympus-frontend-dist
+          path: olympus-artifacts/dist/
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ env.SERVER_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Upload JAR
+        run: |
+          scp -i ~/.ssh/deploy_key \
+            olympus-artifacts/olympus-0.0.1-SNAPSHOT.jar \
+            ${{ secrets.SSH_USER }}@${{ env.SERVER_HOST }}:/tmp/olympus.jar
+
+      - name: Upload PWA dist
+        run: |
+          rsync -az --delete \
+            -e "ssh -i ~/.ssh/deploy_key" \
+            olympus-artifacts/dist/ \
+            ${{ secrets.SSH_USER }}@${{ env.SERVER_HOST }}:/tmp/olympus-pwa-dist/
+
+      - name: Upload compose + nginx.conf
+        run: |
+          scp -i ~/.ssh/deploy_key \
+            olympus/olympus-back/docker-compose.prod.yml \
+            ${{ secrets.SSH_USER }}@${{ env.SERVER_HOST }}:/tmp/olympus-compose.yml
+          scp -i ~/.ssh/deploy_key \
+            olympus/olympus-pwa/nginx.conf \
+            ${{ secrets.SSH_USER }}@${{ env.SERVER_HOST }}:/tmp/olympus-pwa-nginx.conf
+
+      - name: Upload secrets (.env Olympus)
+        run: |
+          printf 'POSTGRES_USER=%s\nPOSTGRES_PASSWORD=%s\nMISTRAL_API_KEY=%s\nGEMINI_API_KEY=%s\n' \
+            'olympus_user' \
+            'olympus_password' \
+            '${{ secrets.OLYMPUS_MISTRAL_API_KEY }}' \
+            '${{ secrets.OLYMPUS_GEMINI_API_KEY }}' \
+            > /tmp/olympus.env
+          scp -i ~/.ssh/deploy_key /tmp/olympus.env \
+            ${{ secrets.SSH_USER }}@${{ env.SERVER_HOST }}:/tmp/olympus.env
+
+      - name: Deploy Olympus on server
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+            ${{ secrets.SSH_USER }}@${{ env.SERVER_HOST }} \
+            'bash -s' << 'ENDSSH'
+
+            set -e
+            OLYMPUS_DIR=~/olympus
+
+            if command -v docker-compose &> /dev/null; then COMPOSE="docker-compose"; else COMPOSE="docker compose"; fi
+
+            echo "▶ Préparation de $OLYMPUS_DIR..."
+            mkdir -p $OLYMPUS_DIR
+
+            echo "▶ Dépôt des artefacts..."
+            cp /tmp/olympus.jar              $OLYMPUS_DIR/olympus.jar
+            cp /tmp/olympus-compose.yml      $OLYMPUS_DIR/docker-compose.prod.yml
+            cp /tmp/olympus-pwa-nginx.conf   $OLYMPUS_DIR/olympus-pwa-nginx.conf
+            cp /tmp/olympus.env              $OLYMPUS_DIR/.env
+            rsync -a --delete /tmp/olympus-pwa-dist/ $OLYMPUS_DIR/olympus-pwa-dist/
+
+            echo "▶ Vérification du réseau partagé chiron-olympus..."
+            docker network inspect chiron-olympus >/dev/null 2>&1 \
+              || docker network create chiron-olympus
+
+            echo "▶ Démarrage de la base (si nécessaire) puis recréation API + PWA..."
+            cd $OLYMPUS_DIR
+            $COMPOSE -f docker-compose.prod.yml up -d olympus-db
+            $COMPOSE -f docker-compose.prod.yml up -d --force-recreate olympus-api olympus-pwa
+
+            echo "▶ Vérification : le conteneur API tourne bien le JAR déployé..."
+            sleep 3
+            EXPECTED_SHA=$(sha256sum /tmp/olympus.jar | awk '{print $1}')
+            RUNNING_SHA=$(docker exec olympus-api sha256sum /app/olympus.jar 2>/dev/null | awk '{print $1}' || echo "indisponible")
+            if [ "$EXPECTED_SHA" != "$RUNNING_SHA" ]; then
+              echo "✗ ÉCHEC : olympus-api ne tourne PAS le JAR déployé."
+              echo "  attendu=$EXPECTED_SHA conteneur=$RUNNING_SHA"
+              docker logs --tail 40 olympus-api 2>&1 || true
+              exit 1
+            fi
+            echo "✓ olympus-api aligné sur le JAR déployé."
+
+            echo "▶ Nettoyage..."
+            rm -f /tmp/olympus.jar /tmp/olympus-compose.yml /tmp/olympus-pwa-nginx.conf /tmp/olympus.env
+            rm -rf /tmp/olympus-pwa-dist/
+            echo "✓ Déploiement Olympus terminé"
+          ENDSSH
+
+      - name: Health check PWA Olympus
+        run: |
+          HEALTH_URL="http://${{ env.SERVER_HOST }}:8082/olympus/"
+          echo "Attente du front Olympus (max 90s) sur $HEALTH_URL"
+          STATUS=000
+          for i in $(seq 1 18); do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$HEALTH_URL" || echo "000")
+            if [ "$STATUS" = "200" ]; then
+              echo "✓ PWA Olympus UP — HTTP 200 après ~$((i * 5))s"
+              exit 0
+            fi
+            echo "  tentative $i/18 : HTTP $STATUS — nouvelle tentative dans 5s..."
+            sleep 5
+          done
+          echo "✗ ÉCHEC : la PWA Olympus ne renvoie pas 200 (dernier code : HTTP $STATUS)."
+          exit 1
+
+      - name: Diagnostics Olympus (si échec)
+        if: failure()
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+            ${{ secrets.SSH_USER }}@${{ env.SERVER_HOST }} 'bash -s' << 'ENDSSH'
+            echo "=== docker ps -a ==="
+            docker ps -a || true
+            echo "=== logs olympus-api (120 dernières lignes) ==="
+            docker logs --tail 120 olympus-api 2>&1 || true
+            echo "=== logs olympus-pwa (40 dernières lignes) ==="
+            docker logs --tail 40 olympus-pwa 2>&1 || true
           ENDSSH
