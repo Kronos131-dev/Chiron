@@ -106,3 +106,19 @@
     text-shadow: 0 0 10px rgba(212,184,106,.50);
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   SAFE-AREA (PWA edge-to-edge) — l'app passe sous l'encoche / la barre
+   gestuelle (viewport-fit=cover). On décale header et contenu pour que
+   rien d'important ne soit masqué. Additif aux paddings Tailwind.
+   ══════════════════════════════════════════════════════════════════ */
+@supports (padding: env(safe-area-inset-top)) {
+  header.fixed {
+    padding-top: calc(1rem + env(safe-area-inset-top));
+    padding-left: calc(1.5rem + env(safe-area-inset-left));
+    padding-right: calc(1.5rem + env(safe-area-inset-right));
+  }
+  body {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}

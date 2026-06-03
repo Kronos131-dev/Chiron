@@ -115,45 +115,10 @@
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   WRAPPER + COLONNES GRECQUES (avancé) — au premier plan
+   WRAPPER
    ══════════════════════════════════════════════════════════════════ */
 
 .hero-card-wrap { position: relative; }
-
-/* Colonne : image de marbre (asset) avec FALLBACK marbre CSS (cannelures).
-   Placée DERRIÈRE la carte (z-index:0) → peut dépasser sur les côtés sans
-   gêner la lisibilité, et reste « clip-safe » (overflow-hidden sur main). */
-.greek-column {
-  position: absolute;
-  top: 70px;
-  bottom: 26px;
-  width: clamp(26px, 9vw, 64px);
-  z-index: 0;
-  background-image:
-    var(--column-img, none),
-    repeating-linear-gradient(90deg,
-      rgba(0,0,0,0.30) 0px,
-      rgba(0,0,0,0.08) 2px,
-      rgba(255,255,255,0.20) 4px,
-      rgba(0,0,0,0.08) 6px,
-      rgba(0,0,0,0.30) 8px);
-  background-repeat: no-repeat, repeat;
-  background-position: center, center;
-  background-size: contain, auto;
-  filter: drop-shadow(0 8px 16px rgba(0,0,0,0.55));
-  transition: top 0.4s ease;
-}
-.col-novice  { --column-img: url("/images/themes/column-novice.png"); }
-.col-athlete { --column-img: url("/images/themes/column-athlete.png"); }
-.col-legend  { --column-img: url("/images/themes/column-legend.png"); }
-
-.greek-column-right { transform: scaleX(-1); }
-.greek-column-left  { left: clamp(-46px, -7vw, -16px); }
-.greek-column-right { right: clamp(-46px, -7vw, -16px); }
-
-.column-lvl-3 { top: 120px; }
-.column-lvl-4 { top: 96px; }
-.column-lvl-5 { top: 68px; filter: drop-shadow(0 8px 16px rgba(0,0,0,0.55)) drop-shadow(0 0 16px var(--tier-bg)); }
 
 /* ══════════════════════════════════════════════════════════════════
    CARTE PROFIL — cadre métallique mat (gradient-border, coins arrondis)
@@ -168,130 +133,46 @@
 .profile-card-novice,
 .profile-card-athlete,
 .profile-card-legend {
-  /* Bord épais : sert de cadre métallique mat en FALLBACK (gradient-border),
-     remplacé par le cadre ornementé en image quand l'asset est présent. */
-  border: clamp(14px, 4.5vw, 24px) solid transparent;
+  /* Bord épais : c'est la zone où s'affiche le cadre ornementé (border-image).
+     Le remplissage est limité au padding-box → AUCUN métal sous le cadre, donc
+     les parties transparentes du PNG laissent voir le fond de scène (pas de
+     rectangle de bordure CSS qui déborde du vrai cadre). */
+  border: clamp(26px, 9vw, 56px) solid transparent;
   border-radius: 1.5rem;
-  background: var(--card-fill) padding-box, var(--tier-metal) border-box;
+  background: var(--card-fill) padding-box;
 }
 
-/* Cadre ornementé (border-image) — se substitue au gradient-border une fois chargé.
-   Si l'image est absente (404), le bord transparent laisse voir le gradient-border. */
-.frame-img-novice  { border-image: url("/images/themes/frame-novice.png")  90 / 1 / 0 round; }
-.frame-img-athlete { border-image: url("/images/themes/frame-athlete.png") 90 / 1 / 0 round; }
-.frame-img-legend  { border-image: url("/images/themes/frame-legend.png")  90 / 1 / 0 round; }
+/* Cadre ornementé (border-image) : peint dans la zone de bordure transparente. */
+.frame-img-novice  { border-image: url("/images/themes/frame-novice.png")  16% 14% / 1 / 0 round; }
+.frame-img-athlete { border-image: url("/images/themes/frame-athlete.png") 16% 14% / 1 / 0 round; }
+.frame-img-legend  { border-image: url("/images/themes/frame-legend.png")  16% 14% / 1 / 0 round; }
 
+/* Remplissage NEUTRE et translucide (pas de teinte de palier) : le fond de
+   scène transparaît nettement à travers la carte. Voile sombre léger juste
+   suffisant pour la lisibilité du texte. */
 .profile-card-novice {
-  --card-fill: linear-gradient(165deg, rgba(11,16,30,0.98), rgba(7,10,18,0.99));
-  box-shadow: 0 22px 60px rgba(0,0,0,0.7), 0 0 36px var(--tier-bg), inset 0 0 44px rgba(0,0,0,0.45);
+  --card-fill: linear-gradient(165deg, rgba(4,6,10,0.30), rgba(4,6,10,0.42));
+  box-shadow: 0 22px 60px rgba(0,0,0,0.55), inset 0 0 40px rgba(0,0,0,0.35);
 }
 .profile-card-athlete {
-  --card-fill: linear-gradient(165deg, rgba(22,9,18,0.98), rgba(13,6,12,0.99));
-  box-shadow: 0 22px 60px rgba(0,0,0,0.72), 0 0 44px var(--tier-bg), inset 0 0 50px rgba(0,0,0,0.5);
+  --card-fill: linear-gradient(165deg, rgba(4,6,10,0.30), rgba(4,6,10,0.42));
+  box-shadow: 0 22px 60px rgba(0,0,0,0.55), inset 0 0 40px rgba(0,0,0,0.35);
 }
 .profile-card-legend {
-  --card-fill: linear-gradient(165deg, rgba(22,16,5,0.98), rgba(13,9,2,0.99));
-  box-shadow: 0 22px 60px rgba(0,0,0,0.82), 0 0 56px var(--tier-bg), inset 0 0 58px rgba(0,0,0,0.48);
+  --card-fill: linear-gradient(165deg, rgba(4,6,10,0.30), rgba(4,6,10,0.42));
+  box-shadow: 0 22px 60px rgba(0,0,0,0.55), inset 0 0 40px rgba(0,0,0,0.35);
   padding-top: 3.25rem !important;
 }
 
-/* ══════════════════════════════════════════════════════════════════
-   CADRE ORNÉ — frise grecque, motif distinct par palier (1→8)
-   Technique : fond = métal du palier, masque = motif (data-URI).
-   Bandeau haut pour 1-4 ; périmètre complet pour 5-8.
-   ══════════════════════════════════════════════════════════════════ */
-
-.profile-frame {
-  position: absolute;
-  inset: 0;
-  border-radius: 1.5rem;
-  background: var(--tier-metal);
-  pointer-events: none;
-  z-index: 2;
-  -webkit-mask-repeat: repeat-x;
-          mask-repeat: repeat-x;
-  -webkit-mask-position: top center;
-          mask-position: top center;
-}
-
-/* niveau 1 — filet fin + points (sobre) */
-.frame-lvl-1 {
-  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='18'%3E%3Crect x='0' y='13.5' width='40' height='1.4'/%3E%3Ccircle cx='6' cy='8' r='1.3'/%3E%3Ccircle cx='20' cy='8' r='1.3'/%3E%3Ccircle cx='34' cy='8' r='1.3'/%3E%3C/svg%3E");
-          mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='18'%3E%3Crect x='0' y='13.5' width='40' height='1.4'/%3E%3Ccircle cx='6' cy='8' r='1.3'/%3E%3Ccircle cx='20' cy='8' r='1.3'/%3E%3Ccircle cx='34' cy='8' r='1.3'/%3E%3C/svg%3E");
-  -webkit-mask-size: 40px 18px; mask-size: 40px 18px;
-}
-/* niveau 2 — méandre grec (clé) simple */
-.frame-lvl-2 {
-  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='22'%3E%3Cpath d='M0 18 L0 7 L10 7 L10 3 L26 3 L26 14 L18 14 L18 17 L40 17' fill='none' stroke='black' stroke-width='2'/%3E%3C/svg%3E");
-          mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='22'%3E%3Cpath d='M0 18 L0 7 L10 7 L10 3 L26 3 L26 14 L18 14 L18 17 L40 17' fill='none' stroke='black' stroke-width='2'/%3E%3C/svg%3E");
-  -webkit-mask-size: 40px 22px; mask-size: 40px 22px;
-}
-/* niveau 3 — méandre dense (clé + ligne) */
-.frame-lvl-3 {
-  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='22'%3E%3Cpath d='M0 17 L0 6 L8 6 L8 3 L21 3 L21 13 L14 13 L14 16 L32 16' fill='none' stroke='black' stroke-width='1.8'/%3E%3Crect x='0' y='19.5' width='32' height='1.3'/%3E%3C/svg%3E");
-          mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='22'%3E%3Cpath d='M0 17 L0 6 L8 6 L8 3 L21 3 L21 13 L14 13 L14 16 L32 16' fill='none' stroke='black' stroke-width='1.8'/%3E%3Crect x='0' y='19.5' width='32' height='1.3'/%3E%3C/svg%3E");
-  -webkit-mask-size: 32px 22px; mask-size: 32px 22px;
-}
-/* niveau 4 — vague de Vitruve (spirale courante) */
-.frame-lvl-4 {
-  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='22'%3E%3Cpath d='M0 13 q5 -10 10 0 t10 0 t10 0 t10 0' fill='none' stroke='black' stroke-width='2.2'/%3E%3Ccircle cx='10' cy='13' r='1.6'/%3E%3Ccircle cx='30' cy='13' r='1.6'/%3E%3C/svg%3E");
-          mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='22'%3E%3Cpath d='M0 13 q5 -10 10 0 t10 0 t10 0 t10 0' fill='none' stroke='black' stroke-width='2.2'/%3E%3Ccircle cx='10' cy='13' r='1.6'/%3E%3Ccircle cx='30' cy='13' r='1.6'/%3E%3C/svg%3E");
-  -webkit-mask-size: 40px 22px; mask-size: 40px 22px;
-}
-/* niveau 5 — oves (egg-and-dart), périmètre complet */
-.frame-lvl-5 {
-  -webkit-mask-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='22'%3E%3Cellipse cx='10' cy='11' rx='5.5' ry='8'/%3E%3Cellipse cx='30' cy='11' rx='5.5' ry='8'/%3E%3Cpath d='M19.4 3 L20.6 3 L20.2 19 L19.8 19 Z'/%3E%3Cpath d='M-0.6 3 L0.6 3 L0.3 19 L-0.3 19 Z'/%3E%3Cpath d='M39.4 3 L40.6 3 L40.2 19 L39.8 19 Z'/%3E%3C/svg%3E"),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='22'%3E%3Cellipse cx='10' cy='11' rx='5.5' ry='8'/%3E%3Cellipse cx='30' cy='11' rx='5.5' ry='8'/%3E%3Cpath d='M19.4 3 L20.6 3 L20.2 19 L19.8 19 Z'/%3E%3C/svg%3E"),
-    linear-gradient(#000,#000), linear-gradient(#000,#000);
-  mask-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='22'%3E%3Cellipse cx='10' cy='11' rx='5.5' ry='8'/%3E%3Cellipse cx='30' cy='11' rx='5.5' ry='8'/%3E%3Cpath d='M19.4 3 L20.6 3 L20.2 19 L19.8 19 Z'/%3E%3Cpath d='M-0.6 3 L0.6 3 L0.3 19 L-0.3 19 Z'/%3E%3Cpath d='M39.4 3 L40.6 3 L40.2 19 L39.8 19 Z'/%3E%3C/svg%3E"),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='22'%3E%3Cellipse cx='10' cy='11' rx='5.5' ry='8'/%3E%3Cellipse cx='30' cy='11' rx='5.5' ry='8'/%3E%3Cpath d='M19.4 3 L20.6 3 L20.2 19 L19.8 19 Z'/%3E%3C/svg%3E"),
-    linear-gradient(#000,#000), linear-gradient(#000,#000);
-  -webkit-mask-position: top center, bottom center, left center, right center;
-          mask-position: top center, bottom center, left center, right center;
-  -webkit-mask-repeat: repeat-x, repeat-x, no-repeat, no-repeat;
-          mask-repeat: repeat-x, repeat-x, no-repeat, no-repeat;
-  -webkit-mask-size: 40px 20px, 40px 20px, 3px 100%, 3px 100%;
-          mask-size: 40px 20px, 40px 20px, 3px 100%, 3px 100%;
-}
-/* niveau 6 — frise de laurier, périmètre complet */
-.frame-lvl-6, .frame-lvl-7, .frame-lvl-8 {
-  -webkit-mask-position: top center, bottom center, left center, right center;
-          mask-position: top center, bottom center, left center, right center;
-  -webkit-mask-repeat: repeat-x, repeat-x, no-repeat, no-repeat;
-          mask-repeat: repeat-x, repeat-x, no-repeat, no-repeat;
-  -webkit-mask-size: 40px 22px, 40px 22px, 4px 100%, 4px 100%;
-          mask-size: 40px 22px, 40px 22px, 4px 100%, 4px 100%;
-}
-.frame-lvl-6 {
-  --frieze: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='22'%3E%3Crect x='0' y='10.4' width='40' height='1.2'/%3E%3Cg%3E%3Cellipse cx='7' cy='6' rx='5' ry='2' transform='rotate(35 7 6)'/%3E%3Cellipse cx='7' cy='16' rx='5' ry='2' transform='rotate(-35 7 16)'/%3E%3Cellipse cx='20' cy='6' rx='5' ry='2' transform='rotate(35 20 6)'/%3E%3Cellipse cx='20' cy='16' rx='5' ry='2' transform='rotate(-35 20 16)'/%3E%3Cellipse cx='33' cy='6' rx='5' ry='2' transform='rotate(35 33 6)'/%3E%3Cellipse cx='33' cy='16' rx='5' ry='2' transform='rotate(-35 33 16)'/%3E%3C/g%3E%3C/svg%3E");
-  -webkit-mask-image: var(--frieze), var(--frieze), linear-gradient(#000,#000), linear-gradient(#000,#000);
-          mask-image: var(--frieze), var(--frieze), linear-gradient(#000,#000), linear-gradient(#000,#000);
-}
-/* niveau 7 — laurier + rosettes */
-.frame-lvl-7 {
-  --frieze: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='22'%3E%3Crect x='0' y='10.4' width='40' height='1.2'/%3E%3Cellipse cx='8' cy='6' rx='5' ry='2' transform='rotate(35 8 6)'/%3E%3Cellipse cx='8' cy='16' rx='5' ry='2' transform='rotate(-35 8 16)'/%3E%3Cellipse cx='32' cy='6' rx='5' ry='2' transform='rotate(35 32 6)'/%3E%3Cellipse cx='32' cy='16' rx='5' ry='2' transform='rotate(-35 32 16)'/%3E%3Ccircle cx='20' cy='11' r='3'/%3E%3Ccircle cx='20' cy='5' r='1.5'/%3E%3Ccircle cx='20' cy='17' r='1.5'/%3E%3Ccircle cx='14' cy='11' r='1.5'/%3E%3Ccircle cx='26' cy='11' r='1.5'/%3E%3C/svg%3E");
-  -webkit-mask-image: var(--frieze), var(--frieze), linear-gradient(#000,#000), linear-gradient(#000,#000);
-          mask-image: var(--frieze), var(--frieze), linear-gradient(#000,#000), linear-gradient(#000,#000);
-}
-/* niveau 8 — composite orné (méandre + laurier), le plus riche */
-.frame-lvl-8 {
-  --frieze: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='26'%3E%3Cpath d='M0 24 L0 16 L9 16 L9 13 L24 13 L24 22 L17 22 L17 24' fill='none' stroke='black' stroke-width='1.6'/%3E%3Cellipse cx='8' cy='5' rx='5' ry='2' transform='rotate(35 8 5)'/%3E%3Cellipse cx='20' cy='4' rx='5' ry='2' transform='rotate(0 20 4)'/%3E%3Cellipse cx='32' cy='5' rx='5' ry='2' transform='rotate(-35 32 5)'/%3E%3Ccircle cx='20' cy='9' r='1.6'/%3E%3C/svg%3E");
-  -webkit-mask-image: var(--frieze), var(--frieze), linear-gradient(#000,#000), linear-gradient(#000,#000);
-          mask-image: var(--frieze), var(--frieze), linear-gradient(#000,#000), linear-gradient(#000,#000);
-  -webkit-mask-size: 40px 26px, 40px 26px, 4px 100%, 4px 100%;
-          mask-size: 40px 26px, 40px 26px, 4px 100%, 4px 100%;
-}
-
 /* ── Card inner glow ── */
-.card-inner-novice  { background: radial-gradient(ellipse 80% 38% at 50% 0%, var(--tier-bg) 0%, transparent 72%); opacity: 0.5; }
-.card-inner-athlete { background: radial-gradient(ellipse 80% 38% at 50% 0%, var(--tier-bg) 0%, transparent 72%); opacity: 0.5; }
+/* Halo de palier : très discret pour ne pas teinter/voiler la carte translucide. */
+.card-inner-novice  { background: radial-gradient(ellipse 80% 38% at 50% 0%, var(--tier-bg) 0%, transparent 72%); opacity: 0.18; }
+.card-inner-athlete { background: radial-gradient(ellipse 80% 38% at 50% 0%, var(--tier-bg) 0%, transparent 72%); opacity: 0.18; }
 .card-inner-legend  {
   background:
     radial-gradient(ellipse 70% 45% at 50% 0%,   var(--tier-bg) 0%, transparent 60%),
     radial-gradient(ellipse 60% 38% at 50% 100%, var(--tier-bg) 0%, transparent 60%);
-  opacity: 0.6;
+  opacity: 0.2;
 }
 
 /* ── Boutons d'action ── */
@@ -440,7 +321,7 @@
    ══════════════════════════════════════════════════════════════════ */
 
 .stats-novice, .stats-athlete, .stats-legend {
-  background: rgba(6,9,15,0.65);
+  background: rgba(4,6,10,0.32);
   border: 1px solid var(--tier-border);
 }
 .stats-hover-novice, .stats-hover-athlete, .stats-hover-legend {
@@ -531,7 +412,7 @@
 .section-icon-novice, .section-icon-athlete, .section-icon-legend { color: var(--tier-color); }
 
 .prog-card-novice, .prog-card-athlete, .prog-card-legend {
-  background: rgba(6,9,15,0.55);
+  background: rgba(4,6,10,0.32);
   border-color: var(--tier-border);
 }
 .prog-card-novice:hover, .prog-card-athlete:hover, .prog-card-legend:hover { border-color: var(--tier-color); }
@@ -555,13 +436,45 @@
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background-position: center;
+  background-position: center 42%;
   background-size: cover;
   background-repeat: no-repeat;
 }
-.scene-novice  { background-image: url("/images/themes/bg-novice.webp"); }
-.scene-athlete { background-image: url("/images/themes/bg-athlete.webp"); }
-.scene-legend  { background-image: url("/images/themes/bg-legend.webp"); }
+/* Fonds responsifs : le navigateur choisit la résolution selon le DPR de
+   l'appareil (mobile-first). La ligne url() simple sert de fallback. */
+.scene-novice {
+  background-image: url("/images/themes/bg-novice.webp");
+  background-image: -webkit-image-set(
+    url("/images/themes/bg-novice-720.webp") 1x,
+    url("/images/themes/bg-novice.webp") 1.5x,
+    url("/images/themes/bg-novice-1440.webp") 2x);
+  background-image: image-set(
+    url("/images/themes/bg-novice-720.webp") 1x,
+    url("/images/themes/bg-novice.webp") 1.5x,
+    url("/images/themes/bg-novice-1440.webp") 2x);
+}
+.scene-athlete {
+  background-image: url("/images/themes/bg-athlete.webp");
+  background-image: -webkit-image-set(
+    url("/images/themes/bg-athlete-720.webp") 1x,
+    url("/images/themes/bg-athlete.webp") 1.5x,
+    url("/images/themes/bg-athlete-1440.webp") 2x);
+  background-image: image-set(
+    url("/images/themes/bg-athlete-720.webp") 1x,
+    url("/images/themes/bg-athlete.webp") 1.5x,
+    url("/images/themes/bg-athlete-1440.webp") 2x);
+}
+.scene-legend {
+  background-image: url("/images/themes/bg-legend.webp");
+  background-image: -webkit-image-set(
+    url("/images/themes/bg-legend-720.webp") 1x,
+    url("/images/themes/bg-legend.webp") 1.5x,
+    url("/images/themes/bg-legend-1440.webp") 2x);
+  background-image: image-set(
+    url("/images/themes/bg-legend-720.webp") 1x,
+    url("/images/themes/bg-legend.webp") 1.5x,
+    url("/images/themes/bg-legend-1440.webp") 2x);
+}
 
 /* Overlay sombre : garantit la lisibilité du texte et l'esprit « fond noir ».
    N'apparaît que si une image de scène est chargée (sinon transparent par-dessus
@@ -571,32 +484,9 @@
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 120% 80% at 50% 0%, transparent 0%, rgba(5,7,12,0.55) 70%),
-    linear-gradient(to bottom, rgba(5,7,12,0.45) 0%, rgba(5,7,12,0.62) 45%, rgba(5,7,12,0.86) 100%);
+    radial-gradient(ellipse 120% 80% at 50% 0%, transparent 0%, rgba(5,7,12,0.38) 72%),
+    linear-gradient(to bottom, rgba(5,7,12,0.30) 0%, rgba(5,7,12,0.42) 45%, rgba(5,7,12,0.66) 100%);
 }
-
-/* ══════════════════════════════════════════════════════════════════
-   FRONTON (pédiment grec) — au-dessus de la carte
-   Fallback CSS : triangle métallique (clip-path). Asset : texture en + .
-   ══════════════════════════════════════════════════════════════════ */
-
-.profile-pediment {
-  position: relative;
-  z-index: 2;
-  width: 88%;
-  max-width: 460px;
-  height: clamp(40px, 13vw, 78px);
-  margin: 0 auto -10px;
-  background: var(--tier-metal);
-  background-size: cover;
-  background-position: center bottom;
-  clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
-  filter: drop-shadow(0 6px 10px rgba(0,0,0,0.5));
-  opacity: 0.96;
-}
-.pediment-novice  { background-image: url("/images/themes/pediment-novice.png"); }
-.pediment-athlete { background-image: url("/images/themes/pediment-athlete.png"); }
-.pediment-legend  { background-image: url("/images/themes/pediment-legend.png"); }
 
 /* ══════════════════════════════════════════════════════════════════
    CALQUE D'ACCENT NARRATIF — distinct par palier (le « vivant »)

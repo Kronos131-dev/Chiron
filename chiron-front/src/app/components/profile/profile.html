@@ -21,7 +21,7 @@
              [ngModel]="searchQuery()"
              (ngModelChange)="searchQuery.set($event); searchProfiles()"
              placeholder="Rechercher un guerrier..."
-             class="w-full bg-slate-900/80 text-white pl-10 pr-4 py-3 rounded-xl border border-secondary/20 focus:border-secondary outline-none transition-colors font-body shadow-lg">
+             class="w-full bg-black/30 text-white pl-10 pr-4 py-3 rounded-xl border border-secondary/20 focus:border-secondary outline-none transition-colors font-body shadow-lg">
 
       @if (searchResults().length > 0) {
         <div class="absolute w-full mt-2 bg-slate-900 border border-secondary/30 rounded-xl shadow-2xl z-50 overflow-hidden">
@@ -57,18 +57,8 @@
     @if (!isLoading() && athleteProfile()) {
       <div class="hero-card-wrap">
 
-        <!-- Fronton (pédiment grec) au-dessus de la carte -->
-        <div class="profile-pediment" [ngClass]="getPedimentClass()" aria-hidden="true"></div>
-
-        <!-- Colonnes de marbre flanquant la carte (tous univers) -->
-        <div class="greek-column greek-column-left"  [ngClass]="[getColumnClass(), getColumnImgClass()]"></div>
-        <div class="greek-column greek-column-right" [ngClass]="[getColumnClass(), getColumnImgClass()]"></div>
-
       <div class="profile-hero-card relative rounded-3xl p-8 text-center overflow-hidden"
            [ngClass]="[getProfileCardClass(), getFrameImgClass()]">
-
-        <!-- Cadre orné — frise grecque par palier (fallback CSS du border-image) -->
-        <div class="profile-frame" [ngClass]="getFrameMotifClass()"></div>
 
         <!-- Calque d'accent narratif (par palier) -->
         <div class="theme-accent" [ngClass]="getAccentClass()" aria-hidden="true"></div>
@@ -261,7 +251,7 @@
             }
           </div>
         } @else {
-          <p class="text-on-surface-variant text-sm text-center py-4 bg-slate-900/30 rounded-xl border border-white/5">
+          <p class="text-on-surface-variant text-sm text-center py-4 bg-black/25 rounded-xl border border-white/5">
             Aucun programme défini.
           </p>
         }
@@ -286,7 +276,7 @@
         @if (athleteProfile().historiqueRecent?.length > 0) {
           <div class="space-y-3">
             @for (hist of athleteProfile().historiqueRecent; track hist.id) {
-              <div class="border border-white/5 p-5 rounded-xl flex items-center justify-between cursor-pointer hover:border-secondary/20 transition-colors bg-slate-900/30"
+              <div class="border border-white/5 p-5 rounded-xl flex items-center justify-between cursor-pointer hover:border-secondary/20 transition-colors bg-black/25"
                    (click)="viewProgramme(hist.id)">
                 <div>
                   <h4 class="text-white font-bold tracking-wide uppercase">{{ hist.titre }}</h4>
@@ -302,7 +292,7 @@
             }
           </div>
         } @else {
-          <p class="text-on-surface-variant text-sm text-center py-4 bg-slate-900/30 rounded-xl border border-white/5">
+          <p class="text-on-surface-variant text-sm text-center py-4 bg-black/25 rounded-xl border border-white/5">
             Aucun historique récent.
           </p>
         }
