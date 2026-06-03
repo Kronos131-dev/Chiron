@@ -410,6 +410,13 @@ export class ChironApi {
     form.append('file', file);
     return this.http.post<VisbodyImportResult>(`${this.apiUrl}/visbody/import`, form);
   }
+
+  /** Upload manuel d'un export CSV Boditrax (alimente la page Composition). */
+  uploadBoditraxCsv(file: File): Observable<VisbodyImportResult> {
+    const form = new FormData();
+    form.append('file', file);
+    return this.http.post<VisbodyImportResult>(`${this.apiUrl}/boditrax/import`, form);
+  }
 }
 
 export interface NutritionLinkStatus {

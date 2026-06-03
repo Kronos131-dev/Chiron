@@ -295,4 +295,17 @@ jobs:
           done
           echo "✗ ÉCHEC : /actuator/health ne renvoie pas 200 (dernier code : HTTP $STATUS)."
           echo "  HTTP 403 ici = le backend actif n'est pas le nouveau code (ancien JAR encore en mémoire)."
+          echo "  HTTP 000 ici = rien n'écoute sur 9090 (le backend a planté au démarrage)."
           exit 1
+
+      # Sur échec : récupère les logs du conteneur backend (cause réelle du crash).
+      - name: Diagnostics backend (si échec)
+        if: failure()
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+            ${{ secrets.SSH_USER }}@${{ env.SERVER_HOST }} 'bash -s' << 'ENDSSH'
+            echo "=== docker ps -a ==="
+            docker ps -a || true
+            echo "=== docker logs chiron_backend (200 dernières lignes) ==="
+            docker logs --tail 200 chiron_backend 2>&1 || true
+          ENDSSH
