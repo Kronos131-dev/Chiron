@@ -133,15 +133,16 @@ export const COMPOSITION_METRICS: MetricDef[] = [
     label: 'Muscle squelettique',
     unit: 'kg',
     explanation:
-      "Masse musculaire squelettique. Rapportée à la taille (indice MMS/taille²), " +
-      'elle dépiste la sarcopénie : sous le seuil bas, masse musculaire insuffisante.',
+      'Masse musculaire squelettique (les muscles que tu entraînes). Plus elle est élevée ' +
+      'à poids égal, mieux c’est. Zones : homme sain 33-39 % du poids (athlétique > 39 %) ; ' +
+      'femme 24-30 % (> 30 %).',
     spec: (p) => {
-      if (!p.tailleM) return null;
-      const h2 = p.tailleM * p.tailleM;
-      const smiLow = isF(p.sexe) ? 5.7 : 7.0;
-      const b1 = smiLow * h2;
-      const b2 = (smiLow + 2) * h2;
-      return { scaleMin: Math.max(0, (smiLow - 2) * h2), scaleMax: (smiLow + 4) * h2, b1, b2, dir: 'highGood' };
+      if (!p.poids) return null;
+      const b1 = (isF(p.sexe) ? 0.24 : 0.33) * p.poids;
+      const b2 = (isF(p.sexe) ? 0.30 : 0.39) * p.poids;
+      const min = (isF(p.sexe) ? 0.16 : 0.22) * p.poids;
+      const max = (isF(p.sexe) ? 0.45 : 0.55) * p.poids;
+      return { scaleMin: min, scaleMax: max, b1, b2, dir: 'highGood' };
     },
   },
   {
