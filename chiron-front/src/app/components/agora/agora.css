@@ -21,9 +21,10 @@
   pointer-events: none;
 }
 .agora-card:hover::before { opacity: 0.26; }
-.agora-scene-novice::before  { background-image: url("/images/themes/bg-novice.webp"); }
-.agora-scene-athlete::before { background-image: url("/images/themes/bg-athlete.webp"); }
-.agora-scene-legend::before  { background-image: url("/images/themes/bg-legend.webp"); }
+/* Vignette discrète → version légère 720. */
+.agora-scene-novice::before  { background-image: url("/images/themes/bg-novice-720.webp"); }
+.agora-scene-athlete::before { background-image: url("/images/themes/bg-athlete-720.webp"); }
+.agora-scene-legend::before  { background-image: url("/images/themes/bg-legend-720.webp"); }
 
 .agora-card:hover {
   background: rgba(10, 18, 36, 0.9);

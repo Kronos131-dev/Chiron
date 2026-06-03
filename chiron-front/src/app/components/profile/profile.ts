@@ -386,12 +386,6 @@ export class Profile implements OnInit {
 
   /** Couronne de laurier évolutive, distincte à chaque palier. */
   getCrownClass(): string { return `crown-lvl-${this.getTierLevel()}`; }
-  /** Frise/cadre orné, motif distinct à chaque palier (fallback CSS). */
-  getFrameMotifClass(): string { return `frame-lvl-${this.getTierLevel()}`; }
-  /** Hauteur progressive des colonnes. */
-  getColumnClass(): string { return `column-lvl-${this.getTierLevel()}`; }
-  /** Image de colonne selon l'univers (novice/athlete/legend). */
-  getColumnImgClass(): string { return `col-${this.getTierCategory()}`; }
   getMedalClass(): string { return `medal-${this.getTierCategory()}`; }
 
   // ── Univers immersif (fond de scène, fronton, accents par niveau) ────────────
@@ -400,8 +394,6 @@ export class Profile implements OnInit {
   getSceneClass(): string { return `scene-${this.getTierCategory()}`; }
   /** Cadre ornementé (border-image) par univers ; fallback gradient-border. */
   getFrameImgClass(): string { return `frame-img-${this.getTierCategory()}`; }
-  /** Fronton/pédiment grec par univers. */
-  getPedimentClass(): string { return `pediment-${this.getTierCategory()}`; }
   /** Calque d'accent narratif distinct par palier (nef, boucliers, étoiles…). */
   getAccentClass(): string { return `accent-lvl-${this.getTierLevel()}`; }
 
