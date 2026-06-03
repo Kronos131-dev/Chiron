@@ -5,7 +5,6 @@ import com.kronos.chiron.dto.settings.ChangeEmailRequest;
 import com.kronos.chiron.dto.settings.ChangeIdentityRequest;
 import com.kronos.chiron.dto.settings.ChangePasswordRequest;
 import com.kronos.chiron.dto.settings.ChangeUsernameRequest;
-import com.kronos.chiron.dto.settings.TrainingPrefsDto;
 import com.kronos.chiron.dto.settings.UserInfoResponse;
 import com.kronos.chiron.entity.Utilisateur;
 import com.kronos.chiron.service.SettingsService;
@@ -64,20 +63,5 @@ public class SettingsController {
     ) {
         String newToken = settingsService.changeUsername(userDetails.getUsername(), request.newUsername());
         return ResponseEntity.ok(new AuthenticationResponse(newToken));
-    }
-
-    @GetMapping("/training-prefs")
-    public ResponseEntity<TrainingPrefsDto> getTrainingPrefs(@AuthenticationPrincipal UserDetails userDetails) {
-        return ResponseEntity.ok(settingsService.getTrainingPrefs(userDetails.getUsername()));
-    }
-
-    @PutMapping("/training-prefs")
-    public ResponseEntity<Void> updateTrainingPrefs(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @RequestBody TrainingPrefsDto request
-    ) {
-        settingsService.updateTrainingPrefs(
-                userDetails.getUsername(), request.repsParBras(), request.poidsMachineParCote());
-        return ResponseEntity.ok().build();
     }
 }

@@ -44,8 +44,6 @@ export interface ExerciceForm {
   blockId?: number | null;
   /** Nature du groupage. Cohérent entre tous les membres d'un même bloc. */
   blockType?: BlockType | null;
-  /** Exercice réalisé en unilatéral (un membre à la fois) — double le tonnage. */
-  unilateral?: boolean;
 }
 
 /**
@@ -66,7 +64,6 @@ export function makeEmptyExercice(nom: string = '', definitionId?: number, cardi
     nom,
     definitionId,
     cardioType: cardioType ?? null,
-    unilateral: false,
     series: [cardioType ? makeEmptyCardioSerie() : makeEmptySerie()],
   };
 }

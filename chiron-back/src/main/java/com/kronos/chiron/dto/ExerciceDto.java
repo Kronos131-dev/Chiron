@@ -10,6 +10,5 @@ public record ExerciceDto(
         List<SerieDto> series,
         Long blockId,
         String blockType,
-        boolean unilateral,
         String cardioType
 ) {}

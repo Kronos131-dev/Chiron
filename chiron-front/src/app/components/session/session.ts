@@ -208,7 +208,6 @@ export class Session implements OnInit, OnDestroy {
           nom: exo.nom,
           definitionId: exo.exerciceDefinitionId ?? undefined,
           cardioType: exo.cardioType ?? null,
-          unilateral: exo.unilateral ?? false,
           series: exo.series.map((serie: any) => ({
             id: serie.id || generateFormId(),
             poids: serie.poids,
@@ -411,7 +410,6 @@ export class Session implements OnInit, OnDestroy {
       nom: exo.nom,
       commentaire: "",
       exerciceDefinitionId: exo.definitionId ?? null,
-      unilateral: exo.unilateral ?? false,
       series: exo.series.map(serie => ({
         poids: serie.poids != null ? Number(serie.poids) : 0,
         reps: serie.reps != null ? Number(serie.reps) : 0,

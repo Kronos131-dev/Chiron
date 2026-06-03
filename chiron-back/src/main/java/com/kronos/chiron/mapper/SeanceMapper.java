@@ -81,7 +81,6 @@ public class SeanceMapper {
                 seriesDto,
                 exercice.getBlockId(),
                 exercice.getBlockType(),
-                exercice.isUnilateral(),
                 cardioType
         );
     }

@@ -1,495 +1,663 @@
 /* ══════════════════════════════════════════════════════════════════
+   PROFIL — Univers mythologique grec, stylisé par PALIER (1→8)
+   Palette « Musée antique » mate (tokens --tier-* dans styles.css,
+   posés via la classe tier-{lvl} sur .max-w-xl par getTierVarClass()).
+   3 couches d'immersion : couronne de laurier (par niveau),
+   cadre orné (par niveau), fond d'ambiance (par catégorie).
+   Esprit mat : lueurs discrètes, animations lentes.
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ══════════════════════════════════════════════════════════════════
    HEADER — per tier
    ══════════════════════════════════════════════════════════════════ */
 
-.header-novice  { background: rgba(8, 13, 24, 0.85);  border-color: rgba(100,116,139,0.15); backdrop-filter: blur(12px); }
-.header-athlete { background: rgba(6, 12, 28, 0.88);  border-color: rgba(96,165,250,0.15);  backdrop-filter: blur(12px); }
-.header-legend  { background: rgba(14, 10, 2, 0.92);  border-color: rgba(251,191,36,0.25);  backdrop-filter: blur(12px); }
+.header-novice  { background: rgba(8, 12, 22, 0.88);  border-color: rgba(156,124,79,0.18); backdrop-filter: blur(12px); }
+.header-athlete { background: rgba(16, 8, 14, 0.90);  border-color: rgba(140,66,80,0.18);  backdrop-filter: blur(12px); }
+.header-legend  { background: rgba(14, 11, 4, 0.92);  border-color: rgba(212,184,106,0.22); backdrop-filter: blur(12px); }
 
-.header-icon-novice  { color: #94a3b8; }
-.header-icon-novice:hover  { color: #fff; }
-.header-icon-athlete { color: #60a5fa; }
-.header-icon-athlete:hover { color: #fff; }
-.header-icon-legend  { color: #fbbf24; }
-.header-icon-legend:hover  { color: #fef3c7; }
-
-.header-title-novice  { color: #e2e8f0; }
-.header-title-athlete { color: #e2e8f0; }
-.header-title-legend  {
-  background: linear-gradient(90deg, #fbbf24 0%, #fef3c7 50%, #f59e0b 100%);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-}
-
-.header-subtitle-novice  { color: rgba(148,163,184,0.6); }
-.header-subtitle-athlete { color: rgba(96,165,250,0.7); }
-.header-subtitle-legend  { color: rgba(251,191,36,0.7); }
-
-.admin-badge-novice  { background: rgba(180,83,9,0.8);  color: #fef3c7; border-color: rgba(251,191,36,0.4); }
-.admin-badge-athlete { background: rgba(180,83,9,0.8);  color: #fef3c7; border-color: rgba(251,191,36,0.4); }
-.admin-badge-legend  {
-  background: linear-gradient(135deg, #92400e, #b45309);
-  color: #fef3c7; border-color: #fbbf24;
-  box-shadow: 0 0 12px rgba(251,191,36,0.4);
-}
+.header-icon-novice  { color: #9aa3ab; }
+.header-icon-novice:hover  { color: #e9edf1; }
+.header-icon-athlete { color: #a86a55; }
+.header-icon-athlete:hover { color: #e9d9d2; }
+.header-icon-legend  { color: #d4b86a; }
+.header-icon-legend:hover  { color: #f3ead4; }
 
 /* ══════════════════════════════════════════════════════════════════
-   PAGE BACKGROUNDS
+   FONDS D'AMBIANCE — par catégorie
    ══════════════════════════════════════════════════════════════════ */
 
+/* ── Novice : ciel nocturne du Sanctuaire (étoiles + constellation) ── */
 .tier-novice-bg {
-  background-color: #080d18;
+  background-color: #070a12;
   background-image:
-    radial-gradient(ellipse 80% 50% at 50% -5%, rgba(30,58,138,0.18) 0%, transparent 100%);
+    radial-gradient(ellipse 80% 50% at 50% -8%, rgba(156,124,79,0.10) 0%, transparent 100%);
 }
-
-/* Stars overlay for novice */
 .tier-novice-bg::after {
   content: '';
   position: fixed;
   inset: 0;
   pointer-events: none;
-  background-image:
-    radial-gradient(1px 1px at 15%  12%, rgba(255,255,255,0.5) 0%, transparent 100%),
-    radial-gradient(1px 1px at 82%  7%,  rgba(255,255,255,0.35) 0%, transparent 100%),
-    radial-gradient(1px 1px at 45%  3%,  rgba(255,255,255,0.4) 0%, transparent 100%),
-    radial-gradient(1px 1px at 70%  20%, rgba(255,255,255,0.3) 0%, transparent 100%),
-    radial-gradient(1px 1px at 25%  35%, rgba(255,255,255,0.25) 0%, transparent 100%),
-    radial-gradient(1px 1px at 90%  45%, rgba(255,255,255,0.3) 0%, transparent 100%),
-    radial-gradient(1px 1px at 55%  55%, rgba(255,255,255,0.2) 0%, transparent 100%),
-    radial-gradient(1px 1px at 8%   65%, rgba(255,255,255,0.35) 0%, transparent 100%),
-    radial-gradient(1.5px 1.5px at 38% 18%, rgba(200,220,255,0.4) 0%, transparent 100%),
-    radial-gradient(1.5px 1.5px at 65% 80%, rgba(200,220,255,0.3) 0%, transparent 100%),
-    radial-gradient(1px 1px at 92%  75%, rgba(255,255,255,0.25) 0%, transparent 100%),
-    radial-gradient(1px 1px at 12%  88%, rgba(255,255,255,0.3) 0%, transparent 100%);
   z-index: 0;
+  background-image:
+    /* fine constellation (lignes ténues) */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='800'%3E%3Cg fill='none' stroke='%23aab4c4' stroke-width='0.6' opacity='0.18'%3E%3Cpath d='M180 140 L260 110 L300 180 L250 240 L300 180 L390 200'/%3E%3Cpath d='M860 520 L920 470 L1000 500 L1040 430 L1000 500 L980 590'/%3E%3C/g%3E%3Cg fill='%23ccd4e0'%3E%3Ccircle cx='180' cy='140' r='1.6'/%3E%3Ccircle cx='260' cy='110' r='1.3'/%3E%3Ccircle cx='300' cy='180' r='1.6'/%3E%3Ccircle cx='250' cy='240' r='1.2'/%3E%3Ccircle cx='390' cy='200' r='1.4'/%3E%3Ccircle cx='860' cy='520' r='1.5'/%3E%3Ccircle cx='920' cy='470' r='1.2'/%3E%3Ccircle cx='1000' cy='500' r='1.6'/%3E%3Ccircle cx='1040' cy='430' r='1.3'/%3E%3Ccircle cx='980' cy='590' r='1.3'/%3E%3C/g%3E%3C/svg%3E"),
+    radial-gradient(1px 1px at 15%  12%, rgba(255,255,255,0.45) 0%, transparent 100%),
+    radial-gradient(1px 1px at 82%  7%,  rgba(255,255,255,0.30) 0%, transparent 100%),
+    radial-gradient(1px 1px at 45%  3%,  rgba(255,255,255,0.35) 0%, transparent 100%),
+    radial-gradient(1px 1px at 70%  20%, rgba(255,255,255,0.28) 0%, transparent 100%),
+    radial-gradient(1px 1px at 25%  35%, rgba(255,255,255,0.22) 0%, transparent 100%),
+    radial-gradient(1px 1px at 90%  45%, rgba(255,255,255,0.26) 0%, transparent 100%),
+    radial-gradient(1px 1px at 55%  55%, rgba(255,255,255,0.18) 0%, transparent 100%),
+    radial-gradient(1px 1px at 8%   65%, rgba(255,255,255,0.30) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 38% 18%, rgba(220,210,190,0.34) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 65% 80%, rgba(220,210,190,0.26) 0%, transparent 100%),
+    radial-gradient(1px 1px at 92%  75%, rgba(255,255,255,0.22) 0%, transparent 100%),
+    radial-gradient(1px 1px at 12%  88%, rgba(255,255,255,0.26) 0%, transparent 100%);
+  background-repeat: no-repeat;
+  background-size: cover;
 }
 
+/* ── Athlète : silhouette de colonnes de temple au sol ── */
 .tier-athlete-bg {
-  background-color: #050b1a;
+  background-color: #100711;
   background-image:
-    radial-gradient(ellipse 70% 60% at 50% 100%, rgba(37,99,235,0.22) 0%, transparent 65%),
-    radial-gradient(ellipse 50% 40% at 90%  10%, rgba(96,165,250,0.08) 0%, transparent 60%),
-    radial-gradient(ellipse 40% 30% at 10%  60%, rgba(59,130,246,0.07) 0%, transparent 50%);
+    radial-gradient(ellipse 70% 45% at 50% 102%, rgba(132,114,166,0.14) 0%, transparent 62%),
+    radial-gradient(ellipse 55% 40% at 50%  -2%, rgba(140,66,80,0.12)   0%, transparent 60%);
+}
+.tier-athlete-bg::after {
+  content: '';
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  height: 42vh;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.5;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='420' preserveAspectRatio='xMidYMax meet'%3E%3Cg fill='%23120a16'%3E%3Crect x='40'  y='80' width='70' height='320'/%3E%3Crect x='30'  y='66' width='90' height='16'/%3E%3Crect x='34'  y='380' width='82' height='20'/%3E%3Crect x='200' y='80' width='70' height='320'/%3E%3Crect x='190' y='66' width='90' height='16'/%3E%3Crect x='194' y='380' width='82' height='20'/%3E%3Crect x='930' y='80' width='70' height='320'/%3E%3Crect x='920' y='66' width='90' height='16'/%3E%3Crect x='924' y='380' width='82' height='20'/%3E%3Crect x='1090' y='80' width='70' height='320'/%3E%3Crect x='1080' y='66' width='90' height='16'/%3E%3Crect x='1084' y='380' width='82' height='20'/%3E%3C/g%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: bottom center;
+  background-size: 115% auto;
+  -webkit-mask-image: linear-gradient(to top, #000 0%, transparent 90%);
+          mask-image: linear-gradient(to top, #000 0%, transparent 90%);
 }
 
+/* ── Légende : rayons divins + nuées de l'Olympe ── */
 .tier-legend-bg {
-  background-color: #0c0800;
+  background-color: #0b0800;
   background-image:
-    radial-gradient(ellipse 80% 60% at 50% 50%,  rgba(180,120,0,0.18) 0%, transparent 55%),
-    radial-gradient(ellipse 60% 40% at 50% 100%, rgba(251,191,36,0.14) 0%, transparent 55%),
-    radial-gradient(ellipse 40% 40% at 0%   50%, rgba(120,80,0,0.08) 0%, transparent 50%),
-    radial-gradient(ellipse 40% 40% at 100% 50%, rgba(120,80,0,0.08) 0%, transparent 50%);
+    conic-gradient(from 180deg at 50% -10%,
+      transparent 0deg, rgba(212,184,106,0.07) 12deg, transparent 24deg,
+      rgba(212,184,106,0.05) 36deg, transparent 48deg, rgba(212,184,106,0.07) 60deg,
+      transparent 72deg, rgba(212,184,106,0.05) 84deg, transparent 96deg),
+    radial-gradient(ellipse 80% 55% at 50% 40%,  rgba(176,144,74,0.14) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 40% at 50% 102%, rgba(212,184,106,0.10) 0%, transparent 58%);
+}
+.tier-legend-bg::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    radial-gradient(ellipse 50% 22% at 30% 78%, rgba(220,210,190,0.05) 0%, transparent 70%),
+    radial-gradient(ellipse 55% 24% at 72% 70%, rgba(220,210,190,0.045) 0%, transparent 70%);
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   AMBIENT GLOW (absolute overlay inside main)
+   AMBIENT GLOW (overlay dans <main>)
    ══════════════════════════════════════════════════════════════════ */
 
 .ambient-novice  { background: none; }
 .ambient-athlete {
-  background: radial-gradient(ellipse 60% 40% at 50% 100%, rgba(59,130,246,0.12) 0%, transparent 70%);
+  background: radial-gradient(ellipse 55% 35% at 50% 100%, rgba(132,114,166,0.08) 0%, transparent 72%);
 }
 .ambient-legend  {
-  background:
-    radial-gradient(ellipse 70% 50% at 50% 30%, rgba(251,191,36,0.1) 0%, transparent 65%),
-    radial-gradient(ellipse 50% 60% at 50% 80%, rgba(180,120,0,0.12) 0%, transparent 65%);
+  background: radial-gradient(ellipse 60% 45% at 50% 35%, rgba(212,184,106,0.07) 0%, transparent 66%);
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   PROFILE HERO CARD
+   WRAPPER + COLONNES GRECQUES (avancé) — au premier plan
    ══════════════════════════════════════════════════════════════════ */
+
+.hero-card-wrap { position: relative; }
+
+/* Colonne : image de marbre (asset) avec FALLBACK marbre CSS (cannelures).
+   Placée DERRIÈRE la carte (z-index:0) → peut dépasser sur les côtés sans
+   gêner la lisibilité, et reste « clip-safe » (overflow-hidden sur main). */
+.greek-column {
+  position: absolute;
+  top: 70px;
+  bottom: 26px;
+  width: clamp(26px, 9vw, 64px);
+  z-index: 0;
+  background-image:
+    var(--column-img, none),
+    repeating-linear-gradient(90deg,
+      rgba(0,0,0,0.30) 0px,
+      rgba(0,0,0,0.08) 2px,
+      rgba(255,255,255,0.20) 4px,
+      rgba(0,0,0,0.08) 6px,
+      rgba(0,0,0,0.30) 8px);
+  background-repeat: no-repeat, repeat;
+  background-position: center, center;
+  background-size: contain, auto;
+  filter: drop-shadow(0 8px 16px rgba(0,0,0,0.55));
+  transition: top 0.4s ease;
+}
+.col-novice  { --column-img: url("/images/themes/column-novice.png"); }
+.col-athlete { --column-img: url("/images/themes/column-athlete.png"); }
+.col-legend  { --column-img: url("/images/themes/column-legend.png"); }
+
+.greek-column-right { transform: scaleX(-1); }
+.greek-column-left  { left: clamp(-46px, -7vw, -16px); }
+.greek-column-right { right: clamp(-46px, -7vw, -16px); }
+
+.column-lvl-3 { top: 120px; }
+.column-lvl-4 { top: 96px; }
+.column-lvl-5 { top: 68px; filter: drop-shadow(0 8px 16px rgba(0,0,0,0.55)) drop-shadow(0 0 16px var(--tier-bg)); }
+
+/* ══════════════════════════════════════════════════════════════════
+   CARTE PROFIL — cadre métallique mat (gradient-border, coins arrondis)
+   ══════════════════════════════════════════════════════════════════ */
+
+.profile-hero-card {
+  position: relative;
+  z-index: 1;
+  text-shadow: none; /* coupe l'héritage du text-shadow des tokens tier-{lvl} */
+}
+
+.profile-card-novice,
+.profile-card-athlete,
+.profile-card-legend {
+  /* Bord épais : sert de cadre métallique mat en FALLBACK (gradient-border),
+     remplacé par le cadre ornementé en image quand l'asset est présent. */
+  border: clamp(14px, 4.5vw, 24px) solid transparent;
+  border-radius: 1.5rem;
+  background: var(--card-fill) padding-box, var(--tier-metal) border-box;
+}
+
+/* Cadre ornementé (border-image) — se substitue au gradient-border une fois chargé.
+   Si l'image est absente (404), le bord transparent laisse voir le gradient-border. */
+.frame-img-novice  { border-image: url("/images/themes/frame-novice.png")  90 / 1 / 0 round; }
+.frame-img-athlete { border-image: url("/images/themes/frame-athlete.png") 90 / 1 / 0 round; }
+.frame-img-legend  { border-image: url("/images/themes/frame-legend.png")  90 / 1 / 0 round; }
 
 .profile-card-novice {
-  background: rgba(10, 18, 35, 0.95);
-  border: 1px solid rgba(100, 116, 139, 0.22);
-  box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 4px 20px rgba(0,0,0,0.4);
+  --card-fill: linear-gradient(165deg, rgba(11,16,30,0.98), rgba(7,10,18,0.99));
+  box-shadow: 0 22px 60px rgba(0,0,0,0.7), 0 0 36px var(--tier-bg), inset 0 0 44px rgba(0,0,0,0.45);
 }
-
 .profile-card-athlete {
-  background: rgba(6, 12, 28, 0.97);
-  border: 1px solid rgba(96, 165, 250, 0.28);
-  box-shadow:
-    0 20px 60px rgba(0,0,0,0.7),
-    0 0 80px rgba(59,130,246,0.14),
-    0 0 160px rgba(59,130,246,0.06),
-    inset 0 1px 0 rgba(96,165,250,0.12);
+  --card-fill: linear-gradient(165deg, rgba(22,9,18,0.98), rgba(13,6,12,0.99));
+  box-shadow: 0 22px 60px rgba(0,0,0,0.72), 0 0 44px var(--tier-bg), inset 0 0 50px rgba(0,0,0,0.5);
 }
-
 .profile-card-legend {
-  background: rgba(14, 9, 2, 0.98);
-  border: 2px solid rgba(251, 191, 36, 0.5);
-  box-shadow:
-    0 20px 60px rgba(0,0,0,0.85),
-    0 0 100px rgba(251,191,36,0.18),
-    0 0 200px rgba(251,191,36,0.07),
-    inset 0 0 80px rgba(251,191,36,0.04),
-    inset 0 2px 0 rgba(251,191,36,0.2);
-  padding-top: 3rem !important;
+  --card-fill: linear-gradient(165deg, rgba(22,16,5,0.98), rgba(13,9,2,0.99));
+  box-shadow: 0 22px 60px rgba(0,0,0,0.82), 0 0 56px var(--tier-bg), inset 0 0 58px rgba(0,0,0,0.48);
+  padding-top: 3.25rem !important;
 }
 
-/* ── Legend Greek Meander Top Border ── */
-.legend-meander-border {
+/* ══════════════════════════════════════════════════════════════════
+   CADRE ORNÉ — frise grecque, motif distinct par palier (1→8)
+   Technique : fond = métal du palier, masque = motif (data-URI).
+   Bandeau haut pour 1-4 ; périmètre complet pour 5-8.
+   ══════════════════════════════════════════════════════════════════ */
+
+.profile-frame {
   position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 32px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='32'%3E%3Cpath d='M0 28 L0 10 L10 10 L10 4 L30 4 L30 18 L20 18 L20 22 L40 22 L40 28' fill='none' stroke='%23fbbf24' stroke-width='1.5' opacity='0.55'/%3E%3C/svg%3E");
-  background-repeat: repeat-x;
-  background-size: 40px 32px;
-  border-radius: 1.5rem 1.5rem 0 0;
-  overflow: hidden;
+  inset: 0;
+  border-radius: 1.5rem;
+  background: var(--tier-metal);
   pointer-events: none;
+  z-index: 2;
+  -webkit-mask-repeat: repeat-x;
+          mask-repeat: repeat-x;
+  -webkit-mask-position: top center;
+          mask-position: top center;
 }
 
-.legend-corner-tl, .legend-corner-tr {
-  position: absolute;
-  top: 10px;
-  width: 24px; height: 24px;
-  border: 2px solid rgba(251,191,36,0.6);
-  pointer-events: none;
+/* niveau 1 — filet fin + points (sobre) */
+.frame-lvl-1 {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='18'%3E%3Crect x='0' y='13.5' width='40' height='1.4'/%3E%3Ccircle cx='6' cy='8' r='1.3'/%3E%3Ccircle cx='20' cy='8' r='1.3'/%3E%3Ccircle cx='34' cy='8' r='1.3'/%3E%3C/svg%3E");
+          mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='18'%3E%3Crect x='0' y='13.5' width='40' height='1.4'/%3E%3Ccircle cx='6' cy='8' r='1.3'/%3E%3Ccircle cx='20' cy='8' r='1.3'/%3E%3Ccircle cx='34' cy='8' r='1.3'/%3E%3C/svg%3E");
+  -webkit-mask-size: 40px 18px; mask-size: 40px 18px;
 }
-.legend-corner-tl { left: 10px;  border-right: none; border-bottom: none; border-radius: 4px 0 0 0; }
-.legend-corner-tr { right: 10px; border-left: none;  border-bottom: none; border-radius: 0 4px 0 0; }
+/* niveau 2 — méandre grec (clé) simple */
+.frame-lvl-2 {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='22'%3E%3Cpath d='M0 18 L0 7 L10 7 L10 3 L26 3 L26 14 L18 14 L18 17 L40 17' fill='none' stroke='black' stroke-width='2'/%3E%3C/svg%3E");
+          mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='22'%3E%3Cpath d='M0 18 L0 7 L10 7 L10 3 L26 3 L26 14 L18 14 L18 17 L40 17' fill='none' stroke='black' stroke-width='2'/%3E%3C/svg%3E");
+  -webkit-mask-size: 40px 22px; mask-size: 40px 22px;
+}
+/* niveau 3 — méandre dense (clé + ligne) */
+.frame-lvl-3 {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='22'%3E%3Cpath d='M0 17 L0 6 L8 6 L8 3 L21 3 L21 13 L14 13 L14 16 L32 16' fill='none' stroke='black' stroke-width='1.8'/%3E%3Crect x='0' y='19.5' width='32' height='1.3'/%3E%3C/svg%3E");
+          mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='22'%3E%3Cpath d='M0 17 L0 6 L8 6 L8 3 L21 3 L21 13 L14 13 L14 16 L32 16' fill='none' stroke='black' stroke-width='1.8'/%3E%3Crect x='0' y='19.5' width='32' height='1.3'/%3E%3C/svg%3E");
+  -webkit-mask-size: 32px 22px; mask-size: 32px 22px;
+}
+/* niveau 4 — vague de Vitruve (spirale courante) */
+.frame-lvl-4 {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='22'%3E%3Cpath d='M0 13 q5 -10 10 0 t10 0 t10 0 t10 0' fill='none' stroke='black' stroke-width='2.2'/%3E%3Ccircle cx='10' cy='13' r='1.6'/%3E%3Ccircle cx='30' cy='13' r='1.6'/%3E%3C/svg%3E");
+          mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='22'%3E%3Cpath d='M0 13 q5 -10 10 0 t10 0 t10 0 t10 0' fill='none' stroke='black' stroke-width='2.2'/%3E%3Ccircle cx='10' cy='13' r='1.6'/%3E%3Ccircle cx='30' cy='13' r='1.6'/%3E%3C/svg%3E");
+  -webkit-mask-size: 40px 22px; mask-size: 40px 22px;
+}
+/* niveau 5 — oves (egg-and-dart), périmètre complet */
+.frame-lvl-5 {
+  -webkit-mask-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='22'%3E%3Cellipse cx='10' cy='11' rx='5.5' ry='8'/%3E%3Cellipse cx='30' cy='11' rx='5.5' ry='8'/%3E%3Cpath d='M19.4 3 L20.6 3 L20.2 19 L19.8 19 Z'/%3E%3Cpath d='M-0.6 3 L0.6 3 L0.3 19 L-0.3 19 Z'/%3E%3Cpath d='M39.4 3 L40.6 3 L40.2 19 L39.8 19 Z'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='22'%3E%3Cellipse cx='10' cy='11' rx='5.5' ry='8'/%3E%3Cellipse cx='30' cy='11' rx='5.5' ry='8'/%3E%3Cpath d='M19.4 3 L20.6 3 L20.2 19 L19.8 19 Z'/%3E%3C/svg%3E"),
+    linear-gradient(#000,#000), linear-gradient(#000,#000);
+  mask-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='22'%3E%3Cellipse cx='10' cy='11' rx='5.5' ry='8'/%3E%3Cellipse cx='30' cy='11' rx='5.5' ry='8'/%3E%3Cpath d='M19.4 3 L20.6 3 L20.2 19 L19.8 19 Z'/%3E%3Cpath d='M-0.6 3 L0.6 3 L0.3 19 L-0.3 19 Z'/%3E%3Cpath d='M39.4 3 L40.6 3 L40.2 19 L39.8 19 Z'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='22'%3E%3Cellipse cx='10' cy='11' rx='5.5' ry='8'/%3E%3Cellipse cx='30' cy='11' rx='5.5' ry='8'/%3E%3Cpath d='M19.4 3 L20.6 3 L20.2 19 L19.8 19 Z'/%3E%3C/svg%3E"),
+    linear-gradient(#000,#000), linear-gradient(#000,#000);
+  -webkit-mask-position: top center, bottom center, left center, right center;
+          mask-position: top center, bottom center, left center, right center;
+  -webkit-mask-repeat: repeat-x, repeat-x, no-repeat, no-repeat;
+          mask-repeat: repeat-x, repeat-x, no-repeat, no-repeat;
+  -webkit-mask-size: 40px 20px, 40px 20px, 3px 100%, 3px 100%;
+          mask-size: 40px 20px, 40px 20px, 3px 100%, 3px 100%;
+}
+/* niveau 6 — frise de laurier, périmètre complet */
+.frame-lvl-6, .frame-lvl-7, .frame-lvl-8 {
+  -webkit-mask-position: top center, bottom center, left center, right center;
+          mask-position: top center, bottom center, left center, right center;
+  -webkit-mask-repeat: repeat-x, repeat-x, no-repeat, no-repeat;
+          mask-repeat: repeat-x, repeat-x, no-repeat, no-repeat;
+  -webkit-mask-size: 40px 22px, 40px 22px, 4px 100%, 4px 100%;
+          mask-size: 40px 22px, 40px 22px, 4px 100%, 4px 100%;
+}
+.frame-lvl-6 {
+  --frieze: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='22'%3E%3Crect x='0' y='10.4' width='40' height='1.2'/%3E%3Cg%3E%3Cellipse cx='7' cy='6' rx='5' ry='2' transform='rotate(35 7 6)'/%3E%3Cellipse cx='7' cy='16' rx='5' ry='2' transform='rotate(-35 7 16)'/%3E%3Cellipse cx='20' cy='6' rx='5' ry='2' transform='rotate(35 20 6)'/%3E%3Cellipse cx='20' cy='16' rx='5' ry='2' transform='rotate(-35 20 16)'/%3E%3Cellipse cx='33' cy='6' rx='5' ry='2' transform='rotate(35 33 6)'/%3E%3Cellipse cx='33' cy='16' rx='5' ry='2' transform='rotate(-35 33 16)'/%3E%3C/g%3E%3C/svg%3E");
+  -webkit-mask-image: var(--frieze), var(--frieze), linear-gradient(#000,#000), linear-gradient(#000,#000);
+          mask-image: var(--frieze), var(--frieze), linear-gradient(#000,#000), linear-gradient(#000,#000);
+}
+/* niveau 7 — laurier + rosettes */
+.frame-lvl-7 {
+  --frieze: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='22'%3E%3Crect x='0' y='10.4' width='40' height='1.2'/%3E%3Cellipse cx='8' cy='6' rx='5' ry='2' transform='rotate(35 8 6)'/%3E%3Cellipse cx='8' cy='16' rx='5' ry='2' transform='rotate(-35 8 16)'/%3E%3Cellipse cx='32' cy='6' rx='5' ry='2' transform='rotate(35 32 6)'/%3E%3Cellipse cx='32' cy='16' rx='5' ry='2' transform='rotate(-35 32 16)'/%3E%3Ccircle cx='20' cy='11' r='3'/%3E%3Ccircle cx='20' cy='5' r='1.5'/%3E%3Ccircle cx='20' cy='17' r='1.5'/%3E%3Ccircle cx='14' cy='11' r='1.5'/%3E%3Ccircle cx='26' cy='11' r='1.5'/%3E%3C/svg%3E");
+  -webkit-mask-image: var(--frieze), var(--frieze), linear-gradient(#000,#000), linear-gradient(#000,#000);
+          mask-image: var(--frieze), var(--frieze), linear-gradient(#000,#000), linear-gradient(#000,#000);
+}
+/* niveau 8 — composite orné (méandre + laurier), le plus riche */
+.frame-lvl-8 {
+  --frieze: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='26'%3E%3Cpath d='M0 24 L0 16 L9 16 L9 13 L24 13 L24 22 L17 22 L17 24' fill='none' stroke='black' stroke-width='1.6'/%3E%3Cellipse cx='8' cy='5' rx='5' ry='2' transform='rotate(35 8 5)'/%3E%3Cellipse cx='20' cy='4' rx='5' ry='2' transform='rotate(0 20 4)'/%3E%3Cellipse cx='32' cy='5' rx='5' ry='2' transform='rotate(-35 32 5)'/%3E%3Ccircle cx='20' cy='9' r='1.6'/%3E%3C/svg%3E");
+  -webkit-mask-image: var(--frieze), var(--frieze), linear-gradient(#000,#000), linear-gradient(#000,#000);
+          mask-image: var(--frieze), var(--frieze), linear-gradient(#000,#000), linear-gradient(#000,#000);
+  -webkit-mask-size: 40px 26px, 40px 26px, 4px 100%, 4px 100%;
+          mask-size: 40px 26px, 40px 26px, 4px 100%, 4px 100%;
+}
 
 /* ── Card inner glow ── */
-.card-inner-novice  { background: none; }
-.card-inner-athlete {
-  background: radial-gradient(ellipse 80% 40% at 50% 0%, rgba(96,165,250,0.06) 0%, transparent 70%);
-}
+.card-inner-novice  { background: radial-gradient(ellipse 80% 38% at 50% 0%, var(--tier-bg) 0%, transparent 72%); opacity: 0.5; }
+.card-inner-athlete { background: radial-gradient(ellipse 80% 38% at 50% 0%, var(--tier-bg) 0%, transparent 72%); opacity: 0.5; }
 .card-inner-legend  {
   background:
-    radial-gradient(ellipse 70% 50% at 50% 0%,   rgba(251,191,36,0.08) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 40% at 50% 100%, rgba(180,120,0,0.1) 0%, transparent 60%);
+    radial-gradient(ellipse 70% 45% at 50% 0%,   var(--tier-bg) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 38% at 50% 100%, var(--tier-bg) 0%, transparent 60%);
+  opacity: 0.6;
 }
 
-/* ── Action buttons ── */
-.action-btn-novice  { background: rgba(15,23,42,0.9); border-color: rgba(100,116,139,0.3); color: #94a3b8; }
-.action-btn-novice:hover  { background: rgba(100,116,139,0.15); color: #fff; }
-.action-btn-athlete { background: rgba(6,12,28,0.9);  border-color: rgba(96,165,250,0.3);  color: #60a5fa; }
-.action-btn-athlete:hover { background: rgba(96,165,250,0.1);  color: #fff; }
-.action-btn-legend  { background: rgba(14,9,2,0.9);   border-color: rgba(251,191,36,0.35); color: #fbbf24; }
-.action-btn-legend:hover  { background: rgba(251,191,36,0.1); color: #fef3c7; }
+/* ── Boutons d'action ── */
+.action-btn-novice, .action-btn-athlete, .action-btn-legend {
+  background: rgba(7,9,16,0.92);
+  border-color: var(--tier-border);
+  color: var(--tier-color);
+}
+.action-btn-novice:hover, .action-btn-athlete:hover, .action-btn-legend:hover {
+  background: var(--tier-bg); color: #fff;
+}
 
 /* ══════════════════════════════════════════════════════════════════
-   AVATAR — ambient glow
+   AVATAR — halo + bord métallique mat
    ══════════════════════════════════════════════════════════════════ */
 
-.avatar-ambient-novice  { inset: -32px; background: radial-gradient(circle, rgba(100,116,139,0.12) 0%, transparent 70%); }
-.avatar-ambient-athlete { inset: -40px; background: radial-gradient(circle, rgba(96,165,250,0.25) 0%, transparent 65%); animation: pulse-blue 3s ease-in-out infinite; }
-.avatar-ambient-legend  { inset: -48px; background: radial-gradient(circle, rgba(251,191,36,0.3)  0%, transparent 65%); animation: pulse-gold 3s ease-in-out infinite; }
+.avatar-ambient-novice  { inset: -30px; background: radial-gradient(circle, var(--tier-bg) 0%, transparent 70%); }
+.avatar-ambient-athlete { inset: -36px; background: radial-gradient(circle, var(--tier-bg) 0%, transparent 68%); animation: pulse-soft 5s ease-in-out infinite; }
+.avatar-ambient-legend  { inset: -44px; background: radial-gradient(circle, var(--tier-bg) 0%, transparent 66%); animation: pulse-soft 5s ease-in-out infinite; }
 
-@keyframes pulse-blue {
-  0%, 100% { opacity: 0.7; transform: scale(1); }
-  50%       { opacity: 1;   transform: scale(1.08); }
-}
-@keyframes pulse-gold {
+@keyframes pulse-soft {
   0%, 100% { opacity: 0.6; transform: scale(1); }
-  50%       { opacity: 1;   transform: scale(1.1); }
+  50%       { opacity: 0.9; transform: scale(1.05); }
 }
 
-/* ══════════════════════════════════════════════════════════════════
-   AVATAR IMAGE — per level
-   ══════════════════════════════════════════════════════════════════ */
-
-/* Novice levels (1-2) */
-.avatar-img-lvl-1 { border: 3px solid rgba(71,85,105,0.5);   box-shadow: 0 0 12px rgba(0,0,0,0.7); }
-.avatar-img-lvl-2 { border: 3px solid rgba(203,213,225,0.55); box-shadow: 0 0 16px rgba(203,213,225,0.2); }
-
-/* Athlete levels (3-4-5) — bleu → indigo → violet */
-.avatar-img-lvl-3 { border: 3px solid rgba(96,165,250,0.7);  box-shadow: 0 0 22px rgba(96,165,250,0.4); }
-.avatar-img-lvl-4 { border: 3px solid rgba(99,102,241,0.75); box-shadow: 0 0 24px rgba(99,102,241,0.45); }
-.avatar-img-lvl-5 {
-  border: 3px solid #a855f7;
-  box-shadow:
-    0 0 0 2px rgba(168,85,247,0.2),
-    0 0 30px rgba(168,85,247,0.7),
-    0 0 60px rgba(126,34,206,0.3),
-    inset 0 0 20px rgba(168,85,247,0.08);
+[class*="avatar-img-lvl-"] {
+  border-style: solid;
+  border-color: var(--tier-color);
+  box-shadow: 0 0 16px var(--tier-bg), inset 0 0 18px rgba(0,0,0,0.25);
 }
-
-/* Legend levels (6-7-8) */
-.avatar-img-lvl-6 {
-  border: 4px solid rgba(217,119,6,0.85);
-  box-shadow: 0 0 28px rgba(217,119,6,0.5), 0 0 56px rgba(217,119,6,0.18);
-}
-.avatar-img-lvl-7 {
-  border: 4px solid rgba(251,191,36,0.85);
-  box-shadow: 0 0 32px rgba(251,191,36,0.55), 0 0 64px rgba(251,191,36,0.2);
-}
+.avatar-img-lvl-1, .avatar-img-lvl-2, .avatar-img-lvl-3, .avatar-img-lvl-4 { border-width: 3px; }
+.avatar-img-lvl-5 { border-width: 3px; box-shadow: 0 0 0 2px var(--tier-bg), 0 0 22px var(--tier-bg); }
+.avatar-img-lvl-6, .avatar-img-lvl-7 { border-width: 4px; }
 .avatar-img-lvl-8 {
-  border: 5px solid #fbbf24;
-  box-shadow:
-    0 0 0 3px #78350f,
-    0 0 0 6px rgba(251,191,36,0.5),
-    0 0 40px rgba(251,191,36,0.75),
-    0 0 80px rgba(251,191,36,0.3),
-    inset 0 0 24px rgba(251,191,36,0.08);
+  border-width: 4px;
+  box-shadow: 0 0 0 3px rgba(60,44,16,0.8), 0 0 0 5px var(--tier-bg), 0 0 30px var(--tier-bg);
+}
+
+/* Anneau métallique fin sous l'avatar (liseré du métal du palier) */
+.avatar-wrapper-lvl-2, .avatar-wrapper-lvl-3, .avatar-wrapper-lvl-4, .avatar-wrapper-lvl-5,
+.avatar-wrapper-lvl-6, .avatar-wrapper-lvl-7, .avatar-wrapper-lvl-8 {
+  display: inline-block;
+  padding: 3px;
+  border-radius: 9999px;
+  background: var(--tier-metal);
+}
+.avatar-wrapper-lvl-1 { display: inline-block; }
+
+/* ══════════════════════════════════════════════════════════════════
+   COURONNE DE LAURIER — évolutive, métallique, par palier (1→8)
+   Fond = métal du palier, masque = laurier (data-URI). Encercle l'avatar.
+   ══════════════════════════════════════════════════════════════════ */
+
+.profile-crown {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 200px; height: 200px;
+  transform: translate(-50%, -52%);
+  z-index: 5;
+  background: var(--tier-metal);
+  pointer-events: none;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.55));
+  -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+  -webkit-mask-position: center; mask-position: center;
+  -webkit-mask-size: contain; mask-size: contain;
+}
+.crown-lvl-8 { animation: crown-breathe 6s ease-in-out infinite; }
+@keyframes crown-breathe {
+  0%, 100% { filter: drop-shadow(0 2px 3px rgba(0,0,0,0.55)); }
+  50%       { filter: drop-shadow(0 2px 6px rgba(0,0,0,0.55)) drop-shadow(0 0 8px var(--tier-bg)); }
+}
+
+/* L1 — brindille d'olivier (3 feuilles, sobre, en haut) */
+.crown-lvl-1 {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 160'%3E%3Cpath d='M80 56 L80 26' fill='none' stroke='black' stroke-width='2'/%3E%3Cellipse cx='80' cy='24' rx='3' ry='6'/%3E%3Cellipse cx='90' cy='36' rx='6.5' ry='2.6' transform='rotate(42 90 36)'/%3E%3Cellipse cx='70' cy='36' rx='6.5' ry='2.6' transform='rotate(-42 70 36)'/%3E%3C/svg%3E");
+          mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 160'%3E%3Cpath d='M80 56 L80 26' fill='none' stroke='black' stroke-width='2'/%3E%3Cellipse cx='80' cy='24' rx='3' ry='6'/%3E%3Cellipse cx='90' cy='36' rx='6.5' ry='2.6' transform='rotate(42 90 36)'/%3E%3Cellipse cx='70' cy='36' rx='6.5' ry='2.6' transform='rotate(-42 70 36)'/%3E%3C/svg%3E");
+}
+/* L2 — petit arc supérieur (4 feuilles) */
+.crown-lvl-2 {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 160'%3E%3Cg%3E%3Cellipse cx='105' cy='30' rx='8' ry='3.4' transform='rotate(28 105 30)'/%3E%3Cellipse cx='124' cy='44' rx='8' ry='3.4' transform='rotate(50 124 44)'/%3E%3Cellipse cx='55' cy='30' rx='8' ry='3.4' transform='rotate(-28 55 30)'/%3E%3Cellipse cx='36' cy='44' rx='8' ry='3.4' transform='rotate(-50 36 44)'/%3E%3C/g%3E%3C/svg%3E");
+          mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 160'%3E%3Cg%3E%3Cellipse cx='105' cy='30' rx='8' ry='3.4' transform='rotate(28 105 30)'/%3E%3Cellipse cx='124' cy='44' rx='8' ry='3.4' transform='rotate(50 124 44)'/%3E%3Cellipse cx='55' cy='30' rx='8' ry='3.4' transform='rotate(-28 55 30)'/%3E%3Cellipse cx='36' cy='44' rx='8' ry='3.4' transform='rotate(-50 36 44)'/%3E%3C/g%3E%3C/svg%3E");
+}
+/* L3 — demi-couronne supérieure (6 feuilles) */
+.crown-lvl-3 {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 160'%3E%3Cellipse cx='105' cy='30' rx='8' ry='3.4' transform='rotate(28 105 30)'/%3E%3Cellipse cx='124' cy='44' rx='8' ry='3.4' transform='rotate(50 124 44)'/%3E%3Cellipse cx='135' cy='62' rx='8' ry='3.4' transform='rotate(72 135 62)'/%3E%3Cellipse cx='55' cy='30' rx='8' ry='3.4' transform='rotate(-28 55 30)'/%3E%3Cellipse cx='36' cy='44' rx='8' ry='3.4' transform='rotate(-50 36 44)'/%3E%3Cellipse cx='25' cy='62' rx='8' ry='3.4' transform='rotate(-72 25 62)'/%3E%3C/svg%3E");
+          mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 160'%3E%3Cellipse cx='105' cy='30' rx='8' ry='3.4' transform='rotate(28 105 30)'/%3E%3Cellipse cx='124' cy='44' rx='8' ry='3.4' transform='rotate(50 124 44)'/%3E%3Cellipse cx='135' cy='62' rx='8' ry='3.4' transform='rotate(72 135 62)'/%3E%3Cellipse cx='55' cy='30' rx='8' ry='3.4' transform='rotate(-28 55 30)'/%3E%3Cellipse cx='36' cy='44' rx='8' ry='3.4' transform='rotate(-50 36 44)'/%3E%3Cellipse cx='25' cy='62' rx='8' ry='3.4' transform='rotate(-72 25 62)'/%3E%3C/svg%3E");
+}
+/* L4 — couronne aux 3/4 + branches */
+.crown-lvl-4 {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 160'%3E%3Cpath d='M135 105 Q140 84 139 84 Q138 52 105 30' fill='none' stroke='black' stroke-width='2.2'/%3E%3Cpath d='M25 105 Q20 84 21 84 Q22 52 55 30' fill='none' stroke='black' stroke-width='2.2'/%3E%3Cellipse cx='105' cy='30' rx='8' ry='3.4' transform='rotate(28 105 30)'/%3E%3Cellipse cx='124' cy='44' rx='8' ry='3.4' transform='rotate(50 124 44)'/%3E%3Cellipse cx='135' cy='62' rx='8' ry='3.4' transform='rotate(72 135 62)'/%3E%3Cellipse cx='139' cy='84' rx='8' ry='3.4' transform='rotate(92 139 84)'/%3E%3Cellipse cx='135' cy='105' rx='8' ry='3.4' transform='rotate(112 135 105)'/%3E%3Cellipse cx='55' cy='30' rx='8' ry='3.4' transform='rotate(-28 55 30)'/%3E%3Cellipse cx='36' cy='44' rx='8' ry='3.4' transform='rotate(-50 36 44)'/%3E%3Cellipse cx='25' cy='62' rx='8' ry='3.4' transform='rotate(-72 25 62)'/%3E%3Cellipse cx='21' cy='84' rx='8' ry='3.4' transform='rotate(-92 21 84)'/%3E%3Cellipse cx='25' cy='105' rx='8' ry='3.4' transform='rotate(-112 25 105)'/%3E%3C/svg%3E");
+          mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 160'%3E%3Cpath d='M135 105 Q140 84 139 84 Q138 52 105 30' fill='none' stroke='black' stroke-width='2.2'/%3E%3Cpath d='M25 105 Q20 84 21 84 Q22 52 55 30' fill='none' stroke='black' stroke-width='2.2'/%3E%3Cellipse cx='105' cy='30' rx='8' ry='3.4' transform='rotate(28 105 30)'/%3E%3Cellipse cx='124' cy='44' rx='8' ry='3.4' transform='rotate(50 124 44)'/%3E%3Cellipse cx='135' cy='62' rx='8' ry='3.4' transform='rotate(72 135 62)'/%3E%3Cellipse cx='139' cy='84' rx='8' ry='3.4' transform='rotate(92 139 84)'/%3E%3Cellipse cx='135' cy='105' rx='8' ry='3.4' transform='rotate(112 135 105)'/%3E%3Cellipse cx='55' cy='30' rx='8' ry='3.4' transform='rotate(-28 55 30)'/%3E%3Cellipse cx='36' cy='44' rx='8' ry='3.4' transform='rotate(-50 36 44)'/%3E%3Cellipse cx='25' cy='62' rx='8' ry='3.4' transform='rotate(-72 25 62)'/%3E%3Cellipse cx='21' cy='84' rx='8' ry='3.4' transform='rotate(-92 21 84)'/%3E%3Cellipse cx='25' cy='105' rx='8' ry='3.4' transform='rotate(-112 25 105)'/%3E%3C/svg%3E");
+}
+/* L5 — couronne fermée complète */
+.crown-lvl-5 {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 160'%3E%3Cpath d='M108 136 Q140 112 139 84 Q138 52 105 30' fill='none' stroke='black' stroke-width='2.4'/%3E%3Cpath d='M52 136 Q20 112 21 84 Q22 52 55 30' fill='none' stroke='black' stroke-width='2.4'/%3E%3Cellipse cx='105' cy='30' rx='8' ry='3.4' transform='rotate(28 105 30)'/%3E%3Cellipse cx='124' cy='44' rx='8' ry='3.4' transform='rotate(50 124 44)'/%3E%3Cellipse cx='135' cy='62' rx='8' ry='3.4' transform='rotate(72 135 62)'/%3E%3Cellipse cx='139' cy='84' rx='8' ry='3.4' transform='rotate(92 139 84)'/%3E%3Cellipse cx='135' cy='105' rx='8' ry='3.4' transform='rotate(112 135 105)'/%3E%3Cellipse cx='124' cy='123' rx='8' ry='3.4' transform='rotate(132 124 123)'/%3E%3Cellipse cx='108' cy='136' rx='8' ry='3.4' transform='rotate(152 108 136)'/%3E%3Cellipse cx='55' cy='30' rx='8' ry='3.4' transform='rotate(-28 55 30)'/%3E%3Cellipse cx='36' cy='44' rx='8' ry='3.4' transform='rotate(-50 36 44)'/%3E%3Cellipse cx='25' cy='62' rx='8' ry='3.4' transform='rotate(-72 25 62)'/%3E%3Cellipse cx='21' cy='84' rx='8' ry='3.4' transform='rotate(-92 21 84)'/%3E%3Cellipse cx='25' cy='105' rx='8' ry='3.4' transform='rotate(-112 25 105)'/%3E%3Cellipse cx='36' cy='123' rx='8' ry='3.4' transform='rotate(-132 36 123)'/%3E%3Cellipse cx='52' cy='136' rx='8' ry='3.4' transform='rotate(-152 52 136)'/%3E%3C/svg%3E");
+          mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 160'%3E%3Cpath d='M108 136 Q140 112 139 84 Q138 52 105 30' fill='none' stroke='black' stroke-width='2.4'/%3E%3Cpath d='M52 136 Q20 112 21 84 Q22 52 55 30' fill='none' stroke='black' stroke-width='2.4'/%3E%3Cellipse cx='105' cy='30' rx='8' ry='3.4' transform='rotate(28 105 30)'/%3E%3Cellipse cx='124' cy='44' rx='8' ry='3.4' transform='rotate(50 124 44)'/%3E%3Cellipse cx='135' cy='62' rx='8' ry='3.4' transform='rotate(72 135 62)'/%3E%3Cellipse cx='139' cy='84' rx='8' ry='3.4' transform='rotate(92 139 84)'/%3E%3Cellipse cx='135' cy='105' rx='8' ry='3.4' transform='rotate(112 135 105)'/%3E%3Cellipse cx='124' cy='123' rx='8' ry='3.4' transform='rotate(132 124 123)'/%3E%3Cellipse cx='108' cy='136' rx='8' ry='3.4' transform='rotate(152 108 136)'/%3E%3Cellipse cx='55' cy='30' rx='8' ry='3.4' transform='rotate(-28 55 30)'/%3E%3Cellipse cx='36' cy='44' rx='8' ry='3.4' transform='rotate(-50 36 44)'/%3E%3Cellipse cx='25' cy='62' rx='8' ry='3.4' transform='rotate(-72 25 62)'/%3E%3Cellipse cx='21' cy='84' rx='8' ry='3.4' transform='rotate(-92 21 84)'/%3E%3Cellipse cx='25' cy='105' rx='8' ry='3.4' transform='rotate(-112 25 105)'/%3E%3Cellipse cx='36' cy='123' rx='8' ry='3.4' transform='rotate(-132 36 123)'/%3E%3Cellipse cx='52' cy='136' rx='8' ry='3.4' transform='rotate(-152 52 136)'/%3E%3C/svg%3E");
+}
+/* L6 — couronne pleine + baies */
+.crown-lvl-6 {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 160'%3E%3Cpath d='M108 136 Q140 112 139 84 Q138 52 105 30' fill='none' stroke='black' stroke-width='2.6'/%3E%3Cpath d='M52 136 Q20 112 21 84 Q22 52 55 30' fill='none' stroke='black' stroke-width='2.6'/%3E%3Cellipse cx='105' cy='30' rx='8.5' ry='3.6' transform='rotate(28 105 30)'/%3E%3Cellipse cx='124' cy='44' rx='8.5' ry='3.6' transform='rotate(50 124 44)'/%3E%3Cellipse cx='135' cy='62' rx='8.5' ry='3.6' transform='rotate(72 135 62)'/%3E%3Cellipse cx='139' cy='84' rx='8.5' ry='3.6' transform='rotate(92 139 84)'/%3E%3Cellipse cx='135' cy='105' rx='8.5' ry='3.6' transform='rotate(112 135 105)'/%3E%3Cellipse cx='124' cy='123' rx='8.5' ry='3.6' transform='rotate(132 124 123)'/%3E%3Cellipse cx='108' cy='136' rx='8.5' ry='3.6' transform='rotate(152 108 136)'/%3E%3Cellipse cx='55' cy='30' rx='8.5' ry='3.6' transform='rotate(-28 55 30)'/%3E%3Cellipse cx='36' cy='44' rx='8.5' ry='3.6' transform='rotate(-50 36 44)'/%3E%3Cellipse cx='25' cy='62' rx='8.5' ry='3.6' transform='rotate(-72 25 62)'/%3E%3Cellipse cx='21' cy='84' rx='8.5' ry='3.6' transform='rotate(-92 21 84)'/%3E%3Cellipse cx='25' cy='105' rx='8.5' ry='3.6' transform='rotate(-112 25 105)'/%3E%3Cellipse cx='36' cy='123' rx='8.5' ry='3.6' transform='rotate(-132 36 123)'/%3E%3Cellipse cx='52' cy='136' rx='8.5' ry='3.6' transform='rotate(-152 52 136)'/%3E%3Ccircle cx='116' cy='38' r='2.4'/%3E%3Ccircle cx='131' cy='73' r='2.4'/%3E%3Ccircle cx='44' cy='38' r='2.4'/%3E%3Ccircle cx='29' cy='73' r='2.4'/%3E%3C/svg%3E");
+          mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 160'%3E%3Cpath d='M108 136 Q140 112 139 84 Q138 52 105 30' fill='none' stroke='black' stroke-width='2.6'/%3E%3Cpath d='M52 136 Q20 112 21 84 Q22 52 55 30' fill='none' stroke='black' stroke-width='2.6'/%3E%3Cellipse cx='105' cy='30' rx='8.5' ry='3.6' transform='rotate(28 105 30)'/%3E%3Cellipse cx='124' cy='44' rx='8.5' ry='3.6' transform='rotate(50 124 44)'/%3E%3Cellipse cx='135' cy='62' rx='8.5' ry='3.6' transform='rotate(72 135 62)'/%3E%3Cellipse cx='139' cy='84' rx='8.5' ry='3.6' transform='rotate(92 139 84)'/%3E%3Cellipse cx='135' cy='105' rx='8.5' ry='3.6' transform='rotate(112 135 105)'/%3E%3Cellipse cx='124' cy='123' rx='8.5' ry='3.6' transform='rotate(132 124 123)'/%3E%3Cellipse cx='108' cy='136' rx='8.5' ry='3.6' transform='rotate(152 108 136)'/%3E%3Cellipse cx='55' cy='30' rx='8.5' ry='3.6' transform='rotate(-28 55 30)'/%3E%3Cellipse cx='36' cy='44' rx='8.5' ry='3.6' transform='rotate(-50 36 44)'/%3E%3Cellipse cx='25' cy='62' rx='8.5' ry='3.6' transform='rotate(-72 25 62)'/%3E%3Cellipse cx='21' cy='84' rx='8.5' ry='3.6' transform='rotate(-92 21 84)'/%3E%3Cellipse cx='25' cy='105' rx='8.5' ry='3.6' transform='rotate(-112 25 105)'/%3E%3Cellipse cx='36' cy='123' rx='8.5' ry='3.6' transform='rotate(-132 36 123)'/%3E%3Cellipse cx='52' cy='136' rx='8.5' ry='3.6' transform='rotate(-152 52 136)'/%3E%3Ccircle cx='116' cy='38' r='2.4'/%3E%3Ccircle cx='131' cy='73' r='2.4'/%3E%3Ccircle cx='44' cy='38' r='2.4'/%3E%3Ccircle cx='29' cy='73' r='2.4'/%3E%3C/svg%3E");
+}
+/* L7 — couronne épaisse + ruban (taenia) noué */
+.crown-lvl-7 {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 160'%3E%3Cpath d='M108 136 Q140 112 139 84 Q138 52 105 30' fill='none' stroke='black' stroke-width='3'/%3E%3Cpath d='M52 136 Q20 112 21 84 Q22 52 55 30' fill='none' stroke='black' stroke-width='3'/%3E%3Cellipse cx='105' cy='30' rx='9' ry='3.8' transform='rotate(28 105 30)'/%3E%3Cellipse cx='124' cy='44' rx='9' ry='3.8' transform='rotate(50 124 44)'/%3E%3Cellipse cx='135' cy='62' rx='9' ry='3.8' transform='rotate(72 135 62)'/%3E%3Cellipse cx='139' cy='84' rx='9' ry='3.8' transform='rotate(92 139 84)'/%3E%3Cellipse cx='135' cy='105' rx='9' ry='3.8' transform='rotate(112 135 105)'/%3E%3Cellipse cx='124' cy='123' rx='9' ry='3.8' transform='rotate(132 124 123)'/%3E%3Cellipse cx='108' cy='136' rx='9' ry='3.8' transform='rotate(152 108 136)'/%3E%3Cellipse cx='55' cy='30' rx='9' ry='3.8' transform='rotate(-28 55 30)'/%3E%3Cellipse cx='36' cy='44' rx='9' ry='3.8' transform='rotate(-50 36 44)'/%3E%3Cellipse cx='25' cy='62' rx='9' ry='3.8' transform='rotate(-72 25 62)'/%3E%3Cellipse cx='21' cy='84' rx='9' ry='3.8' transform='rotate(-92 21 84)'/%3E%3Cellipse cx='25' cy='105' rx='9' ry='3.8' transform='rotate(-112 25 105)'/%3E%3Cellipse cx='36' cy='123' rx='9' ry='3.8' transform='rotate(-132 36 123)'/%3E%3Cellipse cx='52' cy='136' rx='9' ry='3.8' transform='rotate(-152 52 136)'/%3E%3Ccircle cx='80' cy='144' r='4'/%3E%3Cpath d='M80 144 q-12 6 -18 20 M80 144 q12 6 18 20' fill='none' stroke='black' stroke-width='3.4'/%3E%3C/svg%3E");
+          mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 160'%3E%3Cpath d='M108 136 Q140 112 139 84 Q138 52 105 30' fill='none' stroke='black' stroke-width='3'/%3E%3Cpath d='M52 136 Q20 112 21 84 Q22 52 55 30' fill='none' stroke='black' stroke-width='3'/%3E%3Cellipse cx='105' cy='30' rx='9' ry='3.8' transform='rotate(28 105 30)'/%3E%3Cellipse cx='124' cy='44' rx='9' ry='3.8' transform='rotate(50 124 44)'/%3E%3Cellipse cx='135' cy='62' rx='9' ry='3.8' transform='rotate(72 135 62)'/%3E%3Cellipse cx='139' cy='84' rx='9' ry='3.8' transform='rotate(92 139 84)'/%3E%3Cellipse cx='135' cy='105' rx='9' ry='3.8' transform='rotate(112 135 105)'/%3E%3Cellipse cx='124' cy='123' rx='9' ry='3.8' transform='rotate(132 124 123)'/%3E%3Cellipse cx='108' cy='136' rx='9' ry='3.8' transform='rotate(152 108 136)'/%3E%3Cellipse cx='55' cy='30' rx='9' ry='3.8' transform='rotate(-28 55 30)'/%3E%3Cellipse cx='36' cy='44' rx='9' ry='3.8' transform='rotate(-50 36 44)'/%3E%3Cellipse cx='25' cy='62' rx='9' ry='3.8' transform='rotate(-72 25 62)'/%3E%3Cellipse cx='21' cy='84' rx='9' ry='3.8' transform='rotate(-92 21 84)'/%3E%3Cellipse cx='25' cy='105' rx='9' ry='3.8' transform='rotate(-112 25 105)'/%3E%3Cellipse cx='36' cy='123' rx='9' ry='3.8' transform='rotate(-132 36 123)'/%3E%3Cellipse cx='52' cy='136' rx='9' ry='3.8' transform='rotate(-152 52 136)'/%3E%3Ccircle cx='80' cy='144' r='4'/%3E%3Cpath d='M80 144 q-12 6 -18 20 M80 144 q12 6 18 20' fill='none' stroke='black' stroke-width='3.4'/%3E%3C/svg%3E");
+}
+/* L8 — couronne d'Olympien : riche + gemme centrale */
+.crown-lvl-8 {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 160'%3E%3Cpath d='M108 136 Q140 112 139 84 Q138 52 105 30' fill='none' stroke='black' stroke-width='3.2'/%3E%3Cpath d='M52 136 Q20 112 21 84 Q22 52 55 30' fill='none' stroke='black' stroke-width='3.2'/%3E%3Cellipse cx='105' cy='30' rx='9.5' ry='4' transform='rotate(28 105 30)'/%3E%3Cellipse cx='124' cy='44' rx='9.5' ry='4' transform='rotate(50 124 44)'/%3E%3Cellipse cx='135' cy='62' rx='9.5' ry='4' transform='rotate(72 135 62)'/%3E%3Cellipse cx='139' cy='84' rx='9.5' ry='4' transform='rotate(92 139 84)'/%3E%3Cellipse cx='135' cy='105' rx='9.5' ry='4' transform='rotate(112 135 105)'/%3E%3Cellipse cx='124' cy='123' rx='9.5' ry='4' transform='rotate(132 124 123)'/%3E%3Cellipse cx='108' cy='136' rx='9.5' ry='4' transform='rotate(152 108 136)'/%3E%3Cellipse cx='55' cy='30' rx='9.5' ry='4' transform='rotate(-28 55 30)'/%3E%3Cellipse cx='36' cy='44' rx='9.5' ry='4' transform='rotate(-50 36 44)'/%3E%3Cellipse cx='25' cy='62' rx='9.5' ry='4' transform='rotate(-72 25 62)'/%3E%3Cellipse cx='21' cy='84' rx='9.5' ry='4' transform='rotate(-92 21 84)'/%3E%3Cellipse cx='25' cy='105' rx='9.5' ry='4' transform='rotate(-112 25 105)'/%3E%3Cellipse cx='36' cy='123' rx='9.5' ry='4' transform='rotate(-132 36 123)'/%3E%3Cellipse cx='52' cy='136' rx='9.5' ry='4' transform='rotate(-152 52 136)'/%3E%3Ccircle cx='80' cy='146' r='4'/%3E%3Cpath d='M80 146 q-13 6 -20 22 M80 146 q13 6 20 22' fill='none' stroke='black' stroke-width='3.6'/%3E%3Cpath d='M80 16 l9 11 -9 11 -9 -11 z'/%3E%3C/svg%3E");
+          mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 160'%3E%3Cpath d='M108 136 Q140 112 139 84 Q138 52 105 30' fill='none' stroke='black' stroke-width='3.2'/%3E%3Cpath d='M52 136 Q20 112 21 84 Q22 52 55 30' fill='none' stroke='black' stroke-width='3.2'/%3E%3Cellipse cx='105' cy='30' rx='9.5' ry='4' transform='rotate(28 105 30)'/%3E%3Cellipse cx='124' cy='44' rx='9.5' ry='4' transform='rotate(50 124 44)'/%3E%3Cellipse cx='135' cy='62' rx='9.5' ry='4' transform='rotate(72 135 62)'/%3E%3Cellipse cx='139' cy='84' rx='9.5' ry='4' transform='rotate(92 139 84)'/%3E%3Cellipse cx='135' cy='105' rx='9.5' ry='4' transform='rotate(112 135 105)'/%3E%3Cellipse cx='124' cy='123' rx='9.5' ry='4' transform='rotate(132 124 123)'/%3E%3Cellipse cx='108' cy='136' rx='9.5' ry='4' transform='rotate(152 108 136)'/%3E%3Cellipse cx='55' cy='30' rx='9.5' ry='4' transform='rotate(-28 55 30)'/%3E%3Cellipse cx='36' cy='44' rx='9.5' ry='4' transform='rotate(-50 36 44)'/%3E%3Cellipse cx='25' cy='62' rx='9.5' ry='4' transform='rotate(-72 25 62)'/%3E%3Cellipse cx='21' cy='84' rx='9.5' ry='4' transform='rotate(-92 21 84)'/%3E%3Cellipse cx='25' cy='105' rx='9.5' ry='4' transform='rotate(-112 25 105)'/%3E%3Cellipse cx='36' cy='123' rx='9.5' ry='4' transform='rotate(-132 36 123)'/%3E%3Cellipse cx='52' cy='136' rx='9.5' ry='4' transform='rotate(-152 52 136)'/%3E%3Ccircle cx='80' cy='146' r='4'/%3E%3Cpath d='M80 146 q-13 6 -20 22 M80 146 q13 6 20 22' fill='none' stroke='black' stroke-width='3.6'/%3E%3Cpath d='M80 16 l9 11 -9 11 -9 -11 z'/%3E%3C/svg%3E");
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   ATHLETE — SPIKE RING (Spartiate)
+   TIER BADGE (pastille sous l'avatar)
    ══════════════════════════════════════════════════════════════════ */
 
-/* Base spike ring — 12 spikes using repeating-conic-gradient */
-.athlete-spike-ring {
-  border-radius: 50%;
-  /* Mask: only show outer ring (hide center so avatar shows) */
-  -webkit-mask-image: radial-gradient(circle at center, transparent 54%, black 60%, black 100%);
-  mask-image:         radial-gradient(circle at center, transparent 54%, black 60%, black 100%);
+[class*="tier-badge-lvl-"] {
+  background: rgba(7,9,16,0.95);
+  border: 2px solid var(--tier-color);
+  color: var(--tier-accent);
+  box-shadow: 0 0 10px var(--tier-bg);
 }
-
-/* Level 3 (Hoplite) - subtle, 8 spikes — bleu clair */
-.athlete-spike-3 {
-  inset: -22px;
-  background: repeating-conic-gradient(
-    rgba(96, 165, 250, 0)   0deg 18deg,
-    rgba(96, 165, 250, 0.4) 18deg 27deg,
-    rgba(96, 165, 250, 0)   27deg 45deg
-  );
-  animation: spin-spikes 25s linear infinite;
-}
-
-/* Level 4 (Myrmidon) - medium, 8 spikes — indigo */
-.athlete-spike-4 {
-  inset: -26px;
-  background: repeating-conic-gradient(
-    rgba(99, 102, 241, 0)   0deg 17deg,
-    rgba(99, 102, 241, 0.5) 17deg 28deg,
-    rgba(99, 102, 241, 0)   28deg 45deg
-  );
-  animation: spin-spikes 18s linear infinite;
-}
-
-/* Level 5 (Spartiate) - full, 12 sharp bright spikes — violet */
-.athlete-spike-5 {
-  inset: -30px;
-  background:
-    repeating-conic-gradient(
-      rgba(168, 85, 247, 0)   0deg 12deg,
-      rgba(168, 85, 247, 0.7) 12deg 18deg,
-      rgba(168, 85, 247, 0)   18deg 30deg
-    );
-  animation: spin-spikes 14s linear infinite;
-  filter: blur(0.5px);
-}
-
-/* Outer static ring for athlete */
-.athlete-outer-ring {
-  border-radius: 50%;
-  border: 1px solid;
-}
-.athlete-outer-3 { inset: -26px; border-color: rgba(96,165,250,0.25); }
-.athlete-outer-4 { inset: -30px; border-color: rgba(99,102,241,0.28); }
-.athlete-outer-5 {
-  inset: -36px;
-  border-color: rgba(168,85,247,0.3);
-  box-shadow: 0 0 20px rgba(168,85,247,0.15), inset 0 0 20px rgba(168,85,247,0.05);
-}
-
-/* Avatar wrapper ring (rendered inside .relative.z-10) */
-.avatar-wrapper-lvl-1, .avatar-wrapper-lvl-2 { display: inline-block; }
-.avatar-wrapper-lvl-3, .avatar-wrapper-lvl-4, .avatar-wrapper-lvl-5 { display: inline-block; }
-.avatar-wrapper-lvl-6, .avatar-wrapper-lvl-7, .avatar-wrapper-lvl-8 { display: inline-block; }
-
-@keyframes spin-spikes {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
-}
-
-/* ══════════════════════════════════════════════════════════════════
-   LEGEND — OUTER RINGS (Olympien)
-   ══════════════════════════════════════════════════════════════════ */
-
-.legend-outer-ring-1 {
-  inset: -16px;
-  border-radius: 50%;
-  border: 2px solid rgba(251,191,36,0.55);
-  box-shadow: 0 0 20px rgba(251,191,36,0.3), inset 0 0 12px rgba(251,191,36,0.1);
-  animation: pulse-ring-gold 4s ease-in-out infinite;
-}
-.legend-outer-ring-2 {
-  inset: -26px;
-  border-radius: 50%;
-  border: 1px solid rgba(251,191,36,0.25);
-  box-shadow: 0 0 30px rgba(251,191,36,0.12);
-}
-
-@keyframes pulse-ring-gold {
-  0%, 100% { opacity: 0.7; }
-  50%       { opacity: 1; box-shadow: 0 0 30px rgba(251,191,36,0.5), inset 0 0 18px rgba(251,191,36,0.15); }
-}
-
-/* ══════════════════════════════════════════════════════════════════
-   TIER BADGE (pill below avatar)
-   ══════════════════════════════════════════════════════════════════ */
-
-.tier-badge-lvl-1 { background: rgba(10,18,35,0.95); border: 2px solid rgba(71,85,105,0.55);  color: #94a3b8; }
-.tier-badge-lvl-2 { background: rgba(10,18,35,0.95); border: 2px solid rgba(203,213,225,0.55); color: #cbd5e1; }
-.tier-badge-lvl-3 { background: rgba(6,12,28,0.95);  border: 2px solid rgba(96,165,250,0.6);  color: #93c5fd; }
-.tier-badge-lvl-4 { background: rgba(6,12,28,0.95);  border: 2px solid rgba(99,102,241,0.65); color: #a5b4fc; }
-.tier-badge-lvl-5 {
-  background: rgba(6,12,28,0.97);
-  border: 2px solid rgba(168,85,247,0.85);
-  color: #d8b4fe;
-  box-shadow: 0 0 16px rgba(168,85,247,0.45), inset 0 0 10px rgba(168,85,247,0.08);
-}
-.tier-badge-lvl-6 {
-  background: rgba(14,9,2,0.97);
-  border: 2px solid rgba(217,119,6,0.75);
-  color: #d97706;
-  box-shadow: 0 0 16px rgba(217,119,6,0.35);
-}
-.tier-badge-lvl-7 {
-  background: rgba(14,9,2,0.97);
-  border: 2px solid rgba(251,191,36,0.75);
-  color: #fbbf24;
-  box-shadow: 0 0 18px rgba(251,191,36,0.4);
-}
-.tier-badge-lvl-8 {
-  background: rgba(14,9,2,0.97);
-  border: 2px solid #fbbf24;
-  color: #fef3c7;
-  box-shadow: 0 0 24px rgba(251,191,36,0.6), inset 0 0 12px rgba(251,191,36,0.08);
-  letter-spacing: 0.25em;
-}
+.tier-badge-lvl-8 { letter-spacing: 0.25em; color: #f3ead4; }
 
 /* ══════════════════════════════════════════════════════════════════
    USERNAME
    ══════════════════════════════════════════════════════════════════ */
 
-.username-novice  { color: #f1f5f9; }
-.username-athlete { color: #f1f5f9; text-shadow: 0 0 30px rgba(96,165,250,0.25); }
+.username-novice  { color: #eef0f3; }
+.username-athlete { color: #f2ece9; text-shadow: 0 0 18px var(--tier-bg); }
 .username-legend  {
-  background: linear-gradient(90deg, #f59e0b 0%, #fef3c7 30%, #fbbf24 50%, #fef3c7 70%, #f59e0b 100%);
+  background: linear-gradient(90deg, #b0904a 0%, #efe6cf 32%, #d4b86a 50%, #efe6cf 68%, #b0904a 100%);
   background-size: 200% auto;
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  animation: shimmer-gold 3.5s linear infinite;
+  background-clip: text;
+  animation: shimmer-gold 6s linear infinite;
 }
-
 @keyframes shimmer-gold {
   0%   { background-position: 0%   center; }
   100% { background-position: 200% center; }
 }
 
-/* Tier symbols beside username */
-.tier-symbol-novice-sm  { color: rgba(71,85,105,0.5);    font-size: 0.75em; }
-.tier-symbol-novice-lg  { color: rgba(203,213,225,0.65); font-size: 0.75em; }
-.tier-symbol-athlete-sm { color: rgba(148,163,184,0.65); font-size: 0.8em; }
-.tier-symbol-athlete-md { color: rgba(96,165,250,0.75);  font-size: 0.85em; }
-.tier-symbol-athlete-lg {
-  color: #93c5fd; font-size: 0.9em;
-  text-shadow: 0 0 10px rgba(96,165,250,0.6);
-  animation: pulse-symbol-blue 2.5s ease-in-out infinite;
-}
-.tier-symbol-legend-sm  { color: rgba(217,119,6,0.9); font-size: 0.9em; text-shadow: 0 0 10px rgba(217,119,6,0.4); }
-.tier-symbol-legend-md  { color: #fbbf24; font-size: 0.9em; text-shadow: 0 0 10px rgba(251,191,36,0.5); }
-.tier-symbol-legend-lg  {
-  background: linear-gradient(90deg, #fbbf24, #fef3c7, #fbbf24);
-  background-size: 200% auto;
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  animation: shimmer-gold 2.5s linear infinite;
-  font-size: 0.9em;
-}
-
-@keyframes pulse-symbol-blue {
-  0%, 100% { opacity: 0.8; }
-  50%       { opacity: 1; text-shadow: 0 0 16px rgba(96,165,250,0.8); }
-}
-
-/* Laurel (legend) */
-.laurel-novice  { display: none; }
-.laurel-athlete { display: none; }
-.laurel-legend  { color: #fbbf24; text-shadow: 0 0 12px rgba(251,191,36,0.5); filter: drop-shadow(0 0 6px rgba(251,191,36,0.4)); }
-
 /* ══════════════════════════════════════════════════════════════════
    STATS CARDS
    ══════════════════════════════════════════════════════════════════ */
 
-.stats-novice  { background: rgba(15,23,42,0.6);  border: 1px solid rgba(71,85,105,0.2); }
-.stats-athlete { background: rgba(6,12,28,0.7);   border: 1px solid rgba(96,165,250,0.2); }
-.stats-legend  { background: rgba(20,13,2,0.8);   border: 1px solid rgba(251,191,36,0.2); }
-
-.stats-hover-novice  { background: linear-gradient(to top, rgba(100,116,139,0.1), transparent); }
-.stats-hover-athlete { background: linear-gradient(to top, rgba(59,130,246,0.12), transparent); }
-.stats-hover-legend  { background: linear-gradient(to top, rgba(251,191,36,0.1), transparent); }
-
-.stats-val-novice  { color: #f1f5f9; }
-.stats-val-athlete { color: #60a5fa; }
+.stats-novice, .stats-athlete, .stats-legend {
+  background: rgba(6,9,15,0.65);
+  border: 1px solid var(--tier-border);
+}
+.stats-hover-novice, .stats-hover-athlete, .stats-hover-legend {
+  background: linear-gradient(to top, var(--tier-bg), transparent);
+}
+.stats-val-novice  { color: #eef0f3; }
+.stats-val-athlete { color: var(--tier-accent); text-shadow: 0 0 14px var(--tier-bg); }
 .stats-val-legend  {
-  background: linear-gradient(90deg, #fbbf24, #fef3c7, #fbbf24);
+  background: linear-gradient(90deg, #b0904a, #efe6cf, #d4b86a);
   background-size: 200% auto;
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  animation: shimmer-gold 4s linear infinite;
+  background-clip: text;
+  animation: shimmer-gold 7s linear infinite;
 }
+.stats-alt-novice  { color: var(--tier-accent); }
+.stats-alt-athlete { color: var(--tier-accent); }
+.stats-alt-legend  { color: #d4b86a; }
 
-.stats-alt-novice  { color: #93c5fd; }
-.stats-alt-athlete { color: #93c5fd; }
-.stats-alt-legend  { color: #fbbf24; }
+/* ══════════════════════════════════════════════════════════════════
+   MÉDAILLE TRÉSOR
+   ══════════════════════════════════════════════════════════════════ */
+
+.medal-disc {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+.medal-disc::before {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%;
+  background: var(--tier-metal);
+  opacity: 0.18;
+  box-shadow: 0 0 22px var(--tier-bg), inset 0 0 22px rgba(0,0,0,0.45);
+  z-index: 0;
+}
+.medal-disc::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: 50%;
+  border: 2px solid var(--tier-color);
+  opacity: 0.45;
+  z-index: 0;
+}
+.medal-legend::before { opacity: 0.24; animation: pulse-soft 6s ease-in-out infinite; }
+
+.tresor-section { cursor: pointer; }
+.tresor-section-badge {
+  position: relative;
+  z-index: 1;
+  width: 220px; height: 220px;
+  max-width: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.55));
+  transition: transform 0.45s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.tresor-section:hover .tresor-section-badge { transform: scale(1.04) rotate(-2deg); }
 
 /* ══════════════════════════════════════════════════════════════════
    TRÉSOR LINK
    ══════════════════════════════════════════════════════════════════ */
 
-.tresor-link-novice  { border-color: rgba(100,116,139,0.2); background: rgba(100,116,139,0.05); }
-.tresor-link-novice:hover  { border-color: rgba(100,116,139,0.45); background: rgba(100,116,139,0.1); }
-.tresor-link-athlete { border-color: rgba(96,165,250,0.2);  background: rgba(96,165,250,0.05); }
-.tresor-link-athlete:hover { border-color: rgba(96,165,250,0.5);  background: rgba(96,165,250,0.1); }
-.tresor-link-legend  { border-color: rgba(251,191,36,0.3);  background: rgba(251,191,36,0.06); }
-.tresor-link-legend:hover  { border-color: rgba(251,191,36,0.6);  background: rgba(251,191,36,0.12); }
-
-.tresor-icon-novice  { color: #94a3b8; }
-.tresor-icon-athlete { color: #60a5fa; }
-.tresor-icon-legend  { color: #fbbf24; }
-.tresor-text-novice  { color: #f1f5f9; }
-.tresor-text-athlete { color: #f1f5f9; }
-.tresor-text-legend  { color: #fef3c7; }
+.tresor-link-novice, .tresor-link-athlete, .tresor-link-legend {
+  border-color: var(--tier-border);
+  background: var(--tier-bg);
+}
+.tresor-link-novice:hover, .tresor-link-athlete:hover, .tresor-link-legend:hover {
+  border-color: var(--tier-color);
+  box-shadow: 0 0 20px var(--tier-bg);
+}
+.tresor-icon-novice, .tresor-icon-athlete, .tresor-icon-legend { color: var(--tier-color); }
+.tresor-text-novice  { color: #eef0f3; }
+.tresor-text-athlete { color: var(--tier-accent); }
+.tresor-text-legend  { color: #f3ead4; }
 
 /* ══════════════════════════════════════════════════════════════════
    SECTION TITLES & PROGRAMME CARDS
    ══════════════════════════════════════════════════════════════════ */
 
-.section-title-novice  { color: #f1f5f9; }
-.section-title-athlete { color: #f1f5f9; }
-.section-title-legend  { color: #fef3c7; }
+.section-title-novice  { color: #eef0f3; }
+.section-title-athlete { color: #f2ece9; }
+.section-title-legend  { color: #f3ead4; }
 
-.section-icon-novice  { color: #94a3b8; }
-.section-icon-athlete { color: #60a5fa; }
-.section-icon-legend  { color: #fbbf24; }
+.section-icon-novice, .section-icon-athlete, .section-icon-legend { color: var(--tier-color); }
 
-.prog-card-novice  { background: rgba(10,18,35,0.5);  border-color: rgba(71,85,105,0.2); }
-.prog-card-novice:hover  { border-color: rgba(71,85,105,0.45); }
-.prog-card-athlete { background: rgba(6,12,28,0.6);   border-color: rgba(96,165,250,0.15); }
-.prog-card-athlete:hover { border-color: rgba(96,165,250,0.4); }
-.prog-card-legend  { background: rgba(14,9,2,0.7);    border-color: rgba(251,191,36,0.18); }
-.prog-card-legend:hover  { border-color: rgba(251,191,36,0.45); }
+.prog-card-novice, .prog-card-athlete, .prog-card-legend {
+  background: rgba(6,9,15,0.55);
+  border-color: var(--tier-border);
+}
+.prog-card-novice:hover, .prog-card-athlete:hover, .prog-card-legend:hover { border-color: var(--tier-color); }
 
-.copy-btn-novice  { color: #94a3b8; border-color: rgba(71,85,105,0.3); }
-.copy-btn-novice:hover  { background: rgba(100,116,139,0.2); color: #fff; }
-.copy-btn-athlete { color: #60a5fa; border-color: rgba(96,165,250,0.3); }
-.copy-btn-athlete:hover { background: rgba(96,165,250,0.15); }
-.copy-btn-legend  { color: #fbbf24; border-color: rgba(251,191,36,0.35); }
-.copy-btn-legend:hover  { background: rgba(251,191,36,0.12); }
+.copy-btn-novice, .copy-btn-athlete, .copy-btn-legend {
+  color: var(--tier-color);
+  border-color: var(--tier-border);
+}
+.copy-btn-novice:hover, .copy-btn-athlete:hover, .copy-btn-legend:hover { background: var(--tier-bg); color: #fff; }
 
-.toggle-active-novice  { background-color: #64748b; }
-.toggle-active-athlete { background-color: #3b82f6; }
-.toggle-active-legend  { background-color: #f59e0b; }
+.toggle-active-novice, .toggle-active-athlete, .toggle-active-legend { background-color: var(--tier-color); }
 
 /* ══════════════════════════════════════════════════════════════════
-   SECTION TRÉSOR (badge moyen sur top 3 exercices)
+   FOND DE SCÈNE PLEIN ÉCRAN — image immersive par univers (+ overlay)
+   Couche fixe DERRIÈRE le contenu. Si l'image manque (404), la couche
+   reste transparente et le dégradé tier-{cat}-bg de <main> sert de fallback.
    ══════════════════════════════════════════════════════════════════ */
 
-.tresor-section {
-  cursor: pointer;
+.scene-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+.scene-novice  { background-image: url("/images/themes/bg-novice.webp"); }
+.scene-athlete { background-image: url("/images/themes/bg-athlete.webp"); }
+.scene-legend  { background-image: url("/images/themes/bg-legend.webp"); }
+
+/* Overlay sombre : garantit la lisibilité du texte et l'esprit « fond noir ».
+   N'apparaît que si une image de scène est chargée (sinon transparent par-dessus
+   le fallback CSS, qui gère déjà son propre contraste). */
+.scene-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 120% 80% at 50% 0%, transparent 0%, rgba(5,7,12,0.55) 70%),
+    linear-gradient(to bottom, rgba(5,7,12,0.45) 0%, rgba(5,7,12,0.62) 45%, rgba(5,7,12,0.86) 100%);
 }
 
-.tresor-section-badge {
-  width: 220px;
-  height: 220px;
-  max-width: 100%;
-  object-fit: contain;
-  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.55));
-  transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-}
+/* ══════════════════════════════════════════════════════════════════
+   FRONTON (pédiment grec) — au-dessus de la carte
+   Fallback CSS : triangle métallique (clip-path). Asset : texture en + .
+   ══════════════════════════════════════════════════════════════════ */
 
-.tresor-section:hover .tresor-section-badge {
-  transform: scale(1.05) rotate(-2deg);
+.profile-pediment {
+  position: relative;
+  z-index: 2;
+  width: 88%;
+  max-width: 460px;
+  height: clamp(40px, 13vw, 78px);
+  margin: 0 auto -10px;
+  background: var(--tier-metal);
+  background-size: cover;
+  background-position: center bottom;
+  clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+  filter: drop-shadow(0 6px 10px rgba(0,0,0,0.5));
+  opacity: 0.96;
+}
+.pediment-novice  { background-image: url("/images/themes/pediment-novice.png"); }
+.pediment-athlete { background-image: url("/images/themes/pediment-athlete.png"); }
+.pediment-legend  { background-image: url("/images/themes/pediment-legend.png"); }
+
+/* ══════════════════════════════════════════════════════════════════
+   CALQUE D'ACCENT NARRATIF — distinct par palier (le « vivant »)
+   SVG inline en masque, teinté par le métal du palier. Discret, en fond
+   de carte, sous le contenu (z-index bas, opacité faible).
+   1 chemin → 2 nef · 3 boucliers · 4 flamme · 5 laurier · 6 lyre ·
+   7 foudre · 8 constellation.
+   ══════════════════════════════════════════════════════════════════ */
+
+.theme-accent {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  width: min(78%, 360px);
+  height: 90px;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.16;
+  background: var(--tier-metal);
+  -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+  -webkit-mask-position: center bottom; mask-position: center bottom;
+  -webkit-mask-size: contain; mask-size: contain;
+}
+/* L1 — sentier & étoile du départ */
+.accent-lvl-1 {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 90'%3E%3Cpath d='M20 84 Q90 60 120 74 Q150 88 220 58' fill='none' stroke='black' stroke-width='2' stroke-dasharray='5 6'/%3E%3Cpath d='M120 18 l3 9 9 0 -7 6 3 9 -8 -5 -8 5 3 -9 -7 -6 9 0 z'/%3E%3C/svg%3E");
+          mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 90'%3E%3Cpath d='M20 84 Q90 60 120 74 Q150 88 220 58' fill='none' stroke='black' stroke-width='2' stroke-dasharray='5 6'/%3E%3Cpath d='M120 18 l3 9 9 0 -7 6 3 9 -8 -5 -8 5 3 -9 -7 -6 9 0 z'/%3E%3C/svg%3E");
+}
+/* L2 — la nef Argo (coque, voile, rames) */
+.accent-lvl-2 {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 90'%3E%3Cpath d='M60 60 L180 60 Q170 78 150 80 L90 80 Q70 78 60 60 Z'/%3E%3Cpath d='M120 60 L120 14'  stroke='black' stroke-width='3'/%3E%3Cpath d='M122 18 Q160 28 158 52 L122 52 Z'/%3E%3Cpath d='M70 64 l-10 12 M88 64 l-10 12 M106 64 l-10 12' stroke='black' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+          mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 90'%3E%3Cpath d='M60 60 L180 60 Q170 78 150 80 L90 80 Q70 78 60 60 Z'/%3E%3Cpath d='M120 60 L120 14'  stroke='black' stroke-width='3'/%3E%3Cpath d='M122 18 Q160 28 158 52 L122 52 Z'/%3E%3Cpath d='M70 64 l-10 12 M88 64 l-10 12 M106 64 l-10 12' stroke='black' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+}
+/* L3 — boucliers & lances croisées (phalange) */
+.accent-lvl-3 {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 90'%3E%3Cpath d='M70 30 L170 84 M170 30 L70 84' stroke='black' stroke-width='3'/%3E%3Ccircle cx='120' cy='55' r='22' fill='none' stroke='black' stroke-width='4'/%3E%3Ccircle cx='120' cy='55' r='6'/%3E%3C/svg%3E");
+          mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 90'%3E%3Cpath d='M70 30 L170 84 M170 30 L70 84' stroke='black' stroke-width='3'/%3E%3Ccircle cx='120' cy='55' r='22' fill='none' stroke='black' stroke-width='4'/%3E%3Ccircle cx='120' cy='55' r='6'/%3E%3C/svg%3E");
+}
+/* L4 — flamme des Myrmidons */
+.accent-lvl-4 {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 90'%3E%3Cpath d='M120 84 C95 70 100 50 116 36 C112 50 124 52 124 40 C140 52 142 70 126 82 C140 74 138 58 134 52 C150 66 146 86 120 86 Z'/%3E%3C/svg%3E");
+          mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 90'%3E%3Cpath d='M120 84 C95 70 100 50 116 36 C112 50 124 52 124 40 C140 52 142 70 126 82 C140 74 138 58 134 52 C150 66 146 86 120 86 Z'/%3E%3C/svg%3E");
+}
+/* L5 — branche de laurier triomphale */
+.accent-lvl-5 {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 90'%3E%3Cpath d='M40 80 Q120 40 200 80' fill='none' stroke='black' stroke-width='3'/%3E%3Cg%3E%3Cellipse cx='70' cy='70' rx='9' ry='3.4' transform='rotate(30 70 70)'/%3E%3Cellipse cx='100' cy='58' rx='9' ry='3.4' transform='rotate(18 100 58)'/%3E%3Cellipse cx='140' cy='58' rx='9' ry='3.4' transform='rotate(-18 140 58)'/%3E%3Cellipse cx='170' cy='70' rx='9' ry='3.4' transform='rotate(-30 170 70)'/%3E%3C/g%3E%3C/svg%3E");
+          mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 90'%3E%3Cpath d='M40 80 Q120 40 200 80' fill='none' stroke='black' stroke-width='3'/%3E%3Cg%3E%3Cellipse cx='70' cy='70' rx='9' ry='3.4' transform='rotate(30 70 70)'/%3E%3Cellipse cx='100' cy='58' rx='9' ry='3.4' transform='rotate(18 100 58)'/%3E%3Cellipse cx='140' cy='58' rx='9' ry='3.4' transform='rotate(-18 140 58)'/%3E%3Cellipse cx='170' cy='70' rx='9' ry='3.4' transform='rotate(-30 170 70)'/%3E%3C/g%3E%3C/svg%3E");
+}
+/* L6 — lyre d'Apollon (ascension) */
+.accent-lvl-6 {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 90'%3E%3Cpath d='M96 80 Q80 50 96 26 M144 80 Q160 50 144 26' fill='none' stroke='black' stroke-width='4'/%3E%3Cpath d='M92 30 L148 30' stroke='black' stroke-width='4'/%3E%3Cpath d='M106 32 L106 76 M120 32 L120 78 M134 32 L134 76' stroke='black' stroke-width='2'/%3E%3C/svg%3E");
+          mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 90'%3E%3Cpath d='M96 80 Q80 50 96 26 M144 80 Q160 50 144 26' fill='none' stroke='black' stroke-width='4'/%3E%3Cpath d='M92 30 L148 30' stroke='black' stroke-width='4'/%3E%3Cpath d='M106 32 L106 76 M120 32 L120 78 M134 32 L134 76' stroke='black' stroke-width='2'/%3E%3C/svg%3E");
+}
+/* L7 — foudre de Zeus */
+.accent-lvl-7 {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 90'%3E%3Cpath d='M132 14 L96 52 L118 52 L104 84 L150 40 L126 40 Z'/%3E%3C/svg%3E");
+          mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 90'%3E%3Cpath d='M132 14 L96 52 L118 52 L104 84 L150 40 L126 40 Z'/%3E%3C/svg%3E");
+}
+/* L8 — constellation du Héros (catastérisme) */
+.accent-lvl-8 {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 90'%3E%3Cg fill='none' stroke='black' stroke-width='1.6'%3E%3Cpath d='M50 70 L86 44 L120 56 L150 30 L196 50'/%3E%3Cpath d='M120 56 L132 82'/%3E%3C/g%3E%3Cg%3E%3Ccircle cx='50' cy='70' r='3'/%3E%3Ccircle cx='86' cy='44' r='3.6'/%3E%3Ccircle cx='120' cy='56' r='3'/%3E%3Ccircle cx='150' cy='30' r='4'/%3E%3Ccircle cx='196' cy='50' r='3'/%3E%3Ccircle cx='132' cy='82' r='2.6'/%3E%3C/g%3E%3C/svg%3E");
+          mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 90'%3E%3Cg fill='none' stroke='black' stroke-width='1.6'%3E%3Cpath d='M50 70 L86 44 L120 56 L150 30 L196 50'/%3E%3Cpath d='M120 56 L132 82'/%3E%3C/g%3E%3Cg%3E%3Ccircle cx='50' cy='70' r='3'/%3E%3Ccircle cx='86' cy='44' r='3.6'/%3E%3Ccircle cx='120' cy='56' r='3'/%3E%3Ccircle cx='150' cy='30' r='4'/%3E%3Ccircle cx='196' cy='50' r='3'/%3E%3Ccircle cx='132' cy='82' r='2.6'/%3E%3C/g%3E%3C/svg%3E");
 }

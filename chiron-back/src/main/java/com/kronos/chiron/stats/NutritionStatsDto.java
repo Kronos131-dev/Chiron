@@ -6,8 +6,7 @@ import java.util.List;
 /**
  * Historique nutritionnel sur une période + moyennes, pour la page Statistiques.
  *
- * @param linked         true si le compte Olympus est lié
- * @param available      true si la base Olympus a pu être interrogée (false = injoignable)
+ * @param linked         true si le compte Olympus est lié et joignable
  * @param jours          série journalière (ordre chronologique)
  * @param moyKcal        calories moyennes/jour (jours avec données)
  * @param moyProteines   protéines moyennes/jour (g)
@@ -17,7 +16,6 @@ import java.util.List;
  */
 public record NutritionStatsDto(
         boolean linked,
-        boolean available,
         List<NutritionPointDto> jours,
         Double moyKcal,
         Double moyProteines,
@@ -25,13 +23,8 @@ public record NutritionStatsDto(
         Double moyLipides,
         Double moyTargetKcal
 ) {
-    /** Compte Olympus non lié. */
+    /** Réponse standard quand le compte Olympus n'est pas lié ou est injoignable. */
     public static NutritionStatsDto notLinked() {
-        return new NutritionStatsDto(false, true, Collections.emptyList(), null, null, null, null, null);
-    }
-
-    /** Compte lié mais base Olympus injoignable (mode dégradé). */
-    public static NutritionStatsDto unavailable() {
-        return new NutritionStatsDto(true, false, Collections.emptyList(), null, null, null, null, null);
+        return new NutritionStatsDto(false, Collections.emptyList(), null, null, null, null, null);
     }
 }

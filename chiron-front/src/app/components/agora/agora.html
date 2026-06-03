@@ -63,6 +63,9 @@
                    [ngClass]="getTierClass(athlete.performanceTierLevel)"
                    class="rounded-2xl p-6 cursor-pointer shadow-xl overflow-hidden relative group">
 
+            <!-- Bordure céramique (méandre grec) teintée par le palier -->
+            <span class="agora-meander"></span>
+
             <div class="relative z-10 flex items-center gap-5">
               <!-- Avatar with tier-colored border, no status bubble -->
               <img [src]="chironApi.getImageUrl(athlete.icon || 'default_icon.png')"
@@ -80,6 +83,12 @@
                 <p class="agora-rank text-xs font-black tracking-widest uppercase mt-1">
                   {{ athlete.performanceTier || 'Éphèbe' }}
                 </p>
+              </div>
+
+              <!-- Médaille de palier -->
+              <div class="agora-medal flex-shrink-0">
+                <img [src]="getTierBadge(athlete.performanceTierLevel)"
+                     class="agora-medal-img" alt="palier" aria-hidden="true">
               </div>
 
               <span class="agora-arrow material-symbols-outlined text-xl flex-shrink-0">

@@ -7,7 +7,6 @@ import { AuthService } from '../../service/auth.service';
 import { HeaderComponent } from '../shared/header/header';
 import { tierBadgeUrl } from '../../shared/tier-badges';
 import { TIERS, Tier } from '../../shared/tiers';
-import { display1RM, ratio1RM } from '../../shared/one-rep-max';
 
 const THRESHOLDS: Record<string, number[]> = {
   DEVELOPPE_COUCHE: [0.70, 0.85, 1.00, 1.15, 1.30, 1.45, 1.60],
@@ -110,24 +109,26 @@ export class Tresor implements OnInit {
   weightTeethOffset = computed(() => `${((-this.weightOffset() % 20) + 20) % 20}px`);
   repsTeethOffset   = computed(() => `${((-this.repsOffset()   % 20) + 20) % 20}px`);
 
-  // Live 1RM / tier preview — délègue au helper partagé (miroir du backend).
-  // Valeur affichée = 1RM lesté pour Tractions/Dips, 1RM total sinon. Plafond 10 reps.
+  // Live 1RM / tier preview
   preview1RM = computed(() => {
     const exercise = this.editingExercise();
     if (!exercise) return null;
     const w = this.weightValue();
     const r = this.repsValue();
     if (r < 1 || r > 36) return null;
+    const meta = EXERCISE_META[exercise.exerciseType];
     const bw = this.summary()?.poidsCorps ?? null;
-    return Math.round(display1RM(exercise.exerciseType, w, r, bw) * 100) / 100;
+    // Mirror backend cap: bodyweight exercise with no added weight → cap reps at 10
+    const effectiveReps = (meta?.isBodyweight && w === 0) ? Math.min(r, 10) : r;
+    const effectiveWeight = (meta?.isBodyweight && bw) ? w + bw : w;
+    return Math.round(effectiveWeight * (36 / (37 - effectiveReps)) * 100) / 100;
   });
 
-  // Ratio pour le palier : toujours 1RM total / poids de corps (seuils inchangés).
   previewRatio = computed(() => {
-    const exercise = this.editingExercise();
+    const rm1 = this.preview1RM();
     const bw = this.summary()?.poidsCorps;
-    if (!exercise || !bw) return null;
-    return Math.round(ratio1RM(exercise.exerciseType, this.weightValue(), this.repsValue(), bw) * 100) / 100;
+    if (!rm1 || !bw) return null;
+    return Math.round(rm1 / bw * 100) / 100;
   });
 
   previewTier = computed(() => {

@@ -203,8 +203,39 @@
       </div>
     }
 
+    <!-- ====================== CORPS ====================== -->
+    @if (activeTab() === 'corps' && !loading().corps) {
+      <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4 md:p-6">
+        <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-4">Évolution du poids de corps</h3>
+        @if (bodyweight(); as b) {
+          @if (!b.linked) {
+            <div class="text-center py-8">
+              <span class="material-symbols-outlined text-5xl text-secondary/40 mb-3">link_off</span>
+              <p class="text-on-surface-variant mb-4">Lie ton compte Olympus pour voir l'évolution de ton poids.</p>
+              <button (click)="goToProfile()" class="bg-secondary/15 border border-secondary/40 text-secondary px-5 py-2 rounded-lg text-xs font-bold tracking-widest uppercase hover:bg-secondary/25 transition-colors">Aller au profil</button>
+            </div>
+          } @else if (b.points.length > 1) {
+            <div class="h-64"><canvas baseChart [type]="'line'" [data]="bodyweightChart()" [options]="lineOptions"></canvas></div>
+          } @else {
+            <p class="text-on-surface-variant text-sm">Pas assez de mesures de poids sur la période.</p>
+          }
+        }
+      </div>
+    }
+
     <!-- ====================== COMPOSITION CORPORELLE (Visbody) ====================== -->
     @if (activeTab() === 'composition' && !loading().composition) {
+      <!-- Légende : comment alimenter cet onglet -->
+      <div class="bg-secondary/5 border border-secondary/20 rounded-xl px-4 py-3 mb-4 flex items-start gap-3">
+        <span class="material-symbols-outlined text-secondary text-xl shrink-0">mail</span>
+        <p class="text-on-surface-variant text-xs leading-relaxed">
+          Envoie le PDF de ton scan Visbody à
+          <a href="mailto:chirondusanctuaire@gmail.com"
+             class="text-secondary font-bold break-all">chirondusanctuaire&#64;gmail.com</a>
+          : il est importé automatiquement et apparaît ici. Renseigne ton prénom/nom dans les
+          réglages pour que le rapport soit associé à ton compte.
+        </p>
+      </div>
       @if (bodyComposition(); as c) {
         @if (!c.hasData) {
           <div class="bg-slate-900/40 border border-white/5 rounded-xl p-6 text-center py-10">
@@ -265,22 +296,37 @@
                 }
               </div>
 
-              <!-- Toutes les valeurs du dernier scan -->
+              <!-- Dernier scan : jauges (positionnement faible / moyenne / élevée) -->
               <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4 md:p-6">
-                <div class="flex items-center justify-between mb-4">
-                  <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant">Dernier scan</h3>
+                <div class="flex items-center justify-between mb-2 flex-wrap gap-2">
+                  <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant">Dernier scan — {{ dateLabel(last.date) }}</h3>
                   @if (last.note != null) {
                     <span class="text-secondary font-headline text-lg font-black">Note {{ last.note }}</span>
                   }
                 </div>
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  @for (m of compositionMetrics(last); track m.label) {
-                    <div class="bg-slate-950/40 border border-white/5 rounded-lg px-3 py-2">
-                      <p class="text-[9px] font-bold tracking-widest uppercase text-on-surface-variant">{{ m.label }}</p>
-                      <p class="text-white font-headline text-base">{{ m.value }}</p>
-                    </div>
+                <p class="text-on-surface-variant/60 text-xs mb-5">
+                  Pour chaque indicateur : ta valeur (▼) située sur une échelle faible / moyenne / élevée.
+                  Touche l'icône <span class="material-symbols-outlined text-[13px] align-middle">info</span> pour le détail.
+                </p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-7">
+                  @for (g of compositionGauges(); track g.def.key) {
+                    @if (g.spec) {
+                      <app-composition-gauge
+                        [acronym]="g.def.acronym" [label]="g.def.label" [unit]="g.def.unit"
+                        [value]="g.value!" [spec]="g.spec" [explanation]="g.def.explanation" />
+                    } @else if (g.value != null) {
+                      <div class="bg-slate-950/40 border border-white/5 rounded-lg px-3 py-2">
+                        <p class="text-[9px] font-bold tracking-widest uppercase text-on-surface-variant">{{ g.def.acronym }} · {{ g.def.label }}</p>
+                        <p class="text-white font-headline text-base">{{ fmt(g.value, g.def.unit ? ' ' + g.def.unit : '') }}</p>
+                      </div>
+                    }
                   }
                 </div>
+                @if (profile()?.tailleCm == null || profile()?.sexe == null) {
+                  <p class="text-on-surface-variant/50 text-[11px] mt-4">
+                    Renseigne ta taille, ton sexe et ta date de naissance dans les réglages pour des zones de référence personnalisées.
+                  </p>
+                }
               </div>
             }
 
@@ -318,13 +364,7 @@
             <span class="material-symbols-outlined text-6xl text-secondary/40 mb-4">restaurant</span>
             <h3 class="text-xl font-headline text-on-surface">Compte Olympus non lié</h3>
             <p class="text-on-surface-variant mb-5">Lie ton compte Olympus pour suivre tes calories et macros ici.</p>
-            <button (click)="goToSettings()" class="bg-secondary/15 border border-secondary/40 text-secondary px-6 py-2.5 rounded-lg text-xs font-bold tracking-widest uppercase hover:bg-secondary/25 transition-colors">Lier mon compte Olympus</button>
-          </div>
-        } @else if (!n.available) {
-          <div class="text-center py-12 bg-slate-900/40 border border-amber-500/20 rounded-xl">
-            <span class="material-symbols-outlined text-6xl text-amber-400/50 mb-4">cloud_off</span>
-            <h3 class="text-xl font-headline text-on-surface">Service nutrition indisponible</h3>
-            <p class="text-on-surface-variant">Le service Olympus est momentanément injoignable. Réessaie plus tard.</p>
+            <button (click)="goToProfile()" class="bg-secondary/15 border border-secondary/40 text-secondary px-6 py-2.5 rounded-lg text-xs font-bold tracking-widest uppercase hover:bg-secondary/25 transition-colors">Aller au profil</button>
           </div>
         } @else if (n.jours.length === 0) {
           <p class="text-center text-on-surface-variant mt-10">Aucune donnée nutritionnelle sur la période.</p>

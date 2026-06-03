@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { ChironApi, NutritionLinkStatus, FitbitLinkStatus, TrainingPrefs } from '../../service/chiron-api';
+import { ChironApi, NutritionLinkStatus, FitbitLinkStatus } from '../../service/chiron-api';
 import { AuthService } from '../../service/auth.service';
 import { HeaderComponent } from '../shared/header/header';
 
@@ -47,11 +47,6 @@ export class Settings implements OnInit, OnDestroy {
   isLinking = signal(false);
   linkError = signal<string | null>(null);
 
-  // --- Préférences d'entraînement ---
-  repsParBras = signal(false);
-  poidsMachineParCote = signal(false);
-  savingPrefs = signal(false);
-
   // --- Liaison Fitbit ---
   fitbitStatus = signal<FitbitLinkStatus | null>(null);
   isFitbitConnecting = signal(false);
@@ -80,33 +75,6 @@ export class Settings implements OnInit, OnDestroy {
   ngOnInit() {
     this.loadNutritionStatus();
     this.loadFitbitStatus();
-    this.loadTrainingPrefs();
-  }
-
-  // --- Préférences d'entraînement ---
-
-  loadTrainingPrefs() {
-    this.chironApi.getTrainingPrefs().subscribe({
-      next: (p) => {
-        this.repsParBras.set(p.repsParBras);
-        this.poidsMachineParCote.set(p.poidsMachineParCote);
-      },
-      error: () => {}
-    });
-  }
-
-  saveTrainingPrefs(patch: Partial<TrainingPrefs>) {
-    const prefs: TrainingPrefs = {
-      repsParBras: patch.repsParBras ?? this.repsParBras(),
-      poidsMachineParCote: patch.poidsMachineParCote ?? this.poidsMachineParCote(),
-    };
-    this.repsParBras.set(prefs.repsParBras);
-    this.poidsMachineParCote.set(prefs.poidsMachineParCote);
-    this.savingPrefs.set(true);
-    this.chironApi.updateTrainingPrefs(prefs).subscribe({
-      next: () => this.savingPrefs.set(false),
-      error: () => this.savingPrefs.set(false),
-    });
   }
 
   ngOnDestroy() {
@@ -244,7 +212,6 @@ export class Settings implements OnInit, OnDestroy {
         this.olympusPseudo.set('');
         this.olympusPassword.set('');
         this.isLinking.set(false);
-        this.successMessage.set('Compte Olympus lié. Ton tableau de bord nutrition est maintenant disponible.');
       },
       error: (err) => {
         this.isLinking.set(false);

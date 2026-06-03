@@ -4,10 +4,13 @@
 <main class="min-h-screen pt-24 pb-32 px-4 md:px-8 relative overflow-hidden"
       [ngClass]="getTierBgClass()">
 
+  <!-- Fond de scène immersif (image + overlay) — fallback = dégradé de <main> -->
+  <div class="scene-bg" [ngClass]="getSceneClass()" aria-hidden="true"></div>
+
   <!-- Ambient background glow (tier-specific) -->
   <div class="pointer-events-none absolute inset-0" [ngClass]="getAmbientGlowClass()"></div>
 
-  <div class="max-w-xl mx-auto space-y-8 relative z-10">
+  <div class="max-w-xl mx-auto space-y-8 relative z-10" [ngClass]="getTierVarClass()">
 
     <!-- Search Bar -->
     <div class="relative">
@@ -52,15 +55,23 @@
 
     <!-- ═══════ PROFILE HERO CARD ═══════ -->
     @if (!isLoading() && athleteProfile()) {
-      <div class="profile-hero-card relative rounded-3xl p-8 text-center overflow-hidden"
-           [ngClass]="getProfileCardClass()">
+      <div class="hero-card-wrap">
 
-        <!-- Ornate top border (legend only) -->
-        @if (getTierCategory() === 'legend') {
-          <div class="legend-meander-border"></div>
-          <div class="legend-corner-tl"></div>
-          <div class="legend-corner-tr"></div>
-        }
+        <!-- Fronton (pédiment grec) au-dessus de la carte -->
+        <div class="profile-pediment" [ngClass]="getPedimentClass()" aria-hidden="true"></div>
+
+        <!-- Colonnes de marbre flanquant la carte (tous univers) -->
+        <div class="greek-column greek-column-left"  [ngClass]="[getColumnClass(), getColumnImgClass()]"></div>
+        <div class="greek-column greek-column-right" [ngClass]="[getColumnClass(), getColumnImgClass()]"></div>
+
+      <div class="profile-hero-card relative rounded-3xl p-8 text-center overflow-hidden"
+           [ngClass]="[getProfileCardClass(), getFrameImgClass()]">
+
+        <!-- Cadre orné — frise grecque par palier (fallback CSS du border-image) -->
+        <div class="profile-frame" [ngClass]="getFrameMotifClass()"></div>
+
+        <!-- Calque d'accent narratif (par palier) -->
+        <div class="theme-accent" [ngClass]="getAccentClass()" aria-hidden="true"></div>
 
         <!-- Inner card glow -->
         <div class="absolute inset-0 pointer-events-none" [ngClass]="getCardInnerGlowClass()"></div>
@@ -91,17 +102,8 @@
           <!-- Ambient avatar glow -->
           <div class="absolute rounded-full pointer-events-none" [ngClass]="getAvatarAmbientClass()"></div>
 
-          <!-- Athlete: rotating spike ring -->
-          @if (getTierCategory() === 'athlete') {
-            <div class="athlete-spike-ring absolute" [ngClass]="getAthleteRingClass()"></div>
-            <div class="athlete-outer-ring absolute" [ngClass]="getAthleteOuterRingClass()"></div>
-          }
-
-          <!-- Legend: ornate gold rings -->
-          @if (getTierCategory() === 'legend') {
-            <div class="legend-outer-ring-1 absolute"></div>
-            <div class="legend-outer-ring-2 absolute"></div>
-          }
+          <!-- Couronne de laurier — évolutive par palier (1→8) -->
+          <div class="profile-crown" [ngClass]="getCrownClass()"></div>
 
           <!-- Avatar image -->
           <div class="relative z-10" [ngClass]="getAvatarWrapperClass()">
@@ -121,18 +123,10 @@
 
         <!-- ── USERNAME ── -->
         <div class="flex items-center justify-center gap-3 mb-8">
-          @if (getTierCategory() === 'legend') {
-            <span class="laurel-left text-2xl select-none" [ngClass]="getLaurelClass()">❧</span>
-          }
-
           <h2 class="text-4xl font-black tracking-widest font-headline uppercase"
               [ngClass]="getUsernameClass()">
             {{ athleteProfile().username }}
           </h2>
-
-          @if (getTierCategory() === 'legend') {
-            <span class="laurel-right text-2xl select-none" [ngClass]="getLaurelClass()">❧</span>
-          }
 
           @if (athleteProfile()?.isAdmin) {
             <span class="material-symbols-outlined text-amber-500 text-lg" title="Administrateur">shield</span>
@@ -185,9 +179,11 @@
                 class="tresor-section mt-6 w-full flex flex-col items-center px-5 pt-6 pb-5 rounded-3xl transition-all group border"
                 [ngClass]="getTresorLinkClass()"
                 [title]="'Voir le Trésor — Palier ' + getCurrentTierName()">
-          <img [src]="getTierBadgeUrl()"
-               [alt]="'Palier ' + getCurrentTierName()"
-               class="tresor-section-badge" />
+          <div class="medal-disc" [ngClass]="getMedalClass()">
+            <img [src]="getTierBadgeUrl()"
+                 [alt]="'Palier ' + getCurrentTierName()"
+                 class="tresor-section-badge" />
+          </div>
           <p class="font-headline text-2xl font-black tracking-[0.25em] uppercase mt-5"
              [ngClass]="getTresorTextClass()">Trésor</p>
           <p class="text-[11px] tracking-[0.2em] uppercase mt-1 text-on-surface-variant">
@@ -203,6 +199,7 @@
         </button>
 
       </div>
+      </div><!-- /.hero-card-wrap -->
 
       <!-- ═══════ PROGRAMMES ═══════ -->
       <div class="mt-10">

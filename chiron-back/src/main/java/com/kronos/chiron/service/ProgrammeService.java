@@ -138,7 +138,6 @@ public class ProgrammeService {
                 exercice.setDisplayOrder(position++);
                 exercice.setBlockId(exoDto.blockId());
                 exercice.setBlockType(exoDto.blockType());
-                exercice.setUnilateral(exoDto.unilateral());
 
                 ExerciceDefinition definition = null;
                 if (exoDto.exerciceDefinitionId() != null) {

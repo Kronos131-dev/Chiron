@@ -2,10 +2,10 @@ package com.kronos.chiron.controller;
 
 import com.kronos.chiron.nutrition.NutritionLinkStatus;
 import com.kronos.chiron.nutrition.NutritionService;
+import com.kronos.chiron.nutrition.OlympusClient;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -37,10 +37,9 @@ public class NutritionController {
         } catch (NutritionService.InvalidCredentialsException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new ErrorResponse("Identifiants Olympus invalides."));
-        } catch (DataAccessException e) {
-            log.warn("NUTRITION_LINK_DB_UNAVAILABLE : {}", e.getMessage());
+        } catch (OlympusClient.OlympusUnavailableException e) {
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                    .body(new ErrorResponse("Service Olympus indisponible. Réessaie plus tard."));
+                    .body(new ErrorResponse("Olympus indisponible : " + e.getMessage()));
         }
     }
 

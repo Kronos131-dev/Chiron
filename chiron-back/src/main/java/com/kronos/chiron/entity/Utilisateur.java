@@ -126,23 +126,13 @@ public class Utilisateur implements UserDetails {
     @Builder.Default
     private Set<TypeEquipement> materielDisponible = EnumSet.noneOf(TypeEquipement.class);
 
-    // Préférences de saisie d'entraînement (cf. tonnage).
-    /** Reps saisies par bras par défaut (sinon total). */
-    @Column(name = "reps_par_bras", nullable = false)
-    @Builder.Default
-    private boolean repsParBras = false;
-
-    /** Aux machines, le poids saisi est celui d'un seul côté (→ tonnage ×2). */
-    @Column(name = "poids_machine_par_cote", nullable = false)
-    @Builder.Default
-    private boolean poidsMachineParCote = false;
-
-    // Identifiant de l'utilisateur côté Olympus, résolu une fois à la liaison
-    // (vérification pseudo + mot de passe BCrypt contre la base Olympus). Toutes
-    // les lectures nutrition/poids se font ensuite directement en base par cet id.
-    @Column(name = "olympus_user_id")
+    @Column(name = "olympus_token_encrypted", columnDefinition = "TEXT")
     @JsonIgnore
-    private Long olympusUserId;
+    private String olympusTokenEncrypted;
+
+    @Column(name = "olympus_token_expires_at")
+    @JsonIgnore
+    private LocalDateTime olympusTokenExpiresAt;
 
     @Column(name = "olympus_username")
     @JsonIgnore

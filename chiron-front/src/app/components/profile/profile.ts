@@ -372,10 +372,38 @@ export class Profile implements OnInit {
     return tierBadgeUrl(this.getTierLevel());
   }
 
+  // ── Tokens couleur (--tier-*) par niveau ────────────────────────────────────
+
+  /** Classe `tier-{lvl}` (styles.css) exposant --tier-color / --tier-metal / etc. */
+  getTierVarClass(): string { return `tier-${this.getTierLevel()}`; }
+
   // ── Main background ─────────────────────────────────────────────────────────
 
   getTierBgClass(): string { return `tier-${this.getTierCategory()}-bg`; }
   getAmbientGlowClass(): string { return `ambient-${this.getTierCategory()}`; }
+
+  // ── Décor antique (couronne, cadre, colonnes, médaille) ──────────────────────
+
+  /** Couronne de laurier évolutive, distincte à chaque palier. */
+  getCrownClass(): string { return `crown-lvl-${this.getTierLevel()}`; }
+  /** Frise/cadre orné, motif distinct à chaque palier (fallback CSS). */
+  getFrameMotifClass(): string { return `frame-lvl-${this.getTierLevel()}`; }
+  /** Hauteur progressive des colonnes. */
+  getColumnClass(): string { return `column-lvl-${this.getTierLevel()}`; }
+  /** Image de colonne selon l'univers (novice/athlete/legend). */
+  getColumnImgClass(): string { return `col-${this.getTierCategory()}`; }
+  getMedalClass(): string { return `medal-${this.getTierCategory()}`; }
+
+  // ── Univers immersif (fond de scène, fronton, accents par niveau) ────────────
+
+  /** Fond de scène plein écran (image + fallback CSS) par univers. */
+  getSceneClass(): string { return `scene-${this.getTierCategory()}`; }
+  /** Cadre ornementé (border-image) par univers ; fallback gradient-border. */
+  getFrameImgClass(): string { return `frame-img-${this.getTierCategory()}`; }
+  /** Fronton/pédiment grec par univers. */
+  getPedimentClass(): string { return `pediment-${this.getTierCategory()}`; }
+  /** Calque d'accent narratif distinct par palier (nef, boucliers, étoiles…). */
+  getAccentClass(): string { return `accent-lvl-${this.getTierLevel()}`; }
 
   // ── Profile card ────────────────────────────────────────────────────────────
 
@@ -387,15 +415,6 @@ export class Profile implements OnInit {
 
   getAvatarAmbientClass(): string { return `avatar-ambient-${this.getTierCategory()}`; }
 
-  getAthleteRingClass(): string {
-    const lvl = this.getTierLevel();
-    return `athlete-spike-ring athlete-spike-${lvl}`;
-  }
-  getAthleteOuterRingClass(): string {
-    const lvl = this.getTierLevel();
-    return `athlete-outer-ring athlete-outer-${lvl}`;
-  }
-
   getAvatarWrapperClass(): string { return `avatar-wrapper-lvl-${this.getTierLevel()}`; }
 
   getAvatarImgClass(): string { return `avatar-img-lvl-${this.getTierLevel()}`; }
@@ -405,8 +424,6 @@ export class Profile implements OnInit {
   // ── Username & symbols ──────────────────────────────────────────────────────
 
   getUsernameClass(): string { return `username-${this.getTierCategory()}`; }
-
-  getLaurelClass(): string { return `laurel-${this.getTierCategory()}`; }
 
   // ── Stats ───────────────────────────────────────────────────────────────────
 
