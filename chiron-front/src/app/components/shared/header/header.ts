@@ -58,13 +58,16 @@ export class HeaderComponent implements OnInit {
    */
   openOlympus() {
     this.showSettings.set(false);
+    // `ngsw-bypass` force le service worker Angular à NE PAS intercepter cette
+    // navigation (sinon il sert le shell Angular en cache et l'authGuard renvoie
+    // vers /chat). Le fragment #ctk est lu par la PWA ; la query est ignorée.
     this.chironApi.getOlympusHandoff().subscribe({
       next: ({ token }) => {
-        window.location.href = `/olympus/#ctk=${encodeURIComponent(token)}`;
+        window.location.href = `/olympus/?ngsw-bypass=true#ctk=${encodeURIComponent(token)}`;
       },
       error: () => {
         // Compte non lié (409) ou Olympus indisponible : on laisse la PWA gérer le login.
-        window.location.href = '/olympus/';
+        window.location.href = '/olympus/?ngsw-bypass=true';
       },
     });
   }
