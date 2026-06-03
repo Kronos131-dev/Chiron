@@ -76,23 +76,6 @@ public class SettingsService {
         return jwtService.generateToken(user);
     }
 
-    @Transactional(readOnly = true)
-    public com.kronos.chiron.dto.settings.TrainingPrefsDto getTrainingPrefs(String username) {
-        Utilisateur user = utilisateurRepository.findByUsername(username)
-                .orElseThrow(() -> new NoSuchElementException("Utilisateur introuvable"));
-        return new com.kronos.chiron.dto.settings.TrainingPrefsDto(
-                user.isRepsParBras(), user.isPoidsMachineParCote());
-    }
-
-    @Transactional
-    public void updateTrainingPrefs(String username, boolean repsParBras, boolean poidsMachineParCote) {
-        Utilisateur user = utilisateurRepository.findByUsername(username)
-                .orElseThrow(() -> new NoSuchElementException("Utilisateur introuvable"));
-        user.setRepsParBras(repsParBras);
-        user.setPoidsMachineParCote(poidsMachineParCote);
-        utilisateurRepository.save(user);
-    }
-
     @Transactional
     public void forgotPassword(String email) {
         Utilisateur user = utilisateurRepository.findByEmail(email).orElse(null);

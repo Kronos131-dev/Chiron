@@ -48,19 +48,61 @@
     background-blend-mode: overlay;
   }
 
-  /* Tier colors: Novice=gris→argent, Athlète=bleu→violet, Légende=orange→or */
-  .tier-1 { --tier-color: #64748b; --tier-bg: rgba(100,116,139,.18); --tier-border: rgba(100,116,139,.40); }
-  .tier-2 { --tier-color: #cbd5e1; --tier-bg: rgba(203,213,225,.18); --tier-border: rgba(203,213,225,.45); }
-  .tier-3 { --tier-color: #60a5fa; --tier-bg: rgba(96,165,250,.18);  --tier-border: rgba(96,165,250,.45); }
-  .tier-4 { --tier-color: #6366f1; --tier-bg: rgba(99,102,241,.18);  --tier-border: rgba(99,102,241,.45); }
-  .tier-5 { --tier-color: #a855f7; --tier-bg: rgba(168,85,247,.22);  --tier-border: rgba(168,85,247,.60);
-             text-shadow: 0 0 10px rgba(168,85,247,.5); }
-  .tier-6 { --tier-color: #d97706; --tier-bg: rgba(217,119,6,.18);   --tier-border: rgba(217,119,6,.45); }
-  .tier-7 { --tier-color: #f59e0b; --tier-bg: rgba(245,158,11,.20);  --tier-border: rgba(245,158,11,.55); }
+  /* ── Paliers grecs : palette « Musée antique » (mate, sur fond noir) ──────
+     Débutant 1-2 : bronze oxydé → argent patiné
+     Avancé   3-5 : terre cuite → vin profond → améthyste sourde
+     Légende  6-8 : or vieilli → or → or pâle + ivoire nacré
+     Teintes désaturées, lueurs discrètes (alphas faibles).
+     Variables par palier :
+       --tier-color    couleur d'accent (texte, bordure au survol)
+       --tier-bg       teinte de halo (rgba translucide, faible)
+       --tier-border   bordure au repos
+       --tier-metal    dégradé métallique mat (couronne, frise, médaille)
+       --tier-accent   reflet clair du métal
+  */
+  .tier-1 {
+    --tier-color: #9c7c4f; --tier-bg: rgba(156,124,79,.12); --tier-border: rgba(156,124,79,.38);
+    --tier-accent: #c2a06a;
+    --tier-metal: linear-gradient(135deg, #4f3d22 0%, #8a6c42 46%, #b89360 54%, #6b5230 100%);
+  }
+  .tier-2 {
+    --tier-color: #9aa3ab; --tier-bg: rgba(154,163,171,.12); --tier-border: rgba(154,163,171,.40);
+    --tier-accent: #cdd4da;
+    --tier-metal: linear-gradient(135deg, #5b636b 0%, #98a1a9 46%, #cdd4da 54%, #717a82 100%);
+  }
+  .tier-3 {
+    --tier-color: #a86a55; --tier-bg: rgba(168,106,85,.13); --tier-border: rgba(168,106,85,.42);
+    --tier-accent: #c98e76;
+    --tier-metal: linear-gradient(135deg, #5a3026 0%, #93503e 46%, #be7259 54%, #6c3a2c 100%);
+  }
+  .tier-4 {
+    --tier-color: #a35260; --tier-bg: rgba(140,66,80,.15); --tier-border: rgba(140,66,80,.44);
+    --tier-accent: #c47e8c;
+    --tier-metal: linear-gradient(135deg, #4d222c 0%, #82394a 46%, #ab5a6c 54%, #5d2935 100%);
+  }
+  .tier-5 {
+    --tier-color: #8472a6; --tier-bg: rgba(132,114,166,.15); --tier-border: rgba(132,114,166,.46);
+    --tier-accent: #a99cc4;
+    --tier-metal: linear-gradient(135deg, #3c3055 0%, #6e5f93 46%, #9384b4 54%, #463a63 100%);
+    text-shadow: 0 0 8px rgba(132,114,166,.35);
+  }
+  .tier-6 {
+    --tier-color: #b0904a; --tier-bg: rgba(176,144,74,.14); --tier-border: rgba(176,144,74,.44);
+    --tier-accent: #d0b06a;
+    --tier-metal: linear-gradient(135deg, #5f4716 0%, #9a7a36 46%, #c4a25a 54%, #6f5420 100%);
+  }
+  .tier-7 {
+    --tier-color: #c6a24e; --tier-bg: rgba(198,162,78,.16); --tier-border: rgba(198,162,78,.50);
+    --tier-accent: #e2c277;
+    --tier-metal: linear-gradient(135deg, #6f521a 0%, #b08e3c 46%, #d8b765 54%, #7e5f22 100%);
+    text-shadow: 0 0 9px rgba(198,162,78,.40);
+  }
   .tier-8 {
-    --tier-color: #fbbf24;
-    --tier-bg: rgba(251,191,36,.22);
-    --tier-border: rgba(251,191,36,.65);
-    text-shadow: 0 0 12px rgba(251,191,36,.65);
+    --tier-color: #d4b86a;
+    --tier-bg: rgba(212,184,106,.18);
+    --tier-border: rgba(212,184,106,.56);
+    --tier-accent: #efe6cf;
+    --tier-metal: linear-gradient(135deg, #7c5f24 0%, #c4a455 42%, #e8d59a 54%, #efe6cf 62%, #8a6c2c 100%);
+    text-shadow: 0 0 10px rgba(212,184,106,.50);
   }
 }

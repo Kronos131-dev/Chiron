@@ -9,6 +9,7 @@ import com.kronos.chiron.repository.UtilisateurRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -29,16 +30,13 @@ class PerformanceServiceTest {
     @Mock private PerformanceRecordRepository performanceRecordRepository;
     @Mock private UtilisateurRepository utilisateurRepository;
 
+    @InjectMocks
     private PerformanceService performanceService;
 
     private Utilisateur user;
 
     @BeforeEach
     void setUp() {
-        // Estimateur réel (logique pure) injecté manuellement à côté des repos mockés.
-        performanceService = new PerformanceService(
-                performanceRecordRepository, utilisateurRepository, new OneRepMaxEstimator());
-
         user = Utilisateur.builder()
                 .id(1L)
                 .username("athlete")
@@ -47,6 +45,46 @@ class PerformanceServiceTest {
         when(utilisateurRepository.findByUsername("athlete")).thenReturn(Optional.of(user));
         when(performanceRecordRepository.findFirstByUtilisateurIdAndExerciseTypeOrderByRecordedAtDesc(any(), any()))
                 .thenReturn(Optional.empty());
+    }
+
+    // --- calculateRm1 ---
+
+    @Test
+    void calculateRm1_barbellExercise_usesBarWeight() {
+        double rm1 = performanceService.calculateRm1(ExerciseType.DEVELOPPE_COUCHE, 100.0, 5, 80.0);
+        // 100 * (36 / (37 - 5)) = 100 * 36/32 = 112.5
+        assertThat(rm1).isCloseTo(112.5, within(0.1));
+    }
+
+    @Test
+    void calculateRm1_bodyweightExercise_addsPoidsCorporel() {
+        // TRACTIONS: effectiveWeight = lest(0) + bodyweight(80) = 80; 10 reps capped
+        double rm1 = performanceService.calculateRm1(ExerciseType.TRACTIONS, 0.0, 8, 80.0);
+        // effectiveReps = 8 (< 10), effectiveWeight = 80; 80 * (36/(37-8)) = 80 * 36/29 ≈ 99.31
+        assertThat(rm1).isCloseTo(99.31, within(0.1));
+    }
+
+    @Test
+    void calculateRm1_bodyweightWithExtraWeight_addsLest() {
+        // TRACTIONS: lest=20, poidsCorps=80 → effectiveWeight=100; 5 reps
+        double rm1 = performanceService.calculateRm1(ExerciseType.TRACTIONS, 20.0, 5, 80.0);
+        // 100 * (36/(37-5)) = 100 * 36/32 = 112.5
+        assertThat(rm1).isCloseTo(112.5, within(0.1));
+    }
+
+    @Test
+    void calculateRm1_bodyweightNoLest_capsAt10Reps() {
+        // 15 reps declared, but lest=0 → capped at 10
+        double rm1_15reps = performanceService.calculateRm1(ExerciseType.TRACTIONS, 0.0, 15, 80.0);
+        double rm1_10reps = performanceService.calculateRm1(ExerciseType.TRACTIONS, 0.0, 10, 80.0);
+        assertThat(rm1_15reps).isEqualTo(rm1_10reps);
+    }
+
+    @Test
+    void calculateRm1_bodyweightNullBodyweight_usesOnlyLest() {
+        double rm1 = performanceService.calculateRm1(ExerciseType.TRACTIONS, 30.0, 5, null);
+        // no bodyweight → effectiveWeight = poids (30) only
+        assertThat(rm1).isCloseTo(30.0 * 36.0 / 32.0, within(0.01));
     }
 
     // --- tierForRatio ---

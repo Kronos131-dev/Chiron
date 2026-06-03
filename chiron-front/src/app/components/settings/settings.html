@@ -149,34 +149,6 @@
       </div>
     </div>
 
-    <!-- ── Préférences d'entraînement (tonnage) ── -->
-    <div class="bg-slate-900/80 border border-white/10 rounded-2xl overflow-hidden">
-      <div class="px-5 py-4 flex items-center gap-3 border-b border-white/5">
-        <span class="material-symbols-outlined text-secondary">fitness_center</span>
-        <span class="text-white font-bold">Préférences d'entraînement</span>
-      </div>
-      <div class="px-5 py-4 space-y-4">
-        <label class="flex items-start justify-between gap-4 cursor-pointer">
-          <span>
-            <span class="text-white text-sm font-bold block">Reps comptées par bras</span>
-            <span class="text-on-surface-variant text-xs">Par défaut, le nombre de reps saisi est compté par bras (sinon en total).</span>
-          </span>
-          <input type="checkbox" class="mt-1 w-5 h-5 accent-secondary shrink-0"
-                 [checked]="repsParBras()"
-                 (change)="saveTrainingPrefs({ repsParBras: !repsParBras() })">
-        </label>
-        <label class="flex items-start justify-between gap-4 cursor-pointer">
-          <span>
-            <span class="text-white text-sm font-bold block">Poids machine par côté</span>
-            <span class="text-on-surface-variant text-xs">Aux machines, le poids saisi est celui d'un seul côté (le tonnage est alors doublé).</span>
-          </span>
-          <input type="checkbox" class="mt-1 w-5 h-5 accent-secondary shrink-0"
-                 [checked]="poidsMachineParCote()"
-                 (change)="saveTrainingPrefs({ poidsMachineParCote: !poidsMachineParCote() })">
-        </label>
-      </div>
-    </div>
-
     <!-- ── Changer le mot de passe ── -->
     <div class="bg-slate-900/80 border border-white/10 rounded-2xl overflow-hidden">
       <button (click)="toggle('password')"

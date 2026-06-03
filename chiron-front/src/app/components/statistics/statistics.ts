@@ -7,6 +7,8 @@ import { ChartConfiguration, ChartData } from 'chart.js';
 import { HeaderComponent } from '../shared/header/header';
 import { AuthService } from '../../service/auth.service';
 import { formatDuration } from '../../util/duration';
+import { CompositionGaugeComponent } from './composition-gauge/composition-gauge';
+import { COMPOSITION_METRICS, GaugeProfile } from './composition-gauges.config';
 import {
   ChironApi,
   StatsOverview,
@@ -15,13 +17,15 @@ import {
   ExerciseListItem,
   ExerciseProgressPoint,
   NutritionStats,
+  BodyweightStats,
   BodyCompositionStats,
   RecoveryPoint,
   PerformanceSummary,
   PerformanceExercise,
+  UserProfileSetup,
 } from '../../service/chiron-api';
 
-type Tab = 'overview' | 'force' | 'exercices' | 'volume' | 'composition' | 'nutrition' | 'recup';
+type Tab = 'overview' | 'force' | 'exercices' | 'volume' | 'corps' | 'composition' | 'nutrition' | 'recup';
 type Periode = 30 | 90 | 365 | 3650;
 type ProgressMetric = 'e1rm' | 'chargeMax' | 'volume';
 
@@ -33,7 +37,7 @@ type ProgressMetric = 'e1rm' | 'chargeMax' | 'volume';
 @Component({
   selector: 'app-statistics',
   standalone: true,
-  imports: [CommonModule, FormsModule, HeaderComponent, BaseChartDirective],
+  imports: [CommonModule, FormsModule, HeaderComponent, BaseChartDirective, CompositionGaugeComponent],
   templateUrl: './statistics.html',
   styleUrls: ['./statistics.css'],
 })
@@ -65,6 +69,7 @@ export class Statistics implements OnInit {
     { id: 'force', label: 'Force', icon: 'fitness_center' },
     { id: 'exercices', label: 'Exercices', icon: 'show_chart' },
     { id: 'volume', label: 'Volume', icon: 'bar_chart' },
+    { id: 'corps', label: 'Corps', icon: 'monitor_weight' },
     { id: 'composition', label: 'Composition', icon: 'accessibility_new' },
     { id: 'nutrition', label: 'Nutrition', icon: 'restaurant' },
     { id: 'recup', label: 'Récup', icon: 'bedtime' },
@@ -96,7 +101,10 @@ export class Statistics implements OnInit {
   volume = signal<WeeklyVolumePoint[]>([]);
   muscles = signal<MuscleStats | null>(null);
 
+  bodyweight = signal<BodyweightStats | null>(null);
   bodyComposition = signal<BodyCompositionStats | null>(null);
+  /** Profil (taille / sexe / âge / poids) pour le calcul des bornes des jauges. */
+  profile = signal<UserProfileSetup | null>(null);
   /** Schéma corporel : afficher la masse musculaire ou la masse grasse par segment. */
   bodySegMode = signal<'muscle' | 'graisse'>('muscle');
   nutrition = signal<NutritionStats | null>(null);
@@ -104,7 +112,7 @@ export class Statistics implements OnInit {
 
   // États de chargement / erreur, par onglet
   loading = signal<Record<Tab, boolean>>({
-    overview: false, force: false, exercices: false, volume: false, composition: false, nutrition: false, recup: false,
+    overview: false, force: false, exercices: false, volume: false, corps: false, composition: false, nutrition: false, recup: false,
   });
   private loaded = new Set<Tab>();
 
@@ -125,7 +133,7 @@ export class Statistics implements OnInit {
     if (p === this.periode()) return;
     this.periode.set(p);
     // Les onglets dépendant de la période doivent être rechargés.
-    const dependents: Tab[] = ['volume', 'composition', 'nutrition', 'recup'];
+    const dependents: Tab[] = ['volume', 'corps', 'composition', 'nutrition', 'recup'];
     for (const t of dependents) this.loaded.delete(t);
     this.loadTab(this.activeTab());
   }
@@ -177,14 +185,23 @@ export class Statistics implements OnInit {
         this.api.getStatsMuscles(this.days()).subscribe({ next: (d) => { this.muscles.set(d); fin(); }, error: fin });
         break;
       }
+      case 'corps':
+        this.api.getStatsBodyweight(this.days()).subscribe({
+          next: (d) => { this.bodyweight.set(d); this.done(tab); },
+          error: () => this.done(tab),
+        });
+        break;
       case 'composition':
+        if (this.profile() == null) {
+          this.api.getProfileSetup().subscribe({ next: (p) => this.profile.set(p), error: () => {} });
+        }
         this.api.getStatsBodyComposition(this.days()).subscribe({
           next: (d) => { this.bodyComposition.set(d); this.done(tab); },
           error: () => this.done(tab),
         });
         break;
       case 'nutrition':
-        this.api.getStatsNutrition(this.days()).subscribe({
+        this.api.getStatsNutrition(Math.min(this.days(), 365)).subscribe({
           next: (d) => { this.nutrition.set(d); this.done(tab); },
           error: () => this.done(tab),
         });
@@ -333,6 +350,23 @@ export class Statistics implements OnInit {
     };
   });
 
+  // ----------------------------------------------------------- Corps
+
+  bodyweightChart = computed<ChartData<'line'>>(() => {
+    const pts = this.bodyweight()?.points ?? [];
+    return {
+      labels: pts.map((p) => this.dateLabel(p.date)),
+      datasets: [{
+        data: pts.map((p) => p.poids),
+        label: 'Poids (kg)',
+        borderColor: this.COL.green,
+        backgroundColor: this.hexA(this.COL.green, 0.15),
+        fill: true,
+        tension: 0.3,
+        pointRadius: 2,
+      }],
+    };
+  });
 
   // ----------------------------------------------------- Composition (Visbody)
 
@@ -439,27 +473,41 @@ export class Statistics implements OnInit {
     return (Math.round(v * 100) / 100) + suffix;
   }
 
-  /** Toutes les métriques scalaires du dernier scan, pour la grille « Dernier scan ». */
-  compositionMetrics(p: BodyCompositionStats['points'][number]): { label: string; value: string }[] {
-    return [
-      { label: 'Poids', value: this.fmt(p.poids, ' kg') },
-      { label: 'Masse musculaire', value: this.fmt(p.masseMusculaire, ' kg') },
-      { label: 'Musc. squelettique', value: this.fmt(p.mms, ' kg') },
-      { label: 'Masse maigre', value: this.fmt(p.mmc, ' kg') },
-      { label: 'Masse grasse', value: this.fmt(p.mgc, ' kg') },
-      { label: 'Taux de graisse', value: this.fmt(p.tgcPct, ' %') },
-      { label: 'IMC', value: this.fmt(p.imc) },
-      { label: 'Ratio taille/hanche', value: this.fmt(p.rth) },
-      { label: 'Métabolisme base', value: this.fmt(p.mbKcal, ' kcal') },
-      { label: 'Âge métabolique', value: this.fmt(p.ageMetabolique) },
-      { label: 'Graisse viscérale', value: this.fmt(p.graisseViscerale) },
-      { label: 'Eau totale', value: this.fmt(p.eauTotale, ' kg') },
-      { label: 'Eau intracellulaire', value: this.fmt(p.eauIntra, ' kg') },
-      { label: 'Eau extracellulaire', value: this.fmt(p.eauExtra, ' kg') },
-      { label: 'Ratio ECW/TBW', value: this.fmt(p.ratioEcwTbw) },
-      { label: 'Protéines', value: this.fmt(p.masseProteine, ' kg') },
-      { label: 'Sel inorganique', value: this.fmt(p.selInorganique, ' kg') },
-    ];
+  /**
+   * Jauges du dernier scan : pour chaque métrique, sa valeur et les bornes des zones
+   * calculées depuis le profil. `spec` est `null` si le profil est insuffisant ou la
+   * valeur absente → affichage en simple valeur (fallback).
+   */
+  compositionGauges = computed(() => {
+    const p = this.latestComposition();
+    if (!p) return [];
+    const prof = this.toGaugeProfile(this.profile(), p.poids);
+    return COMPOSITION_METRICS.map((def) => {
+      const value = p[def.key] as number | null;
+      const spec = value == null ? null : def.spec(prof, value);
+      return { def, value, spec };
+    });
+  });
+
+  /** Construit le profil normalisé ; le poids du scan prime sur celui du profil. */
+  private toGaugeProfile(prof: UserProfileSetup | null, scanPoids: number | null): GaugeProfile {
+    return {
+      tailleM: prof?.tailleCm != null ? prof.tailleCm / 100 : null,
+      sexe: prof?.sexe ?? null,
+      age: prof?.dateNaissance ? this.ageFrom(prof.dateNaissance) : null,
+      poids: scanPoids ?? prof?.poidsCorps ?? null,
+    };
+  }
+
+  /** Âge en années à partir d'une date ISO (YYYY-MM-DD). */
+  private ageFrom(iso: string): number | null {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return null;
+    const now = new Date();
+    let age = now.getFullYear() - d.getFullYear();
+    const m = now.getMonth() - d.getMonth();
+    if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
+    return age;
   }
 
   // ----------------------------------------------------------- Nutrition
@@ -611,8 +659,8 @@ export class Statistics implements OnInit {
 
   // ----------------------------------------------------------- Helpers
 
-  goToSettings(): void {
-    this.router.navigate(['/settings']);
+  goToProfile(): void {
+    this.router.navigate(['/profile']);
   }
 
   tierClass(level: number | undefined | null): string {
