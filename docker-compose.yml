@@ -61,6 +61,11 @@ services:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
     depends_on:
       - backend
+    # `default` : communication avec NPM. `chiron-olympus` : permet à ce nginx de
+    # relayer /olympus/* vers le conteneur olympus-pwa par son nom de service.
+    networks:
+      - default
+      - chiron-olympus
 
   # 4. NGINX PROXY MANAGER (Le "videur" qui gère le HTTPS)
   npm:

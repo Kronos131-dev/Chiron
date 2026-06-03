@@ -302,6 +302,12 @@ jobs:
             docker-compose.yml \
             ${{ secrets.SSH_USER }}@${{ env.SERVER_HOST }}:/tmp/chiron-docker-compose.yml
 
+      - name: Upload nginx.conf
+        run: |
+          scp -i ~/.ssh/deploy_key \
+            nginx.conf \
+            ${{ secrets.SSH_USER }}@${{ env.SERVER_HOST }}:/tmp/chiron-nginx.conf
+
       - name: Upload secrets
         run: |
           printf 'GMAIL_USERNAME=%s\nGMAIL_APP_PASSWORD=%s\nFRONTEND_URL=%s\nFITBIT_CLIENT_ID=%s\nFITBIT_CLIENT_SECRET=%s\nFITBIT_REDIRECT_URI=%s\nOLYMPUS_DB_URL=%s\nOLYMPUS_DB_USERNAME=%s\nOLYMPUS_DB_PASSWORD=%s\nVISBODY_MAILBOX_ENABLED=%s\n' \
@@ -348,6 +354,9 @@ jobs:
             echo "▶ Mise à jour du docker-compose.yml..."
             cp /tmp/chiron-docker-compose.yml $CHIRON_DIR/docker-compose.yml
 
+            echo "▶ Mise à jour du nginx.conf (route /olympus -> olympus-pwa)..."
+            cp /tmp/chiron-nginx.conf $CHIRON_DIR/nginx.conf
+
             echo "▶ Mise à jour du .env..."
             ENV_FILE=$CHIRON_DIR/.env
             grep -v '^GMAIL_\|^FRONTEND_URL=\|^FITBIT_\|^OLYMPUS_DB_\|^VISBODY_MAILBOX_ENABLED=' "$ENV_FILE" > /tmp/.env.tmp 2>/dev/null || true
@@ -388,7 +397,7 @@ jobs:
             echo "✓ Conteneur backend aligné sur le JAR déployé."
 
             echo "▶ Nettoyage..."
-            rm -f /tmp/chiron-app.jar /tmp/chiron.secrets /tmp/.env.tmp /tmp/chiron-docker-compose.yml
+            rm -f /tmp/chiron-app.jar /tmp/chiron.secrets /tmp/.env.tmp /tmp/chiron-docker-compose.yml /tmp/chiron-nginx.conf
             rm -rf /tmp/chiron-frontend/
 
             echo "✓ Déploiement terminé"
