@@ -116,13 +116,15 @@ export const COMPOSITION_METRICS: MetricDef[] = [
     label: 'Masse musculaire',
     unit: 'kg',
     explanation:
-      'Masse musculaire totale. Plus elle est élevée (à poids égal), mieux c’est. ' +
-      'Les zones sont exprimées en proportion de ton poids.',
+      'Masse maigre « molle » mesurée par le scan (muscle + eau, hors os). Elle représente ' +
+      'environ 75-85 % du poids ; plus elle est élevée à poids égal, mieux c’est.',
     spec: (p) => {
       if (!p.poids) return null;
-      const b1 = (isF(p.sexe) ? 0.35 : 0.40) * p.poids;
-      const b2 = (isF(p.sexe) ? 0.42 : 0.47) * p.poids;
-      return { scaleMin: 0.2 * p.poids, scaleMax: 0.6 * p.poids, b1, b2, dir: 'highGood' };
+      const b1 = (isF(p.sexe) ? 0.64 : 0.72) * p.poids;
+      const b2 = (isF(p.sexe) ? 0.76 : 0.81) * p.poids;
+      const min = (isF(p.sexe) ? 0.48 : 0.55) * p.poids;
+      const max = (isF(p.sexe) ? 0.88 : 0.92) * p.poids;
+      return { scaleMin: min, scaleMax: max, b1, b2, dir: 'highGood' };
     },
   },
   {
@@ -149,14 +151,14 @@ export const COMPOSITION_METRICS: MetricDef[] = [
     unit: 'kg',
     explanation:
       'Masse non grasse (muscles, os, eau, organes). Plus elle est élevée, mieux c’est. ' +
-      'Les zones correspondent à un taux de graisse sain appliqué à ton poids.',
+      'Zones : homme sain 75-84 % du poids (athlétique > 84 %) ; femme 67-79 % (> 79 %).',
     spec: (p) => {
       if (!p.poids) return null;
-      const lowFat = isF(p.sexe) ? 0.21 : 0.11;
-      const highFat = isF(p.sexe) ? 0.33 : 0.22;
-      const b1 = p.poids * (1 - highFat);
-      const b2 = p.poids * (1 - lowFat);
-      return { scaleMin: 0.45 * p.poids, scaleMax: 0.97 * p.poids, b1, b2, dir: 'highGood' };
+      const b1 = (isF(p.sexe) ? 0.67 : 0.75) * p.poids;
+      const b2 = (isF(p.sexe) ? 0.79 : 0.84) * p.poids;
+      const min = (isF(p.sexe) ? 0.55 : 0.60) * p.poids;
+      const max = (isF(p.sexe) ? 0.90 : 0.95) * p.poids;
+      return { scaleMin: min, scaleMax: max, b1, b2, dir: 'highGood' };
     },
   },
   {
