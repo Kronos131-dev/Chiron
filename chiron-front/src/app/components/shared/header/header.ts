@@ -51,6 +51,27 @@ export class HeaderComponent implements OnInit {
     }
   }
 
+  /**
+   * Ouvre la PWA Olympus. Si le compte est lié, on récupère le token de liaison et on
+   * lance Olympus avec l'« entrée directe » (#ctk=…) — la PWA ouvre alors une session
+   * sans nouvelle connexion. Sinon, on ouvre Olympus sur sa propre page de connexion.
+   */
+  openOlympus() {
+    this.showSettings.set(false);
+    // `ngsw-bypass` force le service worker Angular à NE PAS intercepter cette
+    // navigation (sinon il sert le shell Angular en cache et l'authGuard renvoie
+    // vers /chat). Le fragment #ctk est lu par la PWA ; la query est ignorée.
+    this.chironApi.getOlympusHandoff().subscribe({
+      next: ({ token }) => {
+        window.location.href = `/olympus/?ngsw-bypass=true#ctk=${encodeURIComponent(token)}`;
+      },
+      error: () => {
+        // Compte non lié (409) ou Olympus indisponible : on laisse la PWA gérer le login.
+        window.location.href = '/olympus/?ngsw-bypass=true';
+      },
+    });
+  }
+
   logout() {
     this.authService.logout();
   }

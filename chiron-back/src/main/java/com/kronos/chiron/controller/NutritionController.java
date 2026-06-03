@@ -49,6 +49,24 @@ public class NutritionController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Remet le token de liaison Olympus de l'utilisateur pour l'« entrée directe » dans la
+     * PWA Olympus : le front ouvre {@code /olympus/#ctk=<token>}, et la PWA échange ce token
+     * contre une session Olympus complète. Réservé à l'utilisateur authentifié (son propre
+     * token) ; renvoie 409 si le compte n'est pas lié ou si le lien doit être refait.
+     */
+    @GetMapping("/handoff")
+    public ResponseEntity<?> handoff(@AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            String token = nutritionService.getValidToken(userDetails.getUsername());
+            return ResponseEntity.ok(new HandoffResponse(token));
+        } catch (NutritionService.NotLinkedException | NutritionService.ExpiredException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(new ErrorResponse("Compte Olympus non lié."));
+        }
+    }
+
     public record LinkRequest(@NotBlank String pseudo, @NotBlank String password) {}
     public record ErrorResponse(String message) {}
+    public record HandoffResponse(String token) {}
 }
