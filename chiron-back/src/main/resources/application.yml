@@ -23,6 +23,10 @@ spring:
 
   flyway:
     enabled: true
+    # Tolère les migrations appliquées en base mais retirées du code (ex. V34/35/36,
+    # supprimées alors qu'elles étaient déjà appliquées en prod). Sans ça, Flyway
+    # échoue au démarrage : « Detected applied migration not resolved locally ».
+    ignore-migration-patterns: "*:missing"
 
   servlet:
     multipart:

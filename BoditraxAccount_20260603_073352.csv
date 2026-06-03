@@ -1,0 +1,48 @@
+User Details
+Email,FirstName LastName,DateOfBirth,Gender
+yvain1er@gmail.com,florent,crahay boudo,11/19/2003 12:00:00 AM,Male
+User Physique Details
+Height,RecentClothesWeight
+185,1
+User Scan Details
+BodyMetricTypeId,Value,CreatedDate
+VisceralFatRating,1,6/2/2026 11:18:33 AM
+SarcopeniaASMBW,0.4,6/2/2026 11:18:33 AM
+TrunkFatMass,2.3,6/2/2026 11:18:33 AM
+PhaseAngleLeftLegLeftArm,-5.9,6/2/2026 11:18:33 AM
+LeftArmMuscleMass,3,6/2/2026 11:18:33 AM
+FatFreeMass,57.6,6/2/2026 11:18:33 AM
+ExtraCellularWaterMass,16.6,6/2/2026 11:18:33 AM
+MuscleMass,54.7,6/2/2026 11:18:33 AM
+RightLegMuscleMass,9.2,6/2/2026 11:18:33 AM
+BoneMass,2.9,6/2/2026 11:18:33 AM
+IntraCellularWaterMass,22.3,6/2/2026 11:18:33 AM
+LeftLegFatMass,0.6,6/2/2026 11:18:33 AM
+PhaseAngleLeftLeg,-5.9,6/2/2026 11:18:33 AM
+FatMass,4.2,6/2/2026 11:18:33 AM
+PhaseAngleRightLegLeftLeg,-6,6/2/2026 11:18:33 AM
+BodyMassIndex,18.1,6/2/2026 11:18:33 AM
+Height,185,6/2/2026 11:18:33 AM
+PhaseAngleRightLeg,-5.9,6/2/2026 11:18:33 AM
+MuscleScore,-2,6/2/2026 11:18:33 AM
+RightArmFatMass,0.3,6/2/2026 11:18:33 AM
+LeftLegMuscleMass,9.4,6/2/2026 11:18:33 AM
+LeftArmFatMass,0.3,6/2/2026 11:18:33 AM
+SarcopeniaSMI,7.2,6/2/2026 11:18:33 AM
+BoditraxScore,827,6/2/2026 11:18:33 AM
+LegMuscleScore,107,6/2/2026 11:18:33 AM
+BodyWeight,61.8,6/2/2026 11:18:33 AM
+Age,22,6/2/2026 11:18:33 AM
+RightArmMuscleMass,3.1,6/2/2026 11:18:33 AM
+WaterMass,38.9,6/2/2026 11:18:33 AM
+MetabolicAge,12,6/2/2026 11:18:33 AM
+PhaseAngleRightArm,-6,6/2/2026 11:18:33 AM
+BasalMetabolicRatekJ,7050,6/2/2026 11:18:33 AM
+TrunkMuscleMass,30,6/2/2026 11:18:33 AM
+BmrScore,11,6/2/2026 11:18:33 AM
+RightLegFatMass,0.7,6/2/2026 11:18:33 AM
+PhaseAngleLeftArm,-5.7,6/2/2026 11:18:33 AM
+User Login Details
+Username,IpAddress,CreatedDate
+yvain1er@gmail.com,192.168.202.254,03-Jun-2026 09:31
+yvain1er@gmail.com,195.135.40.190,02-Jun-2026 13:16

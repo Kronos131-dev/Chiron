@@ -43,7 +43,7 @@ public class VisbodyImportService {
         if (report.getMesureLe() == null) {
             return new ImportResult(Outcome.INVALID, "Date de détection introuvable dans le PDF.");
         }
-        return persist(report, user);
+        return persist(report, user, "VISBODY_PDF");
     }
 
     /**
@@ -71,7 +71,7 @@ public class VisbodyImportService {
             return new ImportResult(Outcome.USER_NOT_FOUND,
                     "Utilisateur introuvable pour ce rapport.");
         }
-        return persist(report, user.get());
+        return persist(report, user.get(), "VISBODY_PDF");
     }
 
     // ----------------------------------------------------------------- Matching
@@ -130,7 +130,13 @@ public class VisbodyImportService {
 
     // ----------------------------------------------------------------- Persist
 
-    private ImportResult persist(VisbodyReport report, Utilisateur user) {
+    /**
+     * Enregistre un rapport pour un utilisateur (idempotent par couple
+     * {@code (utilisateur, mesureLe)}). {@code source} identifie l'origine
+     * ("VISBODY_PDF", "BODITRAX_CSV", …) ; réutilisable par d'autres imports.
+     */
+    @Transactional
+    public ImportResult persist(VisbodyReport report, Utilisateur user, String source) {
         if (recordRepo.existsByUtilisateurAndMesureLe(user, report.getMesureLe())) {
             return new ImportResult(Outcome.DUPLICATE, "Scan déjà importé (" + report.getMesureLe() + ").");
         }
@@ -165,7 +171,7 @@ public class VisbodyImportService {
                 .muscleTronc(report.getMuscleTronc())
                 .muscleJambeGauche(report.getMuscleJambeGauche())
                 .muscleJambeDroite(report.getMuscleJambeDroite())
-                .source("VISBODY_PDF")
+                .source(source)
                 .build();
         recordRepo.save(rec);
 
@@ -174,7 +180,7 @@ public class VisbodyImportService {
             user.setPoidsCorps(report.getPoids());
             utilisateurRepo.save(user);
         }
-        log.info("Visbody : scan importé pour {} ({})", user.getUsername(), report.getMesureLe());
+        log.info("{} : scan importé pour {} ({})", source, user.getUsername(), report.getMesureLe());
         return new ImportResult(Outcome.IMPORTED, "Scan importé (" + report.getMesureLe() + ").");
     }
 }

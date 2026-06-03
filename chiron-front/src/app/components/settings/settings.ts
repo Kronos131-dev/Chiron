@@ -320,4 +320,31 @@ export class Settings implements OnInit, OnDestroy {
       },
     });
   }
+
+  // --- Import manuel d'un export Boditrax (CSV) ---
+  boditraxUploading = signal(false);
+  boditraxMessage = signal<string | null>(null);
+  boditraxError = signal(false);
+
+  uploadBoditrax(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    this.boditraxUploading.set(true);
+    this.boditraxMessage.set(null);
+    this.chironApi.uploadBoditraxCsv(file).subscribe({
+      next: (res) => {
+        this.boditraxUploading.set(false);
+        this.boditraxError.set(res.outcome === 'INVALID' || res.outcome === 'USER_NOT_FOUND');
+        this.boditraxMessage.set(res.detail);
+        input.value = '';
+      },
+      error: (err) => {
+        this.boditraxUploading.set(false);
+        this.boditraxError.set(true);
+        this.boditraxMessage.set(err?.error?.detail ?? "Échec de l'import du fichier.");
+        input.value = '';
+      },
+    });
+  }
 }

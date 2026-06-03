@@ -322,5 +322,32 @@
       </div>
     </div>
 
+    <!-- ── Composition corporelle (Boditrax) ── -->
+    <div class="bg-slate-900/80 border border-white/10 rounded-2xl overflow-hidden">
+      <div class="px-5 py-4 flex items-center gap-3">
+        <span class="material-symbols-outlined text-secondary">scale</span>
+        <span class="text-white font-bold">Composition corporelle (Boditrax)</span>
+      </div>
+      <div class="px-5 pb-5">
+        <div class="border border-white/5 bg-slate-900/30 p-5 rounded-xl space-y-3">
+          <p class="text-white/70 text-sm">
+            Importe l'export CSV de ton compte Boditrax : tes scans apparaissent dans la
+            page Composition, au même titre que les rapports Visbody.
+          </p>
+          <label class="w-full inline-flex items-center justify-center gap-2 border border-secondary/40 text-secondary py-3 rounded-xl text-xs font-bold tracking-widest uppercase hover:bg-secondary/10 transition-colors cursor-pointer">
+            <span class="material-symbols-outlined text-base">upload_file</span>
+            {{ boditraxUploading() ? 'Import en cours…' : 'Importer un CSV Boditrax' }}
+            <input type="file" accept=".csv,text/csv" class="hidden"
+                   [disabled]="boditraxUploading()" (change)="uploadBoditrax($event)">
+          </label>
+          @if (boditraxMessage()) {
+            <p class="text-sm" [class.text-emerald-400]="!boditraxError()" [class.text-red-400]="boditraxError()">
+              {{ boditraxMessage() }}
+            </p>
+          }
+        </div>
+      </div>
+    </div>
+
   </div>
 </main>
