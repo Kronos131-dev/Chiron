@@ -1,6 +1,7 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, inject } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs';
+import { PwaUpdateService } from './service/pwa-update.service';
 
 @Component({
   selector: 'app-root',
@@ -20,10 +21,14 @@ export class App {
   private static readonly NAV_HIDDEN_PREFIXES = ['/login', '/reset-password', '/onboarding'];
   protected readonly showNav = signal(this.computeShowNav(location.pathname));
 
+  private readonly pwaUpdate = inject(PwaUpdateService);
+
   constructor(router: Router) {
     router.events
       .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
       .subscribe((e) => this.showNav.set(this.computeShowNav(e.urlAfterRedirects)));
+    // Active automatiquement les nouvelles versions de la PWA (plus de réinstallation).
+    this.pwaUpdate.init();
   }
 
   private computeShowNav(url: string): boolean {

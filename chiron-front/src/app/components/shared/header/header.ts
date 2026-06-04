@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../service/auth.service';
 import { ChironApi } from '../../../service/chiron-api';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-header',
@@ -52,22 +53,20 @@ export class HeaderComponent implements OnInit {
   }
 
   /**
-   * Ouvre la PWA Olympus. Si le compte est lié, on récupère le token de liaison et on
-   * lance Olympus avec l'« entrée directe » (#ctk=…) — la PWA ouvre alors une session
-   * sans nouvelle connexion. Sinon, on ouvre Olympus sur sa propre page de connexion.
+   * Ouvre la PWA Olympus (sous-domaine dédié). Si le compte est lié, on récupère le token
+   * de liaison et on lance Olympus avec l'« entrée directe » (#ctk=…) — la PWA ouvre alors
+   * une session sans nouvelle connexion. Sinon, on ouvre Olympus sur sa page de connexion.
    */
   openOlympus() {
     this.showSettings.set(false);
-    // `ngsw-bypass` force le service worker Angular à NE PAS intercepter cette
-    // navigation (sinon il sert le shell Angular en cache et l'authGuard renvoie
-    // vers /chat). Le fragment #ctk est lu par la PWA ; la query est ignorée.
+    // Le fragment #ctk est lu par la PWA Olympus puis retiré de l'URL.
     this.chironApi.getOlympusHandoff().subscribe({
       next: ({ token }) => {
-        window.location.href = `/olympus/?ngsw-bypass=true#ctk=${encodeURIComponent(token)}`;
+        window.location.href = `${environment.olympusUrl}#ctk=${encodeURIComponent(token)}`;
       },
       error: () => {
         // Compte non lié (409) ou Olympus indisponible : on laisse la PWA gérer le login.
-        window.location.href = '/olympus/?ngsw-bypass=true';
+        window.location.href = environment.olympusUrl;
       },
     });
   }
