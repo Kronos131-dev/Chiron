@@ -19,6 +19,7 @@ import java.util.List;
 public record SeanceDto(
         Long id,
         String titre,
+        String note,
         LocalDateTime startTime,
         LocalDateTime endTime,
         Integer weekNumber,

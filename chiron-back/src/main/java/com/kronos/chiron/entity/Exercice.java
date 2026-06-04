@@ -34,6 +34,15 @@ public class Exercice {
     private String commentaire;
 
     /**
+     * Indique que l'exercice a été réalisé en unilatéral (un membre à la fois, reps saisies
+     * par bras/jambe). Sert au calcul du tonnage (facteur ×2 : les deux côtés sont travaillés)
+     * et informe Chiron (IA) lors de l'analyse des séances.
+     */
+    @Column(name = "unilateral", nullable = false)
+    @Builder.Default
+    private boolean unilateral = false;
+
+    /**
      * Position of this exercise within its parent {@link Seance}, lower = displayed first.
      * Assigned by {@code ProgrammeService.sauvegarderProgramme} from the order of the input DTO,
      * and used as the JPA {@code @OrderBy} key on {@link Seance#getExercices()}.

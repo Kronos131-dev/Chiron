@@ -40,7 +40,7 @@ class JournalControllerTest {
         seance.setTitre("Push Day");
         seance.setStartTime(LocalDateTime.of(2025, 3, 1, 10, 0));
 
-        SeanceDto dto = new SeanceDto(1L, "Push Day", LocalDateTime.of(2025, 3, 1, 10, 0),
+        SeanceDto dto = new SeanceDto(1L, "Push Day", null, LocalDateTime.of(2025, 3, 1, 10, 0),
                 null, 9, true, null, List.of());
 
         when(seanceRepository.findByUtilisateurUsernameAndIsModeleTrueOrderByStartTimeDesc("alice"))

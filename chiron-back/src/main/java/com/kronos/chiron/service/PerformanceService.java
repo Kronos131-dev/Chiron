@@ -7,9 +7,12 @@ import com.kronos.chiron.entity.ExerciseType;
 import com.kronos.chiron.entity.PerformanceRecord;
 import com.kronos.chiron.entity.PerformanceTier;
 import com.kronos.chiron.entity.Utilisateur;
+import com.kronos.chiron.nutrition.NutritionService;
+import com.kronos.chiron.nutrition.OlympusClient;
 import com.kronos.chiron.repository.PerformanceRecordRepository;
 import com.kronos.chiron.repository.UtilisateurRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,10 +21,13 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PerformanceService {
 
     private final PerformanceRecordRepository performanceRecordRepository;
     private final UtilisateurRepository utilisateurRepository;
+    private final NutritionService nutritionService;
+    private final OlympusClient olympusClient;
 
     /**
      * Returns the full performance summary for a user:
@@ -94,7 +100,31 @@ public class PerformanceService {
         Utilisateur user = findUser(username);
         user.setPoidsCorps(poidsCorps);
         utilisateurRepository.save(user);
+        syncWeightToOlympus(username, poidsCorps);
         return getSummary(username);
+    }
+
+    /**
+     * Pousse le poids dans Olympus si le compte est lié. Best-effort : une indisponibilité
+     * d'Olympus ne doit jamais faire échouer la mise à jour du poids dans Chiron. Un token
+     * rejeté (401/403) invalide la liaison locale pour forcer une nouvelle liaison.
+     */
+    private void syncWeightToOlympus(String username, Double poidsCorps) {
+        if (poidsCorps == null) {
+            return;
+        }
+        try {
+            String token = nutritionService.getValidToken(username);
+            olympusClient.pushWeight(token, poidsCorps);
+            log.info("OLYMPUS_WEIGHT_SYNCED user={} poids={}", username, poidsCorps);
+        } catch (NutritionService.NotLinkedException | NutritionService.ExpiredException e) {
+            // Compte non lié : rien à synchroniser.
+        } catch (OlympusClient.OlympusUnauthorizedException e) {
+            log.warn("OLYMPUS_WEIGHT_SYNC_REJECTED user={} : token rejeté, liaison invalidée", username);
+            nutritionService.invalidateLink(username);
+        } catch (RuntimeException e) {
+            log.warn("OLYMPUS_WEIGHT_SYNC_FAILED user={} : {}", username, e.getMessage());
+        }
     }
 
     /**

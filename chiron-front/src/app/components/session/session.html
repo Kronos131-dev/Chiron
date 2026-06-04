@@ -74,6 +74,23 @@
         </button>
       }
 
+      <!-- Note de séance (facultative) — juste avant l'enregistrement au journal -->
+      @if (!isReadonly()) {
+        <div class="pt-2">
+          <label class="text-secondary text-[9px] font-bold tracking-[0.2em] uppercase ml-1">Note de séance (facultatif)</label>
+          <textarea [ngModel]="noteSeance()"
+                    (ngModelChange)="noteSeance.set($event)"
+                    rows="2"
+                    class="w-full mt-1 bg-slate-950/50 border border-white/10 rounded p-3 text-white font-body text-sm outline-none focus:border-secondary/50 transition-colors resize-y"
+                    placeholder="Ressenti global, condition, à retenir pour la prochaine fois…"></textarea>
+        </div>
+      } @else if (noteSeance()) {
+        <div class="bg-slate-950/40 border border-white/5 rounded-xl p-4">
+          <p class="text-secondary text-[9px] font-bold tracking-[0.2em] uppercase mb-1">Note de séance</p>
+          <p class="text-on-surface text-sm font-body whitespace-pre-wrap break-words">{{ noteSeance() }}</p>
+        </div>
+      }
+
       <!-- Save to Journal — primary end-of-session action, placed at the bottom
            since the session is filled top-to-bottom. -->
       @if (!isReadonly()) {

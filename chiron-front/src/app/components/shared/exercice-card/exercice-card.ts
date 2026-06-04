@@ -59,6 +59,12 @@ export class ExerciceCardComponent implements OnInit {
     return !!this.exercice.cardioType;
   }
 
+  /** Bascule l'exercice en unilatéral / bilatéral (tonnage ×2 + info pour Chiron). */
+  toggleUnilateral(): void {
+    if (this.readonly) return;
+    this.exercice.unilateral = !this.exercice.unilateral;
+  }
+
   /** Total des calories brûlées de l'exercice (somme des séries), ou null si aucune. */
   caloriesTotales(): number | null {
     const total = this.exercice.series.reduce((sum, s) => sum + (s.calories ?? 0), 0);

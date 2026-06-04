@@ -268,6 +268,61 @@
       }
     </div>
 
+    <!-- ── Calcul du tonnage ── -->
+    <div class="bg-slate-900/80 border border-white/10 rounded-2xl overflow-hidden">
+      <button (click)="toggle('tonnage')"
+              class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-white/5 transition-colors">
+        <div class="flex items-center gap-3">
+          <span class="material-symbols-outlined text-secondary">scale</span>
+          <div>
+            <span class="text-white font-bold">Calcul du tonnage</span>
+            <p class="text-white/40 text-xs mt-0.5">Conventions de saisie du poids</p>
+          </div>
+        </div>
+        <span class="material-symbols-outlined text-secondary/60 transition-transform"
+              [class.rotate-180]="openSection() === 'tonnage'">expand_more</span>
+      </button>
+      @if (openSection() === 'tonnage') {
+        <div class="px-5 pb-5 space-y-4 border-t border-white/5">
+          <p class="text-white/40 text-xs mt-4 leading-relaxed">
+            Par défaut : barre, machine et lest comptés au poids total ; haltères au poids
+            d'une seule haltère. Les exercices marqués « unilatéral » comptent toujours ×2.
+            Ajuste ci-dessous selon ta façon de saisir.
+          </p>
+
+          <!-- Haltères -->
+          <button type="button" (click)="toggleHalteres()"
+                  class="w-full flex items-center justify-between gap-3 text-left">
+            <span class="text-white text-sm">
+              Aux haltères, je saisis le poids d'une seule haltère
+              <span class="text-white/40 block text-xs mt-0.5">Compte ×2 dans le tonnage</span>
+            </span>
+            <span class="relative shrink-0 w-11 h-6 rounded-full transition-colors"
+                  [class.bg-secondary]="halteresParImplement()"
+                  [class.bg-slate-700]="!halteresParImplement()">
+              <span class="absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform"
+                    [class.translate-x-5]="halteresParImplement()"></span>
+            </span>
+          </button>
+
+          <!-- Machine -->
+          <button type="button" (click)="toggleMachine()"
+                  class="w-full flex items-center justify-between gap-3 text-left">
+            <span class="text-white text-sm">
+              Aux machines, je saisis le poids d'un seul côté
+              <span class="text-white/40 block text-xs mt-0.5">Compte ×2 dans le tonnage</span>
+            </span>
+            <span class="relative shrink-0 w-11 h-6 rounded-full transition-colors"
+                  [class.bg-secondary]="machineParCote()"
+                  [class.bg-slate-700]="!machineParCote()">
+              <span class="absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform"
+                    [class.translate-x-5]="machineParCote()"></span>
+            </span>
+          </button>
+        </div>
+      }
+    </div>
+
     <!-- ── Supprimer le compte ── -->
     <div class="bg-slate-900/80 border border-red-500/20 rounded-2xl overflow-hidden">
       <button (click)="toggle('delete')"

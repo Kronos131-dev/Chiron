@@ -85,6 +85,16 @@ public class Utilisateur implements UserDetails {
     @Column(name = "poids_corps")
     private Double poidsCorps;
 
+    /** Aux haltères, le poids saisi est celui d'une seule haltère → tonnage ×2 (défaut true). */
+    @Column(name = "poids_haltere_par_implement", nullable = false)
+    @Builder.Default
+    private boolean poidsHaltereParImplement = true;
+
+    /** Aux machines, le poids saisi est celui d'un seul côté → tonnage ×2 (défaut false). */
+    @Column(name = "poids_machine_par_cote", nullable = false)
+    @Builder.Default
+    private boolean poidsMachineParCote = false;
+
     @Column(name = "date_naissance")
     private LocalDate dateNaissance;
 

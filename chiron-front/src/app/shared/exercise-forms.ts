@@ -36,6 +36,10 @@ export interface ExerciceForm {
   definitionId?: number;
   /** Type de cardio si l'exercice en est un, sinon absent/null. */
   cardioType?: CardioType | null;
+  /** Note libre facultative sur l'exercice (ressenti, point à savoir, condition…). */
+  commentaire?: string | null;
+  /** Exercice réalisé en unilatéral (un membre à la fois) → tonnage ×2 + info pour Chiron. */
+  unilateral?: boolean;
   series: SerieForm[];
   /**
    * Identifiant de groupe (superset/biset). Deux exercices consécutifs partageant
@@ -64,6 +68,8 @@ export function makeEmptyExercice(nom: string = '', definitionId?: number, cardi
     nom,
     definitionId,
     cardioType: cardioType ?? null,
+    commentaire: '',
+    unilateral: false,
     series: [cardioType ? makeEmptyCardioSerie() : makeEmptySerie()],
   };
 }
