@@ -126,6 +126,8 @@ export class ProgrammeBuilder implements OnInit {
           nom: exo.nom,
           definitionId: exo.exerciceDefinitionId ?? undefined,
           cardioType: exo.cardioType ?? null,
+          commentaire: exo.commentaire ?? '',
+          unilateral: exo.unilateral ?? false,
           blockId: exo.blockId ?? null,
           blockType: exo.blockType ?? null,
           series: (exo.series ?? []).map((serie: any) => ({
@@ -317,7 +319,8 @@ export class ProgrammeBuilder implements OnInit {
       isModele: false,
       exercices: this.exercices().map(exo => ({
         nom: exo.nom,
-        commentaire: '',
+        commentaire: exo.commentaire ?? '',
+        unilateral: exo.unilateral ?? false,
         exerciceDefinitionId: exo.definitionId ?? null,
         blockId: exo.blockId ?? null,
         blockType: exo.blockType ?? null,

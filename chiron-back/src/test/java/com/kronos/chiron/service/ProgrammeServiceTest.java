@@ -54,9 +54,9 @@ class ProgrammeServiceTest {
     void sauvegarderProgramme_newProgramme_savesWithOwner() {
         when(utilisateurRepository.findByUsername("owner")).thenReturn(Optional.of(owner));
 
-        SeanceDto dto = new SeanceDto(null, "Leg Day", LocalDateTime.now(), null, 1, false, null,
+        SeanceDto dto = new SeanceDto(null, "Leg Day", null, LocalDateTime.now(), null, 1, false, null,
                 List.of(new ExerciceDto(null, "Squat", null, null,
-                        List.of(new SerieDto(100.0, 5, null, null, null, null, null, null, null)), null, null, null)));
+                        List.of(new SerieDto(100.0, 5, null, null, null, null, null, null, null)), null, null, null, false)));
 
         Seance result = programmeService.sauvegarderProgramme("owner", dto);
 
@@ -71,7 +71,7 @@ class ProgrammeServiceTest {
     void sauvegarderProgramme_noExercices_savesEmptyProgramme() {
         when(utilisateurRepository.findByUsername("owner")).thenReturn(Optional.of(owner));
 
-        SeanceDto dto = new SeanceDto(null, "Empty", null, null, null, false, null, List.of());
+        SeanceDto dto = new SeanceDto(null, "Empty", null, null, null, null, false, null, List.of());
 
         programmeService.sauvegarderProgramme("owner", dto);
 
@@ -89,7 +89,7 @@ class ProgrammeServiceTest {
         when(utilisateurRepository.findByUsername("owner")).thenReturn(Optional.of(owner));
         when(seanceRepository.findById(5L)).thenReturn(Optional.of(existing));
 
-        SeanceDto dto = new SeanceDto(5L, "New Title", null, null, null, false, null, List.of());
+        SeanceDto dto = new SeanceDto(5L, "New Title", null, null, null, null, false, null, List.of());
 
         programmeService.sauvegarderProgramme("owner", dto);
 
@@ -112,11 +112,11 @@ class ProgrammeServiceTest {
         when(utilisateurRepository.findByUsername("owner")).thenReturn(Optional.of(owner));
         when(seanceRepository.findById(7L)).thenReturn(Optional.of(existing));
 
-        SeanceDto dto = new SeanceDto(7L, "Push", null, null, null, false, null,
+        SeanceDto dto = new SeanceDto(7L, "Push", null, null, null, null, false, null,
                 List.of(
-                        new ExerciceDto(null, "Dips",  null, null, List.of(), null, null, null),
-                        new ExerciceDto(null, "Bench", null, null, List.of(), null, null, null),
-                        new ExerciceDto(null, "Squat", null, null, List.of(), null, null, null)
+                        new ExerciceDto(null, "Dips",  null, null, List.of(), null, null, null, false),
+                        new ExerciceDto(null, "Bench", null, null, List.of(), null, null, null, false),
+                        new ExerciceDto(null, "Squat", null, null, List.of(), null, null, null, false)
                 ));
 
         programmeService.sauvegarderProgramme("owner", dto);
@@ -142,7 +142,7 @@ class ProgrammeServiceTest {
         when(utilisateurRepository.findByUsername("other")).thenReturn(Optional.of(otherUser));
         when(seanceRepository.findById(5L)).thenReturn(Optional.of(existing));
 
-        SeanceDto dto = new SeanceDto(5L, "Hack", null, null, null, false, null, List.of());
+        SeanceDto dto = new SeanceDto(5L, "Hack", null, null, null, null, false, null, List.of());
 
         assertThatThrownBy(() -> programmeService.sauvegarderProgramme("other", dto))
                 .isInstanceOf(RuntimeException.class)
@@ -157,7 +157,7 @@ class ProgrammeServiceTest {
         when(utilisateurRepository.findByUsername("coach")).thenReturn(Optional.of(coach));
         when(utilisateurRepository.findByUsername("owner")).thenReturn(Optional.of(owner));
 
-        SeanceDto dto = new SeanceDto(null, "For my athlete", null, null, 0, false, null, List.of());
+        SeanceDto dto = new SeanceDto(null, "For my athlete", null, null, null, 0, false, null, List.of());
 
         programmeService.sauvegarderProgramme("coach", dto, "owner");
 
@@ -174,7 +174,7 @@ class ProgrammeServiceTest {
         when(utilisateurRepository.findByUsername("other")).thenReturn(Optional.of(otherUser));
         when(utilisateurRepository.findByUsername("owner")).thenReturn(Optional.of(owner));
 
-        SeanceDto dto = new SeanceDto(null, "Hack", null, null, 0, false, null, List.of());
+        SeanceDto dto = new SeanceDto(null, "Hack", null, null, null, 0, false, null, List.of());
 
         assertThatThrownBy(() -> programmeService.sauvegarderProgramme("other", dto, "owner"))
                 .isInstanceOf(RuntimeException.class)
@@ -188,7 +188,7 @@ class ProgrammeServiceTest {
         // forUsername == username → behaves as a normal self-create, no coach check.
         when(utilisateurRepository.findByUsername("owner")).thenReturn(Optional.of(owner));
 
-        SeanceDto dto = new SeanceDto(null, "Mine", null, null, 0, false, null, List.of());
+        SeanceDto dto = new SeanceDto(null, "Mine", null, null, null, 0, false, null, List.of());
 
         programmeService.sauvegarderProgramme("owner", dto, "owner");
 
@@ -208,7 +208,7 @@ class ProgrammeServiceTest {
         when(utilisateurRepository.findByUsername("coach")).thenReturn(Optional.of(coach));
         when(seanceRepository.findById(5L)).thenReturn(Optional.of(existing));
 
-        SeanceDto dto = new SeanceDto(5L, "Coach Edit", null, null, null, false, null, List.of());
+        SeanceDto dto = new SeanceDto(5L, "Coach Edit", null, null, null, null, false, null, List.of());
 
         programmeService.sauvegarderProgramme("coach", dto);
 

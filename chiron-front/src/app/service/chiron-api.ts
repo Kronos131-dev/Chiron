@@ -18,6 +18,12 @@ export interface ExerciceDefinitionDto {
   cardioType: string | null;
 }
 
+/** Préférences de calcul du tonnage de l'utilisateur (conventions de saisie du poids). */
+export interface TrainingPrefs {
+  halteresParImplement: boolean;
+  machineParCote: boolean;
+}
+
 /**
  * Interface defining the structure of an aggregated exercise performance summary.
  */
@@ -314,6 +320,15 @@ export class ChironApi {
 
   changeUsername(req: { newUsername: string }): Observable<{ token: string }> {
     return this.http.put<{ token: string }>(`${this.apiUrl}/settings/username`, req);
+  }
+
+  /** Préférences de calcul du tonnage (conventions de saisie du poids). */
+  getTrainingPrefs(): Observable<TrainingPrefs> {
+    return this.http.get<TrainingPrefs>(`${this.apiUrl}/settings/training-prefs`);
+  }
+
+  updateTrainingPrefs(prefs: TrainingPrefs): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/settings/training-prefs`, prefs);
   }
 
   forgotPassword(email: string): Observable<void> {

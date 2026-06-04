@@ -6,6 +6,7 @@ import com.kronos.chiron.entity.Exercice;
 import com.kronos.chiron.entity.MuscleGroup;
 import com.kronos.chiron.entity.Seance;
 import com.kronos.chiron.entity.Serie;
+import com.kronos.chiron.entity.TypeEquipement;
 import com.kronos.chiron.nutrition.NutritionService;
 import com.kronos.chiron.nutrition.olympusdb.OlympusNutritionDao;
 import com.kronos.chiron.repository.SeanceRepository;
@@ -63,11 +64,12 @@ public class StatsService {
                 .filter(s -> s.getStartTime() != null && s.getStartTime().isAfter(now.minusDays(30)))
                 .count();
 
+        TonnagePrefs tp = tonnagePrefs(username);
         String currentWeekKey = weekKey(today);
         double tonnageSemaine = sessions.stream()
                 .filter(s -> s.getStartTime() != null)
                 .filter(s -> weekKey(s.getStartTime().toLocalDate()).equals(currentWeekKey))
-                .mapToDouble(this::sessionTonnage)
+                .mapToDouble(s -> sessionTonnage(s, tp))
                 .sum();
 
         int streak = computeWeekStreak(sessions, today);
@@ -100,6 +102,7 @@ public class StatsService {
     public List<WeeklyVolumePointDto> getWeeklyVolume(String username, int weeks) {
         int n = Math.min(Math.max(weeks, 1), 52);
         List<Seance> sessions = realSessions(username);
+        TonnagePrefs tp = tonnagePrefs(username);
         LocalDate monday = LocalDate.now().with(ISO.dayOfWeek(), 1);
 
         List<WeeklyVolumePointDto> result = new ArrayList<>();
@@ -116,7 +119,7 @@ public class StatsService {
                 LocalDate d = s.getStartTime().toLocalDate();
                 if (d.isBefore(weekStart) || d.isAfter(weekEnd)) continue;
                 nbSeances++;
-                tonnage += sessionTonnage(s);
+                tonnage += sessionTonnage(s, tp);
                 nbSeries += sessionSeriesCount(s);
                 Double dm = sessionDurationMin(s);
                 if (dm != null) { dureeSum += dm; dureeCount++; }
@@ -135,6 +138,7 @@ public class StatsService {
         int n = Math.min(Math.max(days, 1), 365);
         LocalDateTime since = LocalDateTime.now().minusDays(n);
         List<Seance> sessions = realSessions(username);
+        TonnagePrefs tp = tonnagePrefs(username);
 
         Map<MuscleGroup, double[]> tonnageAndSeries = new EnumMap<>(MuscleGroup.class); // [tonnage, nbSeries]
         Map<MuscleGroup, Set<Long>> seancesByMuscle = new EnumMap<>(MuscleGroup.class);
@@ -145,7 +149,7 @@ public class StatsService {
                 MuscleGroup mg = (e.getDefinition() != null) ? e.getDefinition().getMusclePrincipal() : null;
                 if (mg == null) continue;
                 double[] acc = tonnageAndSeries.computeIfAbsent(mg, k -> new double[2]);
-                acc[0] += exerciseTonnage(e);
+                acc[0] += exerciseTonnage(e, tp);
                 acc[1] += e.getSeries().size();
                 seancesByMuscle.computeIfAbsent(mg, k -> new java.util.HashSet<>()).add(s.getId());
             }
@@ -204,6 +208,7 @@ public class StatsService {
         if (nom == null || nom.isBlank()) return List.of();
         String target = nom.trim().toLowerCase();
         List<Seance> sessions = realSessions(username);
+        TonnagePrefs tp = tonnagePrefs(username);
 
         // sessions est trié décroissant : on parcourt en ordre chronologique croissant.
         List<Seance> chronological = new ArrayList<>(sessions);
@@ -222,7 +227,7 @@ public class StatsService {
                     chargeMax = Math.max(chargeMax, serie.getPoids());
                     e1rm = Math.max(e1rm, epley(serie.getPoids(), serie.getNombreReps()));
                 }
-                volume += exerciseTonnage(e);
+                volume += exerciseTonnage(e, tp);
             }
             if (found) {
                 points.add(new ExerciseProgressPointDto(
@@ -317,13 +322,35 @@ public class StatsService {
         return seanceRepository.findByUtilisateurUsernameAndIsModeleTrueOrderByStartTimeDesc(username);
     }
 
-    private double sessionTonnage(Seance s) {
+    /** Préférences de tonnage d'un utilisateur (conventions de saisie du poids). */
+    private record TonnagePrefs(boolean halteresX2, boolean machineX2) {}
+
+    /** Charge les préférences de tonnage de l'utilisateur (défauts : haltères ×2, machine ×1). */
+    private TonnagePrefs tonnagePrefs(String username) {
+        return utilisateurRepository.findByUsername(username)
+                .map(u -> new TonnagePrefs(u.isPoidsHaltereParImplement(), u.isPoidsMachineParCote()))
+                .orElse(new TonnagePrefs(true, false));
+    }
+
+    /**
+     * Facteur ×1/×2 du tonnage d'un exercice, sans cumul (max ×2) :
+     * unilatéral, ou haltères/machine selon les préférences de saisie de l'utilisateur.
+     */
+    private int tonnageFactor(Exercice e, TonnagePrefs p) {
+        TypeEquipement eq = (e.getDefinition() != null) ? e.getDefinition().getTypeEquipement() : null;
+        boolean doubler = e.isUnilateral()
+                || (eq == TypeEquipement.HALTERES && p.halteresX2())
+                || (eq == TypeEquipement.MACHINE && p.machineX2());
+        return doubler ? 2 : 1;
+    }
+
+    private double sessionTonnage(Seance s, TonnagePrefs p) {
         double t = 0;
-        for (Exercice e : s.getExercices()) t += exerciseTonnage(e);
+        for (Exercice e : s.getExercices()) t += exerciseTonnage(e, p);
         return t;
     }
 
-    private double exerciseTonnage(Exercice e) {
+    private double exerciseTonnage(Exercice e, TonnagePrefs p) {
         double t = 0;
         for (Serie serie : e.getSeries()) {
             t += serie.getPoids() * serie.getNombreReps();
@@ -331,7 +358,7 @@ public class StatsService {
                 t += d.getPoids() * d.getNombreReps();
             }
         }
-        return t;
+        return t * tonnageFactor(e, p);
     }
 
     private int sessionSeriesCount(Seance s) {

@@ -62,6 +62,9 @@ export class Session implements OnInit, OnDestroy {
   /** Signal holding the array of exercises configured in the current session. */
   exercices = signal<ExerciceForm[]>([]);
 
+  /** Optional free-text note for the whole session (ressenti, condition…). */
+  noteSeance = signal('');
+
   /** Loading state indicator. */
   isLoading = signal(false);
 
@@ -203,11 +206,15 @@ export class Session implements OnInit, OnDestroy {
             this.targetUsername.set(data.utilisateur.username);
         }
 
+        this.noteSeance.set(data.note ?? '');
+
         const exosFormates: ExerciceForm[] = data.exercices.map((exo: any) => ({
           id: exo.id || generateFormId(),
           nom: exo.nom,
           definitionId: exo.exerciceDefinitionId ?? undefined,
           cardioType: exo.cardioType ?? null,
+          commentaire: exo.commentaire ?? '',
+          unilateral: exo.unilateral ?? false,
           series: exo.series.map((serie: any) => ({
             id: serie.id || generateFormId(),
             poids: serie.poids,
@@ -408,7 +415,8 @@ export class Session implements OnInit, OnDestroy {
 
     const exercicesPayload = this.exercices().map(exo => ({
       nom: exo.nom,
-      commentaire: "",
+      commentaire: exo.commentaire ?? "",
+      unilateral: exo.unilateral ?? false,
       exerciceDefinitionId: exo.definitionId ?? null,
       series: exo.series.map(serie => ({
         poids: serie.poids != null ? Number(serie.poids) : 0,
@@ -430,6 +438,7 @@ export class Session implements OnInit, OnDestroy {
     const journalDto = {
       id: null,
       titre: this.titreRoutine(),
+      note: this.noteSeance() || null,
       weekNumber: currentWeekNumber,
       startTime: this.activeSession.startedAt() ?? new Date().toISOString(),
       endTime: new Date().toISOString(),

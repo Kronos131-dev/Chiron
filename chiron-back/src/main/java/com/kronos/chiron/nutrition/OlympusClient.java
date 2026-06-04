@@ -102,6 +102,31 @@ public class OlympusClient {
         return doGet(token, "/api/v1/meal-presets");
     }
 
+    /**
+     * Pousse le poids de l'utilisateur dans Olympus (seule écriture autorisée via le token
+     * d'intégration). Olympus historise la métrique du jour. 401/403 → token rejeté.
+     */
+    public void pushWeight(String token, double weightKg) {
+        try {
+            restClient.post()
+                    .uri("/api/v1/integration/chiron/weight")
+                    .header("X-Integration-Token", token)
+                    .body(Map.of("weightKg", weightKg))
+                    .retrieve()
+                    .toBodilessEntity();
+        } catch (HttpClientErrorException e) {
+            HttpStatusCode status = e.getStatusCode();
+            if (status.value() == 401 || status.value() == 403) {
+                throw new OlympusUnauthorizedException("Token Olympus rejeté (" + status.value() + ")");
+            }
+            log.warn("Olympus POST /weight a renvoyé {} : {}", status, e.getResponseBodyAsString());
+            throw new OlympusUnavailableException("Olympus a renvoyé " + status);
+        } catch (org.springframework.web.client.ResourceAccessException e) {
+            log.warn("Olympus injoignable sur {} : {}", baseUrl, e.getMessage());
+            throw new OlympusUnavailableException("Olympus injoignable sur " + baseUrl + " : " + e.getMessage());
+        }
+    }
+
     private JsonNode doGet(String token, String uri) {
         try {
             return restClient.get()

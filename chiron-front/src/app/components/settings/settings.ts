@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { ChironApi, NutritionLinkStatus, FitbitLinkStatus } from '../../service/chiron-api';
+import { ChironApi, NutritionLinkStatus, FitbitLinkStatus, TrainingPrefs } from '../../service/chiron-api';
 import { AuthService } from '../../service/auth.service';
 import { HeaderComponent } from '../shared/header/header';
 
@@ -18,7 +18,11 @@ export class Settings implements OnInit, OnDestroy {
   currentPrenom = signal<string | null>(null);
   currentNom = signal<string | null>(null);
 
-  openSection = signal<'password' | 'email' | 'username' | 'identity' | 'delete' | null>(null);
+  openSection = signal<'password' | 'email' | 'username' | 'identity' | 'tonnage' | 'delete' | null>(null);
+
+  // --- Préférences de calcul du tonnage ---
+  halteresParImplement = signal(true);
+  machineParCote = signal(false);
 
   // Champs password
   currentPasswordForPwd = '';
@@ -75,13 +79,49 @@ export class Settings implements OnInit, OnDestroy {
   ngOnInit() {
     this.loadNutritionStatus();
     this.loadFitbitStatus();
+    this.loadTrainingPrefs();
+  }
+
+  private loadTrainingPrefs() {
+    this.chironApi.getTrainingPrefs().subscribe({
+      next: (prefs) => {
+        this.halteresParImplement.set(prefs.halteresParImplement);
+        this.machineParCote.set(prefs.machineParCote);
+      },
+      error: () => {} // garde les défauts en cas d'échec
+    });
+  }
+
+  /** Persiste les préférences de tonnage à chaque changement de toggle. */
+  saveTrainingPrefs() {
+    const prefs: TrainingPrefs = {
+      halteresParImplement: this.halteresParImplement(),
+      machineParCote: this.machineParCote(),
+    };
+    this.chironApi.updateTrainingPrefs(prefs).subscribe({
+      next: () => {
+        this.successMessage.set('Préférences de tonnage enregistrées.');
+        setTimeout(() => this.successMessage.set(''), 2500);
+      },
+      error: () => this.errorMessage.set("Erreur lors de l'enregistrement des préférences."),
+    });
+  }
+
+  toggleHalteres() {
+    this.halteresParImplement.update(v => !v);
+    this.saveTrainingPrefs();
+  }
+
+  toggleMachine() {
+    this.machineParCote.update(v => !v);
+    this.saveTrainingPrefs();
   }
 
   ngOnDestroy() {
     this.stopFitbitPolling();
   }
 
-  toggle(section: 'password' | 'email' | 'username' | 'identity' | 'delete') {
+  toggle(section: 'password' | 'email' | 'username' | 'identity' | 'tonnage' | 'delete') {
     this.openSection.set(this.openSection() === section ? null : section);
     this.clearFeedback();
   }

@@ -23,100 +23,120 @@
 
   <div class="p-5">
 
-    <!-- Exercise Name Input and Delete Button -->
-    <!-- Mobile : nom en pleine largeur, boutons sur une rangée en dessous ; sm+ : côte à côte -->
-    <div class="flex flex-col sm:flex-row sm:items-end gap-3 mb-6">
+    <!-- En-tête : nom en pleine largeur (rangée 1), puis icône à gauche + boutons à droite (rangée 2) -->
+    <div class="mb-6">
 
-      <!-- Nom (+ thumbnail) -->
-      <div class="flex items-end gap-3 flex-1 min-w-0">
-
-        <!-- Thumbnail image (si définition connue) -->
-        @if (definition()?.imageUrl) {
-          <img [src]="definition()!.imageUrl"
-               [alt]="exercice.nom"
-               class="w-12 h-12 object-cover rounded-lg border border-white/10 flex-shrink-0 mb-[1px]"
-               loading="lazy">
-        }
-
-        <div class="flex-1 min-w-0 relative">
-          <label class="text-secondary text-[9px] font-bold tracking-[0.2em] uppercase ml-1">Nom de l'exercice</label>
-          @if (!readonly) {
-            <input type="text"
-                   [value]="exercice.nom"
-                   (input)="onNomInput($event)"
-                   (blur)="closeSuggestions()"
-                   class="w-full mt-1 bg-slate-950/50 border border-white/10 rounded p-3 text-white font-headline text-lg outline-none focus:border-secondary/50 transition-colors"
-                   placeholder="Rechercher un exercice...">
-            @if (showSuggestions() && suggestions().length > 0) {
-              <ul class="absolute z-50 left-0 right-0 mt-1 bg-[#1a1c23] border border-white/10 rounded-lg shadow-xl max-h-96 overflow-y-auto">
-                @for (def of suggestions(); track def.id) {
-                  <li (mousedown)="selectDefinition(def)"
-                      class="flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-white/5 transition-colors border-b border-white/5 last:border-0">
-                    @if (def.imageUrl) {
-                      <img [src]="def.imageUrl" alt="" class="w-8 h-8 object-cover rounded" loading="lazy">
-                    }
-                    <div class="flex-1 min-w-0">
-                      <span class="text-white font-bold text-sm block line-clamp-2 break-words">{{ def.nomFr ?? def.nomEn }}</span>
-                      <span class="text-on-surface-variant text-[10px] uppercase tracking-wider">{{ def.musclePrincipal }}</span>
-                    </div>
-                  </li>
-                }
-              </ul>
-            }
-          } @else {
-            <p class="w-full mt-1 bg-slate-950/50 border border-white/10 rounded p-3 text-white font-headline text-lg break-words">{{ exercice.nom }}</p>
+      <!-- Rangée 1 : nom de l'exercice -->
+      <div class="relative">
+        <label class="text-secondary text-[9px] font-bold tracking-[0.2em] uppercase ml-1">Nom de l'exercice</label>
+        @if (!readonly) {
+          <input type="text"
+                 [value]="exercice.nom"
+                 (input)="onNomInput($event)"
+                 (blur)="closeSuggestions()"
+                 class="w-full mt-1 bg-slate-950/50 border border-white/10 rounded p-3 text-white font-headline text-lg outline-none focus:border-secondary/50 transition-colors"
+                 placeholder="Rechercher un exercice...">
+          @if (showSuggestions() && suggestions().length > 0) {
+            <ul class="absolute z-50 left-0 right-0 mt-1 bg-[#1a1c23] border border-white/10 rounded-lg shadow-xl max-h-96 overflow-y-auto">
+              @for (def of suggestions(); track def.id) {
+                <li (mousedown)="selectDefinition(def)"
+                    class="flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-white/5 transition-colors border-b border-white/5 last:border-0">
+                  @if (def.imageUrl) {
+                    <img [src]="def.imageUrl" alt="" class="w-8 h-8 object-cover rounded" loading="lazy">
+                  }
+                  <div class="flex-1 min-w-0">
+                    <span class="text-white font-bold text-sm block line-clamp-2 break-words">{{ def.nomFr ?? def.nomEn }}</span>
+                    <span class="text-on-surface-variant text-[10px] uppercase tracking-wider">{{ def.musclePrincipal }}</span>
+                  </div>
+                </li>
+              }
+            </ul>
           }
-        </div>
+        } @else {
+          <p class="w-full mt-1 bg-slate-950/50 border border-white/10 rounded p-3 text-white font-headline text-lg break-words">{{ exercice.nom }}</p>
+        }
       </div>
 
-      <!-- Boutons d'action : sous le nom (centrés) sur mobile, à droite sur sm+ -->
-      <div class="flex items-center justify-center sm:justify-end gap-3 flex-shrink-0">
+      <!-- Rangée 2 : icône (gauche) + boutons d'action (droite), même ligne -->
+      <div class="flex items-center justify-between gap-3 mt-3 flex-wrap">
 
-        <!-- Bouton fiche complète -->
-        @if (exercice.definitionId) {
-          <button (click)="voirFiche()"
-                  class="bg-slate-950/50 border border-white/10 p-3 rounded text-on-surface-variant hover:text-secondary hover:border-secondary/30 transition-all mb-[1px]"
-                  title="Voir la fiche de l'exercice">
-            <span class="material-symbols-outlined text-xl">info</span>
-          </button>
-        }
+        <!-- Vignette + toggle unilatéral (attributs de l'exercice) -->
+        <div class="flex items-center gap-2 flex-shrink-0">
+          @if (definition()?.imageUrl) {
+            <img [src]="definition()!.imageUrl"
+                 [alt]="exercice.nom"
+                 class="w-12 h-12 object-cover rounded-lg border border-white/10"
+                 loading="lazy">
+          }
 
-        @if (!readonly && !inBlock && hasNext) {
-          <div class="group-menu-root relative mb-[1px]">
+          <!-- Unilatéral : tonnage ×2 + info pour Chiron (caché pour le cardio) -->
+          @if (!isCardio() && (!readonly || exercice.unilateral)) {
             <button type="button"
-                    (click)="toggleGroupMenu($event)"
-                    class="bg-slate-950/50 border p-3 rounded transition-all"
-                    [class.border-white/10]="!groupMenuOpen()"
-                    [class.text-on-surface-variant]="!groupMenuOpen()"
-                    [class.hover:text-secondary]="!groupMenuOpen()"
-                    [class.hover:border-secondary/40]="!groupMenuOpen()"
-                    [class.text-secondary]="groupMenuOpen()"
-                    [class.border-secondary/60]="groupMenuOpen()"
-                    title="Grouper avec l'exercice suivant">
-              <span class="material-symbols-outlined text-xl">link</span>
+                    [disabled]="readonly"
+                    (click)="toggleUnilateral()"
+                    class="inline-flex items-center gap-1 text-[9px] font-bold tracking-[0.15em] uppercase px-2.5 py-1.5 rounded-full border transition-colors"
+                    [class.border-secondary]="exercice.unilateral"
+                    [class.text-secondary]="exercice.unilateral"
+                    [class.border-white/10]="!exercice.unilateral"
+                    [class.text-on-surface-variant]="!exercice.unilateral"
+                    title="Exercice réalisé un membre à la fois (reps par bras/jambe) — compte ×2 dans le tonnage">
+              <span class="material-symbols-outlined text-[15px] leading-none">
+                {{ exercice.unilateral ? 'check_circle' : 'radio_button_unchecked' }}
+              </span>
+              Unilatéral
             </button>
-            @if (groupMenuOpen()) {
-              <div class="absolute right-0 top-full mt-1 z-30 w-32 bg-[#1a1c23] border border-white/10 rounded-lg shadow-xl overflow-hidden">
-                <button type="button"
-                        (click)="chooseGroupType('SUPERSET')"
-                        class="w-full text-left px-3 py-2 text-[11px] font-bold tracking-widest uppercase text-on-surface hover:bg-secondary/10 hover:text-secondary transition-colors">
-                  Superset
-                </button>
-                <button type="button"
-                        (click)="chooseGroupType('BISET')"
-                        class="w-full text-left px-3 py-2 text-[11px] font-bold tracking-widest uppercase text-on-surface hover:bg-secondary/10 hover:text-secondary transition-colors border-t border-white/5">
-                  Biset
-                </button>
-              </div>
-            }
-          </div>
-        }
+          }
+        </div>
 
-        @if (!readonly) {
-          <button (click)="remove.emit()" class="bg-slate-950/50 border border-white/10 p-3 rounded text-on-surface-variant hover:text-red-400 hover:border-red-400/30 transition-all mb-[1px]">
-            <span class="material-symbols-outlined text-xl">delete</span>
-          </button>
-        }
+        <!-- Boutons d'action -->
+        <div class="flex items-center gap-3 flex-shrink-0 ml-auto">
+
+          <!-- Bouton fiche complète -->
+          @if (exercice.definitionId) {
+            <button (click)="voirFiche()"
+                    class="bg-slate-950/50 border border-white/10 p-3 rounded text-on-surface-variant hover:text-secondary hover:border-secondary/30 transition-all"
+                    title="Voir la fiche de l'exercice">
+              <span class="material-symbols-outlined text-xl">info</span>
+            </button>
+          }
+
+          @if (!readonly && !inBlock && hasNext) {
+            <div class="group-menu-root relative">
+              <button type="button"
+                      (click)="toggleGroupMenu($event)"
+                      class="bg-slate-950/50 border p-3 rounded transition-all"
+                      [class.border-white/10]="!groupMenuOpen()"
+                      [class.text-on-surface-variant]="!groupMenuOpen()"
+                      [class.hover:text-secondary]="!groupMenuOpen()"
+                      [class.hover:border-secondary/40]="!groupMenuOpen()"
+                      [class.text-secondary]="groupMenuOpen()"
+                      [class.border-secondary/60]="groupMenuOpen()"
+                      title="Grouper avec l'exercice suivant">
+                <span class="material-symbols-outlined text-xl">link</span>
+              </button>
+              @if (groupMenuOpen()) {
+                <div class="absolute right-0 top-full mt-1 z-30 w-32 bg-[#1a1c23] border border-white/10 rounded-lg shadow-xl overflow-hidden">
+                  <button type="button"
+                          (click)="chooseGroupType('SUPERSET')"
+                          class="w-full text-left px-3 py-2 text-[11px] font-bold tracking-widest uppercase text-on-surface hover:bg-secondary/10 hover:text-secondary transition-colors">
+                    Superset
+                  </button>
+                  <button type="button"
+                          (click)="chooseGroupType('BISET')"
+                          class="w-full text-left px-3 py-2 text-[11px] font-bold tracking-widest uppercase text-on-surface hover:bg-secondary/10 hover:text-secondary transition-colors border-t border-white/5">
+                    Biset
+                  </button>
+                </div>
+              }
+            </div>
+          }
+
+          @if (!readonly) {
+            <button (click)="remove.emit()" class="bg-slate-950/50 border border-white/10 p-3 rounded text-on-surface-variant hover:text-red-400 hover:border-red-400/30 transition-all">
+              <span class="material-symbols-outlined text-xl">delete</span>
+            </button>
+          }
+        </div>
       </div>
     </div>
 
@@ -253,6 +273,22 @@
               class="w-full border border-dashed border-white/10 rounded py-3 flex items-center justify-center gap-2 text-on-surface-variant text-[10px] font-bold tracking-widest uppercase hover:text-secondary hover:bg-white/5 transition-colors">
         <span class="text-lg leading-none">+</span> {{ isCardio() ? 'Ajouter un intervalle' : 'Ajouter une série' }}
       </button>
+    }
+
+    <!-- Note d'exercice (facultative) — sous les séries -->
+    @if (!readonly) {
+      <div class="mt-4">
+        <label class="text-secondary text-[9px] font-bold tracking-[0.2em] uppercase ml-1">Note (facultatif)</label>
+        <textarea [(ngModel)]="exercice.commentaire"
+                  rows="2"
+                  class="w-full mt-1 bg-slate-950/50 border border-white/10 rounded p-3 text-white font-body text-sm outline-none focus:border-secondary/50 transition-colors resize-y"
+                  placeholder="Ressenti, point à savoir, condition…"></textarea>
+      </div>
+    } @else if (exercice.commentaire) {
+      <div class="mt-4 bg-slate-950/40 border border-white/5 rounded p-3">
+        <p class="text-secondary text-[9px] font-bold tracking-[0.2em] uppercase mb-1">Note</p>
+        <p class="text-on-surface text-sm font-body whitespace-pre-wrap break-words">{{ exercice.commentaire }}</p>
+      </div>
     }
 
   </div>

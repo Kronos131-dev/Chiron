@@ -45,6 +45,7 @@ public class SeanceMapper {
         return new SeanceDto(
                 seance.getId(),
                 seance.getTitre(),
+                seance.getNote(),
                 seance.getStartTime(),
                 seance.getEndTime(),
                 seance.getWeekNumber(),
@@ -81,7 +82,8 @@ public class SeanceMapper {
                 seriesDto,
                 exercice.getBlockId(),
                 exercice.getBlockType(),
-                cardioType
+                cardioType,
+                exercice.isUnilateral()
         );
     }
 

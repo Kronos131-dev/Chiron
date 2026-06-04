@@ -787,7 +787,7 @@ public class WorkoutTools {
             }
 
             String nomCanonique = def.nomFr() != null ? def.nomFr() : def.nomEn();
-            exerciceDtos.add(new ExerciceDto(null, nomCanonique, null, def.id(), series, null, null, null));
+            exerciceDtos.add(new ExerciceDto(null, nomCanonique, null, def.id(), series, null, null, null, false));
             resumeExos.add(nomCanonique + " (" + nbSeries + "x" + reps + ")");
         }
 
@@ -801,7 +801,7 @@ public class WorkoutTools {
             return "Aucun exercice valide fourni.";
         }
 
-        SeanceDto dto = new SeanceDto(null, titre, null, null, 0, false, null, exerciceDtos);
+        SeanceDto dto = new SeanceDto(null, titre, null, null, null, 0, false, null, exerciceDtos);
         Seance saved = programmeService.sauvegarderProgramme(user.getUsername(), dto);
 
         return "Programme '" + saved.getTitre() + "' créé avec " + exerciceDtos.size() + " exercice(s) : "
@@ -1046,6 +1046,7 @@ public class WorkoutTools {
     }
 
     private String exoLabel(Exercice e) {
-        return e.getDefinition() != null ? e.getNom() + " [std]" : e.getNom();
+        String base = e.getDefinition() != null ? e.getNom() + " [std]" : e.getNom();
+        return e.isUnilateral() ? base + " (unilatéral)" : base;
     }
 }

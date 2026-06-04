@@ -29,6 +29,13 @@ public class Seance {
     private String titre;
 
     /**
+     * Optional free-text note for the whole session (felt sensation, condition, reminder…).
+     * Nullable; mainly filled when logging an executed session to the journal.
+     */
+    @Column(columnDefinition = "TEXT")
+    private String note;
+
+    /**
      * The start time of the workout session.
      */
     private LocalDateTime startTime;

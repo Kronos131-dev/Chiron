@@ -32,6 +32,22 @@ public class SettingsService {
     @Value("${chiron.frontend-url}")
     private String frontendUrl;
 
+    public com.kronos.chiron.dto.settings.TrainingPrefsDto getTrainingPrefs(String username) {
+        Utilisateur user = utilisateurRepository.findByUsername(username)
+                .orElseThrow(() -> new NoSuchElementException("Utilisateur introuvable"));
+        return new com.kronos.chiron.dto.settings.TrainingPrefsDto(
+                user.isPoidsHaltereParImplement(), user.isPoidsMachineParCote());
+    }
+
+    @Transactional
+    public void updateTrainingPrefs(String username, boolean halteresParImplement, boolean machineParCote) {
+        Utilisateur user = utilisateurRepository.findByUsername(username)
+                .orElseThrow(() -> new NoSuchElementException("Utilisateur introuvable"));
+        user.setPoidsHaltereParImplement(halteresParImplement);
+        user.setPoidsMachineParCote(machineParCote);
+        utilisateurRepository.save(user);
+    }
+
     @Transactional
     public void changePassword(String username, String currentPassword, String newPassword) {
         Utilisateur user = utilisateurRepository.findByUsername(username)

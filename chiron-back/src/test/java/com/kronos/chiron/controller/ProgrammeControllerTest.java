@@ -37,7 +37,7 @@ class ProgrammeControllerTest {
     @MockitoBean private UserDetailsService userDetailsService;
 
     private SeanceDto buildSeanceDto() {
-        return new SeanceDto(1L, "Push Day", null, null, 1, false, null, List.of());
+        return new SeanceDto(1L, "Push Day", null, null, null, 1, false, null, List.of());
     }
 
     @Test

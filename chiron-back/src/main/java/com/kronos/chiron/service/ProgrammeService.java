@@ -118,7 +118,8 @@ public class ProgrammeService {
         }
 
         seance.setTitre(seanceDto.titre());
-        
+        seance.setNote(seanceDto.note());
+
         if (seanceDto.weekNumber() != null) {
             seance.setWeekNumber(seanceDto.weekNumber());
         }
@@ -135,6 +136,7 @@ public class ProgrammeService {
                 Exercice exercice = new Exercice();
                 exercice.setNom(exoDto.nom());
                 exercice.setCommentaire(exoDto.commentaire());
+                exercice.setUnilateral(exoDto.unilateral());
                 exercice.setDisplayOrder(position++);
                 exercice.setBlockId(exoDto.blockId());
                 exercice.setBlockType(exoDto.blockType());
@@ -325,6 +327,7 @@ public class ProgrammeService {
 
         Seance newSeance = new Seance();
         newSeance.setTitre(sourceSeance.getTitre() + " (Copie)");
+        newSeance.setNote(sourceSeance.getNote());
         newSeance.setStartTime(LocalDateTime.now());
         newSeance.setUtilisateur(targetUser);
         newSeance.setModele(false);
@@ -335,6 +338,7 @@ public class ProgrammeService {
             Exercice newExo = new Exercice();
             newExo.setNom(sourceExo.getNom());
             newExo.setCommentaire(sourceExo.getCommentaire());
+            newExo.setUnilateral(sourceExo.isUnilateral());
             newExo.setDefinition(sourceExo.getDefinition());
             newExo.setDisplayOrder(copyPosition++);
             newExo.setBlockId(sourceExo.getBlockId());

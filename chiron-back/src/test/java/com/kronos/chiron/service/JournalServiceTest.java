@@ -52,7 +52,7 @@ class JournalServiceTest {
         int currentWeek = journalService.getCurrentWeekNumber();
         Seance seance = new Seance();
         seance.setId(10L);
-        SeanceDto dto = new SeanceDto(10L, "Push", null, null, currentWeek, true, null, List.of());
+        SeanceDto dto = new SeanceDto(10L, "Push", null, null, null, currentWeek, true, null, List.of());
 
         when(seanceRepository.findByUtilisateurIdAndWeekNumberOrderByStartTimeDesc(2L, currentWeek))
                 .thenReturn(List.of(seance));
@@ -69,8 +69,8 @@ class JournalServiceTest {
         int currentWeek = journalService.getCurrentWeekNumber();
         Seance s1 = new Seance(); s1.setId(1L);
         Seance s2 = new Seance(); s2.setId(2L);
-        SeanceDto d1 = new SeanceDto(1L, "A", null, null, currentWeek, true, null, List.of());
-        SeanceDto d2 = new SeanceDto(2L, "B", null, null, currentWeek, true, null, List.of());
+        SeanceDto d1 = new SeanceDto(1L, "A", null, null, null, currentWeek, true, null, List.of());
+        SeanceDto d2 = new SeanceDto(2L, "B", null, null, null, currentWeek, true, null, List.of());
 
         when(seanceRepository.findByUtilisateurIdAndWeekNumberOrderByStartTimeDesc(3L, currentWeek))
                 .thenReturn(List.of(s1, s2));
