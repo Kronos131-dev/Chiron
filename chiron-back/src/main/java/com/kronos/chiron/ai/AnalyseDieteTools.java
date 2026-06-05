@@ -32,7 +32,7 @@ public class AnalyseDieteTools {
     private final BodyCompositionRecordRepository bodyCompositionRepository;
     private final StatsService statsService;
 
-    @Tool("Récupère le profil personnel et sportif de l'utilisateur Chiron : sexe, âge, taille, poids de corps, objectif principal, niveau d'expérience, fréquence d'entraînement visée et blessures connues. Indispensable pour estimer les besoins caloriques (métabolisme).")
+    @Tool("Récupère le profil personnel et sportif : sexe, âge, taille, poids de corps, objectif principal, niveau d'expérience, fréquence visée, blessures. Base pour estimer les besoins caloriques.")
     public String getProfilSportif(@ToolMemoryId String userId) {
         Utilisateur u = loadUser(userId);
         StringBuilder res = new StringBuilder("Profil personnel et sportif :\n");
@@ -55,7 +55,7 @@ public class AnalyseDieteTools {
         return res.toString();
     }
 
-    @Tool("Récupère la dernière mesure de composition corporelle (scan Visbody) de l'utilisateur : poids, taux de masse grasse, masse musculaire, masse maigre, métabolisme de base (kcal/jour), graisse viscérale et âge métabolique, ainsi que la tendance par rapport au scan précédent. Le métabolisme de base sert de référence pour estimer la dépense énergétique.")
+    @Tool("Récupère la dernière composition corporelle (scan Visbody) : poids, masse grasse, masse musculaire, masse maigre, métabolisme de base (kcal/j), graisse viscérale, âge métabolique, et tendance vs scan précédent. Le métabolisme de base sert de référence pour la dépense énergétique.")
     public String getCompositionCorporelle(@ToolMemoryId String userId) {
         Utilisateur u = loadUser(userId);
         List<BodyCompositionRecord> scans = bodyCompositionRepository.findByUtilisateurOrderByMesureLeAsc(u);

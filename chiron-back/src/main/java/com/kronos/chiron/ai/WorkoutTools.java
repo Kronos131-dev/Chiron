@@ -65,7 +65,7 @@ public class WorkoutTools {
      *
      * @return A formatted string representing the current date and time.
      */
-    @Tool("Retourne la date et l'heure actuelles, ainsi que le jour de la semaine. Utilise cet outil à CHAQUE FOIS que l'utilisateur fait référence à 'aujourd'hui', 'hier', 'demain' ou s'il demande la date.")
+    @Tool("Retourne la date et l'heure actuelles et le jour de la semaine.")
     public String getCurrentDate() {
         LocalDateTime now = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEEE dd MMMM yyyy à HH:mm", Locale.FRANCE);
@@ -180,7 +180,7 @@ public class WorkoutTools {
      * @param titre  The title of the new session.
      * @return A status message indicating successful session creation.
      */
-    @Tool("Démarre une nouvelle séance d'entraînement dans l'historique de l'utilisateur. À utiliser quand l'utilisateur annonce qu'il commence le sport.")
+    @Tool("Démarre une nouvelle séance d'entraînement dans l'historique de l'utilisateur.")
     public String startSession(@ToolMemoryId String userId, String titre) {
         Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
                 .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
@@ -214,7 +214,7 @@ public class WorkoutTools {
      * @param titre  The title of the new template.
      * @return A status message indicating successful template creation.
      */
-    @Tool("Crée un NOUVEAU modèle de programme d'entraînement (preset) vide. À utiliser uniquement quand l'utilisateur demande explicitement à créer un programme/modèle.")
+    @Tool("Crée un NOUVEAU modèle de programme d'entraînement (preset) VIDE.")
     public String createProgramModel(@ToolMemoryId String userId, String titre) {
         Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
                 .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
@@ -240,7 +240,7 @@ public class WorkoutTools {
      * @param nomExercice The name of the exercise being started.
      * @return A status message or error if no session is active.
      */
-    @Tool("Démarre un nouvel exercice dans la séance en cours. À utiliser quand l'utilisateur change d'atelier.")
+    @Tool("Démarre un nouvel exercice dans la séance en cours.")
     public String startExercise(@ToolMemoryId String userId, String nomExercice) {
         Seance activeSeance = getActiveSeance(userId);
 
@@ -319,7 +319,7 @@ public class WorkoutTools {
      * @param userId The ID of the user finishing their workout.
      * @return A status message confirming session completion.
      */
-    @Tool("Termine la séance d'entraînement en cours. À utiliser quand l'utilisateur dit qu'il a fini.")
+    @Tool("Termine la séance d'entraînement en cours.")
     public String endSession(@ToolMemoryId String userId) {
         Seance activeSeance = getActiveSeance(userId);
 
@@ -461,7 +461,7 @@ public class WorkoutTools {
      * @param programmeName The name (or partial name) of the programme to fetch.
      * @return A formatted string with all exercises and their sets for the matching programme(s).
      */
-    @Tool("Récupère le contenu détaillé d'un programme spécifique (exercices, séries, poids, répétitions) à partir de son nom. À utiliser quand l'utilisateur demande 'qu'est-ce que mon programme X contient ?'.")
+    @Tool("Récupère le contenu détaillé d'un programme (exercices, séries, poids, répétitions) à partir de son nom.")
     public String getProgrammeDetails(@ToolMemoryId String userId, String programmeName) {
         Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
                 .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
@@ -507,7 +507,7 @@ public class WorkoutTools {
      * @param sessionTitle The title (or partial title) of the session to look up.
      * @return A formatted string with the date, exercises, sets, and comments for the matching session(s).
      */
-    @Tool("Récupère les détails complets d'une ou plusieurs séances historiques à partir de leur titre. Inclut tous les exercices, séries, poids et commentaires. À utiliser quand l'utilisateur mentionne le nom d'une séance.")
+    @Tool("Récupère les détails complets d'une ou plusieurs séances historiques à partir de leur titre (exercices, séries, poids, commentaires).")
     public String getSessionDetails(@ToolMemoryId String userId, String sessionTitle) {
         Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
                 .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
@@ -562,7 +562,7 @@ public class WorkoutTools {
      * @param nomExercice The name (or partial name) of the exercise.
      * @return A formatted string listing every historical occurrence of the exercise.
      */
-    @Tool("Récupère l'historique COMPLET de toutes les fois où l'utilisateur a effectué un exercice donné, avec les détails de chaque série. À utiliser pour analyser la progression sur un exercice.")
+    @Tool("Récupère l'historique COMPLET de toutes les fois où l'utilisateur a effectué un exercice donné, avec les détails de chaque série.")
     public String getFullExerciseHistory(@ToolMemoryId String userId, String nomExercice) {
         List<Exercice> exercises = exerciceRepository.findAllHistoricExercises(Long.parseLong(userId), nomExercice);
 
@@ -603,7 +603,7 @@ public class WorkoutTools {
      * @param nomExercice The name (or partial name) of the exercise.
      * @return A formatted string with the best set and estimated 1RM.
      */
-    @Tool("Trouve le record personnel de l'utilisateur pour un exercice donné : la meilleure série réalisée et le 1RM estimé (formule d'Epley). À utiliser quand l'utilisateur demande son PR ou son record.")
+    @Tool("Trouve le record personnel d'un exercice : meilleure série réalisée et 1RM estimé (formule d'Epley).")
     public String getPersonalRecord(@ToolMemoryId String userId, String nomExercice) {
         List<Exercice> exercises = exerciceRepository.findAllHistoricExercises(Long.parseLong(userId), nomExercice);
 
@@ -652,7 +652,7 @@ public class WorkoutTools {
      * @param nomExercice The name (or partial name) of the exercise to look up.
      * @return A formatted technical description, or an error message if not found.
      */
-    @Tool("Récupère la fiche technique d'un exercice de la bibliothèque standardisée : muscles ciblés, équipement, niveau de difficulté et description d'exécution en français. À utiliser quand l'utilisateur demande comment faire un exercice, quels muscles il travaille, ou quelle est sa technique.")
+    @Tool("Récupère la fiche technique d'un exercice de la bibliothèque standardisée : muscles ciblés, équipement, difficulté, exécution (en français).")
     public String getExerciceTechnique(String nomExercice) {
         if (nomExercice == null || nomExercice.isBlank()) {
             return "Nom d'exercice manquant.";
@@ -818,7 +818,7 @@ public class WorkoutTools {
      * @param nbJours  The look-back window in days (defaults to 7 if null or <=0).
      * @return A formatted coverage summary, or a message if no session is found.
      */
-    @Tool("Analyse la couverture musculaire des derniers jours : pour chaque groupe musculaire, combien de séances l'utilisateur a faites et combien de séries au total. Identifie aussi les muscles négligés. À utiliser quand l'utilisateur demande un bilan, ce qu'il a travaillé récemment, s'il est équilibré, ou ce qu'il a négligé.")
+    @Tool("Analyse la couverture musculaire des derniers jours : par groupe musculaire, nombre de séances et de séries au total, et muscles négligés.")
     public String analyserCouvertureMusculaire(@ToolMemoryId String userId, Integer nbJours) {
         Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
                 .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
@@ -889,7 +889,7 @@ public class WorkoutTools {
      * @param userId The ID of the requesting user.
      * @return A formatted summary sorted by oldest training first (most neglected on top).
      */
-    @Tool("Retourne la date du dernier entraînement pour chaque groupe musculaire de l'utilisateur, trié du plus ancien au plus récent. Utile pour proposer la prochaine séance ou identifier ce qui a été négligé.")
+    @Tool("Retourne la date du dernier entraînement par groupe musculaire, du plus ancien au plus récent.")
     public String getDernierEntrainementParMuscle(@ToolMemoryId String userId) {
         Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
                 .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
@@ -948,7 +948,7 @@ public class WorkoutTools {
      * @param userId The ID of the requesting user.
      * @return A formatted summary with global tier and per-exercise breakdown.
      */
-    @Tool("Récupère le palier de performance de l'utilisateur (Éphèbe → Olympien) : palier global et palier par exercice de référence (squat, développé couché, soulevé de terre, tractions...). Utile pour situer le niveau et conseiller un objectif réaliste.")
+    @Tool("Récupère le palier de performance (Éphèbe → Olympien) : palier global et par exercice de référence (squat, développé couché, soulevé de terre, tractions...).")
     public String getPerformanceTier(@ToolMemoryId String userId) {
         Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
                 .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
@@ -987,7 +987,7 @@ public class WorkoutTools {
      * blessures, préférences) tel qu'il a été renseigné via l'onboarding ou la page Profil.
      * Chiron doit l'appeler au début d'un échange technique pour contextualiser ses réponses.
      */
-    @Tool("Récupère le profil sportif complet de l'utilisateur : âge, sexe, taille, poids, niveau d'expérience, objectif principal, fréquence visée, matériel disponible, blessures, préférences. À appeler en début d'échange technique ou de création de programme pour personnaliser tes conseils.")
+    @Tool("Récupère le profil sportif complet : âge, sexe, taille, poids, niveau d'expérience, objectif principal, fréquence visée, matériel disponible, blessures, préférences.")
     public String getUserProfileComplet(@ToolMemoryId String userId) {
         Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
                 .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));

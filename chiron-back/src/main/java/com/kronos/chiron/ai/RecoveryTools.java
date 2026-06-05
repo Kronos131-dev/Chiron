@@ -25,7 +25,7 @@ public class RecoveryTools {
     private final UtilisateurRepository utilisateurRepository;
     private final RecoveryService recoveryService;
 
-    @Tool("Enregistre ou met à jour l'état du jour de l'utilisateur : sommeil (heures), fatigue/courbatures/stress/énergie (échelles 1-5 où 1 = au mieux pour fatigue/courbatures/stress et 5 = au pire ; pour energie c'est l'inverse : 1 = vide, 5 = à fond), notes libres. La date est optionnelle (format AAAA-MM-JJ ; défaut = aujourd'hui). Tous les paramètres sont optionnels — n'enregistre que ce que l'utilisateur a mentionné. À appeler dès que l'utilisateur parle de son sommeil, de sa fatigue, de ses courbatures ou de son énergie.")
+    @Tool("Enregistre/met à jour l'état du jour : sommeil (heures), fatigue/courbatures/stress/énergie (1-5 ; 1=au mieux→5=au pire pour fatigue/courbatures/stress, inverse pour energie : 1=vide→5=à fond), notes. Date optionnelle (AAAA-MM-JJ, défaut aujourd'hui). Tous les champs sont optionnels — n'enregistre que ce qui est mentionné.")
     public String enregistrerEtatJournalier(@ToolMemoryId String userId,
                                              String date,
                                              Double sommeilHeures,
@@ -49,7 +49,7 @@ public class RecoveryTools {
         return "État du " + target + " enregistré.";
     }
 
-    @Tool("Récupère l'état journalier (sommeil, fatigue, courbatures, stress, énergie) de l'utilisateur sur les N derniers jours (défaut 7, max 90). À consulter avant de recommander une séance lourde, ou quand l'utilisateur s'interroge sur sa forme.")
+    @Tool("Récupère l'état journalier (sommeil, fatigue, courbatures, stress, énergie) sur les N derniers jours (défaut 7, max 90).")
     public String getEtatRecent(@ToolMemoryId String userId, Integer nbJours) {
         Utilisateur user = loadUser(userId);
         int window = (nbJours != null && nbJours > 0) ? nbJours : 7;
@@ -78,7 +78,7 @@ public class RecoveryTools {
         return res.toString();
     }
 
-    @Tool("Renvoie une recommandation de type de séance (lourd / modéré / léger / repos) en croisant l'état du jour et les 3 derniers jours. À appeler quand l'utilisateur demande quoi faire aujourd'hui ou avant de proposer un programme intense.")
+    @Tool("Recommande un type de séance (lourd / modéré / léger / repos) en croisant l'état du jour et des 3 derniers jours.")
     public String recommanderTypeSeance(@ToolMemoryId String userId) {
         Utilisateur user = loadUser(userId);
         List<EtatJournalier> etats = recoveryService.getRecent(user, 3);
