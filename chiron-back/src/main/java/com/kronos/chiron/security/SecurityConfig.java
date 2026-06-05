@@ -44,8 +44,7 @@ public class SecurityConfig {
                 "http://localhost:4200",
                 "http://localhost:9090",
                 "http://46.224.227.209",
-                "https://chiron-sanctuaire.duckdns.org",
-                // Nouveau domaine perso (Hostinger).
+                // Domaine perso (Hostinger).
                 "https://chiron-sanctuaire.fr",
                 "https://www.chiron-sanctuaire.fr",
                 "https://olympus.chiron-sanctuaire.fr",

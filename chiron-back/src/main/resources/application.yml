@@ -65,7 +65,7 @@ jwt:
 
 chiron:
   uploads-dir: ${UPLOADS_DIR:./uploads/images}
-  frontend-url: ${FRONTEND_URL:http://localhost:4200}
+  frontend-url: ${FRONTEND_URL:https://chiron-sanctuaire.fr}
   # Clé AES-256 base64 (32 octets) pour chiffrer les tokens externes (Olympus).
   # En dev : si vide, le service en génère une éphémère au boot (tokens perdus au redémarrage).
   # En prod : OBLIGATOIRE via env var CHIRON_SECRET_KEY.

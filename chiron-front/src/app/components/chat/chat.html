@@ -7,14 +7,6 @@
   <main class="chat-stream" #scrollContainer>
     <div class="chat-stream-inner">
 
-      <!-- Intro discrète — petit bouton toujours visible en haut du chat -->
-      <div class="intro-row">
-        <button type="button" class="intro-pill" (click)="presentApp()">
-          <span class="material-symbols-outlined">auto_stories</span>
-          Découvrir l'application
-        </button>
-      </div>
-
       <!-- Messages -->
       <div class="msg-list">
         @for (msg of messages(); track $index) {

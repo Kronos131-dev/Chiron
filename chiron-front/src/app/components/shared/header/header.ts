@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../../service/auth.service';
 import { ChironApi } from '../../../service/chiron-api';
 import { environment } from '../../../../environments/environment';
+import { APP_PRESENTATION } from '../../../shared/app-presentation';
 
 @Component({
   selector: 'app-header',
@@ -19,6 +20,10 @@ export class HeaderComponent implements OnInit {
   showSettings = signal(false);
   currentUsername: string = '';
   isAdmin = signal(false);
+
+  /** Modale de présentation de l'application (bouton « i »). */
+  showGuide = signal(false);
+  readonly appPresentation = APP_PRESENTATION;
 
   constructor(
     private authService: AuthService,
@@ -42,6 +47,15 @@ export class HeaderComponent implements OnInit {
 
   toggleSettings() {
     this.showSettings.update(v => !v);
+  }
+
+  toggleGuide() {
+    this.showGuide.update(v => !v);
+  }
+
+  /** Recharge entièrement l'application (bouton temple à gauche). */
+  refreshApp() {
+    window.location.reload();
   }
 
   @HostListener('document:click', ['$event'])
