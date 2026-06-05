@@ -28,6 +28,7 @@ public class SettingsService {
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
     private final JwtService jwtService;
+    private final com.kronos.chiron.ai.ChironAgentRouter chironAgentRouter;
 
     @Value("${chiron.frontend-url}")
     private String frontendUrl;
@@ -51,7 +52,8 @@ public class SettingsService {
     public com.kronos.chiron.dto.settings.AiProviderDto getAiProvider(String username) {
         Utilisateur user = utilisateurRepository.findByUsername(username)
                 .orElseThrow(() -> new NoSuchElementException("Utilisateur introuvable"));
-        return new com.kronos.chiron.dto.settings.AiProviderDto(user.getAiProvider());
+        return new com.kronos.chiron.dto.settings.AiProviderDto(
+                user.getAiProvider(), chironAgentRouter.geminiAvailable());
     }
 
     @Transactional

@@ -26,6 +26,8 @@ export class Settings implements OnInit, OnDestroy {
 
   // --- Fournisseur d'IA du coach ---
   aiProvider = signal<AiProvider>('MISTRAL');
+  /** Gemini réellement disponible côté serveur (clé configurée) ; sinon repli Mistral. */
+  geminiAvailable = signal(false);
 
   // Champs password
   currentPasswordForPwd = '';
@@ -88,13 +90,20 @@ export class Settings implements OnInit, OnDestroy {
 
   private loadAiProvider() {
     this.chironApi.getAiProvider().subscribe({
-      next: (pref) => this.aiProvider.set(pref.provider),
+      next: (pref) => {
+        this.aiProvider.set(pref.provider);
+        this.geminiAvailable.set(pref.geminiAvailable);
+      },
       error: () => {} // garde le défaut (MISTRAL) en cas d'échec
     });
   }
 
   /** Change le fournisseur d'IA du coach et le persiste immédiatement. */
   setAiProvider(provider: AiProvider) {
+    if (provider === 'GEMINI' && !this.geminiAvailable()) {
+      this.errorMessage.set('Gemini n\'est pas configuré côté serveur — le coach reste sur Mistral.');
+      return;
+    }
     if (this.aiProvider() === provider) return;
     const previous = this.aiProvider();
     this.aiProvider.set(provider);

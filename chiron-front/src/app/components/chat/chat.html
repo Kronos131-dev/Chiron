@@ -19,7 +19,11 @@
               </div>
             }
             <div class="msg-bubble">
-              <div class="msg-content">{{ msg.content }}</div>
+              @if (msg.role === 'ai') {
+                <div class="msg-content markdown-body" [innerHTML]="msg.content | markdown"></div>
+              } @else {
+                <div class="msg-content">{{ msg.content }}</div>
+              }
             </div>
           </div>
         }

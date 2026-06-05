@@ -97,9 +97,103 @@
 
 .msg-content {
   font-size: 0.95rem;
-  white-space: pre-line; /* Préserve les sauts de ligne (ex. présentation de l'app) */
+  white-space: pre-line; /* Préserve les sauts de ligne (messages utilisateur en texte brut) */
   word-break: break-word;
   overflow-wrap: anywhere;
+}
+
+/* ════════════ Rendu Markdown (réponses de Chiron) ════════════ */
+/* Le HTML provient de marked et est assaini par Angular ([innerHTML]). */
+
+.markdown-body {
+  white-space: normal; /* marked gère déjà les retours (breaks: true → <br>) */
+}
+
+/* Marges resserrées : la bulle reste compacte, sans blanc en haut/bas. */
+.markdown-body > :first-child { margin-top: 0; }
+.markdown-body > :last-child { margin-bottom: 0; }
+
+.markdown-body p {
+  margin: 0 0 0.55rem;
+}
+
+.markdown-body h2,
+.markdown-body h3 {
+  margin: 0.4rem 0 0.45rem;
+  font-size: 0.98rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: #fff;
+  border-bottom: 1px solid rgba(255, 183, 121, 0.18);
+  padding-bottom: 0.2rem;
+}
+
+.markdown-body strong {
+  color: var(--color-secondary);
+  font-weight: 700;
+}
+
+.markdown-body em {
+  color: #f0e3d4;
+}
+
+.markdown-body ul,
+.markdown-body ol {
+  margin: 0 0 0.55rem;
+  padding-left: 1.25rem;
+}
+
+.markdown-body li {
+  margin: 0.15rem 0;
+}
+
+.markdown-body ul li::marker {
+  color: var(--color-secondary);
+}
+
+.markdown-body a {
+  color: var(--color-secondary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.markdown-body code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.86em;
+  background: #0e151f;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 5px;
+  padding: 0.05rem 0.35rem;
+}
+
+.markdown-body pre {
+  background: #0e151f;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 0.7rem 0.85rem;
+  overflow-x: auto;
+  margin: 0 0 0.55rem;
+}
+
+.markdown-body pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.85rem;
+}
+
+.markdown-body blockquote {
+  margin: 0 0 0.55rem;
+  padding: 0.3rem 0 0.3rem 0.75rem;
+  border-left: 3px solid var(--color-secondary);
+  color: #cfd8e0;
+  font-style: italic;
+}
+
+.markdown-body hr {
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin: 0.6rem 0;
 }
 
 /* ════════════ Indicateur « réfléchit » ════════════ */

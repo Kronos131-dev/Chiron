@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -67,6 +68,7 @@ public class ChironConfig {
         ChatModel mistral = MistralAiChatModel.builder()
                 .apiKey(mistralApiKey)
                 .modelName(mistralModel)
+                .timeout(Duration.ofSeconds(90))
                 .logRequests(true)
                 .logResponses(true)
                 .build();
@@ -81,6 +83,9 @@ public class ChironConfig {
             ChatModel gemini = GoogleAiGeminiChatModel.builder()
                     .apiKey(geminiApiKey)
                     .modelName(geminiModel)
+                    .timeout(Duration.ofSeconds(90))
+                    .maxRetries(2)
+                    .logRequestsAndResponses(true)
                     .build();
             agentGemini = AiServices.builder(ChironAgent.class)
                     .chatModel(gemini)

@@ -28,6 +28,8 @@ export interface TrainingPrefs {
 export type AiProvider = 'MISTRAL' | 'GEMINI';
 export interface AiProviderPref {
   provider: AiProvider;
+  /** true si l'agent Gemini est réellement provisionné côté serveur (clé configurée). */
+  geminiAvailable: boolean;
 }
 
 /**
