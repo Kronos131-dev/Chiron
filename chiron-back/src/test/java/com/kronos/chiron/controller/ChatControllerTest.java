@@ -1,7 +1,6 @@
 package com.kronos.chiron.controller;
 
 import tools.jackson.databind.json.JsonMapper;
-import com.kronos.chiron.ai.ChironAgent;
 import com.kronos.chiron.ai.ChironAgentRouter;
 import com.kronos.chiron.entity.Role;
 import com.kronos.chiron.entity.Utilisateur;
@@ -40,8 +39,6 @@ class ChatControllerTest {
     @MockitoBean private JwtService jwtService;
     @MockitoBean private UserDetailsService userDetailsService;
 
-    private final ChironAgent chironAgent = mock(ChironAgent.class);
-
     private Utilisateur buildUser() {
         return Utilisateur.builder()
                 .id(1L)
@@ -53,8 +50,7 @@ class ChatControllerTest {
     @Test
     void chat_validUser_returnsAgentResponse() throws Exception {
         when(utilisateurRepository.findByUsername("alice")).thenReturn(Optional.of(buildUser()));
-        when(chironAgentRouter.forProvider(any())).thenReturn(chironAgent);
-        when(chironAgent.chat(eq("1"), anyString())).thenReturn("Séance enregistrée.");
+        when(chironAgentRouter.chatWithFallback(any(), eq("1"), anyString())).thenReturn("Séance enregistrée.");
 
         mockMvc.perform(post("/api/chat")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -66,22 +62,20 @@ class ChatControllerTest {
     @Test
     void chat_injectsUserContextInMessage() throws Exception {
         when(utilisateurRepository.findByUsername("alice")).thenReturn(Optional.of(buildUser()));
-        when(chironAgentRouter.forProvider(any())).thenReturn(chironAgent);
-        when(chironAgent.chat(anyString(), anyString())).thenReturn("OK");
+        when(chironAgentRouter.chatWithFallback(any(), anyString(), anyString())).thenReturn("OK");
 
         mockMvc.perform(post("/api/chat")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of("username", "alice", "message", "Bonjour"))))
                 .andExpect(status().isOk());
 
-        verify(chironAgent).chat(eq("1"), contains("alice"));
+        verify(chironAgentRouter).chatWithFallback(any(), eq("1"), contains("alice"));
     }
 
     @Test
     void endSession_validUser_returnsAgentResponse() throws Exception {
         when(utilisateurRepository.findByUsername("alice")).thenReturn(Optional.of(buildUser()));
-        when(chironAgentRouter.forProvider(any())).thenReturn(chironAgent);
-        when(chironAgent.chat(eq("1"), anyString())).thenReturn("Bien joué, soldat.");
+        when(chironAgentRouter.chatWithFallback(any(), eq("1"), anyString())).thenReturn("Bien joué, soldat.");
 
         mockMvc.perform(post("/api/end-session")
                         .contentType(MediaType.APPLICATION_JSON)

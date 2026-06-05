@@ -298,14 +298,22 @@
               Mistral
             </button>
             <button type="button" (click)="setAiProvider('GEMINI')"
+                    [disabled]="!geminiAvailable()"
                     class="flex-1 py-2.5 rounded-xl text-sm font-bold transition-colors"
                     [class.bg-secondary]="aiProvider() === 'GEMINI'"
                     [class.text-slate-900]="aiProvider() === 'GEMINI'"
                     [class.bg-slate-700]="aiProvider() !== 'GEMINI'"
-                    [class.text-white]="aiProvider() !== 'GEMINI'">
+                    [class.text-white]="aiProvider() !== 'GEMINI'"
+                    [class.opacity-40]="!geminiAvailable()"
+                    [class.cursor-not-allowed]="!geminiAvailable()">
               Gemini
             </button>
           </div>
+          @if (!geminiAvailable()) {
+            <p class="text-amber-400/80 text-[11px] mt-2">
+              Gemini n'est pas configuré côté serveur (clé manquante) : le coach reste sur Mistral.
+            </p>
+          }
         </div>
       }
     </div>

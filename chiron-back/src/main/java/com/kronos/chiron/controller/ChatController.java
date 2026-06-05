@@ -72,8 +72,8 @@ public class ChatController {
 
         ctx.append("MESSAGE DE L'UTILISATEUR : ").append(request.getMessage());
 
-        return chironAgentRouter.forProvider(user.getAiProvider())
-                .chat(user.getId().toString(), ctx.toString());
+        return chironAgentRouter.chatWithFallback(
+                user.getAiProvider(), user.getId().toString(), ctx.toString());
     }
 
     private String formatMemoryNotes(Utilisateur user) {
@@ -100,7 +100,7 @@ public class ChatController {
         Utilisateur user = utilisateurRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        return chironAgentRouter.forProvider(user.getAiProvider()).chat(user.getId().toString(),
+        return chironAgentRouter.chatWithFallback(user.getAiProvider(), user.getId().toString(),
                 "COMMANDE SYSTEME : L'utilisateur vient de cliquer sur 'Terminer l'entraînement'. Enregistre la fin de la séance dans la base de données, fais un résumé très court et martial de ses efforts, et dis-lui d'aller se reposer.");
     }
 }

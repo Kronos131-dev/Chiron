@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { ChironApi } from '../../service/chiron-api';
 import { AuthService } from '../../service/auth.service';
 import { HeaderComponent } from '../shared/header/header';
+import { MarkdownPipe } from './markdown.pipe';
 
 /**
  * Interface defining the structure of a chat message.
@@ -24,7 +25,7 @@ declare var SpeechRecognition: any;
 @Component({
   selector: 'app-chat',
   standalone: true,
-  imports: [FormsModule, CommonModule, HeaderComponent],
+  imports: [FormsModule, CommonModule, HeaderComponent, MarkdownPipe],
   templateUrl: './chat.html',
   styleUrl: './chat.css',
 })
@@ -181,32 +182,13 @@ export class Chat implements OnInit {
 
   /**
    * Appends a new message to the component's internal chat history signal.
+   * AI responses are stored as raw Markdown and rendered (and sanitized) by the
+   * {@link MarkdownPipe} at display time; user messages stay plain text.
    *
    * @param role    The origin of the message ('user' or 'ai').
    * @param content The text content of the message.
    */
   private addMessage(role: 'user' | 'ai', content: string) {
-    const clean = role === 'ai' ? this.stripMarkdown(content) : content;
-    this.messages.update(anciensMessages => [...anciensMessages, { role, content: clean }]);
-  }
-
-  /**
-   * Strips Markdown markers from an AI response. Chiron is instructed not to emit
-   * Markdown, but the model occasionally does anyway — this removes the leftover
-   * markers (**bold**, *italic*, headings, backticks, bullets) so the chat bubble
-   * stays clean plain text.
-   *
-   * @param text The raw AI response.
-   * @return The same text without Markdown formatting.
-   */
-  private stripMarkdown(text: string): string {
-    return text
-      .replace(/\*\*(.*?)\*\*/g, '$1')       // **gras**
-      .replace(/__(.*?)__/g, '$1')           // __gras__
-      .replace(/\*([^*\n]+)\*/g, '$1')       // *italique*
-      .replace(/`+([^`]*)`+/g, '$1')         // `code`
-      .replace(/^\s{0,3}#{1,6}\s+/gm, '')    // # titres
-      .replace(/^\s*[-*+]\s+/gm, '• ')       // puces -, *, + → •
-      .trim();
+    this.messages.update(anciensMessages => [...anciensMessages, { role, content }]);
   }
 }
