@@ -16,6 +16,8 @@ export class HeaderComponent implements OnInit {
   @Input() title: string = 'CHIRON';
   @Input() showBack: boolean = false;
   @Input() backRoute: string = '/chat';
+  /** Affiche le bouton « i » (présentation de l'app). Activé seulement sur la page chat. */
+  @Input() showInfo: boolean = false;
 
   showSettings = signal(false);
   currentUsername: string = '';

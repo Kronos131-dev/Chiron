@@ -33,11 +33,11 @@
                    (error)="$event.target.src='/images/default_icon.png'"
                    class="w-10 h-10 rounded-full border border-secondary/30 object-cover"
                    alt="avatar">
-              <div>
-                <p class="text-white font-bold font-headline uppercase tracking-wide flex items-center gap-2">
-                  {{ result.username }}
+              <div class="min-w-0 flex-1">
+                <p class="text-white font-bold font-headline uppercase tracking-wide flex items-center gap-2 min-w-0">
+                  <span class="[overflow-wrap:anywhere] min-w-0">{{ result.username }}</span>
                   @if (result.isAdmin) {
-                    <span class="material-symbols-outlined text-amber-500 text-xs" title="Administrateur">shield</span>
+                    <span class="material-symbols-outlined text-amber-500 text-xs flex-shrink-0" title="Administrateur">shield</span>
                   }
                 </p>
                 <p class="text-secondary text-xs font-bold tracking-widest uppercase">{{ result.rank }}</p>
@@ -74,10 +74,10 @@
                    alt="avatar">
 
               <div class="flex-1 min-w-0">
-                <h3 class="agora-username font-headline font-black text-xl text-white uppercase tracking-wide flex items-center gap-2">
-                  {{ athlete.username }}
+                <h3 class="agora-username font-headline font-black text-xl text-white uppercase tracking-wide flex items-center gap-2 min-w-0">
+                  <span class="[overflow-wrap:anywhere] min-w-0">{{ athlete.username }}</span>
                   @if (athlete.isAdmin) {
-                    <span class="material-symbols-outlined text-amber-500 text-sm" title="Administrateur">shield</span>
+                    <span class="material-symbols-outlined text-amber-500 text-sm flex-shrink-0" title="Administrateur">shield</span>
                   }
                 </h3>
                 <p class="agora-rank text-xs font-black tracking-widest uppercase mt-1">

@@ -417,6 +417,15 @@ export class Profile implements OnInit {
 
   getUsernameClass(): string { return `username-${this.getTierCategory()}`; }
 
+  /** Réduit la taille du pseudo affiché selon sa longueur, pour qu'il tienne dans le cadre. */
+  getUsernameSizeClass(): string {
+    const len = this.athleteProfile()?.username?.length ?? 0;
+    if (len <= 10) return 'text-4xl';
+    if (len <= 16) return 'text-3xl';
+    if (len <= 24) return 'text-2xl';
+    return 'text-xl';
+  }
+
   // ── Stats ───────────────────────────────────────────────────────────────────
 
   getStatsCardClass(): string { return `stats-${this.getTierCategory()}`; }

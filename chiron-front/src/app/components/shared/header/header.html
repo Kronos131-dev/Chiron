@@ -23,6 +23,14 @@
       </div>
     }
 
+    <!-- Bouton info (page chat uniquement) : présentation de l'application -->
+    @if (showInfo) {
+      <button (click)="toggleGuide()" type="button" aria-label="Découvrir l'application"
+              class="material-symbols-outlined text-[#f8fafc] hover:text-secondary transition-colors cursor-pointer">
+        info
+      </button>
+    }
+
     <div class="relative">
       <button (click)="toggleSettings()"
               aria-label="Menu"
@@ -76,12 +84,6 @@
         </div>
       }
     </div>
-
-    <!-- Bouton info : ouvre la présentation de l'application -->
-    <button (click)="toggleGuide()" type="button" aria-label="Découvrir l'application"
-            class="material-symbols-outlined text-[#f8fafc] hover:text-secondary transition-colors cursor-pointer">
-      info
-    </button>
   </div>
 
   <!-- Modale de présentation de l'application -->
