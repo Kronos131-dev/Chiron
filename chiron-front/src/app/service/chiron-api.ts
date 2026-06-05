@@ -24,6 +24,12 @@ export interface TrainingPrefs {
   machineParCote: boolean;
 }
 
+/** Fournisseur d'IA du coach Chiron, choisi par l'utilisateur. */
+export type AiProvider = 'MISTRAL' | 'GEMINI';
+export interface AiProviderPref {
+  provider: AiProvider;
+}
+
 /**
  * Interface defining the structure of an aggregated exercise performance summary.
  */
@@ -329,6 +335,15 @@ export class ChironApi {
 
   updateTrainingPrefs(prefs: TrainingPrefs): Observable<void> {
     return this.http.put<void>(`${this.apiUrl}/settings/training-prefs`, prefs);
+  }
+
+  /** Fournisseur d'IA du coach (Mistral ou Gemini). */
+  getAiProvider(): Observable<AiProviderPref> {
+    return this.http.get<AiProviderPref>(`${this.apiUrl}/settings/ai-provider`);
+  }
+
+  updateAiProvider(provider: AiProvider): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/settings/ai-provider`, { provider });
   }
 
   forgotPassword(email: string): Observable<void> {

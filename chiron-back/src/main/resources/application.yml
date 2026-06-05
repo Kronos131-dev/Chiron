@@ -53,6 +53,11 @@ langchain4j:
     chat-model:
       api-key: ${MISTRAL_API_KEY}
       model-name: mistral-large-latest
+  # Fournisseur Gemini optionnel : si la clé est vide, le coach reste sur Mistral.
+  google-ai-gemini:
+    chat-model:
+      api-key: ${GEMINI_API_KEY:}
+      model-name: ${CHIRON_GEMINI_MODEL:gemini-3.5-flash}
 
 jwt:
   # Expiration du token (ex: 2592000000ms = 30 jours)

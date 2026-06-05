@@ -1,26 +1,34 @@
 package com.kronos.chiron.config;
 
 import com.kronos.chiron.ai.AdaptiveTools;
+import com.kronos.chiron.ai.AnalyseDieteTools;
 import com.kronos.chiron.ai.AppGuideTools;
 import com.kronos.chiron.ai.ChironAgent;
+import com.kronos.chiron.ai.ChironAgentRouter;
 import com.kronos.chiron.ai.FitbitTools;
 import com.kronos.chiron.ai.MemoryTools;
 import com.kronos.chiron.ai.NutritionTools;
 import com.kronos.chiron.ai.RecoveryTools;
 import com.kronos.chiron.ai.WorkoutTools;
+import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.googleai.GoogleAiGeminiChatModel;
 import dev.langchain4j.model.mistralai.MistralAiChatModel;
 import dev.langchain4j.service.AiServices;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 /**
- * Configuration class for the Chiron AI integration.
- * It provisions the necessary beans for integrating with Mistral AI using LangChain4j,
- * including the chat model, memory provider, and the AI agent itself.
+ * Configuration de l'intégration IA de Chiron (LangChain4j).
+ * Provisionne un agent Mistral et, si une clé Gemini est configurée, un agent Gemini.
+ * Les deux partagent les mêmes outils et la même mémoire de conversation ; un routeur
+ * ({@link ChironAgentRouter}) choisit l'agent selon la préférence de l'utilisateur.
  */
 @Configuration
 public class ChironConfig {
@@ -29,60 +37,70 @@ public class ChironConfig {
     private String mistralApiKey;
 
     @Value("${langchain4j.mistral-ai.chat-model.model-name}")
-    private String modelName;
+    private String mistralModel;
+
+    @Value("${langchain4j.google-ai-gemini.chat-model.api-key:}")
+    private String geminiApiKey;
+
+    @Value("${langchain4j.google-ai-gemini.chat-model.model-name:gemini-3.5-flash}")
+    private String geminiModel;
 
     /**
-     * Creates and configures the ChironAgent bean.
-     * This agent serves as the primary interface for AI interactions, tying together
-     * the language model, contextual memory, and available domain-specific tools.
-     *
-     * @param chatModel          The configured chat model to handle interactions.
-     * @param workoutTools       The tools available to the AI for workout-related queries.
-     * @param chatMemoryProvider The provider handling memory context for conversations.
-     * @return A fully constructed ChironAgent instance.
+     * Construit le routeur d'agents : un agent Mistral (toujours) et un agent Gemini
+     * (seulement si {@code GEMINI_API_KEY} est renseignée). Les deux reçoivent l'ensemble
+     * identique d'outils et le même fournisseur de mémoire.
      */
     @Bean
-    public ChironAgent chironAgent(ChatModel chatModel,
-                                   WorkoutTools workoutTools,
-                                   NutritionTools nutritionTools,
-                                   MemoryTools memoryTools,
-                                   RecoveryTools recoveryTools,
-                                   AdaptiveTools adaptiveTools,
-                                   FitbitTools fitbitTools,
-                                   AppGuideTools appGuideTools,
-                                   ChatMemoryProvider chatMemoryProvider) {
-        return AiServices.builder(ChironAgent.class)
-                .chatModel(chatModel)
-                .chatMemoryProvider(chatMemoryProvider)
-                .tools(workoutTools, nutritionTools, memoryTools, recoveryTools, adaptiveTools, fitbitTools, appGuideTools)
-                .build();
-    }
+    public ChironAgentRouter chironAgentRouter(WorkoutTools workoutTools,
+                                               NutritionTools nutritionTools,
+                                               MemoryTools memoryTools,
+                                               RecoveryTools recoveryTools,
+                                               AdaptiveTools adaptiveTools,
+                                               FitbitTools fitbitTools,
+                                               AppGuideTools appGuideTools,
+                                               AnalyseDieteTools analyseDieteTools,
+                                               ChatMemoryProvider chatMemoryProvider) {
 
-    /**
-     * Provides a memory provider for the chat interactions.
-     * Ensures that each user session retains a specific window of previous messages
-     * to maintain conversation context.
-     *
-     * @return A ChatMemoryProvider instance configured with a message window.
-     */
-    @Bean
-    public ChatMemoryProvider chatMemoryProvider() {
-        return userId -> MessageWindowChatMemory.withMaxMessages(20);
-    }
+        Object[] tools = {workoutTools, nutritionTools, memoryTools, recoveryTools,
+                adaptiveTools, fitbitTools, appGuideTools, analyseDieteTools};
 
-    /**
-     * Configures the primary Mistral AI ChatModel bean.
-     * Establishes the connection using the provided API key and specifies logging behavior.
-     *
-     * @return A configured ChatModel instance for interacting with the Mistral API.
-     */
-    @Bean
-    public ChatModel chatModel() {
-        return MistralAiChatModel.builder()
+        ChatModel mistral = MistralAiChatModel.builder()
                 .apiKey(mistralApiKey)
-                .modelName(modelName)
+                .modelName(mistralModel)
                 .logRequests(true)
                 .logResponses(true)
                 .build();
+        ChironAgent agentMistral = AiServices.builder(ChironAgent.class)
+                .chatModel(mistral)
+                .chatMemoryProvider(chatMemoryProvider)
+                .tools(tools)
+                .build();
+
+        ChironAgent agentGemini = null;
+        if (geminiApiKey != null && !geminiApiKey.isBlank()) {
+            ChatModel gemini = GoogleAiGeminiChatModel.builder()
+                    .apiKey(geminiApiKey)
+                    .modelName(geminiModel)
+                    .build();
+            agentGemini = AiServices.builder(ChironAgent.class)
+                    .chatModel(gemini)
+                    .chatMemoryProvider(chatMemoryProvider)
+                    .tools(tools)
+                    .build();
+        }
+
+        return new ChironAgentRouter(agentMistral, agentGemini);
+    }
+
+    /**
+     * Fournisseur de mémoire à cache partagé : renvoie la même {@link ChatMemory} pour un
+     * {@code memoryId} donné, de sorte que les agents Mistral et Gemini conservent un
+     * historique commun même quand l'utilisateur bascule de fournisseur.
+     */
+    @Bean
+    public ChatMemoryProvider chatMemoryProvider() {
+        Map<Object, ChatMemory> store = new ConcurrentHashMap<>();
+        return memoryId -> store.computeIfAbsent(memoryId,
+                id -> MessageWindowChatMemory.withMaxMessages(20));
     }
 }

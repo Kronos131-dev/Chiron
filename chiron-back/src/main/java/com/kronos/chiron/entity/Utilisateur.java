@@ -126,6 +126,11 @@ public class Utilisateur implements UserDetails {
     @Builder.Default
     private Boolean isOnboarded = false;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "ai_provider", nullable = false, length = 20)
+    @Builder.Default
+    private AiProvider aiProvider = AiProvider.MISTRAL;
+
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(
             name = "utilisateur_materiel",
