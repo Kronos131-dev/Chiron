@@ -25,7 +25,7 @@ env:
   # Redirect URI OAuth Fitbit/Google Health. Non secrète (visible dans l'URL de
   # consentement). Doit correspondre EXACTEMENT à l'« Authorized redirect URI »
   # enregistrée dans la console Google Cloud.
-  FITBIT_REDIRECT_URI: 'https://chiron-sanctuaire.duckdns.org/api/fitbit/callback'
+  FITBIT_REDIRECT_URI: 'https://chiron-sanctuaire.fr/api/fitbit/callback'
 
 jobs:
 

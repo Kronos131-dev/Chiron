@@ -31,11 +31,11 @@
               <img [src]="chironApi.getImageUrl(result.icon)"
                    (error)="$event.target.src='/images/default_icon.png'"
                    class="w-10 h-10 rounded-full border border-secondary/30 object-cover">
-              <div>
-                <p class="text-white font-bold font-headline uppercase tracking-wide flex items-center gap-2">
-                  {{ result.username }}
+              <div class="min-w-0 flex-1">
+                <p class="text-white font-bold font-headline uppercase tracking-wide flex items-center gap-2 min-w-0">
+                  <span class="[overflow-wrap:anywhere] min-w-0">{{ result.username }}</span>
                   @if (result.isAdmin) {
-                    <span class="material-symbols-outlined text-amber-500 text-xs">shield</span>
+                    <span class="material-symbols-outlined text-amber-500 text-xs flex-shrink-0">shield</span>
                   }
                 </p>
                 <p class="text-secondary text-xs font-bold tracking-widest uppercase">{{ result.rank }}</p>
@@ -112,9 +112,9 @@
         </div>
 
         <!-- ── USERNAME ── -->
-        <div class="flex items-center justify-center gap-3 mb-8">
-          <h2 class="text-4xl font-black tracking-widest font-headline uppercase"
-              [ngClass]="getUsernameClass()">
+        <div class="flex items-center justify-center gap-3 mb-8 min-w-0 max-w-full">
+          <h2 class="font-black tracking-widest font-headline uppercase min-w-0 max-w-full text-center [overflow-wrap:anywhere]"
+              [ngClass]="[getUsernameClass(), getUsernameSizeClass()]">
             {{ athleteProfile().username }}
           </h2>
 

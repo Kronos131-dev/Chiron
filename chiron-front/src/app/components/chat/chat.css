@@ -37,46 +37,6 @@
   min-height: 100%;
 }
 
-/* ════════════ Intro discrète (nouveaux utilisateurs) ════════════ */
-
-.intro-row {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 0.75rem;
-  /* Toujours visible en haut du fil, même quand la conversation défile. */
-  position: sticky;
-  top: 0;
-  z-index: 5;
-  padding: 0.25rem 0;
-  background: linear-gradient(#0a0e14 70%, transparent);
-}
-
-.intro-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border-radius: 9999px;
-  border: 1px solid rgba(255, 183, 121, 0.3);
-  background: rgba(255, 183, 121, 0.06);
-  color: var(--color-secondary);
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
-}
-
-.intro-pill:hover {
-  background: rgba(255, 183, 121, 0.15);
-  border-color: rgba(255, 183, 121, 0.55);
-}
-
-.intro-pill .material-symbols-outlined {
-  font-size: 18px;
-}
-
 /* ════════════ Messages ════════════ */
 
 .msg-list {

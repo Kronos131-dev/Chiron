@@ -1,19 +1,11 @@
 <!-- Top Navigation Header via Shared Component -->
-<app-header [title]="'CHIRON'" [showBack]="false"></app-header>
+<app-header [title]="'CHIRON'" [showBack]="false" [showInfo]="true"></app-header>
 
 <div class="chat-shell heroic-texture">
 
   <!-- Fil de discussion -->
   <main class="chat-stream" #scrollContainer>
     <div class="chat-stream-inner">
-
-      <!-- Intro discrète — petit bouton toujours visible en haut du chat -->
-      <div class="intro-row">
-        <button type="button" class="intro-pill" (click)="presentApp()">
-          <span class="material-symbols-outlined">auto_stories</span>
-          Découvrir l'application
-        </button>
-      </div>
 
       <!-- Messages -->
       <div class="msg-list">
