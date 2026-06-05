@@ -43,7 +43,7 @@ public class AdaptiveTools {
     private final SeanceRepository seanceRepository;
     private final ExerciceDefinitionService exerciceDefinitionService;
 
-    @Tool("Propose la prochaine progression sur un exercice donné en se basant sur la dernière séance historique (cohérence des charges entre séries, drop-off, comparaison N-1). Renvoie une recommandation chiffrée (+2.5 kg, maintien, baisse, ajouter une rep…). À appeler quand l'utilisateur demande 'que mettre la prochaine fois', 'comment progresser sur X', 'dois-je monter la charge'.")
+    @Tool("Propose la prochaine progression sur un exercice d'après la dernière séance (cohérence des charges, drop-off, comparaison N-1). Renvoie une reco chiffrée (+2.5 kg, maintien, baisse, +1 rep…).")
     public String getProgressionSuggeree(@ToolMemoryId String userId, String nomExercice) {
         if (nomExercice == null || nomExercice.isBlank()) {
             return "Nom d'exercice manquant.";
@@ -115,7 +115,7 @@ public class AdaptiveTools {
         return res.toString();
     }
 
-    @Tool("Analyse la périodisation sur un exercice : prend les 6 dernières séances historiques, calcule le 1RM estimé (Epley) à chaque séance, compare la moyenne des 3 récentes à celle des 3 plus anciennes. Diagnostique progression continue, plateau (variation < 2 %), ou régression (overreaching → deload conseillé). À appeler quand l'utilisateur demande 'est-ce que je progresse', 'je stagne', 'je régresse', ou pour décider d'un deload.")
+    @Tool("Analyse la périodisation sur un exercice : 1RM estimé (Epley) des 6 dernières séances, moyenne des 3 récentes vs 3 anciennes. Diagnostique progression, plateau (< 2 %) ou régression (deload conseillé).")
     public String analyserPeriodisation(@ToolMemoryId String userId, String nomExercice) {
         if (nomExercice == null || nomExercice.isBlank()) {
             return "Nom d'exercice manquant.";
@@ -164,7 +164,7 @@ public class AdaptiveTools {
         return res.toString();
     }
 
-    @Tool("Identifie dans les programmes de l'utilisateur les exercices qu'il pratique depuis longtemps (> 8 semaines en historique) et propose pour chacun 1 à 2 alternatives ciblant le même muscle avec un équipement compatible. À appeler quand l'utilisateur demande 'je m'ennuie', 'je veux varier', 'des alternatives à X', 'change-moi le programme', ou lors d'un plateau confirmé. Optionnel : nomProgramme pour cibler un programme spécifique (sinon analyse tous les programmes).")
+    @Tool("Identifie les exercices pratiqués de longue date (> 8 semaines) et propose 1-2 alternatives par exercice, même muscle et équipement compatible. nomProgramme optionnel pour cibler un programme (sinon tous).")
     public String proposerRotation(@ToolMemoryId String userId, String nomProgramme) {
         Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
                 .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));

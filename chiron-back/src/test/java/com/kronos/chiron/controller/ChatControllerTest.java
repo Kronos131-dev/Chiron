@@ -2,11 +2,17 @@ package com.kronos.chiron.controller;
 
 import tools.jackson.databind.json.JsonMapper;
 import com.kronos.chiron.ai.ChironAgentRouter;
+import com.kronos.chiron.ai.ConversationMemoryManager;
+import com.kronos.chiron.entity.AiProvider;
+import com.kronos.chiron.entity.Conversation;
 import com.kronos.chiron.entity.Role;
 import com.kronos.chiron.entity.Utilisateur;
 import com.kronos.chiron.repository.UtilisateurRepository;
 import com.kronos.chiron.security.JwtService;
+import com.kronos.chiron.service.AiUsageService;
+import com.kronos.chiron.service.ConversationService;
 import com.kronos.chiron.service.MemoryNoteService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
@@ -36,6 +42,9 @@ class ChatControllerTest {
     @MockitoBean private ChironAgentRouter chironAgentRouter;
     @MockitoBean private UtilisateurRepository utilisateurRepository;
     @MockitoBean private MemoryNoteService memoryNoteService;
+    @MockitoBean private ConversationService conversationService;
+    @MockitoBean private ConversationMemoryManager memoryManager;
+    @MockitoBean private AiUsageService aiUsageService;
     @MockitoBean private JwtService jwtService;
     @MockitoBean private UserDetailsService userDetailsService;
 
@@ -47,16 +56,25 @@ class ChatControllerTest {
                 .build();
     }
 
+    @BeforeEach
+    void setUp() {
+        // La conversation résolue porte l'id 42 → la mémoire IA est indexée sur "42".
+        when(conversationService.getOrCreate(any(), any()))
+                .thenReturn(Conversation.builder().id(42L).build());
+        when(aiUsageService.resolveProvider(any())).thenReturn(AiProvider.MISTRAL);
+    }
+
     @Test
     void chat_validUser_returnsAgentResponse() throws Exception {
         when(utilisateurRepository.findByUsername("alice")).thenReturn(Optional.of(buildUser()));
-        when(chironAgentRouter.chatWithFallback(any(), eq("1"), anyString())).thenReturn("Séance enregistrée.");
+        when(chironAgentRouter.chatWithFallback(any(), eq("42"), anyString())).thenReturn("Séance enregistrée.");
 
         mockMvc.perform(post("/api/chat")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of("username", "alice", "message", "Je commence"))))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Séance enregistrée."));
+                .andExpect(jsonPath("$.conversationId").value(42))
+                .andExpect(jsonPath("$.reply").value("Séance enregistrée."));
     }
 
     @Test
@@ -69,18 +87,18 @@ class ChatControllerTest {
                         .content(objectMapper.writeValueAsString(Map.of("username", "alice", "message", "Bonjour"))))
                 .andExpect(status().isOk());
 
-        verify(chironAgentRouter).chatWithFallback(any(), eq("1"), contains("alice"));
+        verify(chironAgentRouter).chatWithFallback(any(), eq("42"), contains("alice"));
     }
 
     @Test
     void endSession_validUser_returnsAgentResponse() throws Exception {
         when(utilisateurRepository.findByUsername("alice")).thenReturn(Optional.of(buildUser()));
-        when(chironAgentRouter.chatWithFallback(any(), eq("1"), anyString())).thenReturn("Bien joué, soldat.");
+        when(chironAgentRouter.chatWithFallback(any(), eq("42"), anyString())).thenReturn("Bien joué, soldat.");
 
         mockMvc.perform(post("/api/end-session")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of("username", "alice", "message", ""))))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Bien joué, soldat."));
+                .andExpect(jsonPath("$.reply").value("Bien joué, soldat."));
     }
 }

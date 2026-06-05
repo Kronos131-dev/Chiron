@@ -3,6 +3,45 @@
 
 <div class="chat-shell heroic-texture">
 
+  <!-- Bouton d'ouverture de l'historique des conversations -->
+  <button type="button" class="chat-history-btn" (click)="toggleHistory()" aria-label="Historique des conversations">
+    <span class="material-symbols-outlined">forum</span>
+  </button>
+
+  <!-- Panneau d'historique des conversations -->
+  @if (showHistory()) {
+    <div class="history-overlay" (click)="toggleHistory()"></div>
+    <aside class="history-panel">
+      <header class="history-head">
+        <span class="history-title">Conversations</span>
+        <button type="button" class="history-close" (click)="toggleHistory()" aria-label="Fermer">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </header>
+
+      <button type="button" class="history-new" (click)="newConversation()">
+        <span class="material-symbols-outlined">add</span>
+        Nouvelle conversation
+      </button>
+
+      <div class="history-list">
+        @for (conv of conversations(); track conv.id) {
+          <div class="history-item"
+               [class.active]="conv.id === activeConversationId()"
+               (click)="loadConversation(conv.id)">
+            <span class="material-symbols-outlined history-item-icon">chat_bubble</span>
+            <span class="history-item-title">{{ conv.titre || 'Sans titre' }}</span>
+            <button type="button" class="history-item-del" (click)="deleteConversation(conv.id, $event)" aria-label="Supprimer">
+              <span class="material-symbols-outlined">delete</span>
+            </button>
+          </div>
+        } @empty {
+          <p class="history-empty">Aucune conversation pour l'instant.</p>
+        }
+      </div>
+    </aside>
+  }
+
   <!-- Fil de discussion -->
   <main class="chat-stream" #scrollContainer>
     <div class="chat-stream-inner">

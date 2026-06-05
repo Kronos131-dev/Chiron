@@ -2,7 +2,7 @@ import { Component, signal, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { ChironApi } from '../../service/chiron-api';
+import { ChironApi, ConversationSummary } from '../../service/chiron-api';
 import { AuthService } from '../../service/auth.service';
 import { HeaderComponent } from '../shared/header/header';
 import { MarkdownPipe } from './markdown.pipe';
@@ -42,6 +42,15 @@ export class Chat implements OnInit {
   /** Signal holding the array of messages in the conversation history. */
   messages = signal<ChatMessage[]>([]);
 
+  /** Conversations passées de l'utilisateur (menu d'historique). */
+  conversations = signal<ConversationSummary[]>([]);
+
+  /** Id de la conversation active, ou null pour une nouvelle conversation. */
+  activeConversationId = signal<number | null>(null);
+
+  /** Ouverture du panneau d'historique des conversations. */
+  showHistory = signal(false);
+
   /** Web Speech API recognition instance. */
   recognition: any;
 
@@ -78,6 +87,57 @@ export class Chat implements OnInit {
         }
       },
       error: () => { /* silencieux : si l'endpoint échoue, on laisse le chat fonctionner */ }
+    });
+
+    this.refreshConversations();
+  }
+
+  /** Recharge la liste des conversations pour le menu d'historique. */
+  private refreshConversations() {
+    this.chironApi.listConversations().subscribe({
+      next: (list) => this.conversations.set(list),
+      error: () => { /* silencieux : le chat reste utilisable sans l'historique */ }
+    });
+  }
+
+  /** Ouvre/ferme le panneau d'historique. */
+  toggleHistory() {
+    this.showHistory.update(v => !v);
+  }
+
+  /** Démarre une nouvelle conversation (vide l'écran, oublie l'id actif). */
+  newConversation() {
+    this.messages.set([]);
+    this.activeConversationId.set(null);
+    this.showHistory.set(false);
+  }
+
+  /** Recharge une conversation existante et l'affiche. */
+  loadConversation(id: number) {
+    this.chironApi.getConversationMessages(id).subscribe({
+      next: (msgs) => {
+        this.messages.set(msgs.map(m => ({
+          role: m.role === 'AI' ? 'ai' : 'user',
+          content: m.content
+        })));
+        this.activeConversationId.set(id);
+        this.showHistory.set(false);
+      },
+      error: (err) => console.error(err)
+    });
+  }
+
+  /** Supprime une conversation ; si c'était l'active, repart sur une nouvelle. */
+  deleteConversation(id: number, event: Event) {
+    event.stopPropagation();
+    this.chironApi.deleteConversation(id).subscribe({
+      next: () => {
+        if (this.activeConversationId() === id) {
+          this.newConversation();
+        }
+        this.refreshConversations();
+      },
+      error: (err) => console.error(err)
     });
   }
 
@@ -167,12 +227,27 @@ export class Chat implements OnInit {
     this.userInput.set('');
     this.isLoading.set(true);
 
-    this.chironApi.sendMessage(this.currentUsername, message).subscribe({
-      next: (res: any) => {
-        this.addMessage('ai', res.toString());
+    // Un réessai silencieux avant d'afficher une erreur : absorbe les ratés transitoires du modèle.
+    this.dispatchMessage(message, true);
+  }
+
+  /**
+   * Envoie le message au coach. En cas d'échec, retente une fois en silence (retryOnError)
+   * avant de signaler que le temple est inaccessible.
+   */
+  private dispatchMessage(message: string, retryOnError: boolean) {
+    this.chironApi.sendMessage(this.currentUsername, message, this.activeConversationId()).subscribe({
+      next: (res) => {
+        this.activeConversationId.set(res.conversationId);
+        this.addMessage('ai', res.reply);
         this.isLoading.set(false);
+        this.refreshConversations();
       },
       error: (err) => {
+        if (retryOnError) {
+          setTimeout(() => this.dispatchMessage(message, false), 800);
+          return;
+        }
         console.error(err);
         this.addMessage('ai', "Erreur : Le temple est inaccessible.");
         this.isLoading.set(false);

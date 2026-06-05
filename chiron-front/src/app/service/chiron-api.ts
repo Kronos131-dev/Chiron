@@ -32,6 +32,25 @@ export interface AiProviderPref {
   geminiAvailable: boolean;
 }
 
+/** Réponse du coach IA, avec l'id de la conversation à laquelle l'échange est rattaché. */
+export interface ChatResponse {
+  conversationId: number;
+  reply: string;
+}
+
+/** Résumé d'une conversation pour le menu d'historique. */
+export interface ConversationSummary {
+  id: number;
+  titre: string | null;
+  updatedAt: string;
+}
+
+/** Un message persisté d'une conversation (role = 'USER' | 'AI'). */
+export interface ConversationMessageDto {
+  role: 'USER' | 'AI';
+  content: string;
+}
+
 /**
  * Interface defining the structure of an aggregated exercise performance summary.
  */
@@ -71,27 +90,46 @@ export class ChironApi {
   /**
    * Sends a user message to the AI coach via the chat endpoint.
    *
-   * @param username The username of the sender.
-   * @param message  The content of the message.
-   * @return An Observable emitting the AI's textual response.
+   * @param username       The username of the sender.
+   * @param message        The content of the message.
+   * @param conversationId The conversation to append to, or null to start a new one.
+   * @return An Observable emitting the AI's reply and its conversation id.
    */
-  sendMessage(username: string, message: string) {
-    return this.http.post(`${this.apiUrl}/chat`, {
-      username: username,
-      message: message
-    }, { responseType: 'text' as 'json' });
+  sendMessage(username: string, message: string, conversationId: number | null) {
+    return this.http.post<ChatResponse>(`${this.apiUrl}/chat`, {
+      username,
+      message,
+      conversationId
+    });
   }
 
   /**
    * Triggers the termination of the current workout session via the AI backend.
    *
-   * @param username The username ending their session.
+   * @param username       The username ending their session.
+   * @param conversationId The conversation to append to, or null.
    * @return An Observable emitting the backend's confirmation response.
    */
-  endSession(username: string) {
-    return this.http.post(`${this.apiUrl}/end-session`, {
-      username: username
-    }, { responseType: 'text' as 'json' });
+  endSession(username: string, conversationId: number | null) {
+    return this.http.post<ChatResponse>(`${this.apiUrl}/end-session`, {
+      username,
+      conversationId
+    });
+  }
+
+  /** Liste les conversations de l'utilisateur, de la plus récente à la plus ancienne. */
+  listConversations(): Observable<ConversationSummary[]> {
+    return this.http.get<ConversationSummary[]>(`${this.apiUrl}/conversations`);
+  }
+
+  /** Récupère les messages d'une conversation (pour la recharger). */
+  getConversationMessages(id: number): Observable<ConversationMessageDto[]> {
+    return this.http.get<ConversationMessageDto[]>(`${this.apiUrl}/conversations/${id}/messages`);
+  }
+
+  /** Supprime une conversation. */
+  deleteConversation(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/conversations/${id}`);
   }
 
   /**

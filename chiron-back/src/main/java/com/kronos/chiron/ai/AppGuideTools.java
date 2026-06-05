@@ -105,7 +105,7 @@ public class AppGuideTools {
                 "Bouton « Dissocier » dans l'en-tête du groupe pour le défaire.");
     }
 
-    @Tool("Explique le fonctionnement d'une feature de l'application Chiron, à appeler dès que l'utilisateur demande comment marche l'app ou une fonctionnalité précise. Paramètre 'feature' : overview (vue globale), chat, voice, journal, programmes, tresor, agora, coach, nutrition, fitbit, recovery, supersets. Si tu ne sais pas quelle clé choisir, passe 'overview' : tu recevras la vue globale + la liste des features disponibles pour rappeler avec la bonne clé.")
+    @Tool("Explique une feature de l'app Chiron. Paramètre 'feature' : overview, chat, voice, journal, programmes, tresor, agora, coach, nutrition, fitbit, recovery, supersets. En cas de doute, passe 'overview' (renvoie la vue globale + la liste des features).")
     public String expliquerFonctionnement(String feature) {
         String key = feature == null ? "" : feature.trim().toLowerCase(Locale.ROOT);
         String guide = GUIDES.get(key);

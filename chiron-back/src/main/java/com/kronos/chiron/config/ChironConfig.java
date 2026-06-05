@@ -5,14 +5,13 @@ import com.kronos.chiron.ai.AnalyseDieteTools;
 import com.kronos.chiron.ai.AppGuideTools;
 import com.kronos.chiron.ai.ChironAgent;
 import com.kronos.chiron.ai.ChironAgentRouter;
+import com.kronos.chiron.ai.ConversationMemoryManager;
 import com.kronos.chiron.ai.FitbitTools;
 import com.kronos.chiron.ai.MemoryTools;
 import com.kronos.chiron.ai.NutritionTools;
 import com.kronos.chiron.ai.RecoveryTools;
 import com.kronos.chiron.ai.WorkoutTools;
-import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
-import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.googleai.GoogleAiGeminiChatModel;
 import dev.langchain4j.model.mistralai.MistralAiChatModel;
@@ -22,8 +21,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.time.Duration;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Configuration de l'intégration IA de Chiron (LangChain4j).
@@ -60,7 +57,8 @@ public class ChironConfig {
                                                FitbitTools fitbitTools,
                                                AppGuideTools appGuideTools,
                                                AnalyseDieteTools analyseDieteTools,
-                                               ChatMemoryProvider chatMemoryProvider) {
+                                               ChatMemoryProvider chatMemoryProvider,
+                                               ConversationMemoryManager memoryManager) {
 
         Object[] tools = {workoutTools, nutritionTools, memoryTools, recoveryTools,
                 adaptiveTools, fitbitTools, appGuideTools, analyseDieteTools};
@@ -84,7 +82,7 @@ public class ChironConfig {
                     .apiKey(geminiApiKey)
                     .modelName(geminiModel)
                     .timeout(Duration.ofSeconds(90))
-                    .maxRetries(2)
+                    .maxRetries(3)
                     .logRequestsAndResponses(true)
                     .build();
             agentGemini = AiServices.builder(ChironAgent.class)
@@ -94,18 +92,16 @@ public class ChironConfig {
                     .build();
         }
 
-        return new ChironAgentRouter(agentMistral, agentGemini);
+        return new ChironAgentRouter(agentMistral, agentGemini, memoryManager);
     }
 
     /**
-     * Fournisseur de mémoire à cache partagé : renvoie la même {@link ChatMemory} pour un
-     * {@code memoryId} donné, de sorte que les agents Mistral et Gemini conservent un
-     * historique commun même quand l'utilisateur bascule de fournisseur.
+     * Fournisseur de mémoire délégué au {@link ConversationMemoryManager} : la mémoire est
+     * indexée par id de conversation et reconstructible depuis la base (cf. le manager).
+     * Les agents Mistral et Gemini partagent ainsi la même mémoire pour une conversation donnée.
      */
     @Bean
-    public ChatMemoryProvider chatMemoryProvider() {
-        Map<Object, ChatMemory> store = new ConcurrentHashMap<>();
-        return memoryId -> store.computeIfAbsent(memoryId,
-                id -> MessageWindowChatMemory.withMaxMessages(20));
+    public ChatMemoryProvider chatMemoryProvider(ConversationMemoryManager memoryManager) {
+        return memoryManager::getOrCreate;
     }
 }

@@ -27,7 +27,7 @@ public class MemoryTools {
     private final UtilisateurRepository utilisateurRepository;
     private final MemoryNoteService memoryNoteService;
 
-    @Tool("Enregistre une note durable concernant l'utilisateur. Types : BLESSURE (douleur, limitation médicale), PREFERENCE (aime/n'aime pas, régime alimentaire), OBJECTIF (objectif précis ou chiffré), ENGAGEMENT (promesse faite par l'utilisateur), NOTE_LIBRE (autre). À appeler dès que l'utilisateur révèle une information structurelle non éphémère que tu devras retenir au-delà de la conversation en cours.")
+    @Tool("Enregistre une note durable sur l'utilisateur. Types : BLESSURE (douleur, limitation médicale), PREFERENCE (goûts, régime alimentaire), OBJECTIF (objectif précis/chiffré), ENGAGEMENT (promesse), NOTE_LIBRE (autre).")
     public String enregistrerNote(@ToolMemoryId String userId, String type, String contenu) {
         Utilisateur user = loadUser(userId);
         if (contenu == null || contenu.isBlank()) {
@@ -43,7 +43,7 @@ public class MemoryTools {
         return "Note enregistrée (id=" + saved.getId() + ", type=" + t.name() + ").";
     }
 
-    @Tool("Récupère les notes durables précédemment enregistrées sur l'utilisateur. Si type est fourni (BLESSURE, PREFERENCE, OBJECTIF, ENGAGEMENT, NOTE_LIBRE), filtre par ce type ; sinon retourne les plus récentes (max 20). Utile pour retrouver une info spécifique au-delà du contexte injecté en début de conversation.")
+    @Tool("Récupère les notes durables de l'utilisateur. Si type fourni (BLESSURE, PREFERENCE, OBJECTIF, ENGAGEMENT, NOTE_LIBRE), filtre dessus ; sinon les 20 plus récentes.")
     public String getMesNotes(@ToolMemoryId String userId, String type) {
         Utilisateur user = loadUser(userId);
         List<ChironMemoryNote> notes;
@@ -71,7 +71,7 @@ public class MemoryTools {
         return res.toString();
     }
 
-    @Tool("Supprime une note durable précédemment enregistrée, à partir de son identifiant numérique. À utiliser quand l'utilisateur demande explicitement d'oublier une information.")
+    @Tool("Supprime une note durable à partir de son identifiant numérique.")
     public String oublierNote(@ToolMemoryId String userId, Long id) {
         if (id == null) return "Identifiant de note manquant.";
         Utilisateur user = loadUser(userId);

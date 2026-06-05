@@ -131,6 +131,15 @@ public class Utilisateur implements UserDetails {
     @Builder.Default
     private AiProvider aiProvider = AiProvider.MISTRAL;
 
+    /** Jour de comptage des requêtes Gemini (réinitialisé quand la date change). */
+    @Column(name = "gemini_call_date")
+    private LocalDate geminiCallDate;
+
+    /** Nombre de requêtes Gemini consommées pour {@link #geminiCallDate}. */
+    @Column(name = "gemini_call_count", nullable = false)
+    @Builder.Default
+    private int geminiCallCount = 0;
+
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(
             name = "utilisateur_materiel",
