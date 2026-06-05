@@ -18,7 +18,7 @@
   <!-- Right: admin badge + settings gear -->
   <div class="flex items-center gap-3">
     @if (isAdmin()) {
-      <div class="bg-amber-600 text-slate-900 text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-[0_0_10px_rgba(217,119,6,0.5)] border border-amber-400">
+      <div class="bg-amber-600 text-slate-900 text-xs font-black uppercase tracking-wide px-2 py-0.5 rounded-full shadow-[0_0_10px_rgba(217,119,6,0.5)] border border-amber-400 flex-shrink-0">
         Admin
       </div>
     }
@@ -41,12 +41,12 @@
       </button>
 
       @if (showSettings()) {
-        <div class="absolute right-0 mt-2 w-52 bg-slate-900 border border-secondary/20 rounded-xl shadow-2xl py-2 z-50 animate-in fade-in zoom-in duration-150">
-          <div class="px-4 py-2 border-b border-white/5 text-xs text-on-surface-variant uppercase tracking-widest font-bold flex items-center gap-2">
-            <span class="material-symbols-outlined text-secondary text-base">account_balance</span>
-            {{ currentUsername }}
+        <div class="absolute right-0 mt-2 w-52 max-h-[calc(100dvh-4.5rem)] overflow-y-auto overscroll-contain bg-slate-900 border border-secondary/20 rounded-xl shadow-2xl py-2 z-50 animate-in fade-in zoom-in duration-150">
+          <div class="px-4 py-2 border-b border-white/5 text-xs text-on-surface-variant uppercase tracking-wide font-bold flex items-center gap-1.5 min-w-0">
+            <span class="material-symbols-outlined text-secondary text-base flex-shrink-0">account_balance</span>
+            <span class="min-w-0 [overflow-wrap:anywhere]">{{ currentUsername }}</span>
             @if (isAdmin()) {
-              <span class="material-symbols-outlined text-amber-500 text-xs">shield</span>
+              <span class="material-symbols-outlined text-amber-500 text-sm flex-shrink-0" title="Administrateur">shield</span>
             }
           </div>
           <a href="/profile" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-white/5 transition-colors cursor-pointer">
