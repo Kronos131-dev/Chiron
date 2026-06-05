@@ -2,6 +2,7 @@ package com.kronos.chiron.controller;
 
 import tools.jackson.databind.json.JsonMapper;
 import com.kronos.chiron.ai.ChironAgent;
+import com.kronos.chiron.ai.ChironAgentRouter;
 import com.kronos.chiron.entity.Role;
 import com.kronos.chiron.entity.Utilisateur;
 import com.kronos.chiron.repository.UtilisateurRepository;
@@ -33,11 +34,13 @@ class ChatControllerTest {
     @Autowired private MockMvc mockMvc;
     @Autowired private JsonMapper objectMapper;
 
-    @MockitoBean private ChironAgent chironAgent;
+    @MockitoBean private ChironAgentRouter chironAgentRouter;
     @MockitoBean private UtilisateurRepository utilisateurRepository;
     @MockitoBean private MemoryNoteService memoryNoteService;
     @MockitoBean private JwtService jwtService;
     @MockitoBean private UserDetailsService userDetailsService;
+
+    private final ChironAgent chironAgent = mock(ChironAgent.class);
 
     private Utilisateur buildUser() {
         return Utilisateur.builder()
@@ -50,6 +53,7 @@ class ChatControllerTest {
     @Test
     void chat_validUser_returnsAgentResponse() throws Exception {
         when(utilisateurRepository.findByUsername("alice")).thenReturn(Optional.of(buildUser()));
+        when(chironAgentRouter.forProvider(any())).thenReturn(chironAgent);
         when(chironAgent.chat(eq("1"), anyString())).thenReturn("Séance enregistrée.");
 
         mockMvc.perform(post("/api/chat")
@@ -62,6 +66,7 @@ class ChatControllerTest {
     @Test
     void chat_injectsUserContextInMessage() throws Exception {
         when(utilisateurRepository.findByUsername("alice")).thenReturn(Optional.of(buildUser()));
+        when(chironAgentRouter.forProvider(any())).thenReturn(chironAgent);
         when(chironAgent.chat(anyString(), anyString())).thenReturn("OK");
 
         mockMvc.perform(post("/api/chat")
@@ -75,6 +80,7 @@ class ChatControllerTest {
     @Test
     void endSession_validUser_returnsAgentResponse() throws Exception {
         when(utilisateurRepository.findByUsername("alice")).thenReturn(Optional.of(buildUser()));
+        when(chironAgentRouter.forProvider(any())).thenReturn(chironAgent);
         when(chironAgent.chat(eq("1"), anyString())).thenReturn("Bien joué, soldat.");
 
         mockMvc.perform(post("/api/end-session")

@@ -268,6 +268,48 @@
       }
     </div>
 
+    <!-- ── Coach IA (fournisseur) ── -->
+    <div class="bg-slate-900/80 border border-white/10 rounded-2xl overflow-hidden">
+      <button (click)="toggle('ai')"
+              class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-white/5 transition-colors">
+        <div class="flex items-center gap-3">
+          <span class="material-symbols-outlined text-secondary">smart_toy</span>
+          <div>
+            <span class="text-white font-bold">Coach IA</span>
+            <p class="text-white/40 text-xs mt-0.5">Fournisseur du modèle ({{ aiProvider() }})</p>
+          </div>
+        </div>
+        <span class="material-symbols-outlined text-secondary/60 transition-transform"
+              [class.rotate-180]="openSection() === 'ai'">expand_more</span>
+      </button>
+      @if (openSection() === 'ai') {
+        <div class="px-5 pb-5 space-y-4 border-t border-white/5">
+          <p class="text-white/40 text-xs mt-4 leading-relaxed">
+            Choisis le modèle qui répond dans le chat du coach. Gemini doit être configuré
+            côté serveur ; sinon le coach reste sur Mistral.
+          </p>
+          <div class="flex gap-2">
+            <button type="button" (click)="setAiProvider('MISTRAL')"
+                    class="flex-1 py-2.5 rounded-xl text-sm font-bold transition-colors"
+                    [class.bg-secondary]="aiProvider() === 'MISTRAL'"
+                    [class.text-slate-900]="aiProvider() === 'MISTRAL'"
+                    [class.bg-slate-700]="aiProvider() !== 'MISTRAL'"
+                    [class.text-white]="aiProvider() !== 'MISTRAL'">
+              Mistral
+            </button>
+            <button type="button" (click)="setAiProvider('GEMINI')"
+                    class="flex-1 py-2.5 rounded-xl text-sm font-bold transition-colors"
+                    [class.bg-secondary]="aiProvider() === 'GEMINI'"
+                    [class.text-slate-900]="aiProvider() === 'GEMINI'"
+                    [class.bg-slate-700]="aiProvider() !== 'GEMINI'"
+                    [class.text-white]="aiProvider() !== 'GEMINI'">
+              Gemini
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+
     <!-- ── Calcul du tonnage ── -->
     <div class="bg-slate-900/80 border border-white/10 rounded-2xl overflow-hidden">
       <button (click)="toggle('tonnage')"

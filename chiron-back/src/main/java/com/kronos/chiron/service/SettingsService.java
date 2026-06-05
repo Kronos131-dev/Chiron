@@ -48,6 +48,20 @@ public class SettingsService {
         utilisateurRepository.save(user);
     }
 
+    public com.kronos.chiron.dto.settings.AiProviderDto getAiProvider(String username) {
+        Utilisateur user = utilisateurRepository.findByUsername(username)
+                .orElseThrow(() -> new NoSuchElementException("Utilisateur introuvable"));
+        return new com.kronos.chiron.dto.settings.AiProviderDto(user.getAiProvider());
+    }
+
+    @Transactional
+    public void updateAiProvider(String username, com.kronos.chiron.entity.AiProvider provider) {
+        Utilisateur user = utilisateurRepository.findByUsername(username)
+                .orElseThrow(() -> new NoSuchElementException("Utilisateur introuvable"));
+        user.setAiProvider(provider != null ? provider : com.kronos.chiron.entity.AiProvider.MISTRAL);
+        utilisateurRepository.save(user);
+    }
+
     @Transactional
     public void changePassword(String username, String currentPassword, String newPassword) {
         Utilisateur user = utilisateurRepository.findByUsername(username)

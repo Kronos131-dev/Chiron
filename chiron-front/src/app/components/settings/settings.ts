@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { ChironApi, NutritionLinkStatus, FitbitLinkStatus, TrainingPrefs } from '../../service/chiron-api';
+import { ChironApi, NutritionLinkStatus, FitbitLinkStatus, TrainingPrefs, AiProvider } from '../../service/chiron-api';
 import { AuthService } from '../../service/auth.service';
 import { HeaderComponent } from '../shared/header/header';
 
@@ -18,11 +18,14 @@ export class Settings implements OnInit, OnDestroy {
   currentPrenom = signal<string | null>(null);
   currentNom = signal<string | null>(null);
 
-  openSection = signal<'password' | 'email' | 'username' | 'identity' | 'tonnage' | 'delete' | null>(null);
+  openSection = signal<'password' | 'email' | 'username' | 'identity' | 'tonnage' | 'ai' | 'delete' | null>(null);
 
   // --- Préférences de calcul du tonnage ---
   halteresParImplement = signal(true);
   machineParCote = signal(false);
+
+  // --- Fournisseur d'IA du coach ---
+  aiProvider = signal<AiProvider>('MISTRAL');
 
   // Champs password
   currentPasswordForPwd = '';
@@ -80,6 +83,31 @@ export class Settings implements OnInit, OnDestroy {
     this.loadNutritionStatus();
     this.loadFitbitStatus();
     this.loadTrainingPrefs();
+    this.loadAiProvider();
+  }
+
+  private loadAiProvider() {
+    this.chironApi.getAiProvider().subscribe({
+      next: (pref) => this.aiProvider.set(pref.provider),
+      error: () => {} // garde le défaut (MISTRAL) en cas d'échec
+    });
+  }
+
+  /** Change le fournisseur d'IA du coach et le persiste immédiatement. */
+  setAiProvider(provider: AiProvider) {
+    if (this.aiProvider() === provider) return;
+    const previous = this.aiProvider();
+    this.aiProvider.set(provider);
+    this.chironApi.updateAiProvider(provider).subscribe({
+      next: () => {
+        this.successMessage.set('Fournisseur d\'IA mis à jour : ' + provider + '.');
+        setTimeout(() => this.successMessage.set(''), 2500);
+      },
+      error: () => {
+        this.aiProvider.set(previous);
+        this.errorMessage.set("Erreur lors du changement de fournisseur d'IA.");
+      },
+    });
   }
 
   private loadTrainingPrefs() {
@@ -121,7 +149,7 @@ export class Settings implements OnInit, OnDestroy {
     this.stopFitbitPolling();
   }
 
-  toggle(section: 'password' | 'email' | 'username' | 'identity' | 'tonnage' | 'delete') {
+  toggle(section: 'password' | 'email' | 'username' | 'identity' | 'tonnage' | 'ai' | 'delete') {
     this.openSection.set(this.openSection() === section ? null : section);
     this.clearFeedback();
   }

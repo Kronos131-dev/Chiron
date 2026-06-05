@@ -66,6 +66,20 @@ public class SettingsController {
         return ResponseEntity.ok(new AuthenticationResponse(newToken));
     }
 
+    @GetMapping("/ai-provider")
+    public ResponseEntity<com.kronos.chiron.dto.settings.AiProviderDto> getAiProvider(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(settingsService.getAiProvider(userDetails.getUsername()));
+    }
+
+    @PutMapping("/ai-provider")
+    public ResponseEntity<Void> updateAiProvider(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody com.kronos.chiron.dto.settings.AiProviderDto request) {
+        settingsService.updateAiProvider(userDetails.getUsername(), request.provider());
+        return ResponseEntity.ok().build();
+    }
+
     @GetMapping("/training-prefs")
     public ResponseEntity<TrainingPrefsDto> getTrainingPrefs(@AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(settingsService.getTrainingPrefs(userDetails.getUsername()));
