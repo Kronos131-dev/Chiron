@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { ChironApi, FitbitDashboard as FitbitDashboardData } from '../../service/chiron-api';
 import { HeaderComponent } from '../shared/header/header';
+import { TranslatePipe } from '../../service/translate.pipe';
+import { I18nService } from '../../service/i18n.service';
 
 /**
  * Tableau de bord des données santé Fitbit : activité du jour, sommeil,
@@ -11,7 +13,7 @@ import { HeaderComponent } from '../shared/header/header';
 @Component({
   selector: 'app-fitbit-dashboard',
   standalone: true,
-  imports: [CommonModule, HeaderComponent],
+  imports: [CommonModule, HeaderComponent, TranslatePipe],
   templateUrl: './fitbit-dashboard.html',
   styleUrls: ['./fitbit-dashboard.css']
 })
@@ -21,7 +23,7 @@ export class FitbitDashboard implements OnInit {
   isLoading = signal(true);
   error = signal<string | null>(null);
 
-  constructor(private chironApi: ChironApi, private router: Router) {}
+  constructor(private chironApi: ChironApi, private router: Router, private i18n: I18nService) {}
 
   ngOnInit() {
     this.load();
@@ -36,7 +38,7 @@ export class FitbitDashboard implements OnInit {
         this.isLoading.set(false);
       },
       error: () => {
-        this.error.set('Impossible de charger les données Fitbit.');
+        this.error.set(this.i18n.t('fitbit.loadError'));
         this.isLoading.set(false);
       }
     });

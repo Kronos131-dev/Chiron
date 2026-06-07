@@ -3,11 +3,13 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ChironApi } from '../../service/chiron-api';
+import { I18nService } from '../../service/i18n.service';
+import { TranslatePipe } from '../../service/translate.pipe';
 
 @Component({
   selector: 'app-reset-password',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslatePipe],
   templateUrl: './reset-password.html',
   styleUrls: ['./reset-password.css'],
 })
@@ -26,13 +28,14 @@ export class ResetPassword implements OnInit {
   constructor(
     private route: ActivatedRoute,
     public router: Router,
-    private chironApi: ChironApi
+    private chironApi: ChironApi,
+    public i18n: I18nService
   ) {}
 
   ngOnInit() {
     this.token = this.route.snapshot.queryParamMap.get('token') || '';
     if (!this.token) {
-      this.errorMessage.set('Lien de réinitialisation invalide ou manquant.');
+      this.errorMessage.set(this.i18n.t('reset.invalidLink'));
     }
   }
 
@@ -75,7 +78,7 @@ export class ResetPassword implements OnInit {
       },
       error: (err) => {
         this.isLoading.set(false);
-        this.errorMessage.set(err.error?.message || 'Lien invalide ou expiré. Demande un nouveau lien.');
+        this.errorMessage.set(err.error?.message || this.i18n.t('reset.invalidOrExpired'));
       }
     });
   }

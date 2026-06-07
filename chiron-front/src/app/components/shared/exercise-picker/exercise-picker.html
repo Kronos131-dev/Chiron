@@ -8,13 +8,13 @@
         <span class="material-symbols-outlined">close</span>
       </button>
       <div class="flex-1 min-w-0">
-        <p class="text-secondary text-[9px] font-bold tracking-[0.25em] uppercase">Ajouter un exercice</p>
-        <h2 class="text-white font-bold text-base truncate">Bibliothèque</h2>
+        <p class="text-secondary text-[9px] font-bold tracking-[0.25em] uppercase">{{ 'picker.add' | t }}</p>
+        <h2 class="text-white font-bold text-base truncate">{{ 'picker.library' | t }}</h2>
       </div>
       @if (addedExercises.length > 0) {
         <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-secondary/15 border border-secondary/30">
           <span class="material-symbols-outlined text-secondary text-base">check_circle</span>
-          <span class="text-secondary text-xs font-bold tracking-wider">{{ addedExercises.length }} ajouté{{ addedExercises.length > 1 ? 's' : '' }}</span>
+          <span class="text-secondary text-xs font-bold tracking-wider">{{ addedExercises.length }} {{ 'picker.added' | t }}</span>
         </div>
       }
     </header>
@@ -25,15 +25,15 @@
       <!-- Recently added panel -->
       @if (addedExercises.length > 0) {
         <section class="max-w-3xl mx-auto px-4 pt-4">
-          <p class="text-on-surface-variant text-[9px] font-bold tracking-[0.25em] uppercase mb-2">Sélection</p>
+          <p class="text-on-surface-variant text-[9px] font-bold tracking-[0.25em] uppercase mb-2">{{ 'picker.selection' | t }}</p>
           <ul class="space-y-2">
             @for (exo of addedExercises; track exo.id) {
               <li class="flex items-center gap-3 bg-secondary/5 border border-secondary/20 rounded-lg pl-3 pr-2 py-2">
                 <span class="material-symbols-outlined text-secondary/70 text-base shrink-0">check</span>
-                <span class="flex-1 min-w-0 text-white text-sm font-medium truncate">{{ exo.nom || 'Exercice personnalisé' }}</span>
+                <span class="flex-1 min-w-0 text-white text-sm font-medium truncate">{{ exo.nom || ('picker.customExercise' | t) }}</span>
                 <button (click)="removeAdded.emit(exo)"
                         type="button"
-                        title="Retirer cet exercice"
+                        [title]="'picker.removeExercise' | t"
                         class="w-8 h-8 rounded-md bg-white/5 hover:bg-red-900/30 hover:text-red-300 text-on-surface-variant flex items-center justify-center transition-colors">
                   <span class="material-symbols-outlined text-base">close</span>
                 </button>
@@ -51,41 +51,41 @@
                  [value]="query()"
                  (input)="onQueryInput(($event.target)!['value'])"
                  class="w-full bg-[#1a1c23] border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white outline-none focus:border-secondary/50 transition-colors placeholder:text-on-surface-variant"
-                 placeholder="Rechercher un exercice...">
+                 [placeholder]="'exCard.searchPlaceholder' | t">
         </div>
       </div>
 
       <!-- Filters -->
       <div class="max-w-3xl mx-auto px-4 pt-4 space-y-3">
         <div>
-          <p class="text-on-surface-variant text-[9px] font-bold tracking-[0.25em] uppercase mb-2">Muscle</p>
+          <p class="text-on-surface-variant text-[9px] font-bold tracking-[0.25em] uppercase mb-2">{{ 'picker.muscle' | t }}</p>
           <div class="flex flex-wrap gap-2">
             @for (m of muscles; track m.key) {
               <button (click)="toggleMuscle(m.key)"
                       [class]="muscle() === m.key ? 'chip-active' : 'chip'">
-                {{ m.label }}
+                {{ m.label | t }}
               </button>
             }
           </div>
         </div>
         <div>
-          <p class="text-on-surface-variant text-[9px] font-bold tracking-[0.25em] uppercase mb-2">Équipement</p>
+          <p class="text-on-surface-variant text-[9px] font-bold tracking-[0.25em] uppercase mb-2">{{ 'picker.equipment' | t }}</p>
           <div class="flex flex-wrap gap-2">
             @for (e of equipements; track e.key) {
               <button (click)="toggleEquipement(e.key)"
                       [class]="equipement() === e.key ? 'chip-active' : 'chip'">
-                {{ e.label }}
+                {{ e.label | t }}
               </button>
             }
           </div>
         </div>
         <div>
-          <p class="text-on-surface-variant text-[9px] font-bold tracking-[0.25em] uppercase mb-2">Niveau</p>
+          <p class="text-on-surface-variant text-[9px] font-bold tracking-[0.25em] uppercase mb-2">{{ 'picker.level' | t }}</p>
           <div class="flex flex-wrap gap-2">
             @for (d of difficultes; track d.key) {
               <button (click)="toggleDifficulte(d.key)"
                       [class]="difficulte() === d.key ? 'chip-active' : 'chip'">
-                {{ d.label }}
+                {{ d.label | t }}
               </button>
             }
           </div>
@@ -101,23 +101,23 @@
         } @else if (!hasSearched()) {
           <div class="flex flex-col items-center justify-center py-12 text-center">
             <span class="material-symbols-outlined text-5xl text-secondary/30 mb-4">search</span>
-            <p class="text-on-surface-variant text-sm">Recherche un exercice ou sélectionne un filtre</p>
+            <p class="text-on-surface-variant text-sm">{{ 'picker.searchHint' | t }}</p>
           </div>
         } @else if (results().length === 0) {
           <div class="flex flex-col items-center justify-center py-12 text-center">
             <span class="material-symbols-outlined text-5xl text-on-surface-variant/30 mb-4">search_off</span>
-            <p class="text-on-surface-variant text-sm">Aucun exercice trouvé</p>
+            <p class="text-on-surface-variant text-sm">{{ 'picker.noResults' | t }}</p>
           </div>
         } @else {
           <p class="text-on-surface-variant text-[10px] uppercase tracking-widest mb-4">
-            {{ results().length }} exercice{{ results().length > 1 ? 's' : '' }}
+            {{ results().length }} {{ 'picker.exercises' | t }}
           </p>
           <div class="picker-grid">
             @for (exo of results(); track exo.id) {
               <article (click)="addFromDefinition.emit(exo)" class="picker-card group">
                 <div class="picker-gif-container">
                   @if (exo.imageUrl) {
-                    <img [src]="exo.imageUrl" [alt]="exo.nomFr ?? exo.nomEn" loading="lazy" class="picker-gif">
+                    <img [src]="exo.imageUrl" [alt]="exo.nomFr | localize: exo.nomEn" loading="lazy" class="picker-gif">
                   } @else {
                     <div class="picker-gif-placeholder">
                       <span class="material-symbols-outlined text-3xl text-secondary/40">fitness_center</span>
@@ -128,11 +128,11 @@
                   </div>
                 </div>
                 <div class="p-3">
-                  <h3 class="text-white font-bold text-sm leading-tight mb-1 line-clamp-2">{{ exo.nomFr ?? exo.nomEn }}</h3>
+                  <h3 class="text-white font-bold text-sm leading-tight mb-1 line-clamp-2">{{ exo.nomFr | localize: exo.nomEn }}</h3>
                   <div class="flex items-center justify-between">
-                    <span class="text-secondary text-[10px] uppercase tracking-wider font-bold">{{ muscleLabel(exo.musclePrincipal) }}</span>
+                    <span class="text-secondary text-[10px] uppercase tracking-wider font-bold">{{ muscleLabel(exo.musclePrincipal) | t }}</span>
                     @if (exo.difficulte) {
-                      <span [class]="'text-[9px] font-bold uppercase ' + difficulteClass(exo.difficulte)">{{ difficulteLabel(exo.difficulte) }}</span>
+                      <span [class]="'text-[9px] font-bold uppercase ' + difficulteClass(exo.difficulte)">{{ difficulteLabel(exo.difficulte) | t }}</span>
                     }
                   </div>
                 </div>
@@ -148,8 +148,8 @@
           <button (click)="addCustom.emit()"
                   class="w-full bg-[#1a1c23]/50 border-2 border-dashed border-white/15 rounded-xl p-5 flex flex-col items-center justify-center gap-2 text-on-surface-variant hover:text-secondary hover:border-secondary/40 hover:bg-secondary/5 transition-all group">
             <span class="material-symbols-outlined text-2xl group-hover:scale-110 transition-transform">edit</span>
-            <span class="text-xs font-bold tracking-[0.15em] uppercase">Ajouter un exercice personnalisé</span>
-            <span class="text-[10px] opacity-70 normal-case tracking-normal">(non lié à la bibliothèque)</span>
+            <span class="text-xs font-bold tracking-[0.15em] uppercase">{{ 'picker.addCustom' | t }}</span>
+            <span class="text-[10px] opacity-70 normal-case tracking-normal">{{ 'picker.notLinked' | t }}</span>
           </button>
         </div>
       </div>
@@ -162,7 +162,7 @@
         <button (click)="close()"
                 class="w-full bg-gradient-to-r from-secondary to-[#c77a30] text-slate-950 font-bold text-xs px-6 py-3 rounded uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-transform shadow-lg shadow-secondary/20 flex items-center justify-center gap-2">
           <span class="material-symbols-outlined text-sm">check</span>
-          Terminer ({{ addedExercises.length }} exercice{{ addedExercises.length > 1 ? 's' : '' }})
+          {{ 'picker.done' | t }} ({{ addedExercises.length }} {{ 'picker.exercises' | t }})
         </button>
       </footer>
     }

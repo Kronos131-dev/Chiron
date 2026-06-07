@@ -1,4 +1,4 @@
-<app-header [title]="'SÉANCE'" [showBack]="true" [backRoute]="'/programme'"></app-header>
+<app-header [title]="'session.title' | t" [showBack]="true" [backRoute]="'/programme'"></app-header>
 
 <!-- Main Session Interface -->
 <main class="min-h-screen pt-20 pb-32 bg-slate-950 heroic-texture relative">
@@ -23,19 +23,19 @@
     <div class="max-w-md mx-auto relative z-10 space-y-4">
       <!-- Editable/Read-only Title Input -->
       <div>
-        <p class="text-secondary text-[10px] font-bold tracking-[0.25em] uppercase mb-1">Séance</p>
+        <p class="text-secondary text-[10px] font-bold tracking-[0.25em] uppercase mb-1">{{ 'session.sessionLabel' | t }}</p>
         <input type="text"
                [ngModel]="titreRoutine()"
                (ngModelChange)="titreRoutine.set($event)"
                [readOnly]="isReadonly()"
                class="w-full bg-transparent border-b-2 border-transparent hover:border-white/10 focus:border-secondary outline-none font-headline text-3xl md:text-4xl font-black text-white uppercase tracking-tight pb-1 transition-colors"
-               placeholder="NOM DE LA ROUTINE" />
+               [placeholder]="'session.namePlaceholder' | t" />
       </div>
 
       <!-- Last Session Date Display (Hidden in Read-only Mode) -->
       @if (!isReadonly()) {
         <div class="pt-2">
-          <p class="text-on-surface-variant text-[10px] font-bold tracking-widest uppercase">Dernière session : {{ derniereSession() }}</p>
+          <p class="text-on-surface-variant text-[10px] font-bold tracking-widest uppercase">{{ 'session.lastSession' | t }} : {{ derniereSession() }}</p>
         </div>
       }
     </div>
@@ -70,23 +70,23 @@
           <div class="w-12 h-12 rounded-full bg-secondary/15 flex items-center justify-center group-hover:bg-secondary/25 group-hover:scale-110 transition-all">
             <span class="material-symbols-outlined text-2xl">add</span>
           </div>
-          <span class="text-xs font-bold tracking-[0.2em] uppercase">Ajouter un exercice</span>
+          <span class="text-xs font-bold tracking-[0.2em] uppercase">{{ 'builder.addExercise' | t }}</span>
         </button>
       }
 
       <!-- Note de séance (facultative) — juste avant l'enregistrement au journal -->
       @if (!isReadonly()) {
         <div class="pt-2">
-          <label class="text-secondary text-[9px] font-bold tracking-[0.2em] uppercase ml-1">Note de séance (facultatif)</label>
+          <label class="text-secondary text-[9px] font-bold tracking-[0.2em] uppercase ml-1">{{ 'session.noteLabel' | t }}</label>
           <textarea [ngModel]="noteSeance()"
                     (ngModelChange)="noteSeance.set($event)"
                     rows="2"
                     class="w-full mt-1 bg-slate-950/50 border border-white/10 rounded p-3 text-white font-body text-sm outline-none focus:border-secondary/50 transition-colors resize-y"
-                    placeholder="Ressenti global, condition, à retenir pour la prochaine fois…"></textarea>
+                    [placeholder]="'session.notePlaceholder' | t"></textarea>
         </div>
       } @else if (noteSeance()) {
         <div class="bg-slate-950/40 border border-white/5 rounded-xl p-4">
-          <p class="text-secondary text-[9px] font-bold tracking-[0.2em] uppercase mb-1">Note de séance</p>
+          <p class="text-secondary text-[9px] font-bold tracking-[0.2em] uppercase mb-1">{{ 'session.noteTitle' | t }}</p>
           <p class="text-on-surface text-sm font-body whitespace-pre-wrap break-words">{{ noteSeance() }}</p>
         </div>
       }
@@ -98,7 +98,7 @@
           <button (click)="ajouterAuJournal()"
                   class="w-full bg-gradient-to-r from-blue-500 to-blue-700 text-white font-bold text-sm px-6 py-4 rounded-xl uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2">
             <span class="material-symbols-outlined text-lg">add_task</span>
-            Ajouter au journal
+            {{ 'session.addToJournal' | t }}
           </button>
 
           <!-- Transient status message (auto-clears after 3s) -->

@@ -4,8 +4,10 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { ChironApi, ConversationSummary } from '../../service/chiron-api';
 import { AuthService } from '../../service/auth.service';
+import { I18nService } from '../../service/i18n.service';
 import { HeaderComponent } from '../shared/header/header';
 import { MarkdownPipe } from './markdown.pipe';
+import { TranslatePipe } from '../../service/translate.pipe';
 
 /**
  * Interface defining the structure of a chat message.
@@ -25,7 +27,7 @@ declare var SpeechRecognition: any;
 @Component({
   selector: 'app-chat',
   standalone: true,
-  imports: [FormsModule, CommonModule, HeaderComponent, MarkdownPipe],
+  imports: [FormsModule, CommonModule, HeaderComponent, MarkdownPipe, TranslatePipe],
   templateUrl: './chat.html',
   styleUrl: './chat.css',
 })
@@ -67,7 +69,8 @@ export class Chat implements OnInit {
   constructor(
     private chironApi: ChironApi,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    public i18n: I18nService
   ) {}
 
   /**
@@ -150,7 +153,7 @@ export class Chat implements OnInit {
 
     if (SpeechRecognitionAPI) {
       this.recognition = new SpeechRecognitionAPI();
-      this.recognition.lang = 'fr-FR';
+      this.recognition.lang = this.i18n.lang() === 'en' ? 'en-US' : 'fr-FR';
       this.recognition.continuous = false;
       this.recognition.interimResults = false;
 
@@ -191,7 +194,7 @@ export class Chat implements OnInit {
       this.recognition.onerror = (event: any) => {
         console.error("Erreur micro:", event.error);
         this.isRecording.set(false);
-        this.addMessage('ai', "Erreur : Le navigateur a bloqué le micro (" + event.error + ").");
+        this.addMessage('ai', this.i18n.t('chat.micError', { error: event.error }));
       };
     } else {
       console.error("La reconnaissance vocale n'est pas supportée.");
@@ -203,7 +206,7 @@ export class Chat implements OnInit {
    */
   toggleRecording() {
     if (!this.recognition) {
-      alert("⚠️ Ton navigateur ne supporte pas la Web Speech API, ou l'accès est bloqué.");
+      alert(this.i18n.t('chat.noSpeech'));
       return;
     }
 
@@ -236,7 +239,7 @@ export class Chat implements OnInit {
    * avant de signaler que le temple est inaccessible.
    */
   private dispatchMessage(message: string, retryOnError: boolean) {
-    this.chironApi.sendMessage(this.currentUsername, message, this.activeConversationId()).subscribe({
+    this.chironApi.sendMessage(this.currentUsername, message, this.activeConversationId(), this.i18n.lang()).subscribe({
       next: (res) => {
         this.activeConversationId.set(res.conversationId);
         this.addMessage('ai', res.reply);
@@ -249,7 +252,7 @@ export class Chat implements OnInit {
           return;
         }
         console.error(err);
-        this.addMessage('ai', "Erreur : Le temple est inaccessible.");
+        this.addMessage('ai', this.i18n.t('chat.error'));
         this.isLoading.set(false);
       }
     });

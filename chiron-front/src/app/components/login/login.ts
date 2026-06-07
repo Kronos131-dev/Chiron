@@ -4,6 +4,8 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } 
 import { Router } from '@angular/router';
 import { AuthService } from '../../service/auth.service';
 import { ChironApi } from '../../service/chiron-api';
+import { I18nService } from '../../service/i18n.service';
+import { TranslatePipe } from '../../service/translate.pipe';
 import { catchError, EMPTY } from 'rxjs';
 
 /**
@@ -13,7 +15,7 @@ import { catchError, EMPTY } from 'rxjs';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, TranslatePipe],
   templateUrl: './login.html',
   styleUrls: ['./login.css']
 })
@@ -39,7 +41,8 @@ export class Login {
     private fb: FormBuilder,
     private authService: AuthService,
     private router: Router,
-    private chironApi: ChironApi
+    private chironApi: ChironApi,
+    public i18n: I18nService
   ) {
     this.loginForm = this.fb.group({
       username: ['', Validators.required],
@@ -79,12 +82,12 @@ export class Login {
     this.chironApi.forgotPassword(this.forgotEmail).pipe(
       catchError(() => {
         this.isLoading = false;
-        this.forgotMessage = 'Si un compte est associé à cet email, un lien vous a été envoyé.';
+        this.forgotMessage = this.i18n.t('login.forgotSent');
         return EMPTY;
       })
     ).subscribe(() => {
       this.isLoading = false;
-      this.forgotMessage = 'Si un compte est associé à cet email, un lien vous a été envoyé.';
+      this.forgotMessage = this.i18n.t('login.forgotSent');
     });
   }
 
@@ -97,12 +100,12 @@ export class Login {
     if (this.loginForm.invalid) return;
 
     if (!this.isLoginMode && !this.loginForm.value.email) {
-      this.errorMessage = "L'email est requis pour s'inscrire.";
+      this.errorMessage = this.i18n.t('login.emailRequired');
       return;
     }
 
     if (!this.isLoginMode && this.loginForm.value.password !== this.loginForm.value.confirmPassword) {
-      this.errorMessage = 'Les mots de passe ne correspondent pas.';
+      this.errorMessage = this.i18n.t('login.passwordMismatch');
       return;
     }
 
@@ -121,8 +124,8 @@ export class Login {
       error: (err) => {
         this.isLoading = false;
         this.errorMessage = this.isLoginMode
-          ? 'Identifiants incorrects ou serveur injoignable.'
-          : 'Erreur lors de la création du compte (nom d\'utilisateur peut-être déjà pris).';
+          ? this.i18n.t('login.badCreds')
+          : this.i18n.t('login.registerError');
         console.error("Erreur d'authentification :", err);
       }
     });

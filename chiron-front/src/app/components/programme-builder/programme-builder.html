@@ -1,4 +1,4 @@
-<app-header [title]="programmeId ? 'MODIFIER LE PROGRAMME' : 'NOUVEAU PROGRAMME'"
+<app-header [title]="(programmeId ? 'builder.editTitle' : 'builder.newTitle') | t"
             [showBack]="true"
             [backRoute]="isCoachMode() ? '/profile/' + targetUsername() : '/programme'">
 </app-header>
@@ -13,17 +13,17 @@
       @if (isCoachMode()) {
         <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary/10 border border-secondary/30">
           <span class="material-symbols-outlined text-secondary text-base">supervisor_account</span>
-          <span class="text-secondary text-xs font-bold tracking-widest uppercase">Coach · {{ targetUsername() }}</span>
+          <span class="text-secondary text-xs font-bold tracking-widest uppercase">{{ 'builder.coach' | t }} · {{ targetUsername() }}</span>
         </div>
       }
 
       <div>
-        <p class="text-secondary text-[10px] font-bold tracking-[0.25em] uppercase mb-1">Programme</p>
+        <p class="text-secondary text-[10px] font-bold tracking-[0.25em] uppercase mb-1">{{ 'builder.programmeLabel' | t }}</p>
         <input type="text"
                [ngModel]="titre()"
                (ngModelChange)="titre.set($event)"
                class="w-full bg-transparent border-b-2 border-transparent hover:border-white/10 focus:border-secondary outline-none font-headline text-3xl md:text-4xl font-black text-white uppercase tracking-tight pb-1 transition-colors"
-               placeholder="NOM DU PROGRAMME" />
+               [placeholder]="'builder.namePlaceholder' | t" />
       </div>
 
       <div class="flex justify-end">
@@ -31,7 +31,7 @@
                 [disabled]="isSaving()"
                 class="bg-gradient-to-r from-secondary to-[#c77a30] text-slate-950 font-bold text-xs px-6 py-3 rounded uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg shadow-secondary/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
           <span class="material-symbols-outlined text-sm">save</span>
-          {{ isSaving() ? 'Sauvegarde…' : 'Sauvegarder' }}
+          {{ (isSaving() ? 'builder.saving' : 'builder.saveBtn') | t }}
         </button>
       </div>
 
@@ -56,8 +56,8 @@
         @if (exercices().length === 0) {
           <div class="flex flex-col items-center justify-center py-12 text-center bg-[#1a1c23]/50 border border-dashed border-white/10 rounded-xl">
             <span class="material-symbols-outlined text-4xl text-secondary/40 mb-3">fitness_center</span>
-            <p class="text-on-surface-variant text-sm mb-1">Aucun exercice pour l'instant</p>
-            <p class="text-on-surface-variant text-xs opacity-60">Commence par en ajouter un ci-dessous</p>
+            <p class="text-on-surface-variant text-sm mb-1">{{ 'builder.noExercises' | t }}</p>
+            <p class="text-on-surface-variant text-xs opacity-60">{{ 'builder.noExercisesHint' | t }}</p>
           </div>
         }
 
@@ -90,9 +90,9 @@
                 </div>
                 <button (click)="dissociateBlock(item.blockId)"
                         class="text-on-surface-variant hover:text-red-400 transition-colors text-[10px] font-bold tracking-widest uppercase flex items-center gap-1"
-                        [title]="'Dissocier ce ' + (item.blockType === 'BISET' ? 'biset' : 'superset')">
+                        [title]="'builder.dissociate' | t">
                   <span class="material-symbols-outlined text-sm">link_off</span>
-                  Dissocier
+                  {{ 'builder.dissociate' | t }}
                 </button>
               </div>
               <div class="superset-body space-y-3">
@@ -126,7 +126,7 @@
           <div class="w-12 h-12 rounded-full bg-secondary/15 flex items-center justify-center group-hover:bg-secondary/25 group-hover:scale-110 transition-all">
             <span class="material-symbols-outlined text-2xl">add</span>
           </div>
-          <span class="text-xs font-bold tracking-[0.2em] uppercase">Ajouter un exercice</span>
+          <span class="text-xs font-bold tracking-[0.2em] uppercase">{{ 'builder.addExercise' | t }}</span>
         </button>
 
       }

@@ -1,4 +1,4 @@
-<app-header [title]="'BIBLIOTHÈQUE'" [showBack]="true" [backRoute]="'/chat'"></app-header>
+<app-header [title]="'bib.title' | t" [showBack]="true" [backRoute]="'/chat'"></app-header>
 
 <main class="min-h-screen pt-20 pb-32 bg-slate-950 heroic-texture">
 
@@ -11,7 +11,7 @@
                [value]="searchQuery()"
                (input)="onSearchInput(($event.target)!['value'])"
                class="w-full bg-[#1a1c23] border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white outline-none focus:border-secondary/50 transition-colors placeholder:text-on-surface-variant"
-               placeholder="Rechercher un exercice...">
+               [placeholder]="'bib.searchPlaceholder' | t">
       </div>
     </div>
   </section>
@@ -20,14 +20,14 @@
 
     <!-- Muscle Filter -->
     <div>
-      <p class="text-on-surface-variant text-[9px] font-bold tracking-[0.25em] uppercase mb-2">Muscle</p>
+      <p class="text-on-surface-variant text-[9px] font-bold tracking-[0.25em] uppercase mb-2">{{ 'picker.muscle' | t }}</p>
       <div class="flex flex-wrap gap-2">
         @for (m of muscles; track m.key) {
           <button (click)="toggleMuscle(m.key)"
                   [class]="selectedMuscle() === m.key
                     ? 'chip-active'
                     : 'chip'">
-            {{ m.label }}
+            {{ m.label | t }}
           </button>
         }
       </div>
@@ -35,14 +35,14 @@
 
     <!-- Equipment Filter -->
     <div>
-      <p class="text-on-surface-variant text-[9px] font-bold tracking-[0.25em] uppercase mb-2">Équipement</p>
+      <p class="text-on-surface-variant text-[9px] font-bold tracking-[0.25em] uppercase mb-2">{{ 'picker.equipment' | t }}</p>
       <div class="flex flex-wrap gap-2">
         @for (e of equipements; track e.key) {
           <button (click)="toggleEquipement(e.key)"
                   [class]="selectedEquipement() === e.key
                     ? 'chip-active'
                     : 'chip'">
-            {{ e.label }}
+            {{ e.label | t }}
           </button>
         }
       </div>
@@ -50,14 +50,14 @@
 
     <!-- Difficulty Filter -->
     <div>
-      <p class="text-on-surface-variant text-[9px] font-bold tracking-[0.25em] uppercase mb-2">Niveau</p>
+      <p class="text-on-surface-variant text-[9px] font-bold tracking-[0.25em] uppercase mb-2">{{ 'picker.level' | t }}</p>
       <div class="flex flex-wrap gap-2">
         @for (d of difficultes; track d.key) {
           <button (click)="toggleDifficulte(d.key)"
                   [class]="selectedDifficulte() === d.key
                     ? 'chip-active'
                     : 'chip'">
-            {{ d.label }}
+            {{ d.label | t }}
           </button>
         }
       </div>
@@ -78,7 +78,7 @@
     @else if (!hasSearched()) {
       <div class="flex flex-col items-center justify-center py-20 text-center">
         <span class="material-symbols-outlined text-5xl text-secondary/30 mb-4">fitness_center</span>
-        <p class="text-on-surface-variant text-sm">Recherche un exercice ou sélectionne un filtre</p>
+        <p class="text-on-surface-variant text-sm">{{ 'bib.emptyHint' | t }}</p>
       </div>
     }
 
@@ -86,19 +86,19 @@
     @else if (exercices().length === 0) {
       <div class="flex flex-col items-center justify-center py-20 text-center">
         <span class="material-symbols-outlined text-5xl text-on-surface-variant/30 mb-4">search_off</span>
-        <p class="text-on-surface-variant text-sm">Aucun exercice trouvé</p>
+        <p class="text-on-surface-variant text-sm">{{ 'bib.noResults' | t }}</p>
       </div>
     }
 
     <!-- Exercise Grid -->
     @else {
-      <p class="text-on-surface-variant text-[10px] uppercase tracking-widest mb-4">{{ exercices().length }} exercice{{ exercices().length > 1 ? 's' : '' }}</p>
+      <p class="text-on-surface-variant text-[10px] uppercase tracking-widest mb-4">{{ exercices().length }} {{ 'picker.exercises' | t }}</p>
       <div class="exercise-grid">
         @for (exo of exercices(); track exo.id) {
           <article (click)="openDetail(exo)" class="exercise-card">
             <div class="gif-container">
               @if (exo.imageUrl) {
-                <img [src]="exo.imageUrl" [alt]="exo.nomFr ?? exo.nomEn" loading="lazy" class="exercise-gif">
+                <img [src]="exo.imageUrl" [alt]="exo.nomFr | localize: exo.nomEn" loading="lazy" class="exercise-gif">
               } @else {
                 <div class="gif-placeholder">
                   <span class="material-symbols-outlined text-3xl text-secondary/40">fitness_center</span>
@@ -106,11 +106,11 @@
               }
             </div>
             <div class="p-3">
-              <h3 class="text-white font-bold text-sm leading-tight mb-1 line-clamp-2">{{ exo.nomFr ?? exo.nomEn }}</h3>
+              <h3 class="text-white font-bold text-sm leading-tight mb-1 line-clamp-2">{{ exo.nomFr | localize: exo.nomEn }}</h3>
               <div class="flex items-center justify-between">
-                <span class="text-secondary text-[10px] uppercase tracking-wider font-bold">{{ muscleLabel(exo.musclePrincipal) }}</span>
+                <span class="text-secondary text-[10px] uppercase tracking-wider font-bold">{{ muscleLabel(exo.musclePrincipal) | t }}</span>
                 @if (exo.difficulte) {
-                  <span [class]="'text-[9px] font-bold uppercase ' + difficulteClass(exo.difficulte)">{{ difficulteLabel(exo.difficulte) }}</span>
+                  <span [class]="'text-[9px] font-bold uppercase ' + difficulteClass(exo.difficulte)">{{ difficulteLabel(exo.difficulte) | t }}</span>
                 }
               </div>
             </div>
@@ -135,9 +135,9 @@
       <!-- Images -->
       @if (selectedExercice()!.imageUrl) {
         <div class="modal-gif-container">
-          <img [src]="selectedExercice()!.imageUrl" [alt]="selectedExercice()!.nomFr ?? selectedExercice()!.nomEn" class="modal-gif">
+          <img [src]="selectedExercice()!.imageUrl" [alt]="selectedExercice()!.nomFr | localize: selectedExercice()!.nomEn" class="modal-gif">
           @if (selectedExercice()!.imageUrl2) {
-            <img [src]="selectedExercice()!.imageUrl2" [alt]="selectedExercice()!.nomFr ?? selectedExercice()!.nomEn" class="modal-gif">
+            <img [src]="selectedExercice()!.imageUrl2" [alt]="selectedExercice()!.nomFr | localize: selectedExercice()!.nomEn" class="modal-gif">
           }
         </div>
       }
@@ -145,7 +145,7 @@
       <!-- Info -->
       <div class="p-5">
         <h2 class="text-white font-black font-headline text-xl uppercase tracking-tight mb-1">
-          {{ selectedExercice()!.nomFr ?? selectedExercice()!.nomEn }}
+          {{ selectedExercice()!.nomFr | localize: selectedExercice()!.nomEn }}
         </h2>
         @if (selectedExercice()!.nomFr && selectedExercice()!.nomEn !== selectedExercice()!.nomFr) {
           <p class="text-on-surface-variant text-xs mb-3 italic">{{ selectedExercice()!.nomEn }}</p>
@@ -154,23 +154,23 @@
         <!-- Tags -->
         <div class="flex flex-wrap gap-2 mb-4">
           @if (selectedExercice()!.musclePrincipal) {
-            <span class="tag tag-muscle">{{ muscleLabel(selectedExercice()!.musclePrincipal) }}</span>
+            <span class="tag tag-muscle">{{ muscleLabel(selectedExercice()!.musclePrincipal) | t }}</span>
           }
           @if (selectedExercice()!.typeEquipement) {
-            <span class="tag tag-equip">{{ equipementLabel(selectedExercice()!.typeEquipement) }}</span>
+            <span class="tag tag-equip">{{ equipementLabel(selectedExercice()!.typeEquipement) | t }}</span>
           }
           @if (selectedExercice()!.difficulte) {
-            <span [class]="'tag ' + difficulteClass(selectedExercice()!.difficulte)">{{ difficulteLabel(selectedExercice()!.difficulte) }}</span>
+            <span [class]="'tag ' + difficulteClass(selectedExercice()!.difficulte)">{{ difficulteLabel(selectedExercice()!.difficulte) | t }}</span>
           }
         </div>
 
         <!-- Secondary muscles -->
         @if (selectedExercice()!.musclesSecondaires && selectedExercice()!.musclesSecondaires.length > 0) {
           <div class="mb-4">
-            <p class="text-on-surface-variant text-[9px] uppercase tracking-widest font-bold mb-1">Muscles secondaires</p>
+            <p class="text-on-surface-variant text-[9px] uppercase tracking-widest font-bold mb-1">{{ 'bib.secondaryMuscles' | t }}</p>
             <div class="flex flex-wrap gap-1.5">
               @for (m of selectedExercice()!.musclesSecondaires; track m) {
-                <span class="tag tag-secondary">{{ muscleLabel(m) }}</span>
+                <span class="tag tag-secondary">{{ muscleLabel(m) | t }}</span>
               }
             </div>
           </div>
@@ -179,9 +179,9 @@
         <!-- Description -->
         @if (selectedExercice()!.descriptionFr ?? selectedExercice()!.descriptionEn) {
           <div>
-            <p class="text-on-surface-variant text-[9px] uppercase tracking-widest font-bold mb-2">Exécution</p>
+            <p class="text-on-surface-variant text-[9px] uppercase tracking-widest font-bold mb-2">{{ 'bib.execution' | t }}</p>
             <p class="text-on-surface text-sm leading-relaxed whitespace-pre-line">
-              {{ selectedExercice()!.descriptionFr ?? selectedExercice()!.descriptionEn }}
+              {{ selectedExercice()!.descriptionFr | localize: selectedExercice()!.descriptionEn }}
             </p>
           </div>
         }
@@ -190,7 +190,7 @@
         <button (click)="voirFiche()"
                 class="mt-5 w-full flex items-center justify-center gap-2 border border-secondary/30 text-secondary rounded-xl py-3 text-sm font-bold uppercase tracking-wider hover:bg-secondary/10 transition-colors">
           <span class="material-symbols-outlined text-base">open_in_new</span>
-          Voir la fiche complète
+          {{ 'bib.viewFullSheet' | t }}
         </button>
       </div>
     </div>

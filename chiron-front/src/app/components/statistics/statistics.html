@@ -1,4 +1,4 @@
-<app-header [title]="'STATS'" [showBack]="true" [backRoute]="'/chat'"></app-header>
+<app-header [title]="'stats.title' | t" [showBack]="true" [backRoute]="'/chat'"></app-header>
 
 <main class="min-h-screen pt-24 pb-32 heroic-texture px-4 md:px-8">
   <div class="max-w-4xl mx-auto">
@@ -6,9 +6,9 @@
     <!-- Titre -->
     <div class="text-center mb-6">
       <h2 class="font-headline text-4xl md:text-5xl font-black text-on-surface uppercase tracking-tight">
-        TES <span class="text-secondary">STATISTIQUES</span>
+        {{ 'stats.heroTitle1' | t }} <span class="text-secondary">{{ 'stats.heroTitle2' | t }}</span>
       </h2>
-      <p class="text-on-surface-variant font-body mt-2">Force, volume, progression, nutrition et récupération.</p>
+      <p class="text-on-surface-variant font-body mt-2">{{ 'stats.subtitle' | t }}</p>
     </div>
 
     <!-- Sélecteur de période -->
@@ -19,7 +19,7 @@
                   ? 'bg-secondary/20 border-secondary/50 text-secondary'
                   : 'bg-slate-900/40 border-white/5 text-on-surface-variant hover:text-on-surface'"
                 class="px-3 py-1.5 rounded-lg border text-xs font-bold tracking-widest uppercase transition-colors">
-          {{ p.label }}
+          {{ p.label | t }}
         </button>
       }
     </div>
@@ -33,7 +33,7 @@
                   : 'bg-slate-900/40 border-white/5 text-on-surface-variant hover:text-on-surface'"
                 class="shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-full border text-xs font-bold tracking-wide uppercase transition-colors">
           <span class="material-symbols-outlined text-base">{{ t.icon }}</span>
-          {{ t.label }}
+          {{ t.label | t }}
         </button>
       }
     </div>
@@ -50,37 +50,37 @@
       @if (overview(); as o) {
         <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
           <div class="bg-slate-900/40 border border-white/5 rounded-xl p-5">
-            <p class="text-[10px] font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-1">Séances (30 j)</p>
+            <p class="text-[10px] font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-1">{{ 'stats.sessions30' | t }}</p>
             <p class="text-3xl font-black text-white">{{ o.seances30 }}</p>
           </div>
           <div class="bg-slate-900/40 border border-white/5 rounded-xl p-5">
-            <p class="text-[10px] font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-1">Séances (total)</p>
+            <p class="text-[10px] font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-1">{{ 'stats.sessionsTotal' | t }}</p>
             <p class="text-3xl font-black text-white">{{ o.seancesTotal }}</p>
           </div>
           <div class="bg-slate-900/40 border border-white/5 rounded-xl p-5">
-            <p class="text-[10px] font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-1">Volume cette semaine</p>
+            <p class="text-[10px] font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-1">{{ 'stats.volumeWeek' | t }}</p>
             <p class="text-3xl font-black text-white">{{ o.tonnageSemaine | number:'1.0-0' }} <span class="text-base text-on-surface-variant">kg</span></p>
           </div>
           <div class="bg-slate-900/40 border border-white/5 rounded-xl p-5">
-            <p class="text-[10px] font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-1">Série (semaines)</p>
+            <p class="text-[10px] font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-1">{{ 'stats.streakWeeks' | t }}</p>
             <p class="text-3xl font-black text-secondary">{{ o.streakSemaines }} 🔥</p>
           </div>
           <div class="bg-slate-900/40 border border-white/5 rounded-xl p-5">
-            <p class="text-[10px] font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-1">Poids de corps</p>
+            <p class="text-[10px] font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-1">{{ 'stats.bodyweight' | t }}</p>
             <p class="text-3xl font-black text-white">{{ o.poidsCorps != null ? (o.poidsCorps | number:'1.0-1') + ' kg' : '—' }}</p>
           </div>
           <div [class]="tierClass(o.tierLevel)" class="bg-slate-900/40 border rounded-xl p-5" [style.border-color]="'var(--tier-border)'">
-            <p class="text-[10px] font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-1">Palier global</p>
+            <p class="text-[10px] font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-1">{{ 'stats.globalTier' | t }}</p>
             <p class="text-2xl font-black" [style.color]="'var(--tier-color)'">{{ o.tier }}</p>
-            <p class="text-[11px] text-on-surface-variant mt-0.5">{{ o.tierCategorie }} · niv. {{ o.tierLevel }}</p>
+            <p class="text-[11px] text-on-surface-variant mt-0.5">{{ o.tierCategorie }} · {{ 'stats.lvl' | t }} {{ o.tierLevel }}</p>
           </div>
           <div class="bg-slate-900/40 border border-white/5 rounded-xl p-5">
-            <p class="text-[10px] font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-1">Durée moyenne</p>
+            <p class="text-[10px] font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-1">{{ 'stats.avgDuration' | t }}</p>
             <p class="text-3xl font-black text-white">{{ formatDuration(o.dureeMoyenneMin) }}</p>
           </div>
         </div>
       } @else {
-        <p class="text-center text-on-surface-variant mt-10">Aucune donnée disponible.</p>
+        <p class="text-center text-on-surface-variant mt-10">{{ 'stats.noData' | t }}</p>
       }
     }
 
@@ -95,24 +95,24 @@
               <p class="text-xs font-bold text-on-surface truncate">{{ e.nom }}</p>
               <p [class]="tierClass(e.tierLevel)" class="text-sm font-black mt-1" [style.color]="'var(--tier-color)'">{{ e.tier }}</p>
               <p class="text-[11px] text-on-surface-variant mt-1">
-                {{ e.rm1Estime != null ? '1RM ~' + (e.rm1Estime | number:'1.0-0') + ' kg' : 'Aucun record' }}
+                {{ e.rm1Estime != null ? '1RM ~' + (e.rm1Estime | number:'1.0-0') + ' kg' : ('stats.noRecord' | t) }}
               </p>
             </button>
           }
         </div>
 
         <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4 md:p-6">
-          <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-4">Progression 1RM estimé</h3>
+          <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-4">{{ 'stats.e1rmProgress' | t }}</h3>
           @if (liftHistory().length > 1) {
             <div class="h-64">
               <canvas baseChart [type]="'line'" [data]="liftChart()" [options]="lineOptions"></canvas>
             </div>
           } @else {
-            <p class="text-on-surface-variant text-sm">Pas assez de records pour tracer une courbe (ajoute tes maxes depuis le Trésor).</p>
+            <p class="text-on-surface-variant text-sm">{{ 'stats.notEnoughRecords' | t }}</p>
           }
         </div>
       } @else {
-        <p class="text-center text-on-surface-variant mt-10">Aucune donnée de force.</p>
+        <p class="text-center text-on-surface-variant mt-10">{{ 'stats.noForceData' | t }}</p>
       }
     }
 
@@ -120,7 +120,7 @@
     @if (activeTab() === 'exercices' && !loading().exercices) {
       <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4 md:p-6">
         <input type="text" [ngModel]="exerciseQuery()" (ngModelChange)="exerciseQuery.set($event)"
-               placeholder="Rechercher un exercice…"
+               [placeholder]="'stats.searchExercise' | t"
                class="w-full bg-slate-950/60 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:border-secondary/50 mb-3" />
 
         <div class="flex gap-2 overflow-x-auto pb-2 mb-4 no-scrollbar">
@@ -132,15 +132,15 @@
             </button>
           }
           @if (filteredExercises().length === 0) {
-            <span class="text-sm text-on-surface-variant py-1.5">Aucun exercice trouvé.</span>
+            <span class="text-sm text-on-surface-variant py-1.5">{{ 'stats.noExerciseFound' | t }}</span>
           }
         </div>
 
         @if (selectedExercise()) {
           <div class="flex gap-2 mb-4">
             <button (click)="setMetric('e1rm')" [class]="progressMetric() === 'e1rm' ? 'bg-secondary/20 text-secondary border-secondary/50' : 'border-white/10 text-on-surface-variant'" class="px-3 py-1 rounded-lg border text-xs font-bold uppercase">1RM</button>
-            <button (click)="setMetric('chargeMax')" [class]="progressMetric() === 'chargeMax' ? 'bg-secondary/20 text-secondary border-secondary/50' : 'border-white/10 text-on-surface-variant'" class="px-3 py-1 rounded-lg border text-xs font-bold uppercase">Charge max</button>
-            <button (click)="setMetric('volume')" [class]="progressMetric() === 'volume' ? 'bg-secondary/20 text-secondary border-secondary/50' : 'border-white/10 text-on-surface-variant'" class="px-3 py-1 rounded-lg border text-xs font-bold uppercase">Volume</button>
+            <button (click)="setMetric('chargeMax')" [class]="progressMetric() === 'chargeMax' ? 'bg-secondary/20 text-secondary border-secondary/50' : 'border-white/10 text-on-surface-variant'" class="px-3 py-1 rounded-lg border text-xs font-bold uppercase">{{ 'stats.maxLoad' | t }}</button>
+            <button (click)="setMetric('volume')" [class]="progressMetric() === 'volume' ? 'bg-secondary/20 text-secondary border-secondary/50' : 'border-white/10 text-on-surface-variant'" class="px-3 py-1 rounded-lg border text-xs font-bold uppercase">{{ 'stats.tab.volume' | t }}</button>
           </div>
 
           @if (exerciseProgress().length > 1) {
@@ -148,7 +148,7 @@
               <canvas baseChart [type]="'line'" [data]="exerciseChart()" [options]="lineOptions"></canvas>
             </div>
           } @else {
-            <p class="text-on-surface-variant text-sm">Pas assez de données pour cet exercice.</p>
+            <p class="text-on-surface-variant text-sm">{{ 'stats.notEnoughExerciseData' | t }}</p>
           }
         }
       </div>
@@ -157,41 +157,41 @@
     <!-- ====================== VOLUME ====================== -->
     @if (activeTab() === 'volume' && !loading().volume) {
       <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4 md:p-6 mb-6">
-        <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-4">Tonnage hebdomadaire</h3>
+        <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-4">{{ 'stats.weeklyTonnage' | t }}</h3>
         @if (volume().length > 0) {
           <div class="h-56"><canvas baseChart [type]="'bar'" [data]="volumeChart()" [options]="barOptions"></canvas></div>
         } @else {
-          <p class="text-on-surface-variant text-sm">Aucune séance sur la période.</p>
+          <p class="text-on-surface-variant text-sm">{{ 'stats.noSessionsPeriod' | t }}</p>
         }
       </div>
 
       <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4 md:p-6 mb-6">
-        <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-4">Séances par semaine</h3>
+        <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-4">{{ 'stats.sessionsPerWeek' | t }}</h3>
         @if (volume().length > 0) {
           <div class="h-48"><canvas baseChart [type]="'bar'" [data]="sessionsChart()" [options]="barOptions"></canvas></div>
         } @else {
-          <p class="text-on-surface-variant text-sm">Aucune séance sur la période.</p>
+          <p class="text-on-surface-variant text-sm">{{ 'stats.noSessionsPeriod' | t }}</p>
         }
       </div>
 
       @if (hasDuree()) {
         <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4 md:p-6 mb-6">
-          <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-4">Durée moyenne par séance</h3>
+          <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-4">{{ 'stats.avgDurationPerSession' | t }}</h3>
           <div class="h-48"><canvas baseChart [type]="'bar'" [data]="dureeChart()" [options]="barOptions"></canvas></div>
         </div>
       }
 
       <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4 md:p-6">
-        <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-4">Répartition par muscle</h3>
+        <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-4">{{ 'stats.muscleDistribution' | t }}</h3>
         @if (muscles(); as m) {
           @if (m.muscles.length > 0) {
             <div class="h-72"><canvas baseChart [type]="'doughnut'" [data]="muscleChart()" [options]="doughnutOptions"></canvas></div>
           } @else {
-            <p class="text-on-surface-variant text-sm">Aucune donnée musculaire sur la période.</p>
+            <p class="text-on-surface-variant text-sm">{{ 'stats.noMuscleData' | t }}</p>
           }
           @if (m.negliges.length > 0) {
             <div class="mt-5 pt-4 border-t border-white/5">
-              <p class="text-[11px] font-bold tracking-widest uppercase text-on-surface-variant mb-2">Muscles négligés</p>
+              <p class="text-[11px] font-bold tracking-widest uppercase text-on-surface-variant mb-2">{{ 'stats.neglectedMuscles' | t }}</p>
               <div class="flex flex-wrap gap-2">
                 @for (mg of m.negliges; track mg) {
                   <span class="px-2.5 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-300 text-xs">{{ muscleLabel(mg) }}</span>
@@ -206,18 +206,18 @@
     <!-- ====================== CORPS ====================== -->
     @if (activeTab() === 'corps' && !loading().corps) {
       <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4 md:p-6">
-        <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-4">Évolution du poids de corps</h3>
+        <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-4">{{ 'stats.bodyweightEvolution' | t }}</h3>
         @if (bodyweight(); as b) {
           @if (!b.linked) {
             <div class="text-center py-8">
               <span class="material-symbols-outlined text-5xl text-secondary/40 mb-3">link_off</span>
-              <p class="text-on-surface-variant mb-4">Lie ton compte Olympus pour voir l'évolution de ton poids.</p>
-              <button (click)="goToProfile()" class="bg-secondary/15 border border-secondary/40 text-secondary px-5 py-2 rounded-lg text-xs font-bold tracking-widest uppercase hover:bg-secondary/25 transition-colors">Aller au profil</button>
+              <p class="text-on-surface-variant mb-4">{{ 'stats.linkOlympusWeight' | t }}</p>
+              <button (click)="goToProfile()" class="bg-secondary/15 border border-secondary/40 text-secondary px-5 py-2 rounded-lg text-xs font-bold tracking-widest uppercase hover:bg-secondary/25 transition-colors">{{ 'fitbit.goToProfile' | t }}</button>
             </div>
           } @else if (b.points.length > 1) {
             <div class="h-64"><canvas baseChart [type]="'line'" [data]="bodyweightChart()" [options]="lineOptions"></canvas></div>
           } @else {
-            <p class="text-on-surface-variant text-sm">Pas assez de mesures de poids sur la période.</p>
+            <p class="text-on-surface-variant text-sm">{{ 'stats.notEnoughWeightData' | t }}</p>
           }
         }
       </div>
@@ -229,19 +229,18 @@
       <div class="bg-secondary/5 border border-secondary/20 rounded-xl px-4 py-3 mb-4 flex items-start gap-3">
         <span class="material-symbols-outlined text-secondary text-xl shrink-0">mail</span>
         <p class="text-on-surface-variant text-xs leading-relaxed">
-          Envoie le PDF de ton scan Visbody à
+          {{ 'stats.visbodyHint1' | t }}
           <a href="mailto:chirondusanctuaire@gmail.com"
              class="text-secondary font-bold break-all">chirondusanctuaire&#64;gmail.com</a>
-          : il est importé automatiquement et apparaît ici. Renseigne ton prénom/nom dans les
-          réglages pour que le rapport soit associé à ton compte.
+          {{ 'stats.visbodyHint2' | t }}
         </p>
       </div>
       @if (bodyComposition(); as c) {
         @if (!c.hasData) {
           <div class="bg-slate-900/40 border border-white/5 rounded-xl p-6 text-center py-10">
             <span class="material-symbols-outlined text-5xl text-secondary/40 mb-3">scale</span>
-            <p class="text-on-surface-variant">Aucun scan de composition corporelle sur la période.</p>
-            <p class="text-on-surface-variant/70 text-xs mt-2">Envoie le PDF de ton scan Visbody par email pour le voir apparaître ici.</p>
+            <p class="text-on-surface-variant">{{ 'stats.noComposition' | t }}</p>
+            <p class="text-on-surface-variant/70 text-xs mt-2">{{ 'stats.noCompositionHint' | t }}</p>
           </div>
         } @else {
           <div class="space-y-6">
@@ -250,22 +249,22 @@
             @if (latestComposition(); as last) {
               <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4 md:p-6">
                 <div class="flex items-center justify-between mb-2 flex-wrap gap-2">
-                  <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant">Schéma corporel</h3>
+                  <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant">{{ 'stats.bodyDiagram' | t }}</h3>
                   <!-- Switch muscle / graisse -->
                   <div class="inline-flex rounded-lg border border-white/10 overflow-hidden text-[11px] font-bold tracking-widest uppercase">
                     <button (click)="setBodySegMode('muscle')"
-                            [class]="bodySegMode() === 'muscle' ? 'bg-green-500/20 text-green-300 px-4 py-1.5' : 'text-on-surface-variant px-4 py-1.5 hover:bg-white/5'">Muscle</button>
+                            [class]="bodySegMode() === 'muscle' ? 'bg-green-500/20 text-green-300 px-4 py-1.5' : 'text-on-surface-variant px-4 py-1.5 hover:bg-white/5'">{{ 'stats.muscle' | t }}</button>
                     <button (click)="setBodySegMode('graisse')"
-                            [class]="bodySegMode() === 'graisse' ? 'bg-secondary/20 text-secondary px-4 py-1.5' : 'text-on-surface-variant px-4 py-1.5 hover:bg-white/5'">Graisse</button>
+                            [class]="bodySegMode() === 'graisse' ? 'bg-secondary/20 text-secondary px-4 py-1.5' : 'text-on-surface-variant px-4 py-1.5 hover:bg-white/5'">{{ 'stats.fat' | t }}</button>
                   </div>
                 </div>
                 <p class="text-on-surface-variant/60 text-xs mb-3">
-                  {{ bodySegMode() === 'muscle' ? 'Masse musculaire' : 'Masse grasse' }} par segment (kg) — scan du {{ dateLabel(last.date) }}
+                  {{ (bodySegMode() === 'muscle' ? 'stats.muscleMassLabel' : 'stats.fatMassLabel') | t }} {{ 'stats.perSegment' | t }} — {{ 'stats.scanOf' | t }} {{ dateLabel(last.date) }}
                 </p>
 
                 @if (bodySegments(); as seg) {
                   <div class="flex justify-center">
-                    <svg viewBox="0 0 220 320" class="w-full max-w-[320px]" aria-label="Schéma corporel">
+                    <svg viewBox="0 0 220 320" class="w-full max-w-[320px]" [attr.aria-label]="'stats.bodyDiagram' | t">
                       <!-- Silhouette -->
                       <g [attr.fill]="bodySegFill()" [attr.stroke]="bodySegColor()" stroke-width="1.5">
                         <circle cx="110" cy="26" r="19" />
@@ -285,11 +284,11 @@
                       </g>
                       <!-- Libellés des segments -->
                       <g fill="#94a3b8" font-size="8" font-weight="700" text-anchor="middle" letter-spacing="0.5">
-                        <text x="34"  y="112">BRAS G</text>
-                        <text x="186" y="112">BRAS D</text>
-                        <text x="110" y="116">TRONC</text>
-                        <text x="64"  y="244">JAMBE G</text>
-                        <text x="156" y="244">JAMBE D</text>
+                        <text x="34"  y="112">{{ 'stats.armL' | t }}</text>
+                        <text x="186" y="112">{{ 'stats.armR' | t }}</text>
+                        <text x="110" y="116">{{ 'stats.trunk' | t }}</text>
+                        <text x="64"  y="244">{{ 'stats.legL' | t }}</text>
+                        <text x="156" y="244">{{ 'stats.legR' | t }}</text>
                       </g>
                     </svg>
                   </div>
@@ -299,14 +298,14 @@
               <!-- Dernier scan : jauges (positionnement faible / moyenne / élevée) -->
               <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4 md:p-6">
                 <div class="flex items-center justify-between mb-2 flex-wrap gap-2">
-                  <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant">Dernier scan — {{ dateLabel(last.date) }}</h3>
+                  <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant">{{ 'stats.lastScan' | t }} — {{ dateLabel(last.date) }}</h3>
                   @if (last.note != null) {
-                    <span class="text-secondary font-headline text-lg font-black">Note {{ last.note }}</span>
+                    <span class="text-secondary font-headline text-lg font-black">{{ 'stats.score' | t }} {{ last.note }}</span>
                   }
                 </div>
                 <p class="text-on-surface-variant/60 text-xs mb-5">
-                  Pour chaque indicateur : ta valeur (▼) située sur une échelle faible / moyenne / élevée.
-                  Touche l'icône <span class="material-symbols-outlined text-[13px] align-middle">info</span> pour le détail.
+                  {{ 'stats.gaugeHint1' | t }}
+                  {{ 'stats.gaugeHint2' | t }} <span class="material-symbols-outlined text-[13px] align-middle">info</span> {{ 'stats.gaugeHint3' | t }}
                 </p>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-7">
                   @for (g of compositionGauges(); track g.def.key) {
@@ -324,7 +323,7 @@
                 </div>
                 @if (profile()?.tailleCm == null || profile()?.sexe == null) {
                   <p class="text-on-surface-variant/50 text-[11px] mt-4">
-                    Renseigne ta taille, ton sexe et ta date de naissance dans les réglages pour des zones de référence personnalisées.
+                    {{ 'stats.profileHint' | t }}
                   </p>
                 }
               </div>
@@ -332,23 +331,23 @@
 
             <!-- Courbes d'évolution -->
             <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4 md:p-6">
-              <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-4">Poids, muscle &amp; graisse (kg)</h3>
+              <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-4">{{ 'stats.weightMuscleFat' | t }}</h3>
               <div class="h-64"><canvas baseChart [type]="'line'" [data]="compositionMassChart()" [options]="compositionOptions"></canvas></div>
             </div>
             <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4 md:p-6">
-              <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-4">Muscle squelettique, masse maigre &amp; protéines (kg)</h3>
+              <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-4">{{ 'stats.skeletalLeanProtein' | t }}</h3>
               <div class="h-64"><canvas baseChart [type]="'line'" [data]="compositionMuscleChart()" [options]="compositionOptions"></canvas></div>
             </div>
             <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4 md:p-6">
-              <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-4">Taux de graisse, IMC &amp; viscérale</h3>
+              <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-4">{{ 'stats.fatBmiVisceral' | t }}</h3>
               <div class="h-64"><canvas baseChart [type]="'line'" [data]="compositionFatChart()" [options]="compositionOptions"></canvas></div>
             </div>
             <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4 md:p-6">
-              <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-4">Eau corporelle (kg)</h3>
+              <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-4">{{ 'stats.bodyWater' | t }}</h3>
               <div class="h-64"><canvas baseChart [type]="'line'" [data]="compositionWaterChart()" [options]="compositionOptions"></canvas></div>
             </div>
             <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4 md:p-6">
-              <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-4">Métabolisme de base (kcal/j)</h3>
+              <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-4">{{ 'stats.bmrTitle' | t }}</h3>
               <div class="h-64"><canvas baseChart [type]="'line'" [data]="compositionMbChart()" [options]="compositionOptions"></canvas></div>
             </div>
           </div>
@@ -362,44 +361,44 @@
         @if (!n.linked) {
           <div class="text-center py-12 bg-slate-900/40 border border-white/5 rounded-xl">
             <span class="material-symbols-outlined text-6xl text-secondary/40 mb-4">restaurant</span>
-            <h3 class="text-xl font-headline text-on-surface">Compte Olympus non lié</h3>
-            <p class="text-on-surface-variant mb-5">Lie ton compte Olympus pour suivre tes calories et macros ici.</p>
-            <button (click)="goToProfile()" class="bg-secondary/15 border border-secondary/40 text-secondary px-6 py-2.5 rounded-lg text-xs font-bold tracking-widest uppercase hover:bg-secondary/25 transition-colors">Aller au profil</button>
+            <h3 class="text-xl font-headline text-on-surface">{{ 'stats.olympusNotLinked' | t }}</h3>
+            <p class="text-on-surface-variant mb-5">{{ 'stats.linkOlympusNutrition' | t }}</p>
+            <button (click)="goToProfile()" class="bg-secondary/15 border border-secondary/40 text-secondary px-6 py-2.5 rounded-lg text-xs font-bold tracking-widest uppercase hover:bg-secondary/25 transition-colors">{{ 'fitbit.goToProfile' | t }}</button>
           </div>
         } @else if (n.jours.length === 0) {
-          <p class="text-center text-on-surface-variant mt-10">Aucune donnée nutritionnelle sur la période.</p>
+          <p class="text-center text-on-surface-variant mt-10">{{ 'stats.noNutritionData' | t }}</p>
         } @else {
           <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
             <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4">
-              <p class="text-[10px] font-bold tracking-widest uppercase text-on-surface-variant mb-1">Cal. moy.</p>
+              <p class="text-[10px] font-bold tracking-widest uppercase text-on-surface-variant mb-1">{{ 'stats.avgCal' | t }}</p>
               <p class="text-2xl font-black text-white">{{ n.moyKcal != null ? (n.moyKcal | number:'1.0-0') : '—' }}</p>
             </div>
             <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4">
-              <p class="text-[10px] font-bold tracking-widest uppercase text-on-surface-variant mb-1">Prot. moy.</p>
+              <p class="text-[10px] font-bold tracking-widest uppercase text-on-surface-variant mb-1">{{ 'stats.avgProt' | t }}</p>
               <p class="text-2xl font-black text-red-300">{{ n.moyProteines != null ? (n.moyProteines | number:'1.0-0') + ' g' : '—' }}</p>
             </div>
             <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4">
-              <p class="text-[10px] font-bold tracking-widest uppercase text-on-surface-variant mb-1">Gluc. moy.</p>
+              <p class="text-[10px] font-bold tracking-widest uppercase text-on-surface-variant mb-1">{{ 'stats.avgCarbs' | t }}</p>
               <p class="text-2xl font-black text-amber-300">{{ n.moyGlucides != null ? (n.moyGlucides | number:'1.0-0') + ' g' : '—' }}</p>
             </div>
             <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4">
-              <p class="text-[10px] font-bold tracking-widest uppercase text-on-surface-variant mb-1">Lip. moy.</p>
+              <p class="text-[10px] font-bold tracking-widest uppercase text-on-surface-variant mb-1">{{ 'stats.avgFat' | t }}</p>
               <p class="text-2xl font-black text-indigo-300">{{ n.moyLipides != null ? (n.moyLipides | number:'1.0-0') + ' g' : '—' }}</p>
             </div>
           </div>
 
           <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4 md:p-6 mb-6">
-            <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-4">Calories vs objectif</h3>
+            <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-4">{{ 'stats.caloriesVsTarget' | t }}</h3>
             <div class="h-64"><canvas baseChart [type]="'line'" [data]="caloriesChart()" [options]="lineOptions"></canvas></div>
           </div>
 
           <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4 md:p-6 mb-6">
-            <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-4">Macros par jour</h3>
+            <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-4">{{ 'stats.macrosPerDay' | t }}</h3>
             <div class="h-64"><canvas baseChart [type]="'line'" [data]="macrosChart()" [options]="lineOptions"></canvas></div>
           </div>
 
           <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4 md:p-6">
-            <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-4">Répartition moyenne des macros</h3>
+            <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-4">{{ 'stats.avgMacroSplit' | t }}</h3>
             <div class="h-64"><canvas baseChart [type]="'doughnut'" [data]="macrosDoughnut()" [options]="doughnutOptions"></canvas></div>
           </div>
         }
@@ -409,20 +408,20 @@
     <!-- ====================== RÉCUP ====================== -->
     @if (activeTab() === 'recup' && !loading().recup) {
       <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4 md:p-6 mb-6">
-        <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-4">Sommeil</h3>
+        <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-4">{{ 'stats.sleep' | t }}</h3>
         @if (recovery().length > 1) {
           <div class="h-56"><canvas baseChart [type]="'line'" [data]="sleepChart()" [options]="lineOptions"></canvas></div>
         } @else {
-          <p class="text-on-surface-variant text-sm">Pas assez de données de sommeil. Renseigne ton état du jour depuis le chat.</p>
+          <p class="text-on-surface-variant text-sm">{{ 'stats.notEnoughSleep' | t }}</p>
         }
       </div>
 
       <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4 md:p-6">
-        <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-4">Forme (énergie, fatigue, stress, courbatures)</h3>
+        <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-4">{{ 'stats.wellbeing' | t }}</h3>
         @if (recovery().length > 1) {
           <div class="h-64"><canvas baseChart [type]="'line'" [data]="wellbeingChart()" [options]="wellbeingOptions"></canvas></div>
         } @else {
-          <p class="text-on-surface-variant text-sm">Pas assez de données. Note ton état quotidien pour suivre ta forme ici.</p>
+          <p class="text-on-surface-variant text-sm">{{ 'stats.notEnoughWellbeing' | t }}</p>
         }
       </div>
     }

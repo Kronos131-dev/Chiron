@@ -7,9 +7,9 @@
     <!-- Page Title & Subtitle -->
     <div class="text-center mb-10">
       <h2 class="font-headline text-4xl md:text-5xl font-black text-on-surface uppercase tracking-tight">
-        TON <span class="text-cyan-400">CORPS</span>
+        {{ 'fitbit.title1' | t }} <span class="text-cyan-400">{{ 'fitbit.title2' | t }}</span>
       </h2>
-      <p class="text-on-surface-variant font-body mt-2">Activité, sommeil et récupération mesurés par Fitbit.</p>
+      <p class="text-on-surface-variant font-body mt-2">{{ 'fitbit.subtitle' | t }}</p>
     </div>
 
     <!-- Loading Spinner -->
@@ -25,7 +25,7 @@
         <p class="text-on-surface-variant">{{ error() }}</p>
         <button (click)="load()"
                 class="mt-4 bg-cyan-500/15 border border-cyan-500/40 text-cyan-400 px-5 py-2 rounded-lg text-xs font-bold tracking-widest uppercase hover:bg-cyan-500/25 transition-colors">
-          Réessayer
+          {{ 'common.retry' | t }}
         </button>
       </div>
     }
@@ -36,28 +36,28 @@
       @if (!d.linked) {
         <div class="text-center p-12 bg-slate-900/50 rounded-xl border border-cyan-500/10">
           <span class="material-symbols-outlined text-6xl text-cyan-400/40 mb-4">watch_off</span>
-          <h3 class="text-xl font-headline text-on-surface">Compte Fitbit non connecté</h3>
-          <p class="text-on-surface-variant mb-5">Connecte ton compte Fitbit pour suivre ton activité ici.</p>
+          <h3 class="text-xl font-headline text-on-surface">{{ 'fitbit.notLinkedTitle' | t }}</h3>
+          <p class="text-on-surface-variant mb-5">{{ 'fitbit.notLinkedText' | t }}</p>
           <button (click)="goToProfile()"
                   class="bg-cyan-500/15 border border-cyan-500/40 text-cyan-400 px-6 py-2.5 rounded-lg text-xs font-bold tracking-widest uppercase hover:bg-cyan-500/25 transition-colors">
-            Aller au profil
+            {{ 'fitbit.goToProfile' | t }}
           </button>
         </div>
       } @else if (d.needsReconnect) {
         <div class="text-center p-12 bg-slate-900/50 rounded-xl border border-amber-500/20">
           <span class="material-symbols-outlined text-6xl text-amber-400/50 mb-4">link_off</span>
-          <h3 class="text-xl font-headline text-on-surface">Connexion Fitbit expirée</h3>
-          <p class="text-on-surface-variant mb-5">Reconnecte ton compte pour réactiver la synchronisation.</p>
+          <h3 class="text-xl font-headline text-on-surface">{{ 'fitbit.expiredTitle' | t }}</h3>
+          <p class="text-on-surface-variant mb-5">{{ 'fitbit.expiredText' | t }}</p>
           <button (click)="goToProfile()"
                   class="bg-cyan-500/15 border border-cyan-500/40 text-cyan-400 px-6 py-2.5 rounded-lg text-xs font-bold tracking-widest uppercase hover:bg-cyan-500/25 transition-colors">
-            Reconnecter
+            {{ 'fitbit.reconnect' | t }}
           </button>
         </div>
       } @else if (!d.dataAvailable) {
         <div class="text-center p-12 bg-slate-900/50 rounded-xl border border-cyan-500/10">
           <span class="material-symbols-outlined text-6xl text-cyan-400/40 mb-4">cloud_off</span>
-          <h3 class="text-xl font-headline text-on-surface">Fitbit momentanément injoignable</h3>
-          <p class="text-on-surface-variant mb-5">Les données n'ont pas pu être chargées. Réessaie plus tard.</p>
+          <h3 class="text-xl font-headline text-on-surface">{{ 'fitbit.unavailableTitle' | t }}</h3>
+          <p class="text-on-surface-variant mb-5">{{ 'fitbit.unavailableText' | t }}</p>
           <button (click)="load()"
                   class="bg-cyan-500/15 border border-cyan-500/40 text-cyan-400 px-6 py-2.5 rounded-lg text-xs font-bold tracking-widest uppercase hover:bg-cyan-500/25 transition-colors">
             Réessayer
@@ -70,7 +70,7 @@
           <div class="bg-slate-900/40 border border-cyan-500/15 rounded-xl p-5">
             <div class="flex items-center gap-2 mb-1">
               <span class="material-symbols-outlined text-cyan-400 text-lg">footprint</span>
-              <span class="text-[10px] font-bold tracking-[0.2em] uppercase text-on-surface-variant">Pas aujourd'hui</span>
+              <span class="text-[10px] font-bold tracking-[0.2em] uppercase text-on-surface-variant">{{ 'fitbit.stepsToday' | t }}</span>
             </div>
             <p class="text-3xl font-black text-white">{{ d.stepsToday ?? '—' }}</p>
           </div>
@@ -78,7 +78,7 @@
           <div class="bg-slate-900/40 border border-cyan-500/15 rounded-xl p-5">
             <div class="flex items-center gap-2 mb-1">
               <span class="material-symbols-outlined text-cyan-400 text-lg">bedtime</span>
-              <span class="text-[10px] font-bold tracking-[0.2em] uppercase text-on-surface-variant">Sommeil nuit</span>
+              <span class="text-[10px] font-bold tracking-[0.2em] uppercase text-on-surface-variant">{{ 'fitbit.sleepNight' | t }}</span>
             </div>
             <p class="text-3xl font-black text-white">
               {{ d.sleepHoursLastNight != null ? d.sleepHoursLastNight + ' h' : '—' }}
@@ -88,7 +88,7 @@
           <div class="bg-slate-900/40 border border-cyan-500/15 rounded-xl p-5">
             <div class="flex items-center gap-2 mb-1">
               <span class="material-symbols-outlined text-cyan-400 text-lg">cardiology</span>
-              <span class="text-[10px] font-bold tracking-[0.2em] uppercase text-on-surface-variant">FC repos</span>
+              <span class="text-[10px] font-bold tracking-[0.2em] uppercase text-on-surface-variant">{{ 'fitbit.restingHr' | t }}</span>
             </div>
             <p class="text-3xl font-black text-white">
               {{ d.restingHeartRate != null ? d.restingHeartRate + ' bpm' : '—' }}
@@ -98,7 +98,7 @@
 
         <!-- Graphe des pas -->
         <div class="bg-slate-900/40 border border-white/5 rounded-xl p-6 mb-6">
-          <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-4">Pas sur 7 jours</h3>
+          <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-4">{{ 'fitbit.steps7d' | t }}</h3>
           @if (d.days.length > 0) {
             <div class="flex items-stretch gap-2 h-40">
               @for (day of d.days; track day.date) {
@@ -113,13 +113,13 @@
               }
             </div>
           } @else {
-            <p class="text-on-surface-variant text-sm">Aucune donnée de pas sur la période.</p>
+            <p class="text-on-surface-variant text-sm">{{ 'fitbit.noStepsData' | t }}</p>
           }
         </div>
 
         <!-- Graphe du sommeil -->
         <div class="bg-slate-900/40 border border-white/5 rounded-xl p-6">
-          <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-4">Sommeil sur 7 nuits</h3>
+          <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-4">{{ 'fitbit.sleep7n' | t }}</h3>
           @if (d.days.length > 0) {
             <div class="flex items-stretch gap-2 h-40">
               @for (day of d.days; track day.date) {
@@ -136,7 +136,7 @@
               }
             </div>
           } @else {
-            <p class="text-on-surface-variant text-sm">Aucune donnée de sommeil sur la période.</p>
+            <p class="text-on-surface-variant text-sm">{{ 'fitbit.noSleepData' | t }}</p>
           }
         </div>
 

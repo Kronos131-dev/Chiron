@@ -4,7 +4,7 @@
 <div class="chat-shell heroic-texture">
 
   <!-- Bouton d'ouverture de l'historique des conversations -->
-  <button type="button" class="chat-history-btn" (click)="toggleHistory()" aria-label="Historique des conversations">
+  <button type="button" class="chat-history-btn" (click)="toggleHistory()" [attr.aria-label]="'chat.historyAria' | t">
     <span class="material-symbols-outlined">forum</span>
   </button>
 
@@ -13,15 +13,15 @@
     <div class="history-overlay" (click)="toggleHistory()"></div>
     <aside class="history-panel">
       <header class="history-head">
-        <span class="history-title">Conversations</span>
-        <button type="button" class="history-close" (click)="toggleHistory()" aria-label="Fermer">
+        <span class="history-title">{{ 'chat.conversations' | t }}</span>
+        <button type="button" class="history-close" (click)="toggleHistory()" [attr.aria-label]="'common.close' | t">
           <span class="material-symbols-outlined">close</span>
         </button>
       </header>
 
       <button type="button" class="history-new" (click)="newConversation()">
         <span class="material-symbols-outlined">add</span>
-        Nouvelle conversation
+        {{ 'chat.newConversation' | t }}
       </button>
 
       <div class="history-list">
@@ -30,13 +30,13 @@
                [class.active]="conv.id === activeConversationId()"
                (click)="loadConversation(conv.id)">
             <span class="material-symbols-outlined history-item-icon">chat_bubble</span>
-            <span class="history-item-title">{{ conv.titre || 'Sans titre' }}</span>
-            <button type="button" class="history-item-del" (click)="deleteConversation(conv.id, $event)" aria-label="Supprimer">
+            <span class="history-item-title">{{ conv.titre || ('chat.untitled' | t) }}</span>
+            <button type="button" class="history-item-del" (click)="deleteConversation(conv.id, $event)" [attr.aria-label]="'common.delete' | t">
               <span class="material-symbols-outlined">delete</span>
             </button>
           </div>
         } @empty {
-          <p class="history-empty">Aucune conversation pour l'instant.</p>
+          <p class="history-empty">{{ 'chat.noConversations' | t }}</p>
         }
       </div>
     </aside>
@@ -75,7 +75,7 @@
             </div>
             <div class="msg-bubble typing-bubble">
               <div class="typing-dots"><span></span><span></span><span></span></div>
-              <span class="typing-text">Chiron réfléchit…</span>
+              <span class="typing-text">{{ 'chat.thinking' | t }}</span>
             </div>
           </div>
         }
@@ -93,7 +93,7 @@
         [class.recording]="isRecording()"
         (click)="toggleRecording()"
         [disabled]="isLoading()"
-        aria-label="Dicter">
+        [attr.aria-label]="'chat.dictate' | t">
         <span class="material-symbols-outlined">{{ isRecording() ? 'stop_circle' : 'mic' }}</span>
       </button>
 
@@ -102,7 +102,7 @@
         [ngModel]="userInput()"
         (ngModelChange)="userInput.set($event)"
         (keyup.enter)="onSend()"
-        placeholder="Parle à Chiron…"
+        [placeholder]="'chat.placeholder' | t"
         type="text"
         [disabled]="isLoading()" />
 
@@ -111,7 +111,7 @@
         class="composer-send"
         (click)="onSend()"
         [disabled]="isLoading() || !userInput().trim()"
-        aria-label="Envoyer">
+        [attr.aria-label]="'chat.send' | t">
         <span class="material-symbols-outlined">arrow_upward</span>
       </button>
     </div>

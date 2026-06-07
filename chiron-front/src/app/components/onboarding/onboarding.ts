@@ -10,11 +10,13 @@ import {
   TypeEquipement,
   UserProfileSetup,
 } from '../../service/chiron-api';
+import { I18nService } from '../../service/i18n.service';
+import { TranslatePipe } from '../../service/translate.pipe';
 
 @Component({
   selector: 'app-onboarding',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslatePipe],
   templateUrl: './onboarding.html',
   styleUrls: ['./onboarding.css'],
 })
@@ -37,39 +39,40 @@ export class OnboardingComponent implements OnInit {
   blessures = signal<string>('');
   preferences = signal<string>('');
 
+  // Les labels sont des clés i18n rendues via `| t` dans le template.
   readonly sexes: { value: Sexe; label: string }[] = [
-    { value: 'HOMME', label: 'Homme' },
-    { value: 'FEMME', label: 'Femme' },
-    { value: 'AUTRE', label: 'Autre' },
+    { value: 'HOMME', label: 'onboarding.sexe.HOMME' },
+    { value: 'FEMME', label: 'onboarding.sexe.FEMME' },
+    { value: 'AUTRE', label: 'onboarding.sexe.AUTRE' },
   ];
 
   readonly niveaux: { value: NiveauExperience; label: string; hint: string }[] = [
-    { value: 'DEBUTANT', label: 'Débutant', hint: '< 6 mois' },
-    { value: 'INTERMEDIAIRE', label: 'Intermédiaire', hint: '6 mois – 2 ans' },
-    { value: 'AVANCE', label: 'Avancé', hint: '2 – 5 ans' },
-    { value: 'EXPERT', label: 'Expert', hint: '5+ ans' },
+    { value: 'DEBUTANT', label: 'onboarding.niveau.DEBUTANT', hint: 'onboarding.niveau.DEBUTANT.hint' },
+    { value: 'INTERMEDIAIRE', label: 'onboarding.niveau.INTERMEDIAIRE', hint: 'onboarding.niveau.INTERMEDIAIRE.hint' },
+    { value: 'AVANCE', label: 'onboarding.niveau.AVANCE', hint: 'onboarding.niveau.AVANCE.hint' },
+    { value: 'EXPERT', label: 'onboarding.niveau.EXPERT', hint: 'onboarding.niveau.EXPERT.hint' },
   ];
 
   readonly objectifs: { value: ObjectifPrincipal; label: string }[] = [
-    { value: 'FORCE', label: 'Force' },
-    { value: 'HYPERTROPHIE', label: 'Hypertrophie' },
-    { value: 'ENDURANCE', label: 'Endurance' },
-    { value: 'PERTE_DE_GRAS', label: 'Perte de gras' },
-    { value: 'MAINTIEN', label: 'Maintien' },
-    { value: 'SANTE_GENERALE', label: 'Santé générale' },
+    { value: 'FORCE', label: 'onboarding.objectif.FORCE' },
+    { value: 'HYPERTROPHIE', label: 'onboarding.objectif.HYPERTROPHIE' },
+    { value: 'ENDURANCE', label: 'onboarding.objectif.ENDURANCE' },
+    { value: 'PERTE_DE_GRAS', label: 'onboarding.objectif.PERTE_DE_GRAS' },
+    { value: 'MAINTIEN', label: 'onboarding.objectif.MAINTIEN' },
+    { value: 'SANTE_GENERALE', label: 'onboarding.objectif.SANTE_GENERALE' },
   ];
 
   readonly materiels: { value: TypeEquipement; label: string }[] = [
-    { value: 'POIDS_DU_CORPS', label: 'Poids du corps' },
-    { value: 'HALTERES', label: 'Haltères' },
-    { value: 'BARRE', label: 'Barre' },
-    { value: 'MACHINE', label: 'Machines' },
-    { value: 'POULIE', label: 'Poulies' },
-    { value: 'KETTLEBELL', label: 'Kettlebell' },
-    { value: 'ELASTIQUE', label: 'Élastiques' },
-    { value: 'BARRE_FIXE', label: 'Barre fixe' },
-    { value: 'ANNEAUX', label: 'Anneaux' },
-    { value: 'AUTRE', label: 'Autre' },
+    { value: 'POIDS_DU_CORPS', label: 'equip.POIDS_DU_CORPS' },
+    { value: 'HALTERES', label: 'equip.HALTERES' },
+    { value: 'BARRE', label: 'equip.BARRE' },
+    { value: 'MACHINE', label: 'equip.MACHINE' },
+    { value: 'POULIE', label: 'equip.POULIE' },
+    { value: 'KETTLEBELL', label: 'equip.KETTLEBELL' },
+    { value: 'ELASTIQUE', label: 'equip.ELASTIQUE' },
+    { value: 'BARRE_FIXE', label: 'equip.BARRE_FIXE' },
+    { value: 'ANNEAUX', label: 'equip.ANNEAUX' },
+    { value: 'AUTRE', label: 'equip.AUTRE' },
   ];
 
   canGoNext = computed(() => {
@@ -86,7 +89,7 @@ export class OnboardingComponent implements OnInit {
     return true;
   });
 
-  constructor(private router: Router, private chironApi: ChironApi) {}
+  constructor(private router: Router, private chironApi: ChironApi, public i18n: I18nService) {}
 
   ngOnInit() {
     // /onboarding sert à la fois pour le premier login et pour l'édition ultérieure.
@@ -163,7 +166,7 @@ export class OnboardingComponent implements OnInit {
       },
       error: () => {
         this.saving.set(false);
-        this.error.set('Erreur lors de l\'enregistrement. Réessaie.');
+        this.error.set(this.i18n.t('onboarding.saveError'));
       }
     });
   }

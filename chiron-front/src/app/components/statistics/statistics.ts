@@ -5,6 +5,8 @@ import { Router } from '@angular/router';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartData } from 'chart.js';
 import { HeaderComponent } from '../shared/header/header';
+import { TranslatePipe } from '../../service/translate.pipe';
+import { I18nService } from '../../service/i18n.service';
 import { AuthService } from '../../service/auth.service';
 import { formatDuration } from '../../util/duration';
 import { CompositionGaugeComponent } from './composition-gauge/composition-gauge';
@@ -37,7 +39,7 @@ type ProgressMetric = 'e1rm' | 'chargeMax' | 'volume';
 @Component({
   selector: 'app-statistics',
   standalone: true,
-  imports: [CommonModule, FormsModule, HeaderComponent, BaseChartDirective, CompositionGaugeComponent],
+  imports: [CommonModule, FormsModule, HeaderComponent, BaseChartDirective, CompositionGaugeComponent, TranslatePipe],
   templateUrl: './statistics.html',
   styleUrls: ['./statistics.css'],
 })
@@ -48,6 +50,7 @@ export class Statistics implements OnInit {
   protected formatDuration = formatDuration;
   private auth = inject(AuthService);
   private router = inject(Router);
+  private i18n = inject(I18nService);
 
   private username = this.auth.getUsername() ?? '';
 
@@ -65,21 +68,21 @@ export class Statistics implements OnInit {
   };
 
   readonly tabs: { id: Tab; label: string; icon: string }[] = [
-    { id: 'overview', label: "Vue d'ensemble", icon: 'dashboard' },
-    { id: 'force', label: 'Force', icon: 'fitness_center' },
-    { id: 'exercices', label: 'Exercices', icon: 'show_chart' },
-    { id: 'volume', label: 'Volume', icon: 'bar_chart' },
-    { id: 'corps', label: 'Corps', icon: 'monitor_weight' },
-    { id: 'composition', label: 'Composition', icon: 'accessibility_new' },
-    { id: 'nutrition', label: 'Nutrition', icon: 'restaurant' },
-    { id: 'recup', label: 'Récup', icon: 'bedtime' },
+    { id: 'overview', label: 'stats.tab.overview', icon: 'dashboard' },
+    { id: 'force', label: 'stats.tab.force', icon: 'fitness_center' },
+    { id: 'exercices', label: 'stats.tab.exercises', icon: 'show_chart' },
+    { id: 'volume', label: 'stats.tab.volume', icon: 'bar_chart' },
+    { id: 'corps', label: 'stats.tab.body', icon: 'monitor_weight' },
+    { id: 'composition', label: 'stats.tab.composition', icon: 'accessibility_new' },
+    { id: 'nutrition', label: 'stats.tab.nutrition', icon: 'restaurant' },
+    { id: 'recup', label: 'stats.tab.recovery', icon: 'bedtime' },
   ];
 
   readonly periodes: { value: Periode; label: string }[] = [
-    { value: 30, label: '30 j' },
-    { value: 90, label: '90 j' },
-    { value: 365, label: '1 an' },
-    { value: 3650, label: 'Tout' },
+    { value: 30, label: 'stats.period.30' },
+    { value: 90, label: 'stats.period.90' },
+    { value: 365, label: 'stats.period.365' },
+    { value: 3650, label: 'stats.period.all' },
   ];
 
   activeTab = signal<Tab>('overview');
@@ -236,7 +239,7 @@ export class Statistics implements OnInit {
       labels: h.map((p) => this.dateLabel(p.recordedAt)),
       datasets: [{
         data: h.map((p) => p.rm1Estime ?? 0),
-        label: '1RM estimé (kg)',
+        label: this.i18n.t('stats.chart.e1rm'),
         borderColor: this.COL.orange,
         backgroundColor: 'rgba(255,183,121,0.15)',
         fill: true,
@@ -271,7 +274,7 @@ export class Statistics implements OnInit {
   exerciseChart = computed<ChartData<'line'>>(() => {
     const pts = this.exerciseProgress();
     const metric = this.progressMetric();
-    const label = metric === 'e1rm' ? '1RM estimé (kg)' : metric === 'chargeMax' ? 'Charge max (kg)' : 'Volume (kg)';
+    const label = metric === 'e1rm' ? this.i18n.t('stats.chart.e1rm') : metric === 'chargeMax' ? this.i18n.t('stats.chart.maxLoad') : this.i18n.t('stats.chart.volumeKg');
     const color = metric === 'e1rm' ? this.COL.orange : metric === 'chargeMax' ? this.COL.cyan : this.COL.indigo;
     return {
       labels: pts.map((p) => this.dateLabel(p.date)),
@@ -295,7 +298,7 @@ export class Statistics implements OnInit {
       labels: v.map((p) => p.label),
       datasets: [{
         data: v.map((p) => p.tonnage),
-        label: 'Tonnage (kg)',
+        label: this.i18n.t('stats.chart.tonnage'),
         backgroundColor: this.hexA(this.COL.orange, 0.55),
         borderRadius: 4,
       }],
@@ -308,7 +311,7 @@ export class Statistics implements OnInit {
       labels: v.map((p) => p.label),
       datasets: [{
         data: v.map((p) => p.nbSeances),
-        label: 'Séances',
+        label: this.i18n.t('stats.chart.sessions'),
         backgroundColor: this.hexA(this.COL.cyan, 0.55),
         borderRadius: 4,
       }],
@@ -324,7 +327,7 @@ export class Statistics implements OnInit {
       labels: v.map((p) => p.label),
       datasets: [{
         data: v.map((p) => p.dureeMoyenneMin ?? 0),
-        label: 'Durée moyenne (min)',
+        label: this.i18n.t('stats.chart.avgDuration'),
         backgroundColor: this.hexA(this.COL.indigo, 0.55),
         borderRadius: 4,
       }],
@@ -358,7 +361,7 @@ export class Statistics implements OnInit {
       labels: pts.map((p) => this.dateLabel(p.date)),
       datasets: [{
         data: pts.map((p) => p.poids),
-        label: 'Poids (kg)',
+        label: this.i18n.t('stats.chart.weight'),
         borderColor: this.COL.green,
         backgroundColor: this.hexA(this.COL.green, 0.15),
         fill: true,
@@ -377,9 +380,9 @@ export class Statistics implements OnInit {
     return {
       labels,
       datasets: [
-        { data: pts.map((p) => p.poids), label: 'Poids (kg)', borderColor: this.COL.orange, backgroundColor: this.hexA(this.COL.orange, 0.12), fill: false, tension: 0.3, pointRadius: 3, spanGaps: true },
-        { data: pts.map((p) => p.masseMusculaire), label: 'Masse musculaire (kg)', borderColor: this.COL.green, backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 3, spanGaps: true },
-        { data: pts.map((p) => p.mgc), label: 'Masse grasse (kg)', borderColor: this.COL.red, backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 3, spanGaps: true },
+        { data: pts.map((p) => p.poids), label: this.i18n.t('stats.chart.weight'), borderColor: this.COL.orange, backgroundColor: this.hexA(this.COL.orange, 0.12), fill: false, tension: 0.3, pointRadius: 3, spanGaps: true },
+        { data: pts.map((p) => p.masseMusculaire), label: this.i18n.t('stats.chart.muscleMass'), borderColor: this.COL.green, backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 3, spanGaps: true },
+        { data: pts.map((p) => p.mgc), label: this.i18n.t('stats.chart.fatMass'), borderColor: this.COL.red, backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 3, spanGaps: true },
       ],
     };
   });
@@ -390,9 +393,9 @@ export class Statistics implements OnInit {
     return {
       labels: pts.map((p) => this.dateLabel(p.date)),
       datasets: [
-        { data: pts.map((p) => p.tgcPct), label: 'Taux de graisse (%)', borderColor: this.COL.amber, backgroundColor: this.hexA(this.COL.amber, 0.15), fill: true, tension: 0.3, pointRadius: 3, spanGaps: true },
-        { data: pts.map((p) => p.imc), label: 'IMC', borderColor: this.COL.cyan, backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 3, spanGaps: true },
-        { data: pts.map((p) => p.graisseViscerale), label: 'Graisse viscérale', borderColor: this.COL.violet, backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 3, spanGaps: true },
+        { data: pts.map((p) => p.tgcPct), label: this.i18n.t('stats.chart.fatPct'), borderColor: this.COL.amber, backgroundColor: this.hexA(this.COL.amber, 0.15), fill: true, tension: 0.3, pointRadius: 3, spanGaps: true },
+        { data: pts.map((p) => p.imc), label: this.i18n.t('stats.chart.bmi'), borderColor: this.COL.cyan, backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 3, spanGaps: true },
+        { data: pts.map((p) => p.graisseViscerale), label: this.i18n.t('stats.chart.visceralFat'), borderColor: this.COL.violet, backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 3, spanGaps: true },
       ],
     };
   });
@@ -403,9 +406,9 @@ export class Statistics implements OnInit {
     return {
       labels: pts.map((p) => this.dateLabel(p.date)),
       datasets: [
-        { data: pts.map((p) => p.mms), label: 'Musculaire squelettique (kg)', borderColor: this.COL.green, backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 3, spanGaps: true },
-        { data: pts.map((p) => p.mmc), label: 'Masse maigre (kg)', borderColor: this.COL.indigo, backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 3, spanGaps: true },
-        { data: pts.map((p) => p.masseProteine), label: 'Protéines (kg)', borderColor: this.COL.violet, backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 3, spanGaps: true },
+        { data: pts.map((p) => p.mms), label: this.i18n.t('stats.chart.skeletalMuscle'), borderColor: this.COL.green, backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 3, spanGaps: true },
+        { data: pts.map((p) => p.mmc), label: this.i18n.t('stats.chart.leanMass'), borderColor: this.COL.indigo, backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 3, spanGaps: true },
+        { data: pts.map((p) => p.masseProteine), label: this.i18n.t('stats.chart.protein'), borderColor: this.COL.violet, backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 3, spanGaps: true },
       ],
     };
   });
@@ -416,9 +419,9 @@ export class Statistics implements OnInit {
     return {
       labels: pts.map((p) => this.dateLabel(p.date)),
       datasets: [
-        { data: pts.map((p) => p.eauTotale), label: 'Eau totale (kg)', borderColor: this.COL.cyan, backgroundColor: this.hexA(this.COL.cyan, 0.15), fill: true, tension: 0.3, pointRadius: 3, spanGaps: true },
-        { data: pts.map((p) => p.eauIntra), label: 'Intracellulaire (kg)', borderColor: this.COL.green, backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 3, spanGaps: true },
-        { data: pts.map((p) => p.eauExtra), label: 'Extracellulaire (kg)', borderColor: this.COL.indigo, backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 3, spanGaps: true },
+        { data: pts.map((p) => p.eauTotale), label: this.i18n.t('stats.chart.totalWater'), borderColor: this.COL.cyan, backgroundColor: this.hexA(this.COL.cyan, 0.15), fill: true, tension: 0.3, pointRadius: 3, spanGaps: true },
+        { data: pts.map((p) => p.eauIntra), label: this.i18n.t('stats.chart.intracellular'), borderColor: this.COL.green, backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 3, spanGaps: true },
+        { data: pts.map((p) => p.eauExtra), label: this.i18n.t('stats.chart.extracellular'), borderColor: this.COL.indigo, backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 3, spanGaps: true },
       ],
     };
   });
@@ -430,7 +433,7 @@ export class Statistics implements OnInit {
       labels: pts.map((p) => this.dateLabel(p.date)),
       datasets: [{
         data: pts.map((p) => p.mbKcal),
-        label: 'Métabolisme de base (kcal/j)',
+        label: this.i18n.t('stats.chart.bmr'),
         borderColor: this.COL.orange,
         backgroundColor: this.hexA(this.COL.orange, 0.15),
         fill: true,
@@ -519,7 +522,7 @@ export class Statistics implements OnInit {
       datasets: [
         {
           data: j.map((p) => p.kcal),
-          label: 'Calories',
+          label: this.i18n.t('stats.chart.calories'),
           borderColor: this.COL.orange,
           backgroundColor: this.hexA(this.COL.orange, 0.15),
           fill: true,
@@ -529,7 +532,7 @@ export class Statistics implements OnInit {
         },
         {
           data: j.map((p) => p.targetKcal),
-          label: 'Objectif',
+          label: this.i18n.t('stats.chart.target'),
           borderColor: this.COL.cyan,
           borderDash: [6, 4],
           fill: false,
@@ -546,9 +549,9 @@ export class Statistics implements OnInit {
     return {
       labels: j.map((p) => this.dateLabel(p.date)),
       datasets: [
-        { data: j.map((p) => p.proteines), label: 'Protéines (g)', borderColor: this.COL.red, backgroundColor: 'transparent', tension: 0.3, pointRadius: 0, spanGaps: true },
-        { data: j.map((p) => p.glucides), label: 'Glucides (g)', borderColor: this.COL.amber, backgroundColor: 'transparent', tension: 0.3, pointRadius: 0, spanGaps: true },
-        { data: j.map((p) => p.lipides), label: 'Lipides (g)', borderColor: this.COL.indigo, backgroundColor: 'transparent', tension: 0.3, pointRadius: 0, spanGaps: true },
+        { data: j.map((p) => p.proteines), label: this.i18n.t('stats.chart.proteinsG'), borderColor: this.COL.red, backgroundColor: 'transparent', tension: 0.3, pointRadius: 0, spanGaps: true },
+        { data: j.map((p) => p.glucides), label: this.i18n.t('stats.chart.carbsG'), borderColor: this.COL.amber, backgroundColor: 'transparent', tension: 0.3, pointRadius: 0, spanGaps: true },
+        { data: j.map((p) => p.lipides), label: this.i18n.t('stats.chart.fatsG'), borderColor: this.COL.indigo, backgroundColor: 'transparent', tension: 0.3, pointRadius: 0, spanGaps: true },
       ],
     };
   });
@@ -559,7 +562,7 @@ export class Statistics implements OnInit {
     const g = n?.moyGlucides ?? 0;
     const l = n?.moyLipides ?? 0;
     return {
-      labels: ['Protéines', 'Glucides', 'Lipides'],
+      labels: [this.i18n.t('stats.chart.proteins'), this.i18n.t('stats.chart.carbs'), this.i18n.t('stats.chart.fats')],
       datasets: [{
         data: [p, g, l],
         backgroundColor: [this.COL.red, this.COL.amber, this.COL.indigo],
@@ -577,7 +580,7 @@ export class Statistics implements OnInit {
       labels: r.map((p) => this.dateLabel(p.date)),
       datasets: [{
         data: r.map((p) => p.sommeilHeures),
-        label: 'Sommeil (h)',
+        label: this.i18n.t('stats.chart.sleep'),
         borderColor: this.COL.indigo,
         backgroundColor: this.hexA(this.COL.indigo, 0.15),
         fill: true,
@@ -593,10 +596,10 @@ export class Statistics implements OnInit {
     return {
       labels: r.map((p) => this.dateLabel(p.date)),
       datasets: [
-        { data: r.map((p) => p.energie), label: 'Énergie', borderColor: this.COL.green, backgroundColor: 'transparent', tension: 0.3, pointRadius: 2, spanGaps: true },
-        { data: r.map((p) => p.fatigue), label: 'Fatigue', borderColor: this.COL.red, backgroundColor: 'transparent', tension: 0.3, pointRadius: 2, spanGaps: true },
-        { data: r.map((p) => p.stress), label: 'Stress', borderColor: this.COL.amber, backgroundColor: 'transparent', tension: 0.3, pointRadius: 2, spanGaps: true },
-        { data: r.map((p) => p.courbatures), label: 'Courbatures', borderColor: this.COL.violet, backgroundColor: 'transparent', tension: 0.3, pointRadius: 2, spanGaps: true },
+        { data: r.map((p) => p.energie), label: this.i18n.t('stats.chart.energy'), borderColor: this.COL.green, backgroundColor: 'transparent', tension: 0.3, pointRadius: 2, spanGaps: true },
+        { data: r.map((p) => p.fatigue), label: this.i18n.t('stats.chart.fatigue'), borderColor: this.COL.red, backgroundColor: 'transparent', tension: 0.3, pointRadius: 2, spanGaps: true },
+        { data: r.map((p) => p.stress), label: this.i18n.t('stats.chart.stress'), borderColor: this.COL.amber, backgroundColor: 'transparent', tension: 0.3, pointRadius: 2, spanGaps: true },
+        { data: r.map((p) => p.courbatures), label: this.i18n.t('stats.chart.soreness'), borderColor: this.COL.violet, backgroundColor: 'transparent', tension: 0.3, pointRadius: 2, spanGaps: true },
       ],
     };
   });
@@ -678,13 +681,21 @@ export class Statistics implements OnInit {
   }
 
   muscleLabel(key: string): string {
-    const map: Record<string, string> = {
+    const fr: Record<string, string> = {
       PECTORAUX: 'Pectoraux', DOS: 'Dos', EPAULES: 'Épaules', BICEPS: 'Biceps',
       TRICEPS: 'Triceps', ABDOMINAUX: 'Abdos', QUADRICEPS: 'Quadriceps',
       ISCHIO_JAMBIERS: 'Ischios', FESSIERS: 'Fessiers', MOLLETS: 'Mollets',
       AVANT_BRAS: 'Avant-bras', TRAPEZES: 'Trapèzes', LOMBAIRES: 'Lombaires',
       ADDUCTEURS: 'Adducteurs', ABDUCTEURS: 'Abducteurs', CARDIO: 'Cardio',
     };
+    const en: Record<string, string> = {
+      PECTORAUX: 'Chest', DOS: 'Back', EPAULES: 'Shoulders', BICEPS: 'Biceps',
+      TRICEPS: 'Triceps', ABDOMINAUX: 'Abs', QUADRICEPS: 'Quads',
+      ISCHIO_JAMBIERS: 'Hamstrings', FESSIERS: 'Glutes', MOLLETS: 'Calves',
+      AVANT_BRAS: 'Forearms', TRAPEZES: 'Traps', LOMBAIRES: 'Lower back',
+      ADDUCTEURS: 'Adductors', ABDUCTEURS: 'Abductors', CARDIO: 'Cardio',
+    };
+    const map = this.i18n.lang() === 'en' ? en : fr;
     return map[key] ?? key;
   }
 

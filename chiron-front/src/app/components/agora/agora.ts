@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { ChironApi } from '../../service/chiron-api';
 import { AuthService } from '../../service/auth.service';
 import { HeaderComponent } from '../shared/header/header';
+import { TranslatePipe } from '../../service/translate.pipe';
 import { tierBadgeUrl } from '../../shared/tier-badges';
 
 /**
@@ -14,7 +15,7 @@ import { tierBadgeUrl } from '../../shared/tier-badges';
 @Component({
   selector: 'app-agora',
   standalone: true,
-  imports: [CommonModule, FormsModule, HeaderComponent],
+  imports: [CommonModule, FormsModule, HeaderComponent, TranslatePipe],
   templateUrl: './agora.html',
   styleUrls: ['./agora.css']
 })

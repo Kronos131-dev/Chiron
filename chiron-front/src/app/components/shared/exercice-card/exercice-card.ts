@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ChironApi, ExerciceDefinitionDto } from '../../../service/chiron-api';
+import { I18nService } from '../../../service/i18n.service';
+import { TranslatePipe, LocalizePipe } from '../../../service/translate.pipe';
 import {
   ExerciceForm,
   BlockType,
@@ -20,7 +22,7 @@ import {
 @Component({
   selector: 'app-exercice-card',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslatePipe, LocalizePipe],
   templateUrl: './exercice-card.html',
   styleUrls: ['./exercice-card.css'],
 })
@@ -52,7 +54,7 @@ export class ExerciceCardComponent implements OnInit {
   groupMenuOpen = signal(false);
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
-  constructor(private chironApi: ChironApi, private router: Router, private host: ElementRef<HTMLElement>) {}
+  constructor(private chironApi: ChironApi, private router: Router, private host: ElementRef<HTMLElement>, public i18n: I18nService) {}
 
   /** Vrai si l'exercice est un cardio (saisie durée/vitesse/pente/distance au lieu de poids/reps). */
   isCardio(): boolean {
@@ -132,7 +134,7 @@ export class ExerciceCardComponent implements OnInit {
   }
 
   selectDefinition(def: ExerciceDefinitionDto) {
-    this.exercice.nom = def.nomFr ?? def.nomEn;
+    this.exercice.nom = this.i18n.pick(def.nomFr, def.nomEn);
     this.exercice.definitionId = def.id;
     this.exercice.cardioType = (def.cardioType as ExerciceForm['cardioType']) ?? null;
     // Bascule la première série en mode cardio si besoin (et inversement).

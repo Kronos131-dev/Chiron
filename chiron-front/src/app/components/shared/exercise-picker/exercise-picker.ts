@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ChironApi, ExerciceDefinitionDto } from '../../../service/chiron-api';
+import { TranslatePipe, LocalizePipe } from '../../../service/translate.pipe';
 import { ExerciceForm } from '../../../shared/exercise-forms';
 import {
   MUSCLES, EQUIPEMENTS, DIFFICULTES,
@@ -18,7 +19,7 @@ import {
 @Component({
   selector: 'app-exercise-picker',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslatePipe, LocalizePipe],
   templateUrl: './exercise-picker.html',
   styleUrls: ['./exercise-picker.css'],
 })
