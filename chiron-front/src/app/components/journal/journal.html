@@ -103,12 +103,32 @@
 
                     <!-- ─── READ-ONLY VIEW ─── -->
                     @if (editingSeanceId() !== seance.id) {
+
+                      <!-- Session note -->
+                      @if (seance.note) {
+                        <div class="bg-secondary/5 border border-secondary/20 rounded-lg p-4">
+                          <p class="text-secondary text-[9px] font-bold tracking-[0.2em] uppercase mb-1 flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-sm">sticky_note_2</span>
+                            {{ 'session.noteTitle' | t }}
+                          </p>
+                          <p class="text-on-surface text-sm font-body whitespace-pre-wrap break-words">{{ seance.note }}</p>
+                        </div>
+                      }
+
                       @for (exo of seance.exercices; track exo.id) {
                         <div class="bg-slate-950/30 rounded-lg p-4 border border-white/5">
                           <h4 class="font-headline text-lg text-on-surface mb-3 flex items-center gap-2">
                             <span class="material-symbols-outlined text-secondary text-lg">fitness_center</span>
                             {{ exo.nom }}
                           </h4>
+
+                          <!-- Per-exercise comment -->
+                          @if (exo.commentaire) {
+                            <div class="mb-3 bg-slate-900/40 border-l-2 border-secondary/40 rounded-r px-3 py-2">
+                              <p class="text-secondary text-[9px] font-bold tracking-[0.2em] uppercase mb-0.5">{{ 'exCard.note' | t }}</p>
+                              <p class="text-on-surface text-sm font-body whitespace-pre-wrap break-words">{{ exo.commentaire }}</p>
+                            </div>
+                          }
 
                           @if (exo.cardioType) {
                             <div class="space-y-2">
