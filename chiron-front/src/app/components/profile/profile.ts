@@ -5,6 +5,8 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { ChironApi } from '../../service/chiron-api';
 import { AuthService } from '../../service/auth.service';
 import { HeaderComponent } from '../shared/header/header';
+import { TranslatePipe } from '../../service/translate.pipe';
+import { I18nService } from '../../service/i18n.service';
 import { tierBadgeUrl } from '../../shared/tier-badges';
 
 /**
@@ -15,7 +17,7 @@ import { tierBadgeUrl } from '../../shared/tier-badges';
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule, HeaderComponent],
+  imports: [CommonModule, FormsModule, HeaderComponent, TranslatePipe],
   templateUrl: './profile.html',
   styleUrls: ['./profile.css']
 })
@@ -60,7 +62,8 @@ export class Profile implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     public chironApi: ChironApi,
-    private authService: AuthService
+    private authService: AuthService,
+    private i18n: I18nService
   ) {}
 
   /**
@@ -117,7 +120,7 @@ export class Profile implements OnInit {
       error: (err) => {
         console.error("Erreur chargement profil", err);
         this.isLoading.set(false);
-        alert("Profil introuvable ou privé.");
+        alert(this.i18n.t('profile.notFound'));
         this.router.navigate(['/chat']);
       }
     });
@@ -190,7 +193,7 @@ export class Profile implements OnInit {
         },
         error: (err) => {
           console.error("Erreur upload image", err);
-          alert("Erreur lors de la mise à jour de l'image.");
+          alert(this.i18n.t('profile.imageError'));
           this.isLoading.set(false);
         }
       });
@@ -265,12 +268,12 @@ export class Profile implements OnInit {
     this.isLoading.set(true);
     this.chironApi.copyProgrammeToMyProfile(progId, currentUsername).subscribe({
       next: () => {
-        alert("Programme copié avec succès dans ton sanctuaire !");
+        alert(this.i18n.t('profile.copySuccess'));
         this.isLoading.set(false);
       },
       error: (err) => {
         console.error("Erreur copie", err);
-        alert("Impossible de copier ce programme.");
+        alert(this.i18n.t('profile.copyError'));
         this.isLoading.set(false);
       }
     });
@@ -293,11 +296,11 @@ export class Profile implements OnInit {
           this.athleteProfile.update(p => {
              return { ...p, isMyCoach: false };
           });
-          alert(`${targetUsername} n'a plus les droits de coach sur tes programmes.`);
+          alert(this.i18n.t('profile.coachRevoked', { user: targetUsername }));
         },
         error: (err) => {
             console.error("Erreur remove coach", err);
-            alert("Erreur lors de la révocation des droits de coach.");
+            alert(this.i18n.t('profile.coachRevokeError'));
         }
       });
     } else {
@@ -306,11 +309,11 @@ export class Profile implements OnInit {
           this.athleteProfile.update(p => {
              return { ...p, isMyCoach: true };
           });
-          alert(`${targetUsername} est maintenant autorisé à modifier tes programmes !`);
+          alert(this.i18n.t('profile.coachGranted', { user: targetUsername }));
         },
         error: (err) => {
             console.error("Erreur add coach", err);
-            alert("Erreur lors de l'attribution des droits de coach.");
+            alert(this.i18n.t('profile.coachGrantError'));
         }
       });
     }
@@ -323,11 +326,11 @@ export class Profile implements OnInit {
     const targetUsername = this.athleteProfile()?.username;
     if (!targetUsername) return;
 
-    if (confirm(`Es-tu sûr de vouloir supprimer le compte de ${targetUsername} ? Cette action est irréversible.`)) {
+    if (confirm(this.i18n.t('profile.confirmDelete', { user: targetUsername }))) {
       this.isLoading.set(true);
       this.chironApi.deleteProfile(targetUsername).subscribe({
         next: () => {
-          alert("Compte supprimé avec succès.");
+          alert(this.i18n.t('profile.deleteSuccess'));
           if (this.isMyProfile()) {
             this.authService.logout();
           } else {
@@ -336,7 +339,7 @@ export class Profile implements OnInit {
         },
         error: (err) => {
           console.error("Erreur suppression compte", err);
-          alert("Erreur lors de la suppression du compte.");
+          alert(this.i18n.t('profile.deleteError'));
           this.isLoading.set(false);
         }
       });

@@ -1,4 +1,4 @@
-<app-header [title]="'PROFIL'" [showBack]="true" [backRoute]="'/chat'"></app-header>
+<app-header [title]="'profile.title' | t" [showBack]="true" [backRoute]="'/chat'"></app-header>
 
 <!-- ═══════════════ MAIN ═══════════════ -->
 <main class="min-h-screen pt-24 pb-32 px-4 md:px-8 relative overflow-hidden"
@@ -20,7 +20,7 @@
       <input type="text"
              [ngModel]="searchQuery()"
              (ngModelChange)="searchQuery.set($event); searchProfiles()"
-             placeholder="Rechercher un guerrier..."
+             [placeholder]="'agora.searchPlaceholder' | t"
              class="w-full bg-black/30 text-white pl-10 pr-4 py-3 rounded-xl border border-secondary/20 focus:border-secondary outline-none transition-colors font-body shadow-lg">
 
       @if (searchResults().length > 0) {
@@ -72,7 +72,7 @@
           <button (click)="triggerFileInput()"
                   class="absolute top-6 left-6 border p-2.5 rounded-xl transition-colors group z-10"
                   [ngClass]="getActionBtnClass()"
-                  title="Changer l'avatar">
+                  [title]="'profile.changeAvatar' | t">
             <span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">add_photo_alternate</span>
           </button>
         }
@@ -81,7 +81,7 @@
         @if (isMyProfile() || isAdmin()) {
           <button (click)="deleteProfile()"
                   class="absolute top-6 right-6 bg-slate-950 border border-red-900/50 p-2.5 rounded-xl hover:bg-red-900/20 text-red-400 transition-colors group z-10"
-                  title="Supprimer le compte">
+                  [title]="'profile.deleteAccount' | t">
             <span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">delete_forever</span>
           </button>
         }
@@ -119,10 +119,10 @@
           </h2>
 
           @if (athleteProfile()?.isAdmin) {
-            <span class="material-symbols-outlined text-amber-500 text-lg" title="Administrateur">shield</span>
+            <span class="material-symbols-outlined text-amber-500 text-lg" [title]="'agora.admin' | t">shield</span>
           }
           @if (!isMyProfile() && athleteProfile().isMyCoach) {
-            <span class="material-symbols-outlined text-secondary" title="Votre Coach">sports</span>
+            <span class="material-symbols-outlined text-secondary" [title]="'profile.yourCoach' | t">sports</span>
           }
         </div>
 
@@ -137,7 +137,7 @@
               <span class="material-symbols-outlined text-sm">
                 {{ athleteProfile().isMyCoach ? 'person_remove' : 'sports' }}
               </span>
-              {{ athleteProfile().isMyCoach ? 'Retirer accès coach' : 'Nommer Coach' }}
+              {{ (athleteProfile().isMyCoach ? 'profile.removeCoach' : 'profile.appointCoach') | t }}
             </button>
           </div>
         }
@@ -148,7 +148,7 @@
                [ngClass]="getStatsCardClass()">
             <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
                  [ngClass]="getStatsHoverClass()"></div>
-            <p class="text-[10px] text-on-surface-variant font-bold tracking-[0.2em] uppercase mb-1 relative z-10">Sessions</p>
+            <p class="text-[10px] text-on-surface-variant font-bold tracking-[0.2em] uppercase mb-1 relative z-10">{{ 'profile.sessions' | t }}</p>
             <p class="text-4xl font-black font-headline relative z-10" [ngClass]="getStatsValueClass()">
               {{ athleteProfile().totalSessions }}
             </p>
@@ -157,7 +157,7 @@
                [ngClass]="getStatsCardClass()">
             <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
                  [ngClass]="getStatsHoverClass()"></div>
-            <p class="text-[10px] text-on-surface-variant font-bold tracking-[0.2em] uppercase mb-1 relative z-10">Séries / Mois</p>
+            <p class="text-[10px] text-on-surface-variant font-bold tracking-[0.2em] uppercase mb-1 relative z-10">{{ 'profile.seriesPerMonth' | t }}</p>
             <p class="text-4xl font-black font-headline relative z-10" [ngClass]="getStatsAltValueClass()">
               {{ athleteProfile().averageSeriesPerMonth }}
             </p>
@@ -168,19 +168,19 @@
         <button (click)="goToTresor()"
                 class="tresor-section mt-6 w-full flex flex-col items-center px-5 pt-6 pb-5 rounded-3xl transition-all group border"
                 [ngClass]="getTresorLinkClass()"
-                [title]="'Voir le Trésor — Palier ' + getCurrentTierName()">
+                [title]="('profile.viewTresor' | t) + ' — ' + getCurrentTierName()">
           <div class="medal-disc" [ngClass]="getMedalClass()">
             <img [src]="getTierBadgeUrl()"
-                 [alt]="'Palier ' + getCurrentTierName()"
+                 [alt]="getCurrentTierName()"
                  class="tresor-section-badge" />
           </div>
           <p class="font-headline text-2xl font-black tracking-[0.25em] uppercase mt-5"
-             [ngClass]="getTresorTextClass()">Trésor</p>
+             [ngClass]="getTresorTextClass()">{{ 'profile.tresor' | t }}</p>
           <p class="text-[11px] tracking-[0.2em] uppercase mt-1 text-on-surface-variant">
             @if (athleteProfile().performanceTier) {
-              Palier · <span class="font-bold" [ngClass]="getTresorTextClass()">{{ athleteProfile().performanceTier }}</span>
+              {{ 'profile.tier' | t }} · <span class="font-bold" [ngClass]="getTresorTextClass()">{{ athleteProfile().performanceTier }}</span>
             } @else {
-              Paliers de force & performances
+              {{ 'profile.tiersSubtitle' | t }}
             }
           </p>
           <span class="material-symbols-outlined text-on-surface-variant/40 group-hover:translate-y-0.5 transition-all text-base">
@@ -197,13 +197,13 @@
           <h3 class="flex items-center gap-3 text-xl font-black font-headline uppercase tracking-widest"
               [ngClass]="getSectionTitleClass()">
             <span class="material-symbols-outlined" [ngClass]="getSectionIconClass()">view_list</span>
-            Programmes
+            {{ 'profile.programmes' | t }}
           </h3>
 
           @if (isMyProfile()) {
             <label class="flex items-center cursor-pointer gap-3">
               <span class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">
-                {{ athleteProfile().isPublic ? 'Public' : 'Privé' }}
+                {{ (athleteProfile().isPublic ? 'profile.public' : 'profile.private') | t }}
               </span>
               <div class="relative">
                 <input type="checkbox" class="sr-only" [checked]="athleteProfile().isPublic" (change)="toggleVisibility()">
@@ -224,7 +224,7 @@
                 <div class="flex items-center justify-between cursor-pointer" (click)="viewProgramme(prog.id)">
                   <div>
                     <h4 class="text-white font-bold tracking-wide uppercase">{{ prog.titre }}</h4>
-                    <p class="text-xs text-on-surface-variant uppercase tracking-widest mt-1">{{ prog.numberOfExercises }} Exos • {{ prog.totalSeries }} Séries</p>
+                    <p class="text-xs text-on-surface-variant uppercase tracking-widest mt-1">{{ prog.numberOfExercises }} {{ 'profile.exos' | t }} • {{ prog.totalSeries }} {{ 'profile.series' | t }}</p>
                   </div>
                   <span class="material-symbols-outlined text-on-surface-variant/40 hover:scale-110 transition-all"
                         [ngClass]="getSectionIconClass()">chevron_right</span>
@@ -236,13 +236,13 @@
                             class="flex-1 flex items-center justify-center gap-2 border py-2 rounded-lg text-xs font-bold tracking-widest uppercase transition-colors"
                             [ngClass]="getCopyBtnClass()">
                       <span class="material-symbols-outlined text-sm">content_copy</span>
-                      Copier
+                      {{ 'profile.copy' | t }}
                     </button>
                     @if (athleteProfile().amICoach) {
                       <button (click)="viewProgramme(prog.id); $event.stopPropagation();"
                               class="flex-1 flex items-center justify-center gap-2 bg-blue-500/10 text-blue-400 border border-blue-500/20 py-2 rounded-lg text-xs font-bold tracking-widest uppercase hover:bg-blue-500 hover:text-white transition-colors">
                         <span class="material-symbols-outlined text-sm">edit</span>
-                        Éditer
+                        {{ 'profile.edit' | t }}
                       </button>
                     }
                   </div>
@@ -252,7 +252,7 @@
           </div>
         } @else {
           <p class="text-on-surface-variant text-sm text-center py-4 bg-black/25 rounded-xl border border-white/5">
-            Aucun programme défini.
+            {{ 'profile.noProgrammes' | t }}
           </p>
         }
 
@@ -260,7 +260,7 @@
           <button (click)="createProgrammeForAthlete()"
                   class="w-full mt-3 flex items-center justify-center gap-2 bg-secondary/10 text-secondary border-2 border-dashed border-secondary/40 py-3 rounded-lg text-xs font-bold tracking-widest uppercase hover:bg-secondary/20 hover:border-secondary transition-all">
             <span class="material-symbols-outlined text-base">add</span>
-            Créer un programme pour cet athlète
+            {{ 'profile.createForAthlete' | t }}
           </button>
         }
       </div>
@@ -270,7 +270,7 @@
         <h3 class="flex items-center gap-3 text-xl font-black font-headline uppercase tracking-widest mb-5"
             [ngClass]="getSectionTitleClass()">
           <span class="material-symbols-outlined text-blue-400">history</span>
-          Dernières Batailles
+          {{ 'profile.recentBattles' | t }}
         </h3>
 
         @if (athleteProfile().historiqueRecent?.length > 0) {
@@ -285,7 +285,7 @@
                   </p>
                 </div>
                 <div class="flex items-center gap-3 text-right">
-                  <p class="text-xs text-on-surface-variant uppercase tracking-widest">{{ hist.totalSeries }} Séries</p>
+                  <p class="text-xs text-on-surface-variant uppercase tracking-widest">{{ hist.totalSeries }} {{ 'profile.series' | t }}</p>
                   <span class="material-symbols-outlined text-blue-500/50">chevron_right</span>
                 </div>
               </div>
@@ -293,7 +293,7 @@
           </div>
         } @else {
           <p class="text-on-surface-variant text-sm text-center py-4 bg-black/25 rounded-xl border border-white/5">
-            Aucun historique récent.
+            {{ 'profile.noHistory' | t }}
           </p>
         }
       </div>

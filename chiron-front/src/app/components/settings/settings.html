@@ -1,4 +1,4 @@
-<app-header [title]="'PARAMÈTRES'" [showBack]="true" [backRoute]="'/chat'"></app-header>
+<app-header [title]="('settings.title' | t)" [showBack]="true" [backRoute]="'/chat'"></app-header>
 
 <main class="min-h-screen pt-24 pb-32 px-4 md:px-8 greek-bg heroic-texture">
   <div class="max-w-xl mx-auto space-y-4 pt-4">
@@ -15,17 +15,55 @@
       </div>
     }
 
+    <!-- ── Langue / Language ── -->
+    <div class="bg-slate-900/80 border border-white/10 rounded-2xl overflow-hidden">
+      <button (click)="toggle('language')"
+              class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-white/5 transition-colors">
+        <div class="flex items-center gap-3">
+          <span class="material-symbols-outlined text-secondary">translate</span>
+          <div>
+            <span class="text-white font-bold">{{ 'settings.language.title' | t }}</span>
+            <p class="text-white/40 text-xs mt-0.5">{{ 'settings.language.subtitle' | t }}</p>
+          </div>
+        </div>
+        <span class="material-symbols-outlined text-secondary/60 transition-transform"
+              [class.rotate-180]="openSection() === 'language'">expand_more</span>
+      </button>
+      @if (openSection() === 'language') {
+        <div class="px-5 pb-5 space-y-4 border-t border-white/5">
+          <div class="flex gap-2 mt-4">
+            <button type="button" (click)="setLanguage('fr')"
+                    class="flex-1 py-2.5 rounded-xl text-sm font-bold transition-colors"
+                    [class.bg-secondary]="lang() === 'fr'"
+                    [class.text-slate-900]="lang() === 'fr'"
+                    [class.bg-slate-700]="lang() !== 'fr'"
+                    [class.text-white]="lang() !== 'fr'">
+              {{ 'settings.language.fr' | t }}
+            </button>
+            <button type="button" (click)="setLanguage('en')"
+                    class="flex-1 py-2.5 rounded-xl text-sm font-bold transition-colors"
+                    [class.bg-secondary]="lang() === 'en'"
+                    [class.text-slate-900]="lang() === 'en'"
+                    [class.bg-slate-700]="lang() !== 'en'"
+                    [class.text-white]="lang() !== 'en'">
+              {{ 'settings.language.en' | t }}
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+
     <!-- ── Profil Sportif ── -->
     <div class="bg-slate-900/80 border border-white/10 rounded-2xl overflow-hidden">
       <div class="px-5 py-4">
         <div class="flex items-center gap-3 mb-3">
           <span class="material-symbols-outlined text-secondary">tune</span>
-          <span class="text-white font-bold">Profil Sportif</span>
+          <span class="text-white font-bold">{{ 'settings.profile.title' | t }}</span>
         </div>
         <button (click)="goToOnboarding()"
                 class="w-full border border-secondary/30 text-secondary py-3 rounded-xl text-xs font-bold tracking-widest uppercase hover:bg-secondary/10 transition-colors flex items-center justify-center gap-2">
           <span class="material-symbols-outlined text-base">edit</span>
-          Modifier mon profil sportif
+          {{ 'settings.profile.edit' | t }}
         </button>
       </div>
     </div>
@@ -35,47 +73,47 @@
       <div class="px-5 py-4">
         <div class="flex items-center gap-3 mb-3">
           <span class="material-symbols-outlined text-emerald-400">restaurant</span>
-          <span class="text-white font-bold">Compte Olympus</span>
+          <span class="text-white font-bold">{{ 'settings.olympus.title' | t }}</span>
         </div>
 
         @if (nutritionStatus()?.linked && !nutritionStatus()?.expired) {
           <div class="border border-emerald-500/20 bg-emerald-500/5 p-5 rounded-xl">
             <div class="flex items-center justify-between mb-3">
               <div>
-                <p class="text-emerald-400 text-[10px] font-bold tracking-[0.2em] uppercase">Lié</p>
+                <p class="text-emerald-400 text-[10px] font-bold tracking-[0.2em] uppercase">{{ 'settings.olympus.linked' | t }}</p>
                 <p class="text-white font-bold tracking-wide">{{ nutritionStatus()?.olympusUsername }}</p>
               </div>
               <span class="material-symbols-outlined text-emerald-400 text-3xl">link</span>
             </div>
             <p class="text-white/50 text-xs mb-4">
-              Chiron peut maintenant analyser ton apport nutritionnel pour affiner ses conseils.
+              {{ 'settings.olympus.linkedDesc' | t }}
             </p>
             <button (click)="unlinkOlympus()"
                     class="w-full border border-red-500/30 text-red-400 py-2 rounded-lg text-xs font-bold tracking-widest uppercase hover:bg-red-500/10 transition-colors">
-              Délier
+              {{ 'settings.olympus.unlink' | t }}
             </button>
           </div>
         } @else if (nutritionStatus()?.expired) {
           <div class="border border-amber-500/30 bg-amber-500/5 p-5 rounded-xl mb-4">
-            <p class="text-amber-400 text-[10px] font-bold tracking-[0.2em] uppercase mb-1">Liaison expirée</p>
-            <p class="text-white text-sm">Reconnecte ton compte Olympus pour réactiver le coaching nutrition.</p>
+            <p class="text-amber-400 text-[10px] font-bold tracking-[0.2em] uppercase mb-1">{{ 'settings.olympus.expired' | t }}</p>
+            <p class="text-white text-sm">{{ 'settings.olympus.expiredDesc' | t }}</p>
           </div>
         }
 
         @if (!nutritionStatus()?.linked || nutritionStatus()?.expired) {
           <div class="border border-white/5 bg-slate-900/30 p-5 rounded-xl space-y-3">
             <p class="text-white/50 text-xs">
-              Connecte ton compte Olympus pour que Chiron puisse devenir ton nutritionniste.
+              {{ 'settings.olympus.connectDesc' | t }}
             </p>
             <input type="text"
                    [ngModel]="olympusPseudo()"
                    (ngModelChange)="olympusPseudo.set($event)"
-                   placeholder="Pseudo Olympus"
+                   [placeholder]="'settings.olympus.usernamePh' | t"
                    class="w-full bg-slate-950/60 text-white px-4 py-2.5 rounded-lg border border-white/10 focus:border-emerald-500/50 outline-none text-sm">
             <input type="password"
                    [ngModel]="olympusPassword()"
                    (ngModelChange)="olympusPassword.set($event)"
-                   placeholder="Mot de passe"
+                   [placeholder]="'settings.olympus.passwordPh' | t"
                    class="w-full bg-slate-950/60 text-white px-4 py-2.5 rounded-lg border border-white/10 focus:border-emerald-500/50 outline-none text-sm">
             @if (linkError()) {
               <p class="text-red-400 text-xs">{{ linkError() }}</p>
@@ -83,7 +121,7 @@
             <button (click)="linkOlympus()"
                     [disabled]="isLinking()"
                     class="w-full bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 py-2.5 rounded-lg text-xs font-bold tracking-widest uppercase hover:bg-emerald-500/25 transition-colors disabled:opacity-50">
-              {{ isLinking() ? 'Liaison…' : 'Lier mon compte' }}
+              {{ isLinking() ? ('settings.olympus.linking' | t) : ('settings.olympus.linkBtn' | t) }}
             </button>
           </div>
         }
@@ -95,54 +133,54 @@
       <div class="px-5 py-4">
         <div class="flex items-center gap-3 mb-3">
           <span class="material-symbols-outlined text-cyan-400">watch</span>
-          <span class="text-white font-bold">Compte Fitbit</span>
+          <span class="text-white font-bold">{{ 'settings.fitbit.title' | t }}</span>
         </div>
 
         @if (fitbitStatus()?.linked && !fitbitStatus()?.needsReconnect) {
           <div class="border border-cyan-500/20 bg-cyan-500/5 p-5 rounded-xl">
             <div class="flex items-center justify-between mb-3">
               <div>
-                <p class="text-cyan-400 text-[10px] font-bold tracking-[0.2em] uppercase">Connecté</p>
-                <p class="text-white font-bold tracking-wide">Données santé synchronisées</p>
+                <p class="text-cyan-400 text-[10px] font-bold tracking-[0.2em] uppercase">{{ 'settings.fitbit.connected' | t }}</p>
+                <p class="text-white font-bold tracking-wide">{{ 'settings.fitbit.synced' | t }}</p>
               </div>
               <span class="material-symbols-outlined text-cyan-400 text-3xl">link</span>
             </div>
             <p class="text-white/50 text-xs mb-4">
-              Chiron exploite ton activité, ton sommeil et ta fréquence cardiaque pour affiner ses conseils.
+              {{ 'settings.fitbit.connectedDesc' | t }}
             </p>
             <button (click)="goToFitbitDashboard()"
                     class="w-full bg-cyan-500/15 border border-cyan-500/40 text-cyan-400 py-2.5 rounded-lg text-xs font-bold tracking-widest uppercase hover:bg-cyan-500/25 transition-colors mb-2">
-              Voir mon tableau de bord
+              {{ 'settings.fitbit.dashboard' | t }}
             </button>
             <button (click)="disconnectFitbit()"
                     class="w-full border border-red-500/30 text-red-400 py-2 rounded-lg text-xs font-bold tracking-widest uppercase hover:bg-red-500/10 transition-colors">
-              Déconnecter
+              {{ 'settings.fitbit.disconnect' | t }}
             </button>
           </div>
         } @else if (fitbitStatus()?.needsReconnect) {
           <div class="border border-amber-500/30 bg-amber-500/5 p-5 rounded-xl mb-4">
-            <p class="text-amber-400 text-[10px] font-bold tracking-[0.2em] uppercase mb-1">Connexion expirée</p>
-            <p class="text-white text-sm">Reconnecte ton compte Fitbit pour réactiver la synchronisation santé.</p>
+            <p class="text-amber-400 text-[10px] font-bold tracking-[0.2em] uppercase mb-1">{{ 'settings.fitbit.expired' | t }}</p>
+            <p class="text-white text-sm">{{ 'settings.fitbit.expiredDesc' | t }}</p>
           </div>
         }
 
         @if (!fitbitStatus()?.linked || fitbitStatus()?.needsReconnect) {
           <div class="border border-white/5 bg-slate-900/30 p-5 rounded-xl space-y-3">
             <p class="text-white/50 text-xs">
-              Connecte ton compte Fitbit pour que Chiron suive ton activité, ton sommeil et ta récupération.
+              {{ 'settings.fitbit.connectDesc' | t }}
             </p>
             @if (fitbitError()) {
               <p class="text-red-400 text-xs">{{ fitbitError() }}</p>
             }
             @if (isFitbitConnecting()) {
               <p class="text-cyan-400 text-xs">
-                Autorise l'accès dans la fenêtre Fitbit, puis reviens ici — la connexion se détecte automatiquement.
+                {{ 'settings.fitbit.waiting' | t }}
               </p>
             }
             <button (click)="connectFitbit()"
                     [disabled]="isFitbitConnecting()"
                     class="w-full bg-cyan-500/15 border border-cyan-500/40 text-cyan-400 py-2.5 rounded-lg text-xs font-bold tracking-widest uppercase hover:bg-cyan-500/25 transition-colors disabled:opacity-50">
-              {{ isFitbitConnecting() ? 'En attente de Fitbit…' : 'Connecter mon compte Fitbit' }}
+              {{ isFitbitConnecting() ? ('settings.fitbit.waitingBtn' | t) : ('settings.fitbit.connectBtn' | t) }}
             </button>
           </div>
         }
@@ -155,22 +193,22 @@
               class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-white/5 transition-colors">
         <div class="flex items-center gap-3">
           <span class="material-symbols-outlined text-secondary">lock</span>
-          <span class="text-white font-bold">Changer le mot de passe</span>
+          <span class="text-white font-bold">{{ 'settings.password.title' | t }}</span>
         </div>
         <span class="material-symbols-outlined text-secondary/60 transition-transform"
               [class.rotate-180]="openSection() === 'password'">expand_more</span>
       </button>
       @if (openSection() === 'password') {
         <div class="px-5 pb-5 space-y-3 border-t border-white/5">
-          <input type="password" [(ngModel)]="currentPasswordForPwd" placeholder="Mot de passe actuel"
+          <input type="password" [(ngModel)]="currentPasswordForPwd" [placeholder]="'settings.password.currentPh' | t"
                  class="w-full mt-4 bg-slate-950/60 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:border-secondary outline-none">
-          <input type="password" [(ngModel)]="newPassword" placeholder="Nouveau mot de passe"
+          <input type="password" [(ngModel)]="newPassword" [placeholder]="'settings.password.newPh' | t"
                  class="w-full bg-slate-950/60 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:border-secondary outline-none">
-          <input type="password" [(ngModel)]="confirmPassword" placeholder="Confirmer le nouveau mot de passe"
+          <input type="password" [(ngModel)]="confirmPassword" [placeholder]="'settings.password.confirmPh' | t"
                  class="w-full bg-slate-950/60 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:border-secondary outline-none">
           <button (click)="onChangePassword()" [disabled]="isLoading()"
                   class="w-full bg-secondary text-slate-900 font-black uppercase tracking-widest py-3 rounded-xl hover:bg-secondary/80 transition-colors disabled:opacity-50">
-            Mettre à jour
+            {{ 'settings.update' | t }}
           </button>
         </div>
       }
@@ -183,11 +221,11 @@
         <div class="flex items-center gap-3">
           <span class="material-symbols-outlined text-secondary">mail</span>
           <div>
-            <span class="text-white font-bold">Changer l'adresse email</span>
+            <span class="text-white font-bold">{{ 'settings.email.title' | t }}</span>
             @if (currentEmail()) {
               <p class="text-white/40 text-xs mt-0.5">{{ currentEmail() }}</p>
             } @else {
-              <p class="text-white/30 text-xs mt-0.5 italic">Aucun email renseigné</p>
+              <p class="text-white/30 text-xs mt-0.5 italic">{{ 'settings.email.none' | t }}</p>
             }
           </div>
         </div>
@@ -196,11 +234,11 @@
       </button>
       @if (openSection() === 'email') {
         <div class="px-5 pb-5 space-y-3 border-t border-white/5">
-          <input type="email" [(ngModel)]="newEmail" placeholder="Nouvelle adresse email"
+          <input type="email" [(ngModel)]="newEmail" [placeholder]="'settings.email.newPh' | t"
                  class="w-full mt-4 bg-slate-950/60 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:border-secondary outline-none">
           <button (click)="onChangeEmail()" [disabled]="isLoading()"
                   class="w-full bg-secondary text-slate-900 font-black uppercase tracking-widest py-3 rounded-xl hover:bg-secondary/80 transition-colors disabled:opacity-50">
-            Mettre à jour
+            {{ 'settings.update' | t }}
           </button>
         </div>
       }
@@ -213,7 +251,7 @@
         <div class="flex items-center gap-3">
           <span class="material-symbols-outlined text-secondary">badge</span>
           <div>
-            <span class="text-white font-bold">Changer le pseudo</span>
+            <span class="text-white font-bold">{{ 'settings.username.title' | t }}</span>
             <p class="text-white/40 text-xs mt-0.5">{{ username }}</p>
           </div>
         </div>
@@ -222,12 +260,12 @@
       </button>
       @if (openSection() === 'username') {
         <div class="px-5 pb-5 space-y-3 border-t border-white/5">
-          <p class="text-white/40 text-xs mt-4">Le pseudo peut être en minuscules ou majuscules selon ta préférence.</p>
-          <input type="text" [(ngModel)]="newUsername" placeholder="Nouveau pseudo"
+          <p class="text-white/40 text-xs mt-4">{{ 'settings.username.hint' | t }}</p>
+          <input type="text" [(ngModel)]="newUsername" [placeholder]="'settings.username.newPh' | t"
                  class="w-full bg-slate-950/60 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:border-secondary outline-none">
           <button (click)="onChangeUsername()" [disabled]="isLoading()"
                   class="w-full bg-secondary text-slate-900 font-black uppercase tracking-widest py-3 rounded-xl hover:bg-secondary/80 transition-colors disabled:opacity-50">
-            Mettre à jour
+            {{ 'settings.update' | t }}
           </button>
         </div>
       }
@@ -240,11 +278,11 @@
         <div class="flex items-center gap-3">
           <span class="material-symbols-outlined text-secondary">person</span>
           <div>
-            <span class="text-white font-bold">Prénom et nom</span>
+            <span class="text-white font-bold">{{ 'settings.identity.title' | t }}</span>
             @if (currentPrenom() || currentNom()) {
               <p class="text-white/40 text-xs mt-0.5">{{ currentPrenom() }} {{ currentNom() }}</p>
             } @else {
-              <p class="text-white/30 text-xs mt-0.5 italic">Non renseignés</p>
+              <p class="text-white/30 text-xs mt-0.5 italic">{{ 'settings.identity.none' | t }}</p>
             }
           </div>
         </div>
@@ -254,15 +292,15 @@
       @if (openSection() === 'identity') {
         <div class="px-5 pb-5 space-y-3 border-t border-white/5">
           <p class="text-white/40 text-xs mt-4">
-            Utilisés pour associer automatiquement les rapports de scan Visbody à ton compte.
+            {{ 'settings.identity.hint' | t }}
           </p>
-          <input type="text" [(ngModel)]="newPrenom" placeholder="Prénom"
+          <input type="text" [(ngModel)]="newPrenom" [placeholder]="'settings.identity.firstNamePh' | t"
                  class="w-full bg-slate-950/60 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:border-secondary outline-none">
-          <input type="text" [(ngModel)]="newNom" placeholder="Nom"
+          <input type="text" [(ngModel)]="newNom" [placeholder]="'settings.identity.lastNamePh' | t"
                  class="w-full bg-slate-950/60 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:border-secondary outline-none">
           <button (click)="onChangeIdentity()" [disabled]="isLoading()"
                   class="w-full bg-secondary text-slate-900 font-black uppercase tracking-widest py-3 rounded-xl hover:bg-secondary/80 transition-colors disabled:opacity-50">
-            Mettre à jour
+            {{ 'settings.update' | t }}
           </button>
         </div>
       }
@@ -275,8 +313,8 @@
         <div class="flex items-center gap-3">
           <span class="material-symbols-outlined text-secondary">smart_toy</span>
           <div>
-            <span class="text-white font-bold">Coach IA</span>
-            <p class="text-white/40 text-xs mt-0.5">Fournisseur du modèle ({{ aiProvider() }})</p>
+            <span class="text-white font-bold">{{ 'settings.ai.title' | t }}</span>
+            <p class="text-white/40 text-xs mt-0.5">{{ 'settings.ai.subtitle' | t:{ provider: aiProvider() } }}</p>
           </div>
         </div>
         <span class="material-symbols-outlined text-secondary/60 transition-transform"
@@ -285,8 +323,7 @@
       @if (openSection() === 'ai') {
         <div class="px-5 pb-5 space-y-4 border-t border-white/5">
           <p class="text-white/40 text-xs mt-4 leading-relaxed">
-            Choisis le modèle qui répond dans le chat du coach. Gemini doit être configuré
-            côté serveur ; sinon le coach reste sur Mistral.
+            {{ 'settings.ai.desc' | t }}
           </p>
           <div class="flex gap-2">
             <button type="button" (click)="setAiProvider('MISTRAL')"
@@ -311,7 +348,7 @@
           </div>
           @if (!geminiAvailable()) {
             <p class="text-amber-400/80 text-[11px] mt-2">
-              Gemini n'est pas configuré côté serveur (clé manquante) : le coach reste sur Mistral.
+              {{ 'settings.ai.geminiUnavailable' | t }}
             </p>
           }
         </div>
@@ -325,8 +362,8 @@
         <div class="flex items-center gap-3">
           <span class="material-symbols-outlined text-secondary">scale</span>
           <div>
-            <span class="text-white font-bold">Calcul du tonnage</span>
-            <p class="text-white/40 text-xs mt-0.5">Conventions de saisie du poids</p>
+            <span class="text-white font-bold">{{ 'settings.tonnage.title' | t }}</span>
+            <p class="text-white/40 text-xs mt-0.5">{{ 'settings.tonnage.subtitle' | t }}</p>
           </div>
         </div>
         <span class="material-symbols-outlined text-secondary/60 transition-transform"
@@ -335,17 +372,15 @@
       @if (openSection() === 'tonnage') {
         <div class="px-5 pb-5 space-y-4 border-t border-white/5">
           <p class="text-white/40 text-xs mt-4 leading-relaxed">
-            Par défaut : barre, machine et lest comptés au poids total ; haltères au poids
-            d'une seule haltère. Les exercices marqués « unilatéral » comptent toujours ×2.
-            Ajuste ci-dessous selon ta façon de saisir.
+            {{ 'settings.tonnage.desc' | t }}
           </p>
 
           <!-- Haltères -->
           <button type="button" (click)="toggleHalteres()"
                   class="w-full flex items-center justify-between gap-3 text-left">
             <span class="text-white text-sm">
-              Aux haltères, je saisis le poids d'une seule haltère
-              <span class="text-white/40 block text-xs mt-0.5">Compte ×2 dans le tonnage</span>
+              {{ 'settings.tonnage.dumbbell' | t }}
+              <span class="text-white/40 block text-xs mt-0.5">{{ 'settings.tonnage.countsX2' | t }}</span>
             </span>
             <span class="relative shrink-0 w-11 h-6 rounded-full transition-colors"
                   [class.bg-secondary]="halteresParImplement()"
@@ -359,8 +394,8 @@
           <button type="button" (click)="toggleMachine()"
                   class="w-full flex items-center justify-between gap-3 text-left">
             <span class="text-white text-sm">
-              Aux machines, je saisis le poids d'un seul côté
-              <span class="text-white/40 block text-xs mt-0.5">Compte ×2 dans le tonnage</span>
+              {{ 'settings.tonnage.machine' | t }}
+              <span class="text-white/40 block text-xs mt-0.5">{{ 'settings.tonnage.countsX2' | t }}</span>
             </span>
             <span class="relative shrink-0 w-11 h-6 rounded-full transition-colors"
                   [class.bg-secondary]="machineParCote()"
@@ -379,7 +414,7 @@
               class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-red-500/5 transition-colors">
         <div class="flex items-center gap-3">
           <span class="material-symbols-outlined text-red-400">delete_forever</span>
-          <span class="text-red-400 font-bold">Supprimer le compte</span>
+          <span class="text-red-400 font-bold">{{ 'settings.delete.title' | t }}</span>
         </div>
         <span class="material-symbols-outlined text-red-400/60 transition-transform"
               [class.rotate-180]="openSection() === 'delete'">expand_more</span>
@@ -387,14 +422,14 @@
       @if (openSection() === 'delete') {
         <div class="px-5 pb-5 space-y-3 border-t border-red-500/10">
           <p class="text-red-400/80 text-sm mt-4">
-            Cette action est irréversible. Toutes tes séances, programmes et données seront supprimés.
+            {{ 'settings.delete.warning' | t }}
           </p>
-          <p class="text-white/50 text-xs">Tape ton pseudo <span class="text-white font-bold">{{ username }}</span> pour confirmer.</p>
+          <p class="text-white/50 text-xs">{{ 'settings.delete.confirmPre' | t }} <span class="text-white font-bold">{{ username }}</span> {{ 'settings.delete.confirmPost' | t }}</p>
           <input type="text" [(ngModel)]="deleteConfirm" [placeholder]="username"
                  class="w-full bg-slate-950/60 border border-red-500/30 rounded-xl px-4 py-3 text-white placeholder:text-white/20 focus:border-red-500 outline-none">
           <button (click)="onDeleteAccount()" [disabled]="isLoading() || deleteConfirm !== username"
                   class="w-full bg-red-600 text-white font-black uppercase tracking-widest py-3 rounded-xl hover:bg-red-700 transition-colors disabled:opacity-40">
-            Supprimer définitivement
+            {{ 'settings.delete.confirmBtn' | t }}
           </button>
         </div>
       }
@@ -404,17 +439,16 @@
     <div class="bg-slate-900/80 border border-white/10 rounded-2xl overflow-hidden">
       <div class="px-5 py-4 flex items-center gap-3">
         <span class="material-symbols-outlined text-secondary">scale</span>
-        <span class="text-white font-bold">Composition corporelle (Visbody)</span>
+        <span class="text-white font-bold">{{ 'settings.visbody.title' | t }}</span>
       </div>
       <div class="px-5 pb-5">
         <div class="border border-white/5 bg-slate-900/30 p-5 rounded-xl space-y-3">
           <p class="text-white/70 text-sm">
-            Importe un rapport de scan Visbody (PDF). Tu peux aussi l'envoyer par email :
-            les rapports reçus sont importés automatiquement.
+            {{ 'settings.visbody.desc' | t }}
           </p>
           <label class="w-full inline-flex items-center justify-center gap-2 border border-secondary/40 text-secondary py-3 rounded-xl text-xs font-bold tracking-widest uppercase hover:bg-secondary/10 transition-colors cursor-pointer">
             <span class="material-symbols-outlined text-base">upload_file</span>
-            {{ visbodyUploading() ? 'Import en cours…' : 'Importer un PDF Visbody' }}
+            {{ visbodyUploading() ? ('settings.importing' | t) : ('settings.visbody.importBtn' | t) }}
             <input type="file" accept="application/pdf" class="hidden"
                    [disabled]="visbodyUploading()" (change)="uploadVisbody($event)">
           </label>
@@ -431,17 +465,16 @@
     <div class="bg-slate-900/80 border border-white/10 rounded-2xl overflow-hidden">
       <div class="px-5 py-4 flex items-center gap-3">
         <span class="material-symbols-outlined text-secondary">scale</span>
-        <span class="text-white font-bold">Composition corporelle (Boditrax)</span>
+        <span class="text-white font-bold">{{ 'settings.boditrax.title' | t }}</span>
       </div>
       <div class="px-5 pb-5">
         <div class="border border-white/5 bg-slate-900/30 p-5 rounded-xl space-y-3">
           <p class="text-white/70 text-sm">
-            Importe l'export CSV de ton compte Boditrax : tes scans apparaissent dans la
-            page Composition, au même titre que les rapports Visbody.
+            {{ 'settings.boditrax.desc' | t }}
           </p>
           <label class="w-full inline-flex items-center justify-center gap-2 border border-secondary/40 text-secondary py-3 rounded-xl text-xs font-bold tracking-widest uppercase hover:bg-secondary/10 transition-colors cursor-pointer">
             <span class="material-symbols-outlined text-base">upload_file</span>
-            {{ boditraxUploading() ? 'Import en cours…' : 'Importer un CSV Boditrax' }}
+            {{ boditraxUploading() ? ('settings.importing' | t) : ('settings.boditrax.importBtn' | t) }}
             <input type="file" accept=".csv,text/csv" class="hidden"
                    [disabled]="boditraxUploading()" (change)="uploadBoditrax($event)">
           </label>

@@ -8,37 +8,38 @@ export interface FilterChip {
   label: string;
 }
 
+// Les `label` sont des clés i18n rendues via `| t` aux points d'affichage.
 export const MUSCLES: FilterChip[] = [
-  { key: 'PECTORAUX',       label: 'Pectoraux' },
-  { key: 'DOS',             label: 'Dos' },
-  { key: 'EPAULES',         label: 'Épaules' },
-  { key: 'BICEPS',          label: 'Biceps' },
-  { key: 'TRICEPS',         label: 'Triceps' },
-  { key: 'ABDOMINAUX',      label: 'Abdos' },
-  { key: 'QUADRICEPS',      label: 'Quadriceps' },
-  { key: 'ISCHIO_JAMBIERS', label: 'Ischio-jamb.' },
-  { key: 'FESSIERS',        label: 'Fessiers' },
-  { key: 'MOLLETS',         label: 'Mollets' },
-  { key: 'AVANT_BRAS',      label: 'Avant-bras' },
-  { key: 'TRAPEZES',        label: 'Trapèzes' },
-  { key: 'LOMBAIRES',       label: 'Lombaires' },
-  { key: 'CARDIO',          label: 'Cardio' },
+  { key: 'PECTORAUX',       label: 'muscle.PECTORAUX' },
+  { key: 'DOS',             label: 'muscle.DOS' },
+  { key: 'EPAULES',         label: 'muscle.EPAULES' },
+  { key: 'BICEPS',          label: 'muscle.BICEPS' },
+  { key: 'TRICEPS',         label: 'muscle.TRICEPS' },
+  { key: 'ABDOMINAUX',      label: 'muscle.ABDOMINAUX' },
+  { key: 'QUADRICEPS',      label: 'muscle.QUADRICEPS' },
+  { key: 'ISCHIO_JAMBIERS', label: 'muscle.ISCHIO_JAMBIERS' },
+  { key: 'FESSIERS',        label: 'muscle.FESSIERS' },
+  { key: 'MOLLETS',         label: 'muscle.MOLLETS' },
+  { key: 'AVANT_BRAS',      label: 'muscle.AVANT_BRAS' },
+  { key: 'TRAPEZES',        label: 'muscle.TRAPEZES' },
+  { key: 'LOMBAIRES',       label: 'muscle.LOMBAIRES' },
+  { key: 'CARDIO',          label: 'muscle.CARDIO' },
 ];
 
 export const EQUIPEMENTS: FilterChip[] = [
-  { key: 'POIDS_DU_CORPS', label: 'Poids du corps' },
-  { key: 'HALTERES',       label: 'Haltères' },
-  { key: 'BARRE',          label: 'Barre' },
-  { key: 'MACHINE',        label: 'Machine' },
-  { key: 'POULIE',         label: 'Poulie' },
-  { key: 'KETTLEBELL',     label: 'Kettlebell' },
-  { key: 'ELASTIQUE',      label: 'Élastique' },
+  { key: 'POIDS_DU_CORPS', label: 'equip.POIDS_DU_CORPS' },
+  { key: 'HALTERES',       label: 'equip.HALTERES' },
+  { key: 'BARRE',          label: 'equip.BARRE' },
+  { key: 'MACHINE',        label: 'equip.MACHINE' },
+  { key: 'POULIE',         label: 'equip.POULIE' },
+  { key: 'KETTLEBELL',     label: 'equip.KETTLEBELL' },
+  { key: 'ELASTIQUE',      label: 'equip.ELASTIQUE' },
 ];
 
 export const DIFFICULTES: FilterChip[] = [
-  { key: 'DEBUTANT',      label: 'Débutant' },
-  { key: 'INTERMEDIAIRE', label: 'Intermédiaire' },
-  { key: 'AVANCE',        label: 'Avancé' },
+  { key: 'DEBUTANT',      label: 'diff.DEBUTANT' },
+  { key: 'INTERMEDIAIRE', label: 'diff.INTERMEDIAIRE' },
+  { key: 'AVANCE',        label: 'diff.AVANCE' },
 ];
 
 export function muscleLabel(key: string | null | undefined): string {

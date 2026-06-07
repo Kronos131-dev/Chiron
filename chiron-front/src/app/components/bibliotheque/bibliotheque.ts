@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ChironApi, ExerciceDefinitionDto } from '../../service/chiron-api';
 import { HeaderComponent } from '../shared/header/header';
+import { TranslatePipe, LocalizePipe } from '../../service/translate.pipe';
 import {
   MUSCLES,
   EQUIPEMENTS,
@@ -17,7 +18,7 @@ import {
 @Component({
   selector: 'app-bibliotheque',
   standalone: true,
-  imports: [CommonModule, FormsModule, HeaderComponent],
+  imports: [CommonModule, FormsModule, HeaderComponent, TranslatePipe, LocalizePipe],
   templateUrl: './bibliotheque.html',
   styleUrl: './bibliotheque.css'
 })

@@ -1,5 +1,5 @@
 <!-- Top Navigation Header via Shared Component -->
-<app-header [title]="'ANNALES'" [showBack]="true" [backRoute]="'/chat'"></app-header>
+<app-header [title]="('journal.headerTitle' | t)" [showBack]="true" [backRoute]="'/chat'"></app-header>
 
 <!-- Main Journal Content Area -->
 <main class="min-h-screen pt-24 pb-32 heroic-texture px-4 md:px-8">
@@ -8,9 +8,9 @@
     <!-- Page Title & Subtitle -->
     <div class="text-center mb-12">
       <h2 class="font-headline text-4xl md:text-5xl font-black text-on-surface uppercase tracking-tight">
-        TON <span class="text-secondary">HÉRITAGE</span>
+        {{ 'journal.heritagePre' | t }} <span class="text-secondary">{{ 'journal.heritage' | t }}</span>
       </h2>
-      <p class="text-on-surface-variant font-body mt-2">L'historique de tes batailles contre la fonte.</p>
+      <p class="text-on-surface-variant font-body mt-2">{{ 'journal.subtitle' | t }}</p>
     </div>
 
     <!-- Loading Spinner Indicator -->
@@ -24,8 +24,8 @@
     @if (!isLoading() && historique().length === 0) {
       <div class="text-center p-12 bg-slate-900/50 rounded-xl border border-secondary/10">
         <span class="material-symbols-outlined text-6xl text-secondary/50 mb-4">fitness_center</span>
-        <h3 class="text-xl font-headline text-on-surface">Aucune séance enregistrée</h3>
-        <p class="text-on-surface-variant">Va forger ton histoire au temple.</p>
+        <h3 class="text-xl font-headline text-on-surface">{{ 'journal.empty' | t }}</h3>
+        <p class="text-on-surface-variant">{{ 'journal.emptyHint' | t }}</p>
       </div>
     }
 
@@ -44,7 +44,7 @@
           <!-- Week Header Separator -->
           <div class="flex items-center gap-4">
             <div class="h-px bg-secondary/30 flex-1"></div>
-            <h3 class="text-secondary font-headline font-black text-xl tracking-widest uppercase">Semaine {{ weekGroup.weekNumber }}</h3>
+            <h3 class="text-secondary font-headline font-black text-xl tracking-widest uppercase">{{ 'journal.week' | t }} {{ weekGroup.weekNumber }}</h3>
             <div class="h-px bg-secondary/30 flex-1"></div>
           </div>
 
@@ -58,7 +58,7 @@
                      (click)="toggleSeanceDetails(seance.id)">
                   <div>
                     <h3 class="font-headline text-2xl font-bold text-white uppercase tracking-wide flex items-center gap-3">
-                      {{ seance.titre || 'Entraînement' }}
+                      {{ seance.titre || ('journal.workout' | t) }}
 
                       <!-- Expansion Indicator Icon -->
                       <span class="material-symbols-outlined text-secondary transition-transform duration-300"
@@ -76,13 +76,13 @@
                   <div class="flex items-center gap-2">
                     <!-- Exercise Count Badge -->
                     <div class="text-xs font-bold uppercase tracking-widest bg-secondary/10 text-secondary px-4 py-2 rounded">
-                      {{ seance.exercices?.length || 0 }} Exercices
+                      {{ seance.exercices?.length || 0 }} {{ 'journal.exercises' | t }}
                     </div>
 
                     <!-- Edit Session Button -->
                     @if (editingSeanceId() !== seance.id) {
                       <button (click)="startEdit(seance, $event)"
-                              title="Modifier"
+                              [title]="'journal.editTitle' | t"
                               class="w-8 h-8 rounded bg-secondary/10 flex items-center justify-center text-secondary hover:bg-secondary/30 transition-colors cursor-pointer z-10">
                         <span class="material-symbols-outlined text-sm">edit</span>
                       </button>
@@ -90,7 +90,7 @@
 
                     <!-- Delete Session Button -->
                     <button (click)="supprimerSeance(seance.id, $event)"
-                            title="Supprimer"
+                            [title]="'common.delete' | t"
                             class="w-8 h-8 rounded bg-red-900/20 flex items-center justify-center text-red-400 hover:bg-red-900/40 transition-colors cursor-pointer z-10">
                       <span class="material-symbols-outlined text-sm">delete</span>
                     </button>
@@ -114,10 +114,10 @@
                             <div class="space-y-2">
                               @for (serie of exo.series; track serie.id) {
                                 <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-on-surface bg-slate-900/30 rounded px-3 py-2">
-                                  @if (serie.dureeMin) { <span><span class="text-on-surface-variant">Durée</span> {{ serie.dureeMin }} min</span> }
-                                  @if (serie.allureKmh) { <span><span class="text-on-surface-variant">Vitesse</span> {{ serie.allureKmh }} km/h</span> }
-                                  @if (serie.pentePct) { <span><span class="text-on-surface-variant">Pente</span> {{ serie.pentePct }} %</span> }
-                                  @if (serie.distanceM) { <span><span class="text-on-surface-variant">Distance</span> {{ serie.distanceM }} m</span> }
+                                  @if (serie.dureeMin) { <span><span class="text-on-surface-variant">{{ 'journal.duration' | t }}</span> {{ serie.dureeMin }} min</span> }
+                                  @if (serie.allureKmh) { <span><span class="text-on-surface-variant">{{ 'journal.speed' | t }}</span> {{ serie.allureKmh }} km/h</span> }
+                                  @if (serie.pentePct) { <span><span class="text-on-surface-variant">{{ 'journal.incline' | t }}</span> {{ serie.pentePct }} %</span> }
+                                  @if (serie.distanceM) { <span><span class="text-on-surface-variant">{{ 'journal.distance' | t }}</span> {{ serie.distanceM }} m</span> }
                                   @if (serie.calories) { <span class="text-secondary font-bold ml-auto flex items-center gap-1"><span>🔥</span> {{ serie.calories | number:'1.0-0' }} kcal</span> }
                                 </div>
                               }
@@ -127,9 +127,9 @@
                             <table class="w-full text-left border-collapse">
                               <thead>
                               <tr class="border-b border-secondary/20 text-on-surface-variant font-headline text-sm tracking-wider uppercase">
-                                <th class="py-2 px-4">Série</th>
-                                <th class="py-2 px-4">Reps</th>
-                                <th class="py-2 px-4">Poids (kg)</th>
+                                <th class="py-2 px-4">{{ 'journal.set' | t }}</th>
+                                <th class="py-2 px-4">{{ 'journal.reps' | t }}</th>
+                                <th class="py-2 px-4">{{ 'journal.weightKg' | t }}</th>
                               </tr>
                               </thead>
                               <tbody class="font-body text-on-surface">
@@ -141,7 +141,7 @@
                                   </tr>
                                   @for (deg of serie.degressifs; track deg.id; let j = $index) {
                                     <tr class="border-b border-white/5 bg-slate-900/30 hover:bg-white/5 transition-colors">
-                                      <td class="py-2 px-4 pl-8 text-on-surface-variant text-xs">↳ Dég.</td>
+                                      <td class="py-2 px-4 pl-8 text-on-surface-variant text-xs">↳ {{ 'journal.drop' | t }}</td>
                                       <td class="py-2 px-4 text-sm">{{ deg.reps }}</td>
                                       <td class="py-2 px-4 text-sm">{{ deg.poids }}</td>
                                     </tr>
@@ -168,9 +168,9 @@
                             <table class="w-full text-left border-collapse">
                               <thead>
                               <tr class="border-b border-secondary/20 text-on-surface-variant font-headline text-sm tracking-wider uppercase">
-                                <th class="py-2 px-3">Série</th>
-                                <th class="py-2 px-3">Reps</th>
-                                <th class="py-2 px-3">Poids (kg)</th>
+                                <th class="py-2 px-3">{{ 'journal.set' | t }}</th>
+                                <th class="py-2 px-3">{{ 'journal.reps' | t }}</th>
+                                <th class="py-2 px-3">{{ 'journal.weightKg' | t }}</th>
                                 <th class="py-2 px-3 w-10"></th>
                               </tr>
                               </thead>
@@ -194,7 +194,7 @@
                                     </td>
                                     <td class="py-2 px-3">
                                       <button (click)="removeSerie(exoIdx, serieIdx, $event)"
-                                              title="Supprimer la série"
+                                              [title]="'journal.removeSet' | t"
                                               class="w-7 h-7 rounded bg-red-900/20 text-red-400 hover:bg-red-900/40 flex items-center justify-center">
                                         <span class="material-symbols-outlined text-sm">close</span>
                                       </button>
@@ -208,7 +208,7 @@
                           <button (click)="addSerie(exoIdx, $event)"
                                   class="mt-3 inline-flex items-center gap-2 text-sm bg-secondary/10 text-secondary hover:bg-secondary/30 transition-colors px-3 py-1.5 rounded">
                             <span class="material-symbols-outlined text-sm">add</span>
-                            Ajouter une série
+                            {{ 'journal.addSet' | t }}
                           </button>
                         </div>
                       }
@@ -218,7 +218,7 @@
                         <button (click)="cancelEdit($event)"
                                 [disabled]="isSaving()"
                                 class="px-5 py-2 rounded bg-slate-800 hover:bg-slate-700 text-on-surface font-headline tracking-wider uppercase text-sm disabled:opacity-50">
-                          Annuler
+                          {{ 'common.cancel' | t }}
                         </button>
                         <button (click)="saveEdit($event)"
                                 [disabled]="isSaving()"
@@ -226,7 +226,7 @@
                           @if (isSaving()) {
                             <span class="w-4 h-4 border-2 border-slate-950/30 border-t-slate-950 rounded-full animate-spin"></span>
                           }
-                          Sauvegarder
+                          {{ 'common.save' | t }}
                         </button>
                       </div>
                     }

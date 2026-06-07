@@ -5,6 +5,8 @@ import { ChironApi } from '../../service/chiron-api';
 import { AuthService } from '../../service/auth.service';
 import { ActiveSessionService } from '../../service/active-session.service';
 import { HeaderComponent } from '../shared/header/header';
+import { TranslatePipe } from '../../service/translate.pipe';
+import { I18nService } from '../../service/i18n.service';
 
 export interface Routine {
   id: string;
@@ -16,7 +18,7 @@ export interface Routine {
 @Component({
   selector: 'app-programme',
   standalone: true,
-  imports: [CommonModule, HeaderComponent],
+  imports: [CommonModule, HeaderComponent, TranslatePipe],
   templateUrl: './programme.html',
   styleUrls: ['./programme.css'],
 })
@@ -41,6 +43,7 @@ export class Programme implements OnInit {
     private chironApi:   ChironApi,
     private authService: AuthService,
     public  activeSession: ActiveSessionService,
+    private i18n: I18nService,
   ) {}
 
   ngOnInit() { this.chargerProgrammes(); }
@@ -55,7 +58,7 @@ export class Programme implements OnInit {
         const routinesFormatees = data.map((seance: any) => {
           let total = 0;
           seance.exercices?.forEach((exo: any) => { total += exo.series?.length ?? 0; });
-          return { id: seance.id.toString(), titre: seance.titre, sousTitre: 'Séance', totalSeries: total };
+          return { id: seance.id.toString(), titre: seance.titre, sousTitre: this.i18n.t('programme.sessionSubtitle'), totalSeries: total };
         });
         this.routines.set(routinesFormatees);
         this.isLoading.set(false);
@@ -68,7 +71,7 @@ export class Programme implements OnInit {
     // Starting a different routine would discard the unsaved progress of the one
     // currently in progress — ask before throwing it away.
     if (this.activeSession.hasActiveSession() && !this.activeSession.isActiveFor(id)) {
-      const ok = confirm('Une séance est déjà en cours sur un autre programme. La progression non enregistrée sera perdue. Continuer ?');
+      const ok = confirm(this.i18n.t('programme.confirmSwitch'));
       if (!ok) return;
       this.activeSession.clear();
     }
@@ -83,7 +86,7 @@ export class Programme implements OnInit {
 
   /** Abandon the in-progress session, discarding its unsaved progress. */
   abandonnerSession() {
-    if (confirm('Abandonner la séance en cours ? La progression non enregistrée sera perdue.')) {
+    if (confirm(this.i18n.t('programme.confirmAbandon'))) {
       this.activeSession.clear();
     }
   }
@@ -92,12 +95,12 @@ export class Programme implements OnInit {
   editerRoutine(id: string)    { this.router.navigate(['/programme', id, 'edit']); }
 
   supprimerRoutine(routineId: string) {
-    if (confirm('Es-tu sûr de vouloir supprimer ce programme ?')) {
+    if (confirm(this.i18n.t('programme.confirmDelete'))) {
       const username = this.authService.getUsername();
       if (!username) return;
       this.chironApi.deleteProgramme(parseInt(routineId), username).subscribe({
         next: () => this.routines.update(list => list.filter(r => r.id !== routineId)),
-        error: () => alert('Impossible de supprimer cette routine.'),
+        error: () => alert(this.i18n.t('programme.deleteError')),
       });
     }
   }

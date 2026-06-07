@@ -8,6 +8,8 @@ import { ActiveSessionService } from '../../service/active-session.service';
 import { HeaderComponent } from '../shared/header/header';
 import { ExerciceCardComponent } from '../shared/exercice-card/exercice-card';
 import { ExercisePickerComponent } from '../shared/exercise-picker/exercise-picker';
+import { TranslatePipe } from '../../service/translate.pipe';
+import { I18nService } from '../../service/i18n.service';
 import {
   ExerciceForm,
   generateFormId,
@@ -38,17 +40,17 @@ function getIsoWeekNumber(d: Date): number {
 @Component({
   selector: 'app-session',
   standalone: true,
-  imports: [CommonModule, FormsModule, HeaderComponent, ExerciceCardComponent, ExercisePickerComponent],
+  imports: [CommonModule, FormsModule, HeaderComponent, ExerciceCardComponent, ExercisePickerComponent, TranslatePipe],
   templateUrl: './session.html',
   styleUrls: ['./session.css']
 })
 export class Session implements OnInit, OnDestroy {
 
   /** Signal holding the title of the current routine. */
-  titreRoutine = signal('Nouvelle Routine');
+  titreRoutine = signal('');
 
   /** Signal holding the current date formatted for display. */
-  derniereSession = signal(new Date().toLocaleDateString('fr-FR'));
+  derniereSession = signal('');
 
   /** The unique identifier of the routine being viewed or edited, if applicable. */
   routineId: string | null = null;
@@ -123,7 +125,8 @@ export class Session implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private chironApi: ChironApi,
     private authService: AuthService,
-    private activeSession: ActiveSessionService
+    private activeSession: ActiveSessionService,
+    private i18n: I18nService
   ) {}
 
   /**
@@ -132,6 +135,7 @@ export class Session implements OnInit, OnDestroy {
    * and loads the requested session data.
    */
   ngOnInit() {
+    this.derniereSession.set(new Date().toLocaleDateString(this.i18n.lang() === 'en' ? 'en-US' : 'fr-FR'));
     // Tick once a second to keep the live session timer up to date.
     this._timer = setInterval(() => this.now.set(Date.now()), 1000);
 
@@ -160,7 +164,7 @@ export class Session implements OnInit, OnDestroy {
         } else {
           // Fallback: someone landed on `/session` without an id. Just show an empty
           // editable template so they can quickly log a one-off workout.
-          this.titreRoutine.set('Nouvelle séance');
+          this.titreRoutine.set(this.i18n.t('session.newSession'));
           this.exercices.set([makeEmptyExercice()]);
         }
       });
@@ -247,7 +251,7 @@ export class Session implements OnInit, OnDestroy {
       error: (err) => {
         console.error("Erreur de chargement", err);
         this.isLoading.set(false);
-        alert("Impossible de charger ce programme.");
+        alert(this.i18n.t('session.loadError'));
         this.router.navigate(['/programme']);
       }
     });
@@ -280,7 +284,7 @@ export class Session implements OnInit, OnDestroy {
   /** Append an exercise to the session from a library card. */
   addExerciceFromDefinition(def: ExerciceDefinitionDto) {
     if (this.isReadonly()) return;
-    const nom = def.nomFr ?? def.nomEn;
+    const nom = this.i18n.pick(def.nomFr, def.nomEn);
     const exo = makeEmptyExercice(nom, def.id, def.cardioType as ExerciceForm['cardioType']);
     this.exercices.update(list => [...list, exo]);
     this.addedExercises.update(list => [...list, exo]);
@@ -448,7 +452,7 @@ export class Session implements OnInit, OnDestroy {
 
     this.chironApi.sauvegarderProgramme(username, journalDto).subscribe({
       next: () => {
-        this.flashStatus('Séance ajoutée au journal.');
+        this.flashStatus(this.i18n.t('session.addedToJournal'));
 
         // The session is now logged: detach from the shared "in progress" state
         // (a fresh start is required next time) while keeping the current view
@@ -471,11 +475,11 @@ export class Session implements OnInit, OnDestroy {
             exercices: exercicesPayload
           };
           this.chironApi.sauvegarderProgramme(username, templateDto).subscribe({
-            error: () => this.flashStatus('Journal OK, mise à jour du modèle échouée.')
+            error: () => this.flashStatus(this.i18n.t('session.modelUpdateFailed'))
           });
         }
       },
-      error: () => this.flashStatus("Erreur lors de l'enregistrement dans le journal."),
+      error: () => this.flashStatus(this.i18n.t('session.saveError')),
     });
   }
 

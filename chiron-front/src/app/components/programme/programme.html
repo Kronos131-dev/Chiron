@@ -1,12 +1,12 @@
-<app-header [title]="'PROGRAMMES'" [showBack]="false"></app-header>
+<app-header [title]="'programme.title' | t" [showBack]="false"></app-header>
 
 <main class="min-h-screen pt-24 pb-32 heroic-texture px-4 md:px-8">
   <div class="max-w-md mx-auto space-y-6">
 
     <!-- Page Title -->
     <div class="mb-8">
-      <p class="text-secondary text-xs font-bold tracking-[0.2em] uppercase mb-1">Le Sanctuaire</p>
-      <h2 class="font-headline text-4xl font-black text-on-surface uppercase tracking-tight">PROGRAMMES</h2>
+      <p class="text-secondary text-xs font-bold tracking-[0.2em] uppercase mb-1">{{ 'programme.sanctuary' | t }}</p>
+      <h2 class="font-headline text-4xl font-black text-on-surface uppercase tracking-tight">{{ 'programme.title' | t }}</h2>
       <div class="h-1 w-12 bg-secondary mt-2 rounded-full"></div>
     </div>
 
@@ -20,14 +20,14 @@
             <span class="material-symbols-outlined text-secondary">play_arrow</span>
           </div>
           <div class="flex-1 min-w-0">
-            <p class="text-secondary text-[10px] font-bold tracking-[0.2em] uppercase">Séance en cours</p>
+            <p class="text-secondary text-[10px] font-bold tracking-[0.2em] uppercase">{{ 'programme.sessionInProgress' | t }}</p>
             <p class="text-white font-headline font-black text-lg uppercase tracking-tight truncate">{{ activeSession.titre() }}</p>
           </div>
-          <span class="text-secondary text-xs font-bold uppercase tracking-widest flex-shrink-0 group-hover:translate-x-1 transition-transform">Reprendre →</span>
+          <span class="text-secondary text-xs font-bold uppercase tracking-widest flex-shrink-0 group-hover:translate-x-1 transition-transform">{{ 'programme.resume' | t }} →</span>
         </button>
         <!-- Abandon the in-progress session -->
         <button (click)="abandonnerSession()"
-                aria-label="Abandonner la séance"
+                [attr.aria-label]="'programme.abandon' | t"
                 class="w-9 h-9 rounded-full bg-red-900/20 flex items-center justify-center text-red-400 hover:bg-red-900/40 transition-colors flex-shrink-0">
           <span class="material-symbols-outlined text-lg">close</span>
         </button>
@@ -94,11 +94,11 @@
             <div class="flex items-end justify-between mt-6">
               <div class="flex items-baseline gap-2">
                 <span class="text-4xl font-headline font-light text-secondary">{{ routine.totalSeries }}</span>
-                <span class="text-xs text-on-surface-variant font-bold uppercase tracking-wider">Séries<br>Totales</span>
+                <span class="text-xs text-on-surface-variant font-bold uppercase tracking-wider" [innerHTML]="'programme.totalSeries' | t"></span>
               </div>
               <button (click)="commencerRoutine(routine.id)"
                       class="bg-gradient-to-r from-secondary to-[#c77a30] text-slate-950 font-bold text-xs px-6 py-3 rounded-lg uppercase tracking-widest hover:scale-105 active:scale-95 transition-transform shadow-lg shadow-secondary/20">
-                {{ activeSession.isActiveFor(routine.id) ? 'Reprendre' : 'Commencer' }}
+                {{ (activeSession.isActiveFor(routine.id) ? 'programme.resume' : 'programme.start') | t }}
               </button>
             </div>
           </div>
@@ -113,7 +113,7 @@
     <button (click)="ajouterRoutine()"
             class="w-full mt-6 border-2 border-dashed border-white/10 rounded-2xl p-6 flex flex-col items-center justify-center gap-3 text-on-surface-variant hover:text-secondary hover:border-secondary/50 hover:bg-secondary/5 transition-all duration-300 group">
       <span class="material-symbols-outlined text-3xl group-hover:scale-110 transition-transform bg-white/5 p-2 rounded-full">add</span>
-      <span class="text-xs font-bold tracking-[0.15em] uppercase">Ajouter un Programme</span>
+      <span class="text-xs font-bold tracking-[0.15em] uppercase">{{ 'programme.add' | t }}</span>
     </button>
 
   </div>

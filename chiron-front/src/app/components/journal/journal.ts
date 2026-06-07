@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ChironApi } from '../../service/chiron-api';
 import { AuthService } from '../../service/auth.service';
+import { I18nService } from '../../service/i18n.service';
+import { TranslatePipe } from '../../service/translate.pipe';
 import { Router } from '@angular/router';
 import { HeaderComponent } from '../shared/header/header';
 import { durationMinutes, formatDuration } from '../../util/duration';
@@ -24,7 +26,7 @@ function getIsoWeekNumber(d: Date): number {
 @Component({
   selector: 'app-journal',
   standalone: true,
-  imports: [CommonModule, FormsModule, HeaderComponent],
+  imports: [CommonModule, FormsModule, HeaderComponent, TranslatePipe],
   templateUrl: './journal.html',
   styleUrls: ['./journal.css']
 })
@@ -53,7 +55,8 @@ export class Journal implements OnInit {
   constructor(
     private chironApi: ChironApi,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    public i18n: I18nService
   ) {}
 
   ngOnInit() {
@@ -118,7 +121,7 @@ export class Journal implements OnInit {
 
   supprimerSeance(seanceId: number, event: Event) {
     event.stopPropagation();
-    if (confirm("Es-tu sûr de vouloir supprimer cette entrée de ton journal ?")) {
+    if (confirm(this.i18n.t('journal.deleteConfirm'))) {
       const username = this.authService.getUsername();
       if (!username) return;
 
@@ -128,7 +131,7 @@ export class Journal implements OnInit {
         },
         error: (err) => {
           console.error("Erreur lors de la suppression", err);
-          alert("Impossible de supprimer cette entrée.");
+          alert(this.i18n.t('journal.deleteError'));
         }
       });
     }
@@ -214,13 +217,13 @@ export class Journal implements OnInit {
         this.isSaving.set(false);
         this.editingSeanceId.set(null);
         this.editingDraft.set(null);
-        this.flashStatus('Séance mise à jour.');
+        this.flashStatus(this.i18n.t('journal.updated'));
         this.loadJournal(username);
       },
       error: (err) => {
         console.error("Erreur lors de la modification", err);
         this.isSaving.set(false);
-        this.flashStatus('Erreur lors de la mise à jour.');
+        this.flashStatus(this.i18n.t('journal.updateError'));
       }
     });
   }
@@ -248,7 +251,7 @@ export class Journal implements OnInit {
     const options: Intl.DateTimeFormatOptions = {
       weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
     };
-    return new Date(dateString).toLocaleDateString('fr-FR', options);
+    return new Date(dateString).toLocaleDateString(this.i18n.lang() === 'en' ? 'en-US' : 'fr-FR', options);
   }
 
   /**

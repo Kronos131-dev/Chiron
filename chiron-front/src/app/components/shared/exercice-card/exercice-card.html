@@ -15,9 +15,9 @@
          (touchstart)="exoTouchStart.emit($event)"
          (touchmove)="exoTouchMove.emit($event)"
          (touchend)="exoTouchEnd.emit()"
-         title="Glisser pour réordonner cet exercice">
+         [title]="'exCard.dragTitle' | t">
       <span class="material-symbols-outlined text-base select-none">drag_indicator</span>
-      <span class="text-[9px] font-bold tracking-[0.2em] uppercase select-none">Déplacer</span>
+      <span class="text-[9px] font-bold tracking-[0.2em] uppercase select-none">{{ 'exCard.move' | t }}</span>
     </div>
   }
 
@@ -28,14 +28,14 @@
 
       <!-- Rangée 1 : nom de l'exercice -->
       <div class="relative">
-        <label class="text-secondary text-[9px] font-bold tracking-[0.2em] uppercase ml-1">Nom de l'exercice</label>
+        <label class="text-secondary text-[9px] font-bold tracking-[0.2em] uppercase ml-1">{{ 'exCard.exerciseName' | t }}</label>
         @if (!readonly) {
           <input type="text"
                  [value]="exercice.nom"
                  (input)="onNomInput($event)"
                  (blur)="closeSuggestions()"
                  class="w-full mt-1 bg-slate-950/50 border border-white/10 rounded p-3 text-white font-headline text-lg outline-none focus:border-secondary/50 transition-colors"
-                 placeholder="Rechercher un exercice...">
+                 [placeholder]="'exCard.searchPlaceholder' | t">
           @if (showSuggestions() && suggestions().length > 0) {
             <ul class="absolute z-50 left-0 right-0 mt-1 bg-[#1a1c23] border border-white/10 rounded-lg shadow-xl max-h-96 overflow-y-auto">
               @for (def of suggestions(); track def.id) {
@@ -45,7 +45,7 @@
                     <img [src]="def.imageUrl" alt="" class="w-8 h-8 object-cover rounded" loading="lazy">
                   }
                   <div class="flex-1 min-w-0">
-                    <span class="text-white font-bold text-sm block line-clamp-2 break-words">{{ def.nomFr ?? def.nomEn }}</span>
+                    <span class="text-white font-bold text-sm block line-clamp-2 break-words">{{ def.nomFr | localize: def.nomEn }}</span>
                     <span class="text-on-surface-variant text-[10px] uppercase tracking-wider">{{ def.musclePrincipal }}</span>
                   </div>
                 </li>
@@ -79,11 +79,11 @@
                     [class.text-secondary]="exercice.unilateral"
                     [class.border-white/10]="!exercice.unilateral"
                     [class.text-on-surface-variant]="!exercice.unilateral"
-                    title="Exercice réalisé un membre à la fois (reps par bras/jambe) — compte ×2 dans le tonnage">
+                    [title]="'exCard.unilateralTitle' | t">
               <span class="material-symbols-outlined text-[15px] leading-none">
                 {{ exercice.unilateral ? 'check_circle' : 'radio_button_unchecked' }}
               </span>
-              Unilatéral
+              {{ 'exCard.unilateral' | t }}
             </button>
           }
         </div>
@@ -95,7 +95,7 @@
           @if (exercice.definitionId) {
             <button (click)="voirFiche()"
                     class="bg-slate-950/50 border border-white/10 p-3 rounded text-on-surface-variant hover:text-secondary hover:border-secondary/30 transition-all"
-                    title="Voir la fiche de l'exercice">
+                    [title]="'exCard.viewSheet' | t">
               <span class="material-symbols-outlined text-xl">info</span>
             </button>
           }
@@ -111,7 +111,7 @@
                       [class.hover:border-secondary/40]="!groupMenuOpen()"
                       [class.text-secondary]="groupMenuOpen()"
                       [class.border-secondary/60]="groupMenuOpen()"
-                      title="Grouper avec l'exercice suivant">
+                      [title]="'exCard.groupTitle' | t">
                 <span class="material-symbols-outlined text-xl">link</span>
               </button>
               @if (groupMenuOpen()) {
@@ -143,9 +143,9 @@
     @if (!isCardio()) {
     <!-- Sets Table Headers -->
     <div class="grid grid-cols-12 gap-3 mb-2 px-1">
-      <div class="col-span-3 text-on-surface-variant text-[9px] font-bold tracking-widest uppercase">Série</div>
-      <div class="col-span-4 text-on-surface-variant text-[9px] font-bold tracking-widest uppercase">Poids (KG)</div>
-      <div class="col-span-5 text-on-surface-variant text-[9px] font-bold tracking-widest uppercase">Reps</div>
+      <div class="col-span-3 text-on-surface-variant text-[9px] font-bold tracking-widest uppercase">{{ 'exCard.set' | t }}</div>
+      <div class="col-span-4 text-on-surface-variant text-[9px] font-bold tracking-widest uppercase">{{ 'exCard.weightKg' | t }}</div>
+      <div class="col-span-5 text-on-surface-variant text-[9px] font-bold tracking-widest uppercase">{{ 'exCard.reps' | t }}</div>
     </div>
 
     <!-- Sets (Series) Rows -->
@@ -173,10 +173,10 @@
                      class="w-full bg-slate-950/80 border border-white/5 rounded p-2.5 text-white font-body text-center outline-none focus:border-secondary/50 transition-colors">
 
               @if (!readonly) {
-                <button (click)="ajouterDegressif(serie.id)" class="text-on-surface-variant hover:text-secondary transition-colors" title="Ajouter un dégressif">
+                <button (click)="ajouterDegressif(serie.id)" class="text-on-surface-variant hover:text-secondary transition-colors" [title]="'exCard.addDrop' | t">
                   <span class="material-symbols-outlined text-sm">keyboard_double_arrow_down</span>
                 </button>
-                <button (click)="supprimerSerie(serie.id)" class="text-on-surface-variant hover:text-red-400 transition-colors" title="Supprimer la série">
+                <button (click)="supprimerSerie(serie.id)" class="text-on-surface-variant hover:text-red-400 transition-colors" [title]="'exCard.removeSet' | t">
                   <span class="material-symbols-outlined text-sm">close</span>
                 </button>
               }
@@ -188,23 +188,23 @@
         @for (deg of serie.degressifs; track deg.id) {
           <div class="grid grid-cols-12 gap-3 items-center mt-1 pl-4 opacity-80">
             <div class="col-span-3 text-on-surface-variant text-xs font-bold text-right pr-2">
-              ↳ Dég.
+              ↳ {{ 'exCard.drop' | t }}
             </div>
             <div class="col-span-4">
               <input type="number" [(ngModel)]="deg.poids"
                      [readOnly]="readonly"
                      class="w-full bg-slate-950/50 border border-white/5 rounded p-1.5 text-white text-sm font-body text-center outline-none focus:border-secondary/50 transition-colors"
-                     placeholder="Kg">
+                     [placeholder]="'exCard.kg' | t">
             </div>
             <div class="col-span-5">
               <div class="flex items-center gap-2">
                 <input type="number" [(ngModel)]="deg.reps"
                        [readOnly]="readonly"
                        class="w-full bg-slate-950/50 border border-white/5 rounded p-1.5 text-white text-sm font-body text-center outline-none focus:border-secondary/50 transition-colors"
-                       placeholder="Reps">
+                       [placeholder]="'exCard.repsPh' | t">
 
                 @if (!readonly) {
-                  <button (click)="supprimerDegressif(serie.id, deg.id)" class="text-on-surface-variant hover:text-red-400 transition-colors" title="Supprimer le dégressif">
+                  <button (click)="supprimerDegressif(serie.id, deg.id)" class="text-on-surface-variant hover:text-red-400 transition-colors" [title]="'exCard.removeDrop' | t">
                     <span class="material-symbols-outlined text-sm">close</span>
                   </button>
                 }
@@ -221,9 +221,9 @@
         <div class="bg-slate-950/40 border border-white/5 rounded-lg p-3">
           @if (exercice.series.length > 1) {
             <div class="flex items-center justify-between mb-2">
-              <span class="text-secondary font-bold font-headline text-sm">Intervalle {{ i + 1 }}</span>
+              <span class="text-secondary font-bold font-headline text-sm">{{ 'exCard.interval' | t }} {{ i + 1 }}</span>
               @if (!readonly) {
-                <button (click)="supprimerSerie(serie.id)" class="text-on-surface-variant hover:text-red-400 transition-colors" title="Supprimer l'intervalle">
+                <button (click)="supprimerSerie(serie.id)" class="text-on-surface-variant hover:text-red-400 transition-colors" [title]="'exCard.removeInterval' | t">
                   <span class="material-symbols-outlined text-sm">close</span>
                 </button>
               }
@@ -232,25 +232,25 @@
           <div class="grid grid-cols-2 gap-3">
             <!-- Durée : commun à tous les cardios -->
             <div>
-              <label class="text-on-surface-variant text-[9px] font-bold tracking-widest uppercase block mb-1">Durée (min)</label>
+              <label class="text-on-surface-variant text-[9px] font-bold tracking-widest uppercase block mb-1">{{ 'exCard.durationMin' | t }}</label>
               <input type="number" inputmode="decimal" min="0" [(ngModel)]="serie.dureeMin" [readOnly]="readonly"
                      class="w-full bg-slate-950/80 border border-white/5 rounded p-2.5 text-white font-body text-center outline-none focus:border-secondary/50 transition-colors">
             </div>
 
             @if (exercice.cardioType === 'MARCHE_PENTE' || exercice.cardioType === 'COURSE') {
               <div>
-                <label class="text-on-surface-variant text-[9px] font-bold tracking-widest uppercase block mb-1">Vitesse (km/h)</label>
+                <label class="text-on-surface-variant text-[9px] font-bold tracking-widest uppercase block mb-1">{{ 'exCard.speedKmh' | t }}</label>
                 <input type="number" inputmode="decimal" min="0" step="0.1" [(ngModel)]="serie.allureKmh" [readOnly]="readonly"
                        class="w-full bg-slate-950/80 border border-white/5 rounded p-2.5 text-white font-body text-center outline-none focus:border-secondary/50 transition-colors">
               </div>
               <div>
-                <label class="text-on-surface-variant text-[9px] font-bold tracking-widest uppercase block mb-1">Pente (%)</label>
+                <label class="text-on-surface-variant text-[9px] font-bold tracking-widest uppercase block mb-1">{{ 'exCard.inclinePct' | t }}</label>
                 <input type="number" inputmode="decimal" min="0" step="0.5" [(ngModel)]="serie.pentePct" [readOnly]="readonly"
                        class="w-full bg-slate-950/80 border border-white/5 rounded p-2.5 text-white font-body text-center outline-none focus:border-secondary/50 transition-colors">
               </div>
             } @else {
               <div>
-                <label class="text-on-surface-variant text-[9px] font-bold tracking-widest uppercase block mb-1">Distance (m)</label>
+                <label class="text-on-surface-variant text-[9px] font-bold tracking-widest uppercase block mb-1">{{ 'exCard.distanceM' | t }}</label>
                 <input type="number" inputmode="numeric" min="0" [(ngModel)]="serie.distanceM" [readOnly]="readonly"
                        class="w-full bg-slate-950/80 border border-white/5 rounded p-2.5 text-white font-body text-center outline-none focus:border-secondary/50 transition-colors">
               </div>
@@ -271,22 +271,22 @@
     @if (!readonly) {
       <button (click)="ajouterSerie()"
               class="w-full border border-dashed border-white/10 rounded py-3 flex items-center justify-center gap-2 text-on-surface-variant text-[10px] font-bold tracking-widest uppercase hover:text-secondary hover:bg-white/5 transition-colors">
-        <span class="text-lg leading-none">+</span> {{ isCardio() ? 'Ajouter un intervalle' : 'Ajouter une série' }}
+        <span class="text-lg leading-none">+</span> {{ isCardio() ? ('exCard.addInterval' | t) : ('exCard.addSet' | t) }}
       </button>
     }
 
     <!-- Note d'exercice (facultative) — sous les séries -->
     @if (!readonly) {
       <div class="mt-4">
-        <label class="text-secondary text-[9px] font-bold tracking-[0.2em] uppercase ml-1">Note (facultatif)</label>
+        <label class="text-secondary text-[9px] font-bold tracking-[0.2em] uppercase ml-1">{{ 'exCard.noteOptional' | t }}</label>
         <textarea [(ngModel)]="exercice.commentaire"
                   rows="2"
                   class="w-full mt-1 bg-slate-950/50 border border-white/10 rounded p-3 text-white font-body text-sm outline-none focus:border-secondary/50 transition-colors resize-y"
-                  placeholder="Ressenti, point à savoir, condition…"></textarea>
+                  [placeholder]="'exCard.notePh' | t"></textarea>
       </div>
     } @else if (exercice.commentaire) {
       <div class="mt-4 bg-slate-950/40 border border-white/5 rounded p-3">
-        <p class="text-secondary text-[9px] font-bold tracking-[0.2em] uppercase mb-1">Note</p>
+        <p class="text-secondary text-[9px] font-bold tracking-[0.2em] uppercase mb-1">{{ 'exCard.note' | t }}</p>
         <p class="text-on-surface text-sm font-body whitespace-pre-wrap break-words">{{ exercice.commentaire }}</p>
       </div>
     }

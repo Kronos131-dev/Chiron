@@ -56,6 +56,7 @@ public class ChatController {
         private String username;
         private String message;
         private Long conversationId;
+        private String language; // 'fr' | 'en' ; null => fr
 
         public String getUsername() { return username; }
         public void setUsername(String username) { this.username = username; }
@@ -63,6 +64,16 @@ public class ChatController {
         public void setMessage(String message) { this.message = message; }
         public Long getConversationId() { return conversationId; }
         public void setConversationId(Long conversationId) { this.conversationId = conversationId; }
+        public String getLanguage() { return language; }
+        public void setLanguage(String language) { this.language = language; }
+    }
+
+    /** Directive de langue de réponse injectée en tête du contexte envoyé au modèle. */
+    private static String languageDirective(String language) {
+        boolean en = "en".equalsIgnoreCase(language);
+        return en
+                ? "LANGUE DE RÉPONSE : réponds exclusivement en anglais, quelle que soit la langue des données internes.\n"
+                : "LANGUE DE RÉPONSE : réponds exclusivement en français.\n";
     }
 
     /**
@@ -82,6 +93,7 @@ public class ChatController {
         memoryManager.seedIfAbsent(memoryId, () -> conversationService.getMessages(conversation));
 
         StringBuilder ctx = new StringBuilder();
+        ctx.append(languageDirective(request.getLanguage()));
         ctx.append("SYSTEM CONTEXT - L'utilisateur qui te parle est : ").append(user.getUsername())
                 .append(". Son rôle est : ").append(user.getRole().name())
                 .append(". S'il est ADMIN, il a le droit de demander des informations sur d'autres utilisateurs.\n");
@@ -130,7 +142,8 @@ public class ChatController {
 
         AiProvider provider = aiUsageService.resolveProvider(user);
         String reply = chironAgentRouter.chatWithFallback(provider, memoryId,
-                "COMMANDE SYSTEME : L'utilisateur vient de cliquer sur 'Terminer l'entraînement'. Enregistre la fin de la séance dans la base de données, fais un résumé très court et martial de ses efforts, et dis-lui d'aller se reposer.");
+                languageDirective(request.getLanguage())
+                        + "COMMANDE SYSTEME : L'utilisateur vient de cliquer sur 'Terminer l'entraînement'. Enregistre la fin de la séance dans la base de données, fais un résumé très court et martial de ses efforts, et dis-lui d'aller se reposer.");
 
         conversationService.recordExchange(conversation, "Terminer l'entraînement", reply);
         return new ChatResponse(conversation.getId(), reply);

@@ -8,7 +8,7 @@
     </button>
     @if (exercice()) {
       <h1 class="text-white font-black font-headline text-lg uppercase tracking-tight line-clamp-1 flex-1">
-        {{ exercice()!.nomFr ?? exercice()!.nomEn }}
+        {{ exercice()!.nomFr | localize: exercice()!.nomEn }}
       </h1>
     }
   </div>
@@ -24,7 +24,7 @@
   @else if (error()) {
     <div class="flex flex-col items-center justify-center py-24 text-center px-8">
       <span class="material-symbols-outlined text-5xl text-on-surface-variant/30 mb-4">error</span>
-      <p class="text-on-surface-variant">Exercice introuvable.</p>
+      <p class="text-on-surface-variant">{{ 'exDetail.notFound' | t }}</p>
     </div>
   }
 
@@ -36,16 +36,16 @@
       @if (exercice()!.imageUrl) {
         <div class="images-container">
           <div class="image-wrapper">
-            <p class="image-label">Position de départ</p>
+            <p class="image-label">{{ 'exDetail.startPosition' | t }}</p>
             <img [src]="exercice()!.imageUrl"
-                 [alt]="exercice()!.nomFr ?? exercice()!.nomEn"
+                 [alt]="exercice()!.nomFr | localize: exercice()!.nomEn"
                  class="exercise-image">
           </div>
           @if (exercice()!.imageUrl2) {
             <div class="image-wrapper">
-              <p class="image-label">Position finale</p>
+              <p class="image-label">{{ 'exDetail.endPosition' | t }}</p>
               <img [src]="exercice()!.imageUrl2"
-                   [alt]="exercice()!.nomFr ?? exercice()!.nomEn"
+                   [alt]="exercice()!.nomFr | localize: exercice()!.nomEn"
                    class="exercise-image">
             </div>
           }
@@ -60,14 +60,14 @@
       <!-- Chips musculaires & équipement -->
       <div class="flex flex-wrap gap-2">
         @if (exercice()!.musclePrincipal) {
-          <span class="tag tag-muscle">{{ muscleLabel(exercice()!.musclePrincipal) }}</span>
+          <span class="tag tag-muscle">{{ muscleLabel(exercice()!.musclePrincipal) | t }}</span>
         }
         @if (exercice()!.typeEquipement) {
-          <span class="tag tag-equip">{{ equipementLabel(exercice()!.typeEquipement) }}</span>
+          <span class="tag tag-equip">{{ equipementLabel(exercice()!.typeEquipement) | t }}</span>
         }
         @if (exercice()!.difficulte) {
           <span [class]="'tag ' + difficulteClass(exercice()!.difficulte)">
-            {{ difficulteLabel(exercice()!.difficulte) }}
+            {{ difficulteLabel(exercice()!.difficulte) | t }}
           </span>
         }
       </div>
@@ -75,10 +75,10 @@
       <!-- Muscles secondaires -->
       @if (exercice()!.musclesSecondaires && exercice()!.musclesSecondaires.length) {
         <section class="section-card">
-          <p class="section-label">Muscles secondaires</p>
+          <p class="section-label">{{ 'bib.secondaryMuscles' | t }}</p>
           <div class="flex flex-wrap gap-1.5">
             @for (m of exercice()!.musclesSecondaires; track m) {
-              <span class="tag tag-secondary">{{ muscleLabel(m) }}</span>
+              <span class="tag tag-secondary">{{ muscleLabel(m) | t }}</span>
             }
           </div>
         </section>
@@ -87,9 +87,9 @@
       <!-- Description -->
       @if (exercice()!.descriptionFr ?? exercice()!.descriptionEn) {
         <section class="section-card">
-          <p class="section-label">Exécution</p>
+          <p class="section-label">{{ 'bib.execution' | t }}</p>
           <p class="text-on-surface text-sm leading-relaxed whitespace-pre-line">
-            {{ exercice()!.descriptionFr ?? exercice()!.descriptionEn }}
+            {{ exercice()!.descriptionFr | localize: exercice()!.descriptionEn }}
           </p>
         </section>
       }

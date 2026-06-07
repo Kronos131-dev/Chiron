@@ -2,6 +2,7 @@ import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { ChironApi, ExerciceDefinitionDto } from '../../service/chiron-api';
+import { TranslatePipe, LocalizePipe } from '../../service/translate.pipe';
 import {
   muscleLabel,
   equipementLabel,
@@ -13,7 +14,7 @@ import {
 @Component({
   selector: 'app-exercice-detail',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslatePipe, LocalizePipe],
   templateUrl: './exercice-detail.html',
   styleUrl: './exercice-detail.css',
 })

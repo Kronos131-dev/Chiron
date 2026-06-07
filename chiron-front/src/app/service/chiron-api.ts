@@ -95,11 +95,12 @@ export class ChironApi {
    * @param conversationId The conversation to append to, or null to start a new one.
    * @return An Observable emitting the AI's reply and its conversation id.
    */
-  sendMessage(username: string, message: string, conversationId: number | null) {
+  sendMessage(username: string, message: string, conversationId: number | null, language: string) {
     return this.http.post<ChatResponse>(`${this.apiUrl}/chat`, {
       username,
       message,
-      conversationId
+      conversationId,
+      language
     });
   }
 
@@ -110,10 +111,11 @@ export class ChironApi {
    * @param conversationId The conversation to append to, or null.
    * @return An Observable emitting the backend's confirmation response.
    */
-  endSession(username: string, conversationId: number | null) {
+  endSession(username: string, conversationId: number | null, language: string) {
     return this.http.post<ChatResponse>(`${this.apiUrl}/end-session`, {
       username,
-      conversationId
+      conversationId,
+      language
     });
   }
 

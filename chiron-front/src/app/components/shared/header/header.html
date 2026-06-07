@@ -8,7 +8,7 @@
         arrow_back
       </button>
     }
-    <button (click)="refreshApp()" type="button" aria-label="Rafraîchir l'application"
+    <button (click)="refreshApp()" type="button" [attr.aria-label]="'header.refresh' | t"
             class="material-symbols-outlined text-secondary text-xl hover:text-white transition-colors cursor-pointer">
       account_balance
     </button>
@@ -19,13 +19,13 @@
   <div class="flex items-center gap-3">
     @if (isAdmin()) {
       <div class="bg-amber-600 text-slate-900 text-xs font-black uppercase tracking-wide px-2 py-0.5 rounded-full shadow-[0_0_10px_rgba(217,119,6,0.5)] border border-amber-400 flex-shrink-0">
-        Admin
+        {{ 'header.admin' | t }}
       </div>
     }
 
     <!-- Bouton info (page chat uniquement) : présentation de l'application -->
     @if (showInfo) {
-      <button (click)="toggleGuide()" type="button" aria-label="Découvrir l'application"
+      <button (click)="toggleGuide()" type="button" [attr.aria-label]="'header.discover' | t"
               class="material-symbols-outlined text-[#f8fafc] hover:text-secondary transition-colors cursor-pointer">
         info
       </button>
@@ -46,39 +46,39 @@
             <span class="material-symbols-outlined text-secondary text-base flex-shrink-0">account_balance</span>
             <span class="min-w-0 [overflow-wrap:anywhere]">{{ currentUsername }}</span>
             @if (isAdmin()) {
-              <span class="material-symbols-outlined text-amber-500 text-sm flex-shrink-0" title="Administrateur">shield</span>
+              <span class="material-symbols-outlined text-amber-500 text-sm flex-shrink-0" [title]="'header.admin' | t">shield</span>
             }
           </div>
           <a href="/profile" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-white/5 transition-colors cursor-pointer">
-            <span class="material-symbols-outlined text-sm text-secondary">person</span> Mon Profil
+            <span class="material-symbols-outlined text-sm text-secondary">person</span> {{ 'header.myProfile' | t }}
           </a>
           <a href="/tresor" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-white/5 transition-colors cursor-pointer">
-            <span class="material-symbols-outlined text-sm text-secondary">emoji_events</span> Trésor
+            <span class="material-symbols-outlined text-sm text-secondary">emoji_events</span> {{ 'header.tresor' | t }}
           </a>
           <a href="/bibliotheque" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-white/5 transition-colors cursor-pointer">
-            <span class="material-symbols-outlined text-sm text-secondary">menu_book</span> Bibliothèque
+            <span class="material-symbols-outlined text-sm text-secondary">menu_book</span> {{ 'header.library' | t }}
           </a>
           <a href="/agora" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-white/5 transition-colors cursor-pointer">
-            <span class="material-symbols-outlined text-sm text-secondary">groups</span> L'Agora
+            <span class="material-symbols-outlined text-sm text-secondary">groups</span> {{ 'header.agora' | t }}
           </a>
           <a href="/journal" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-white/5 transition-colors cursor-pointer">
-            <span class="material-symbols-outlined text-sm text-secondary">history</span> Mes Annales
+            <span class="material-symbols-outlined text-sm text-secondary">history</span> {{ 'header.annals' | t }}
           </a>
           <a href="/fitbit" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-white/5 transition-colors cursor-pointer">
-            <span class="material-symbols-outlined text-sm text-secondary">watch</span> Données Fitbit
+            <span class="material-symbols-outlined text-sm text-secondary">watch</span> {{ 'header.fitbit' | t }}
           </a>
           <a href="/statistics" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-white/5 transition-colors cursor-pointer">
-            <span class="material-symbols-outlined text-sm text-secondary">monitoring</span> Statistiques
+            <span class="material-symbols-outlined text-sm text-secondary">monitoring</span> {{ 'header.statistics' | t }}
           </a>
           <button (click)="openOlympus()" class="w-full text-left flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-white/5 transition-colors cursor-pointer">
-            <span class="material-symbols-outlined text-sm text-secondary">restaurant</span> Olympus
+            <span class="material-symbols-outlined text-sm text-secondary">restaurant</span> {{ 'header.olympus' | t }}
           </button>
           <a href="/settings" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-white/5 transition-colors cursor-pointer">
-            <span class="material-symbols-outlined text-sm text-secondary">manage_accounts</span> Paramètres
+            <span class="material-symbols-outlined text-sm text-secondary">manage_accounts</span> {{ 'header.settings' | t }}
           </a>
           <div class="border-t border-white/5 mt-1 pt-1">
             <button (click)="logout()" class="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer">
-              <span class="material-symbols-outlined text-sm">logout</span> Déconnexion
+              <span class="material-symbols-outlined text-sm">logout</span> {{ 'header.logout' | t }}
             </button>
           </div>
         </div>
@@ -92,7 +92,7 @@
          (click)="showGuide.set(false)">
       <div class="relative w-full max-w-lg max-h-[85dvh] flex flex-col bg-slate-900 border border-secondary/20 rounded-2xl shadow-2xl"
            (click)="$event.stopPropagation()">
-        <button (click)="showGuide.set(false)" type="button" aria-label="Fermer"
+        <button (click)="showGuide.set(false)" type="button" [attr.aria-label]="'common.close' | t"
                 class="absolute top-3 right-3 z-10 w-8 h-8 grid place-items-center rounded-full bg-slate-800/80 text-on-surface-variant hover:text-white hover:bg-slate-700 transition-colors cursor-pointer">
           <span class="material-symbols-outlined text-lg">close</span>
         </button>

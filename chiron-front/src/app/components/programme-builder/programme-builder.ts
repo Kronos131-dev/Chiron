@@ -7,6 +7,8 @@ import { AuthService } from '../../service/auth.service';
 import { HeaderComponent } from '../shared/header/header';
 import { ExerciceCardComponent } from '../shared/exercice-card/exercice-card';
 import { ExercisePickerComponent } from '../shared/exercise-picker/exercise-picker';
+import { TranslatePipe } from '../../service/translate.pipe';
+import { I18nService } from '../../service/i18n.service';
 import {
   ExerciceForm,
   BlockType,
@@ -43,13 +45,13 @@ export type RenderedItem =
 @Component({
   selector: 'app-programme-builder',
   standalone: true,
-  imports: [CommonModule, FormsModule, HeaderComponent, ExerciceCardComponent, ExercisePickerComponent],
+  imports: [CommonModule, FormsModule, HeaderComponent, ExerciceCardComponent, ExercisePickerComponent, TranslatePipe],
   templateUrl: './programme-builder.html',
   styleUrls: ['./programme-builder.css'],
 })
 export class ProgrammeBuilder implements OnInit {
 
-  titre        = signal('Nouveau programme');
+  titre        = signal('');
   exercices    = signal<ExerciceForm[]>([]);
   isLoading    = signal(false);
   isSaving     = signal(false);
@@ -90,9 +92,11 @@ export class ProgrammeBuilder implements OnInit {
     private route:       ActivatedRoute,
     private chironApi:   ChironApi,
     private authService: AuthService,
+    private i18n:        I18nService,
   ) {}
 
   ngOnInit() {
+    this.titre.set(this.i18n.t('builder.defaultTitle'));
     this.route.paramMap.subscribe(params => {
       this.programmeId = params.get('id');
       this.route.queryParamMap.subscribe(qp => {
@@ -102,7 +106,7 @@ export class ProgrammeBuilder implements OnInit {
         if (this.programmeId) {
           this.loadProgramme(this.programmeId);
         } else {
-          this.titre.set('Nouveau programme');
+          this.titre.set(this.i18n.t('builder.defaultTitle'));
           this.exercices.set([]);
         }
       });
@@ -151,7 +155,7 @@ export class ProgrammeBuilder implements OnInit {
       },
       error: () => {
         this.isLoading.set(false);
-        alert('Impossible de charger ce programme.');
+        alert(this.i18n.t('builder.loadError'));
         this.router.navigate(['/programme']);
       },
     });
@@ -161,7 +165,7 @@ export class ProgrammeBuilder implements OnInit {
 
   /** Append an exercise to the programme — from a library card OR as a blank custom one. */
   addExerciceFromDefinition(def: ExerciceDefinitionDto) {
-    const nom = def.nomFr ?? def.nomEn;
+    const nom = this.i18n.pick(def.nomFr, def.nomEn);
     const exo = makeEmptyExercice(nom, def.id, def.cardioType as ExerciceForm['cardioType']);
     this.exercices.update(list => [...list, exo]);
     this.addedExercises.update(list => [...list, exo]);
@@ -348,11 +352,11 @@ export class ProgrammeBuilder implements OnInit {
           this.programmeId = match[1];
         }
         this.isSaving.set(false);
-        this.flashStatus('Programme sauvegardé.');
+        this.flashStatus(this.i18n.t('builder.saved'));
       },
       error: () => {
         this.isSaving.set(false);
-        this.flashStatus('Erreur lors de la sauvegarde.');
+        this.flashStatus(this.i18n.t('builder.saveError'));
       },
     });
   }

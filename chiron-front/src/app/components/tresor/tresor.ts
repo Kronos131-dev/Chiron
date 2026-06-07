@@ -5,6 +5,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { ChironApi } from '../../service/chiron-api';
 import { AuthService } from '../../service/auth.service';
 import { HeaderComponent } from '../shared/header/header';
+import { TranslatePipe } from '../../service/translate.pipe';
 import { tierBadgeUrl } from '../../shared/tier-badges';
 import { TIERS, Tier } from '../../shared/tiers';
 
@@ -30,7 +31,7 @@ const REP_TICK_PX    = 60;
 @Component({
   selector: 'app-tresor',
   standalone: true,
-  imports: [CommonModule, FormsModule, HeaderComponent],
+  imports: [CommonModule, FormsModule, HeaderComponent, TranslatePipe],
   templateUrl: './tresor.html',
   styleUrls: ['./tresor.css'],
 })

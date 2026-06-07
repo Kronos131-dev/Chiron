@@ -7,8 +7,8 @@
 
     <!-- Title Section -->
     <div class="text-center mb-8">
-      <p class="text-secondary text-[10px] font-bold tracking-[0.25em] uppercase mb-2">Le Panthéon des Guerriers</p>
-      <h2 class="font-headline text-4xl md:text-5xl font-black text-white uppercase tracking-tight">L'AGORA</h2>
+      <p class="text-secondary text-[10px] font-bold tracking-[0.25em] uppercase mb-2">{{ 'agora.subtitle' | t }}</p>
+      <h2 class="font-headline text-4xl md:text-5xl font-black text-white uppercase tracking-tight">{{ 'agora.title' | t }}</h2>
       <div class="h-1 w-16 bg-gradient-to-r from-secondary to-transparent mx-auto mt-4 rounded-full"></div>
     </div>
 
@@ -20,7 +20,7 @@
       <input type="text"
              [ngModel]="searchQuery()"
              (ngModelChange)="searchQuery.set($event); searchProfiles()"
-             placeholder="Rechercher un guerrier..."
+             [placeholder]="'agora.searchPlaceholder' | t"
              class="w-full bg-slate-900/80 text-white pl-10 pr-4 py-3 rounded-xl border border-secondary/20 focus:border-secondary outline-none transition-colors font-body shadow-lg">
 
       <!-- Dynamic Search Results Dropdown -->
@@ -37,7 +37,7 @@
                 <p class="text-white font-bold font-headline uppercase tracking-wide flex items-center gap-2 min-w-0">
                   <span class="[overflow-wrap:anywhere] min-w-0">{{ result.username }}</span>
                   @if (result.isAdmin) {
-                    <span class="material-symbols-outlined text-amber-500 text-xs flex-shrink-0" title="Administrateur">shield</span>
+                    <span class="material-symbols-outlined text-amber-500 text-xs flex-shrink-0" [title]="'agora.admin' | t">shield</span>
                   }
                 </p>
                 <p class="text-secondary text-xs font-bold tracking-widest uppercase">{{ result.rank }}</p>
@@ -77,7 +77,7 @@
                 <h3 class="agora-username font-headline font-black text-xl text-white uppercase tracking-wide flex items-center gap-2 min-w-0">
                   <span class="[overflow-wrap:anywhere] min-w-0">{{ athlete.username }}</span>
                   @if (athlete.isAdmin) {
-                    <span class="material-symbols-outlined text-amber-500 text-sm flex-shrink-0" title="Administrateur">shield</span>
+                    <span class="material-symbols-outlined text-amber-500 text-sm flex-shrink-0" [title]="'agora.admin' | t">shield</span>
                   }
                 </h3>
                 <p class="agora-rank text-xs font-black tracking-widest uppercase mt-1">
@@ -105,7 +105,7 @@
     @if (!isLoading() && participants().length === 0) {
       <div class="text-center py-20 bg-slate-900/30 rounded-2xl border border-white/5">
         <span class="material-symbols-outlined text-4xl text-secondary/50 mb-3">group_off</span>
-        <p class="text-on-surface-variant uppercase tracking-widest text-sm font-bold">L'Agora est vide.</p>
+        <p class="text-on-surface-variant uppercase tracking-widest text-sm font-bold">{{ 'agora.empty' | t }}</p>
       </div>
     }
 

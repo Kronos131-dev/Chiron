@@ -3,13 +3,15 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../service/auth.service';
 import { ChironApi } from '../../../service/chiron-api';
+import { I18nService } from '../../../service/i18n.service';
+import { TranslatePipe } from '../../../service/translate.pipe';
 import { environment } from '../../../../environments/environment';
-import { APP_PRESENTATION } from '../../../shared/app-presentation';
+import { APP_PRESENTATION_FR, APP_PRESENTATION_EN } from '../../../shared/app-presentation';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslatePipe],
   templateUrl: './header.html',
 })
 export class HeaderComponent implements OnInit {
@@ -25,12 +27,17 @@ export class HeaderComponent implements OnInit {
 
   /** Modale de présentation de l'application (bouton « i »). */
   showGuide = signal(false);
-  readonly appPresentation = APP_PRESENTATION;
+
+  /** Texte de présentation dans la langue courante. */
+  get appPresentation(): string {
+    return this.i18n.lang() === 'en' ? APP_PRESENTATION_EN : APP_PRESENTATION_FR;
+  }
 
   constructor(
     private authService: AuthService,
     private router: Router,
-    private chironApi: ChironApi
+    private chironApi: ChironApi,
+    public i18n: I18nService
   ) {}
 
   ngOnInit() {
