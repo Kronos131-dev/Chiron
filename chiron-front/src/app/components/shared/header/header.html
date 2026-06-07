@@ -86,20 +86,23 @@
     </div>
   </div>
 
-  <!-- Modale de présentation de l'application : popup centrée + croix de fermeture -->
-  @if (showGuide()) {
-    <div class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-         (click)="showGuide.set(false)">
-      <div class="relative w-full max-w-lg max-h-[85dvh] flex flex-col bg-slate-900 border border-secondary/20 rounded-2xl shadow-2xl"
-           (click)="$event.stopPropagation()">
-        <button (click)="showGuide.set(false)" type="button" [attr.aria-label]="'common.close' | t"
-                class="absolute top-3 right-3 z-10 w-8 h-8 grid place-items-center rounded-full bg-slate-800/80 text-on-surface-variant hover:text-white hover:bg-slate-700 transition-colors cursor-pointer">
-          <span class="material-symbols-outlined text-lg">close</span>
-        </button>
-        <div class="overflow-y-auto overscroll-contain p-6">
-          <p class="whitespace-pre-line text-sm leading-relaxed text-on-surface pr-8">{{ appPresentation }}</p>
-        </div>
+</header>
+
+<!-- Modale de présentation de l'application : popup centrée + croix de fermeture.
+     Hors du <header> (fixed + backdrop-filter) qui créerait un bloc englobant et
+     décalerait le `fixed inset-0` de la modale. -->
+@if (showGuide()) {
+  <div class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+       (click)="showGuide.set(false)">
+    <div class="relative w-full max-w-lg max-h-[85dvh] flex flex-col bg-slate-900 border border-secondary/20 rounded-2xl shadow-2xl"
+         (click)="$event.stopPropagation()">
+      <button (click)="showGuide.set(false)" type="button" [attr.aria-label]="'common.close' | t"
+              class="absolute top-3 right-3 z-10 w-8 h-8 grid place-items-center rounded-full bg-slate-800/80 text-on-surface-variant hover:text-white hover:bg-slate-700 transition-colors cursor-pointer">
+        <span class="material-symbols-outlined text-lg">close</span>
+      </button>
+      <div class="overflow-y-auto overscroll-contain p-6">
+        <p class="whitespace-pre-line text-sm leading-relaxed text-on-surface pr-8">{{ appPresentation }}</p>
       </div>
     </div>
-  }
-</header>
+  </div>
+}
