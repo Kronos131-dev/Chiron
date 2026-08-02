@@ -1,5 +1,7 @@
 package com.kronos.chiron.coach.tools;
 
+import static com.kronos.chiron.core.exceptions.ErrorFactory.notFound;
+
 import com.kronos.chiron.exercice.dto.ExerciceDefinitionDto;
 import com.kronos.chiron.seance.dto.ExerciceDto;
 import com.kronos.chiron.seance.dto.SeanceDto;
@@ -83,7 +85,7 @@ public class WorkoutTools {
     @Tool("Récupère la liste des modèles de programmes d'entraînement (presets) de l'utilisateur ou d'un autre utilisateur spécifié.")
     public String getUserProgrammes(@ToolMemoryId String userId, String targetUsername) {
         Utilisateur requestUser = utilisateurRepository.findById(Long.parseLong(userId))
-                .orElseThrow(() -> new RuntimeException("Utilisateur requérant introuvable"));
+                .orElseThrow(() -> notFound("Utilisateur requérant introuvable"));
 
         String searchUsername = (targetUsername != null && !targetUsername.isBlank()) ? targetUsername : requestUser.getUsername();
 
@@ -131,7 +133,7 @@ public class WorkoutTools {
     @Tool("Récupère l'historique complet ou récent des séances réellement effectuées par l'utilisateur ou un autre utilisateur spécifié.")
     public String getUserHistory(@ToolMemoryId String userId, String targetUsername) {
         Utilisateur requestUser = utilisateurRepository.findById(Long.parseLong(userId))
-                .orElseThrow(() -> new RuntimeException("Utilisateur requérant introuvable"));
+                .orElseThrow(() -> notFound("Utilisateur requérant introuvable"));
 
         String searchUsername = (targetUsername != null && !targetUsername.isBlank()) ? targetUsername : requestUser.getUsername();
 
@@ -183,7 +185,7 @@ public class WorkoutTools {
     @Tool("Démarre une nouvelle séance d'entraînement dans l'historique de l'utilisateur.")
     public String startSession(@ToolMemoryId String userId, String titre) {
         Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
-                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+                .orElseThrow(() -> notFound("Utilisateur introuvable"));
 
         seanceRepository.findFirstByUtilisateurIdAndEndTimeIsNullOrderByStartTimeDesc(user.getId())
                 .ifPresent(s -> {
@@ -217,7 +219,7 @@ public class WorkoutTools {
     @Tool("Crée un NOUVEAU modèle de programme d'entraînement (preset) VIDE.")
     public String createProgramModel(@ToolMemoryId String userId, String titre) {
         Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
-                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+                .orElseThrow(() -> notFound("Utilisateur introuvable"));
 
         Seance seance = Seance.builder()
                 .titre(titre)
@@ -394,7 +396,7 @@ public class WorkoutTools {
     @Tool("Recherche les profils utilisateurs existants (utile pour un admin qui cherche quelqu'un).")
     public String searchAllProfiles(@ToolMemoryId String userId, String query) {
         Utilisateur requestUser = utilisateurRepository.findById(Long.parseLong(userId))
-                .orElseThrow(() -> new RuntimeException("Utilisateur requérant introuvable"));
+                .orElseThrow(() -> notFound("Utilisateur requérant introuvable"));
 
         if (requestUser.getRole() != Role.ADMIN) {
              return "Accès refusé. Seul un administrateur peut effectuer cette recherche globale.";
@@ -423,7 +425,7 @@ public class WorkoutTools {
     @Tool("Récupère un résumé détaillé des séances de sport effectuées à une date précise (format attendu YYYY-MM-DD).")
     public String getWorkoutSummaryByDate(@ToolMemoryId String userId, String dateStr) {
         Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
-                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+                .orElseThrow(() -> notFound("Utilisateur introuvable"));
                 
         List<Seance> historique = seanceRepository.findByUtilisateurUsernameAndIsModeleTrueOrderByStartTimeDesc(user.getUsername());
         
@@ -464,7 +466,7 @@ public class WorkoutTools {
     @Tool("Récupère le contenu détaillé d'un programme (exercices, séries, poids, répétitions) à partir de son nom.")
     public String getProgrammeDetails(@ToolMemoryId String userId, String programmeName) {
         Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
-                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+                .orElseThrow(() -> notFound("Utilisateur introuvable"));
 
         List<Seance> programmes = seanceRepository.findByUtilisateurUsernameAndIsModeleFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername());
 
@@ -510,7 +512,7 @@ public class WorkoutTools {
     @Tool("Récupère les détails complets d'une ou plusieurs séances historiques à partir de leur titre (exercices, séries, poids, commentaires).")
     public String getSessionDetails(@ToolMemoryId String userId, String sessionTitle) {
         Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
-                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+                .orElseThrow(() -> notFound("Utilisateur introuvable"));
 
         List<Seance> historique = seanceRepository.findByUtilisateurUsernameAndIsModeleTrueOrderByStartTimeDesc(user.getUsername());
 
@@ -755,7 +757,7 @@ public class WorkoutTools {
           "pour récupérer les noms exacts. À utiliser quand l'utilisateur demande de créer / générer / construire un programme.")
     public String creerProgramme(@ToolMemoryId String userId, String titre, List<ProgrammeExerciceSpec> exercices) {
         Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
-                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+                .orElseThrow(() -> notFound("Utilisateur introuvable"));
 
         if (titre == null || titre.isBlank()) {
             return "Le titre du programme est obligatoire.";
@@ -821,7 +823,7 @@ public class WorkoutTools {
     @Tool("Analyse la couverture musculaire des derniers jours : par groupe musculaire, nombre de séances et de séries au total, et muscles négligés.")
     public String analyserCouvertureMusculaire(@ToolMemoryId String userId, Integer nbJours) {
         Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
-                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+                .orElseThrow(() -> notFound("Utilisateur introuvable"));
 
         int window = (nbJours != null && nbJours > 0) ? nbJours : 7;
         LocalDateTime cutoff = LocalDateTime.now().minusDays(window);
@@ -892,7 +894,7 @@ public class WorkoutTools {
     @Tool("Retourne la date du dernier entraînement par groupe musculaire, du plus ancien au plus récent.")
     public String getDernierEntrainementParMuscle(@ToolMemoryId String userId) {
         Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
-                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+                .orElseThrow(() -> notFound("Utilisateur introuvable"));
 
         List<Seance> historique = seanceRepository
                 .findByUtilisateurUsernameAndIsModeleTrueOrderByStartTimeDesc(user.getUsername());
@@ -951,7 +953,7 @@ public class WorkoutTools {
     @Tool("Récupère le palier de performance (Éphèbe → Olympien) : palier global et par exercice de référence (squat, développé couché, soulevé de terre, tractions...).")
     public String getPerformanceTier(@ToolMemoryId String userId) {
         Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
-                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+                .orElseThrow(() -> notFound("Utilisateur introuvable"));
 
         PerformanceSummaryDto summary = performanceService.getSummary(user.getUsername());
 
@@ -990,7 +992,7 @@ public class WorkoutTools {
     @Tool("Récupère le profil sportif complet : âge, sexe, taille, poids, niveau d'expérience, objectif principal, fréquence visée, matériel disponible, blessures, préférences.")
     public String getUserProfileComplet(@ToolMemoryId String userId) {
         Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
-                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+                .orElseThrow(() -> notFound("Utilisateur introuvable"));
 
         if (user.getIsOnboarded() == null || !user.getIsOnboarded()) {
             return "Le profil sportif de l'utilisateur n'est pas encore renseigné. Encourage-le à compléter son profil pour des conseils plus pertinents.";

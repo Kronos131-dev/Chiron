@@ -1,5 +1,7 @@
 package com.kronos.chiron.core.security;
 
+import com.kronos.chiron.core.exceptions.ChironTechnicalException;
+
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -69,7 +71,7 @@ public class TokenCipherService {
             buf.put(cipherBytes);
             return Base64.getEncoder().encodeToString(buf.array());
         } catch (Exception e) {
-            throw new RuntimeException("Échec du chiffrement du token", e);
+            throw new ChironTechnicalException("Échec du chiffrement du token", e);
         }
     }
 
@@ -87,7 +89,7 @@ public class TokenCipherService {
             cipher.init(Cipher.DECRYPT_MODE, secretKey, new GCMParameterSpec(TAG_LENGTH_BITS, iv));
             return new String(cipher.doFinal(cipherBytes));
         } catch (Exception e) {
-            throw new RuntimeException("Échec du déchiffrement du token (clé changée ou donnée corrompue ?)", e);
+            throw new ChironTechnicalException("Échec du déchiffrement du token (clé changée ou donnée corrompue ?)", e);
         }
     }
 }

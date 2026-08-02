@@ -1,5 +1,7 @@
 package com.kronos.chiron.coach.tools;
 
+import static com.kronos.chiron.core.exceptions.ErrorFactory.notFound;
+
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 import com.kronos.chiron.utilisateur.persistence.UtilisateurRepository;
 import com.kronos.chiron.stats.MuscleStatsDto;
@@ -107,7 +109,7 @@ public class AnalyseDieteTools {
 
     private Utilisateur loadUser(String userId) {
         return utilisateurRepository.findById(Long.parseLong(userId))
-                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+                .orElseThrow(() -> notFound("Utilisateur introuvable"));
     }
 
     /** Formate une valeur (avec unité) et, si une valeur précédente est fournie, la tendance. */

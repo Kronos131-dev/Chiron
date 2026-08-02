@@ -1,5 +1,7 @@
 package com.kronos.chiron.coach.controller;
 
+import static com.kronos.chiron.core.exceptions.ErrorFactory.notFound;
+
 import com.kronos.chiron.coach.agent.ChironAgentRouter;
 import com.kronos.chiron.coach.agent.ConversationMemoryManager;
 import com.kronos.chiron.coach.dto.ChatResponse;
@@ -86,7 +88,7 @@ public class ChatController {
     @PostMapping("/chat")
     public ChatResponse chat(@RequestBody ChatRequest request) {
         Utilisateur user = utilisateurRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> notFound("User not found"));
 
         Conversation conversation = conversationService.getOrCreate(user, request.getConversationId());
         String memoryId = String.valueOf(conversation.getId());
@@ -134,7 +136,7 @@ public class ChatController {
     @PostMapping("/end-session")
     public ChatResponse endSession(@RequestBody ChatRequest request) {
         Utilisateur user = utilisateurRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> notFound("User not found"));
 
         Conversation conversation = conversationService.getOrCreate(user, request.getConversationId());
         String memoryId = String.valueOf(conversation.getId());

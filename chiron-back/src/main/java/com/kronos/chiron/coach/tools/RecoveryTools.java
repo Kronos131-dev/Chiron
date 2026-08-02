@@ -1,5 +1,7 @@
 package com.kronos.chiron.coach.tools;
 
+import static com.kronos.chiron.core.exceptions.ErrorFactory.notFound;
+
 import com.kronos.chiron.journalier.model.EtatJournalier;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 import com.kronos.chiron.utilisateur.persistence.UtilisateurRepository;
@@ -140,6 +142,6 @@ public class RecoveryTools {
 
     private Utilisateur loadUser(String userId) {
         return utilisateurRepository.findById(Long.parseLong(userId))
-                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+                .orElseThrow(() -> notFound("Utilisateur introuvable"));
     }
 }

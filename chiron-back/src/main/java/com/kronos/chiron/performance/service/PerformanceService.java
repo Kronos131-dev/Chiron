@@ -1,5 +1,7 @@
 package com.kronos.chiron.performance.service;
 
+import static com.kronos.chiron.core.exceptions.ErrorFactory.notFound;
+
 import com.kronos.chiron.performance.dto.ExercisePerformanceDto;
 import com.kronos.chiron.performance.dto.PerformanceRecordDto;
 import com.kronos.chiron.performance.dto.PerformanceSummaryDto;
@@ -268,7 +270,7 @@ public class PerformanceService {
 
     private Utilisateur findUser(String username) {
         return utilisateurRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable : " + username));
+                .orElseThrow(() -> notFound("Utilisateur introuvable : " + username));
     }
 
     private ExerciseType parseExerciseType(String name) {

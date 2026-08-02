@@ -1,5 +1,8 @@
 package com.kronos.chiron.programme.service;
 
+import static com.kronos.chiron.core.exceptions.ErrorFactory.forbidden;
+import static com.kronos.chiron.core.exceptions.ErrorFactory.notFound;
+
 import com.kronos.chiron.seance.service.CardioCalorieService;
 
 import com.kronos.chiron.seance.dto.ExerciceDto;
@@ -71,7 +74,7 @@ public class ProgrammeService {
     @Transactional
     public Seance sauvegarderProgramme(String username, SeanceDto seanceDto, String forUsername) {
         Utilisateur requestUser = utilisateurRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> notFound("User not found"));
 
         Seance seance = null;
         boolean isUpdate = false;
@@ -79,12 +82,12 @@ public class ProgrammeService {
 
         if (seanceDto.id() != null) {
             Seance existingSeance = seanceRepository.findById(seanceDto.id())
-                    .orElseThrow(() -> new RuntimeException("Program not found"));
+                    .orElseThrow(() -> notFound("Program not found"));
 
             Utilisateur owner = existingSeance.getUtilisateur();
             if (!owner.getUsername().equals(username)) {
                 if (!owner.getCoaches().contains(requestUser) && requestUser.getRole() != Role.ADMIN) {
-                    throw new RuntimeException("Access denied. You are not authorized to modify this program.");
+                    throw forbidden("Access denied. You are not authorized to modify this program.");
                 }
             }
 
@@ -105,9 +108,9 @@ public class ProgrammeService {
             // Coach flow: requester is creating on behalf of `forUsername` (an athlete).
             if (forUsername != null && !forUsername.equals(username)) {
                 Utilisateur athlete = utilisateurRepository.findByUsername(forUsername)
-                        .orElseThrow(() -> new RuntimeException("Athlete not found: " + forUsername));
+                        .orElseThrow(() -> notFound("Athlete not found: " + forUsername));
                 if (!athlete.getCoaches().contains(requestUser) && requestUser.getRole() != Role.ADMIN) {
-                    throw new RuntimeException("Access denied. You are not a coach of " + forUsername + ".");
+                    throw forbidden("Access denied. You are not a coach of " + forUsername + ".");
                 }
                 targetUser = athlete;
             }
@@ -225,11 +228,11 @@ public class ProgrammeService {
         if (orderedIds == null || orderedIds.isEmpty()) return;
 
         Utilisateur requestUser = utilisateurRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> notFound("User not found"));
 
         List<Seance> programmes = seanceRepository.findAllById(orderedIds);
         if (programmes.size() != orderedIds.size()) {
-            throw new RuntimeException("One or more programmes not found.");
+            throw notFound("One or more programmes not found.");
         }
 
         for (Seance s : programmes) {
@@ -237,7 +240,7 @@ public class ProgrammeService {
             if (!owner.getUsername().equals(username)
                     && !owner.getCoaches().contains(requestUser)
                     && requestUser.getRole() != Role.ADMIN) {
-                throw new RuntimeException("Access denied. You cannot reorder this programme.");
+                throw forbidden("Access denied. You cannot reorder this programme.");
             }
         }
 
@@ -259,10 +262,10 @@ public class ProgrammeService {
      */
     public Seance getProgrammeById(Long id, String username) {
         Seance seance = seanceRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Program not found"));
+                .orElseThrow(() -> notFound("Program not found"));
         
         Utilisateur requestUser = utilisateurRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> notFound("User not found"));
         Utilisateur owner = seance.getUtilisateur();
 
         if (!owner.getUsername().equals(username)) {
@@ -271,7 +274,7 @@ public class ProgrammeService {
              boolean isAdmin = requestUser.getRole() == Role.ADMIN;
 
              if (!isCoach && !isPublic && !isAdmin) {
-                 throw new RuntimeException("Access denied. This profile is private.");
+                 throw forbidden("Access denied. This profile is private.");
              }
         }
         
@@ -288,15 +291,15 @@ public class ProgrammeService {
     @Transactional
     public void deleteProgramme(Long id, String username) {
         Seance seance = seanceRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Program not found"));
+                .orElseThrow(() -> notFound("Program not found"));
 
         Utilisateur requestUser = utilisateurRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> notFound("User not found"));
         Utilisateur owner = seance.getUtilisateur();
 
         if (!owner.getUsername().equals(username)) {
              if (!owner.getCoaches().contains(requestUser) && requestUser.getRole() != Role.ADMIN) {
-                 throw new RuntimeException("Access denied. You cannot delete this program.");
+                 throw forbidden("Access denied. You cannot delete this program.");
              }
         }
         seanceRepository.delete(seance);
@@ -313,17 +316,17 @@ public class ProgrammeService {
     @Transactional
     public Seance copyProgramme(Long programmeId, String targetUsername) {
         Utilisateur targetUser = utilisateurRepository.findByUsername(targetUsername)
-                .orElseThrow(() -> new RuntimeException("Target user not found"));
+                .orElseThrow(() -> notFound("Target user not found"));
 
         Seance sourceSeance = seanceRepository.findById(programmeId)
-                .orElseThrow(() -> new RuntimeException("Source program not found"));
+                .orElseThrow(() -> notFound("Source program not found"));
 
         if (!sourceSeance.getUtilisateur().getUsername().equals(targetUsername)) {
             boolean isPublic = sourceSeance.getUtilisateur().getIsPublic() != null && sourceSeance.getUtilisateur().getIsPublic();
             boolean isAdmin = targetUser.getRole() == Role.ADMIN;
             
             if (!isPublic && !isAdmin) {
-                 throw new RuntimeException("Cannot copy a program from a private profile.");
+                 throw forbidden("Cannot copy a program from a private profile.");
             }
         }
 
