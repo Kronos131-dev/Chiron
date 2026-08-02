@@ -1,4 +1,4 @@
-package com.kronos.chiron.dto.settings;
+package com.kronos.chiron.utilisateur.dto;
 
 /**
  * Préférences de calcul du tonnage de l'utilisateur (conventions de saisie du poids).

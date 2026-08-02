@@ -1,4 +1,4 @@
-package com.kronos.chiron.controller;
+package com.kronos.chiron.nutrition.controller;
 
 import com.kronos.chiron.nutrition.NutritionLinkStatus;
 import com.kronos.chiron.nutrition.NutritionService;

@@ -1,3 +1,3 @@
-package com.kronos.chiron.dto.settings;
+package com.kronos.chiron.auth.dto;
 
 public record ForgotPasswordRequest(String email) {}

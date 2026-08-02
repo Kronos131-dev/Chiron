@@ -1,4 +1,4 @@
-package com.kronos.chiron.controller;
+package com.kronos.chiron.agora.controller;
 
 import com.kronos.chiron.utilisateur.dto.ProfileDto;
 import com.kronos.chiron.security.JwtService;

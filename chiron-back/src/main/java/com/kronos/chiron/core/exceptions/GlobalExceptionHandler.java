@@ -1,4 +1,4 @@
-package com.kronos.chiron.controller;
+package com.kronos.chiron.core.exceptions;
 
 import com.kronos.chiron.coach.agent.AiUnavailableException;
 import org.springframework.http.HttpStatus;

@@ -35,10 +35,10 @@ public class SettingsService {
     @Value("${chiron.frontend-url}")
     private String frontendUrl;
 
-    public com.kronos.chiron.dto.settings.TrainingPrefsDto getTrainingPrefs(String username) {
+    public com.kronos.chiron.utilisateur.dto.TrainingPrefsDto getTrainingPrefs(String username) {
         Utilisateur user = utilisateurRepository.findByUsername(username)
                 .orElseThrow(() -> new NoSuchElementException("Utilisateur introuvable"));
-        return new com.kronos.chiron.dto.settings.TrainingPrefsDto(
+        return new com.kronos.chiron.utilisateur.dto.TrainingPrefsDto(
                 user.isPoidsHaltereParImplement(), user.isPoidsMachineParCote());
     }
 
@@ -51,10 +51,10 @@ public class SettingsService {
         utilisateurRepository.save(user);
     }
 
-    public com.kronos.chiron.dto.settings.AiProviderDto getAiProvider(String username) {
+    public com.kronos.chiron.utilisateur.dto.AiProviderDto getAiProvider(String username) {
         Utilisateur user = utilisateurRepository.findByUsername(username)
                 .orElseThrow(() -> new NoSuchElementException("Utilisateur introuvable"));
-        return new com.kronos.chiron.dto.settings.AiProviderDto(
+        return new com.kronos.chiron.utilisateur.dto.AiProviderDto(
                 user.getAiProvider(), chironAgentRouter.geminiAvailable());
     }
 
