@@ -19,6 +19,7 @@
         <langchain4j.version>1.14.1</langchain4j.version>
         <jjwt.version>0.12.6</jjwt.version>
         <testcontainers.version>1.21.3</testcontainers.version>
+        <mapstruct.version>1.6.3</mapstruct.version>
         <skipUTs>false</skipUTs>
     </properties>
 
@@ -123,6 +124,12 @@
             <version>1.18.38</version>
             <optional>true</optional>
         </dependency>
+
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct</artifactId>
+            <version>${mapstruct.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
@@ -185,11 +192,41 @@
                 <configuration>
                     <annotationProcessorPaths>
                         <path>
+                            <groupId>org.mapstruct</groupId>
+                            <artifactId>mapstruct-processor</artifactId>
+                            <version>${mapstruct.version}</version>
+                        </path>
+                        <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
                             <version>1.18.38</version>
                         </path>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok-mapstruct-binding</artifactId>
+                            <version>0.2.0</version>
+                        </path>
                     </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+            <!-- Deliberately bound to no lifecycle phase: `spotless:apply` is invoké un fichier à la
+                 fois par .claude/hooks/format-java.sh, donc le code existant converge vers le format
+                 au fil des éditions plutôt qu'en un seul diff massif. Lancer `mvn spotless:apply`
+                 sans -DspotlessFiles reformate tout le projet.
+                 Formateur Eclipse et non google-java-format : ce dernier dépend des internes de
+                 javac et ne tourne pas sur le JDK 25 utilisé en local (la CI compile en 21). -->
+            <plugin>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+                <version>2.44.5</version>
+                <configuration>
+                    <java>
+                        <eclipse>
+                            <file>${project.basedir}/eclipse-formatter.xml</file>
+                        </eclipse>
+                        <removeUnusedImports/>
+                    </java>
+                    <lineEndings>PRESERVE</lineEndings>
                 </configuration>
             </plugin>
             <plugin>
