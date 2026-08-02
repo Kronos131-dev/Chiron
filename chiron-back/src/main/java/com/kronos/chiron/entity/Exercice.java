@@ -1,5 +1,7 @@
 package com.kronos.chiron.entity;
 
+import com.kronos.chiron.exercice.model.ExerciceDefinition;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;

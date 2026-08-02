@@ -2,7 +2,7 @@ package com.kronos.chiron.fitbit;
 
 import com.kronos.chiron.entity.Utilisateur;
 import com.kronos.chiron.repository.UtilisateurRepository;
-import com.kronos.chiron.service.RecoveryService;
+import com.kronos.chiron.journalier.service.RecoveryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

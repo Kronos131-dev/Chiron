@@ -1,9 +1,9 @@
-package com.kronos.chiron.repository;
+package com.kronos.chiron.exercice.persistence;
 
-import com.kronos.chiron.entity.ExerciceDefinition;
-import com.kronos.chiron.entity.MuscleGroup;
-import com.kronos.chiron.entity.NiveauDifficulte;
-import com.kronos.chiron.entity.TypeEquipement;
+import com.kronos.chiron.exercice.model.ExerciceDefinition;
+import com.kronos.chiron.exercice.model.MuscleGroup;
+import com.kronos.chiron.exercice.model.NiveauDifficulte;
+import com.kronos.chiron.exercice.model.TypeEquipement;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

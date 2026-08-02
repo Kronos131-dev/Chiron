@@ -1,4 +1,6 @@
-package com.kronos.chiron.entity;
+package com.kronos.chiron.journalier.model;
+
+import com.kronos.chiron.entity.Utilisateur;
 
 import jakarta.persistence.*;
 import lombok.*;

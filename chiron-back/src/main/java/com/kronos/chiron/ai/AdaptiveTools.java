@@ -1,15 +1,15 @@
 package com.kronos.chiron.ai;
 
-import com.kronos.chiron.dto.ExerciceDefinitionDto;
+import com.kronos.chiron.exercice.dto.ExerciceDefinitionDto;
 import com.kronos.chiron.entity.Exercice;
-import com.kronos.chiron.entity.ExerciceDefinition;
+import com.kronos.chiron.exercice.model.ExerciceDefinition;
 import com.kronos.chiron.entity.Seance;
 import com.kronos.chiron.entity.Utilisateur;
 import com.kronos.chiron.entity.Serie;
 import com.kronos.chiron.repository.ExerciceRepository;
 import com.kronos.chiron.repository.SeanceRepository;
 import com.kronos.chiron.repository.UtilisateurRepository;
-import com.kronos.chiron.service.ExerciceDefinitionService;
+import com.kronos.chiron.exercice.service.ExerciceDefinitionService;
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agent.tool.ToolMemoryId;
 import lombok.RequiredArgsConstructor;

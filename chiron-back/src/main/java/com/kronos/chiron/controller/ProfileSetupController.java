@@ -42,7 +42,7 @@ public class ProfileSetupController {
         user.setFrequenceVisee(dto.frequenceVisee());
         user.setMaterielDisponible(
                 dto.materielDisponible() == null || dto.materielDisponible().isEmpty()
-                        ? EnumSet.noneOf(com.kronos.chiron.entity.TypeEquipement.class)
+                        ? EnumSet.noneOf(com.kronos.chiron.exercice.model.TypeEquipement.class)
                         : EnumSet.copyOf(dto.materielDisponible())
         );
         user.setBlessures(dto.blessures());

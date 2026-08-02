@@ -1,5 +1,7 @@
 package com.kronos.chiron.entity;
 
+import com.kronos.chiron.exercice.model.ExerciceDefinition;
+
 /**
  * Nature d'un exercice cardio. Détermine les paramètres saisis par l'utilisateur
  * (vitesse/pente pour la marche et la course, distance pour le rameur/SkiErg) et

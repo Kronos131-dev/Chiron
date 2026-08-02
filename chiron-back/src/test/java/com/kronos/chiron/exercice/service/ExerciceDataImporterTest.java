@@ -1,8 +1,13 @@
-package com.kronos.chiron.util;
+package com.kronos.chiron.exercice.service;
+
+import com.kronos.chiron.exercice.model.ExerciceDefinition;
+import com.kronos.chiron.exercice.model.MuscleGroup;
+import com.kronos.chiron.exercice.model.NiveauDifficulte;
+import com.kronos.chiron.exercice.model.TypeEquipement;
 
 import tools.jackson.databind.json.JsonMapper;
 import com.kronos.chiron.entity.*;
-import com.kronos.chiron.repository.ExerciceDefinitionRepository;
+import com.kronos.chiron.exercice.persistence.ExerciceDefinitionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

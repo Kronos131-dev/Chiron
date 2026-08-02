@@ -1,6 +1,6 @@
-package com.kronos.chiron.repository;
+package com.kronos.chiron.journalier.persistence;
 
-import com.kronos.chiron.entity.EtatJournalier;
+import com.kronos.chiron.journalier.model.EtatJournalier;
 import com.kronos.chiron.entity.Utilisateur;
 import org.springframework.data.jpa.repository.JpaRepository;
 

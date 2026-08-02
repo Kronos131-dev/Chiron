@@ -1,9 +1,9 @@
-package com.kronos.chiron.controller;
+package com.kronos.chiron.journalier.controller;
 
-import com.kronos.chiron.entity.EtatJournalier;
+import com.kronos.chiron.journalier.model.EtatJournalier;
 import com.kronos.chiron.entity.Utilisateur;
 import com.kronos.chiron.repository.UtilisateurRepository;
-import com.kronos.chiron.service.RecoveryService;
+import com.kronos.chiron.journalier.service.RecoveryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

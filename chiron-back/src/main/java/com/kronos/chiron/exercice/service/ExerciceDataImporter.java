@@ -1,9 +1,14 @@
-package com.kronos.chiron.util;
+package com.kronos.chiron.exercice.service;
+
+import com.kronos.chiron.exercice.model.ExerciceDefinition;
+import com.kronos.chiron.exercice.model.MuscleGroup;
+import com.kronos.chiron.exercice.model.NiveauDifficulte;
+import com.kronos.chiron.exercice.model.TypeEquipement;
 
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 import com.kronos.chiron.entity.*;
-import com.kronos.chiron.repository.ExerciceDefinitionRepository;
+import com.kronos.chiron.exercice.persistence.ExerciceDefinitionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

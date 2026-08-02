@@ -2,7 +2,7 @@ package com.kronos.chiron.fitbit;
 
 import com.kronos.chiron.entity.Utilisateur;
 import com.kronos.chiron.repository.UtilisateurRepository;
-import com.kronos.chiron.service.RecoveryService;
+import com.kronos.chiron.journalier.service.RecoveryService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

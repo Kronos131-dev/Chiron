@@ -1,8 +1,8 @@
-package com.kronos.chiron.service;
+package com.kronos.chiron.journalier.service;
 
-import com.kronos.chiron.entity.EtatJournalier;
+import com.kronos.chiron.journalier.model.EtatJournalier;
 import com.kronos.chiron.entity.Utilisateur;
-import com.kronos.chiron.repository.EtatJournalierRepository;
+import com.kronos.chiron.journalier.persistence.EtatJournalierRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

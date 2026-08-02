@@ -1,11 +1,13 @@
 package com.kronos.chiron.ai;
 
+import com.kronos.chiron.exercice.model.ExerciceDefinition;
+
 import com.kronos.chiron.entity.*;
-import com.kronos.chiron.repository.ExerciceDefinitionRepository;
+import com.kronos.chiron.exercice.persistence.ExerciceDefinitionRepository;
 import com.kronos.chiron.repository.ExerciceRepository;
 import com.kronos.chiron.repository.SeanceRepository;
 import com.kronos.chiron.repository.UtilisateurRepository;
-import com.kronos.chiron.service.ExerciceDefinitionService;
+import com.kronos.chiron.exercice.service.ExerciceDefinitionService;
 import com.kronos.chiron.service.ProgrammeService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
