@@ -24,7 +24,7 @@ class SeanceMapperTest {
 
     @BeforeEach
     void setUp() {
-        mapper = new SeanceMapper();
+        mapper = new SeanceMapperImpl();
     }
 
     private Utilisateur buildUser(String username) {
