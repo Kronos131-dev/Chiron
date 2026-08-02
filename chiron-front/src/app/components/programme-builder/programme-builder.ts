@@ -31,7 +31,7 @@ export type RenderedItem =
     };
 
 /**
- * Standalone editor for a workout programme (template, i.e. isModele=false).
+ * Standalone editor for a workout programme (template, i.e. historique=false).
  *
  * Routes:
  *   /programme/new                  → create a new programme
@@ -320,7 +320,7 @@ export class ProgrammeBuilder implements OnInit {
       id: this.programmeId ? parseInt(this.programmeId) : null,
       titre: this.titre(),
       weekNumber: 0,
-      isModele: false,
+      historique: false,
       exercices: this.exercices().map(exo => ({
         nom: exo.nom,
         commentaire: exo.commentaire ?? '',

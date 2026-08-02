@@ -84,7 +84,7 @@ public class WorkoutTools {
             }
         }
 
-        List<Seance> programmes = seanceRepository.findByUtilisateurUsernameAndIsModeleFalseOrderByDisplayOrderAscStartTimeDesc(targetUser.getUsername());
+        List<Seance> programmes = seanceRepository.findByUtilisateurUsernameAndHistoriqueFalseOrderByDisplayOrderAscStartTimeDesc(targetUser.getUsername());
         
         if (programmes.isEmpty()) {
             return "L'utilisateur " + searchUsername + " n'a aucun modèle de programme d'entraînement enregistré.";
@@ -124,7 +124,7 @@ public class WorkoutTools {
             }
         }
 
-        List<Seance> historique = seanceRepository.findByUtilisateurUsernameAndIsModeleTrueOrderByStartTimeDesc(targetUser.getUsername());
+        List<Seance> historique = seanceRepository.findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc(targetUser.getUsername());
         
         if (historique.isEmpty()) {
             return "L'utilisateur " + searchUsername + " n'a encore enregistré aucune séance dans son historique.";
@@ -165,7 +165,7 @@ public class WorkoutTools {
                 .titre(titre)
                 .startTime(LocalDateTime.now())
                 .weekNumber(currentWeek)
-                .isModele(true)
+                .historique(true)
                 .utilisateur(user)
                 .build();
 
@@ -184,7 +184,7 @@ public class WorkoutTools {
                 .titre(titre)
                 .startTime(LocalDateTime.now())
                 .weekNumber(0)
-                .isModele(false)
+                .historique(false)
                 .utilisateur(user)
                 .build();
 
@@ -339,7 +339,7 @@ public class WorkoutTools {
         Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
                 .orElseThrow(() -> notFound("Utilisateur introuvable"));
                 
-        List<Seance> historique = seanceRepository.findByUtilisateurUsernameAndIsModeleTrueOrderByStartTimeDesc(user.getUsername());
+        List<Seance> historique = seanceRepository.findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc(user.getUsername());
         
         StringBuilder res = new StringBuilder();
         boolean found = false;
@@ -373,7 +373,7 @@ public class WorkoutTools {
         Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
                 .orElseThrow(() -> notFound("Utilisateur introuvable"));
 
-        List<Seance> programmes = seanceRepository.findByUtilisateurUsernameAndIsModeleFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername());
+        List<Seance> programmes = seanceRepository.findByUtilisateurUsernameAndHistoriqueFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername());
 
         List<Seance> matching = programmes.stream()
                 .filter(s -> s.getTitre() != null && s.getTitre().toLowerCase().contains(programmeName.toLowerCase()))
@@ -412,7 +412,7 @@ public class WorkoutTools {
         Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
                 .orElseThrow(() -> notFound("Utilisateur introuvable"));
 
-        List<Seance> historique = seanceRepository.findByUtilisateurUsernameAndIsModeleTrueOrderByStartTimeDesc(user.getUsername());
+        List<Seance> historique = seanceRepository.findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc(user.getUsername());
 
         List<Seance> matching = historique.stream()
                 .filter(s -> s.getTitre() != null && s.getTitre().toLowerCase().contains(sessionTitle.toLowerCase()))
@@ -676,7 +676,7 @@ public class WorkoutTools {
         LocalDateTime cutoff = LocalDateTime.now().minusDays(window);
 
         List<Seance> historique = seanceRepository
-                .findByUtilisateurUsernameAndIsModeleTrueOrderByStartTimeDesc(user.getUsername())
+                .findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc(user.getUsername())
                 .stream()
                 .filter(s -> s.getStartTime() != null && s.getStartTime().isAfter(cutoff))
                 .collect(Collectors.toList());
@@ -737,7 +737,7 @@ public class WorkoutTools {
                 .orElseThrow(() -> notFound("Utilisateur introuvable"));
 
         List<Seance> historique = seanceRepository
-                .findByUtilisateurUsernameAndIsModeleTrueOrderByStartTimeDesc(user.getUsername());
+                .findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc(user.getUsername());
 
         if (historique.isEmpty()) {
             return "Aucune séance dans l'historique de l'utilisateur.";

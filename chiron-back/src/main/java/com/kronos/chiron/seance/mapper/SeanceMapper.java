@@ -37,7 +37,7 @@ public class SeanceMapper {
                 seance.getStartTime(),
                 seance.getEndTime(),
                 seance.getWeekNumber(),
-                seance.isModele(),
+                seance.isHistorique(),
                 utilisateurDto,
                 exercicesDto
         );

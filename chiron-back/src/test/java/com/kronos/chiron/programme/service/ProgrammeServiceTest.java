@@ -73,7 +73,7 @@ class ProgrammeServiceTest {
         verify(seanceRepository).save(argThat(s ->
                 s.getTitre().equals("Leg Day") &&
                 s.getUtilisateur().equals(owner) &&
-                !s.isModele()
+                !s.isHistorique()
         ));
     }
 
@@ -93,7 +93,7 @@ class ProgrammeServiceTest {
         Seance existing = new Seance();
         existing.setId(5L);
         existing.setTitre("Old");
-        existing.setModele(false);
+        existing.setHistorique(false);
         existing.setUtilisateur(owner);
 
         when(utilisateurRepository.findByUsername("owner")).thenReturn(Optional.of(owner));
@@ -112,7 +112,7 @@ class ProgrammeServiceTest {
         Seance existing = new Seance();
         existing.setId(7L);
         existing.setTitre("Push");
-        existing.setModele(false);
+        existing.setHistorique(false);
         existing.setUtilisateur(owner);
         // Pre-populate with exercises in some order to confirm the service clears them.
         Exercice old = new Exercice();
@@ -147,7 +147,7 @@ class ProgrammeServiceTest {
         Seance existing = new Seance();
         existing.setId(5L);
         existing.setUtilisateur(owner);
-        existing.setModele(false);
+        existing.setHistorique(false);
 
         when(utilisateurRepository.findByUsername("other")).thenReturn(Optional.of(otherUser));
         when(seanceRepository.findById(5L)).thenReturn(Optional.of(existing));
@@ -215,7 +215,7 @@ class ProgrammeServiceTest {
         Seance existing = new Seance();
         existing.setId(5L);
         existing.setUtilisateur(owner);
-        existing.setModele(false);
+        existing.setHistorique(false);
 
         when(utilisateurRepository.findByUsername("coach")).thenReturn(Optional.of(coach));
         when(seanceRepository.findById(5L)).thenReturn(Optional.of(existing));
@@ -233,7 +233,7 @@ class ProgrammeServiceTest {
     void getProgrammes_returnsListFromRepository() {
         Seance s = new Seance();
         s.setTitre("My Programme");
-        when(seanceRepository.findByUtilisateurUsernameAndIsModeleFalseOrderByDisplayOrderAscStartTimeDesc("owner"))
+        when(seanceRepository.findByUtilisateurUsernameAndHistoriqueFalseOrderByDisplayOrderAscStartTimeDesc("owner"))
                 .thenReturn(List.of(s));
 
         List<Seance> result = programmeService.getProgrammes("owner");

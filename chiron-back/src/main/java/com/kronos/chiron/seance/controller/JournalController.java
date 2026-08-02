@@ -30,7 +30,7 @@ public class JournalController {
 
     @GetMapping("/historique")
     public ResponseEntity<List<SeanceDto>> getHistorique(@RequestParam String username) {
-        List<Seance> historique = seanceRepository.findByUtilisateurUsernameAndIsModeleTrueOrderByStartTimeDesc(username);
+        List<Seance> historique = seanceRepository.findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc(username);
         List<SeanceDto> dtos = historique.stream().map(seanceMapper::toDto).collect(Collectors.toList());
         return ResponseEntity.ok(dtos);
     }

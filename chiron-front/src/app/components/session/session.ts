@@ -405,7 +405,7 @@ export class Session implements OnInit, OnDestroy {
   }
 
   /**
-   * Persists the current session state to the backend as an executed Historical Session (isModele = true).
+   * Persists the current session state to the backend as an executed Historical Session (historique = true).
    * Calculates the current week number for statistical tracking.
    * Additionally syncs the source template programme (if the session was started from one)
    * so the next execution shows the latest reps / weights as presets.
@@ -446,7 +446,7 @@ export class Session implements OnInit, OnDestroy {
       weekNumber: currentWeekNumber,
       startTime: this.activeSession.startedAt() ?? new Date().toISOString(),
       endTime: new Date().toISOString(),
-      isModele: true,
+      historique: true,
       exercices: exercicesPayload
     };
 
@@ -471,7 +471,7 @@ export class Session implements OnInit, OnDestroy {
           const templateDto = {
             id: parseInt(this.routineId, 10),
             titre: this.titreRoutine(),
-            isModele: false,
+            historique: false,
             exercices: exercicesPayload
           };
           this.chironApi.sauvegarderProgramme(username, templateDto).subscribe({

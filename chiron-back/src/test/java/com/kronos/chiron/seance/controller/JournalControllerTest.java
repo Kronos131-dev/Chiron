@@ -43,7 +43,7 @@ class JournalControllerTest {
         SeanceDto dto = new SeanceDto(1L, "Push Day", null, LocalDateTime.of(2025, 3, 1, 10, 0),
                 null, 9, true, null, List.of());
 
-        when(seanceRepository.findByUtilisateurUsernameAndIsModeleTrueOrderByStartTimeDesc("alice"))
+        when(seanceRepository.findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc("alice"))
                 .thenReturn(List.of(seance));
         when(seanceMapper.toDto(seance)).thenReturn(dto);
 
@@ -55,7 +55,7 @@ class JournalControllerTest {
 
     @Test
     void getHistorique_noSessions_returnsEmptyArray() throws Exception {
-        when(seanceRepository.findByUtilisateurUsernameAndIsModeleTrueOrderByStartTimeDesc("bob"))
+        when(seanceRepository.findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc("bob"))
                 .thenReturn(List.of());
 
         mockMvc.perform(get("/api/journal/historique").param("username", "bob"))

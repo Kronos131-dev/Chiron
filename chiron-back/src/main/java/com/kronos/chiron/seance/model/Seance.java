@@ -33,7 +33,7 @@ public class Seance {
     private int weekNumber;
 
     @Column(nullable = false, columnDefinition = "boolean default false")
-    private boolean isModele;
+    private boolean historique;
 
     @Column(nullable = false, columnDefinition = "integer default 0")
     private int displayOrder;

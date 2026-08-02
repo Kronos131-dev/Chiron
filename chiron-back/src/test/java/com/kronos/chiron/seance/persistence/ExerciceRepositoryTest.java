@@ -37,7 +37,7 @@ class ExerciceRepositoryTest {
 
         historicSession = new Seance();
         historicSession.setTitre("Historic");
-        historicSession.setModele(true);
+        historicSession.setHistorique(true);
         historicSession.setWeekNumber(1);
         historicSession.setStartTime(LocalDateTime.now().minusDays(7));
         historicSession.setUtilisateur(user);
@@ -45,7 +45,7 @@ class ExerciceRepositoryTest {
 
         templateSession = new Seance();
         templateSession.setTitre("Template");
-        templateSession.setModele(false);
+        templateSession.setHistorique(false);
         templateSession.setWeekNumber(0);
         templateSession.setStartTime(LocalDateTime.now().minusDays(1));
         templateSession.setUtilisateur(user);
@@ -94,7 +94,7 @@ class ExerciceRepositoryTest {
         Optional<Exercice> result = exerciceRepository.findFirstHistoricExercise(user.getId(), "Bench");
 
         assertThat(result).isPresent();
-        assertThat(result.get().getSeance().isModele()).isTrue();
+        assertThat(result.get().getSeance().isHistorique()).isTrue();
     }
 
     @Test
