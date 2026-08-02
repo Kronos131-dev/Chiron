@@ -1,8 +1,8 @@
-package com.kronos.chiron.controller;
+package com.kronos.chiron.exercice.controller;
 
-import com.kronos.chiron.dto.ExerciceDefinitionDto;
-import com.kronos.chiron.service.ExerciceDefinitionService;
-import com.kronos.chiron.util.ExerciceDataImporter;
+import com.kronos.chiron.exercice.dto.ExerciceDefinitionDto;
+import com.kronos.chiron.exercice.service.ExerciceDefinitionService;
+import com.kronos.chiron.exercice.service.ExerciceDataImporter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;

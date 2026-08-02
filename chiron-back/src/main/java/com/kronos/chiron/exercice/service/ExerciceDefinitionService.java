@@ -1,11 +1,11 @@
-package com.kronos.chiron.service;
+package com.kronos.chiron.exercice.service;
 
-import com.kronos.chiron.dto.ExerciceDefinitionDto;
-import com.kronos.chiron.entity.ExerciceDefinition;
-import com.kronos.chiron.entity.MuscleGroup;
-import com.kronos.chiron.entity.NiveauDifficulte;
-import com.kronos.chiron.entity.TypeEquipement;
-import com.kronos.chiron.repository.ExerciceDefinitionRepository;
+import com.kronos.chiron.exercice.dto.ExerciceDefinitionDto;
+import com.kronos.chiron.exercice.model.ExerciceDefinition;
+import com.kronos.chiron.exercice.model.MuscleGroup;
+import com.kronos.chiron.exercice.model.NiveauDifficulte;
+import com.kronos.chiron.exercice.model.TypeEquipement;
+import com.kronos.chiron.exercice.persistence.ExerciceDefinitionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;

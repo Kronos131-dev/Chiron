@@ -1,9 +1,9 @@
-package com.kronos.chiron.dto;
+package com.kronos.chiron.exercice.dto;
 
 import com.kronos.chiron.entity.CardioType;
-import com.kronos.chiron.entity.MuscleGroup;
-import com.kronos.chiron.entity.NiveauDifficulte;
-import com.kronos.chiron.entity.TypeEquipement;
+import com.kronos.chiron.exercice.model.MuscleGroup;
+import com.kronos.chiron.exercice.model.NiveauDifficulte;
+import com.kronos.chiron.exercice.model.TypeEquipement;
 
 import java.util.List;
 

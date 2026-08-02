@@ -1,13 +1,13 @@
-package com.kronos.chiron.controller;
+package com.kronos.chiron.exercice.controller;
 
 import tools.jackson.databind.json.JsonMapper;
-import com.kronos.chiron.dto.ExerciceDefinitionDto;
-import com.kronos.chiron.entity.MuscleGroup;
-import com.kronos.chiron.entity.NiveauDifficulte;
-import com.kronos.chiron.entity.TypeEquipement;
+import com.kronos.chiron.exercice.dto.ExerciceDefinitionDto;
+import com.kronos.chiron.exercice.model.MuscleGroup;
+import com.kronos.chiron.exercice.model.NiveauDifficulte;
+import com.kronos.chiron.exercice.model.TypeEquipement;
 import com.kronos.chiron.security.JwtService;
-import com.kronos.chiron.service.ExerciceDefinitionService;
-import com.kronos.chiron.util.ExerciceDataImporter;
+import com.kronos.chiron.exercice.service.ExerciceDefinitionService;
+import com.kronos.chiron.exercice.service.ExerciceDataImporter;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;

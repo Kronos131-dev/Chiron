@@ -46,8 +46,8 @@ class SeanceMapperTest {
         e.setNom(nom);
         e.setCommentaire("note");
         if (definitionId != null) {
-            com.kronos.chiron.entity.ExerciceDefinition def =
-                    com.kronos.chiron.entity.ExerciceDefinition.builder()
+            com.kronos.chiron.exercice.model.ExerciceDefinition def =
+                    com.kronos.chiron.exercice.model.ExerciceDefinition.builder()
                             .id(definitionId)
                             .nomEn("Bench Press")
                             .musclesSecondaires(new java.util.ArrayList<>())

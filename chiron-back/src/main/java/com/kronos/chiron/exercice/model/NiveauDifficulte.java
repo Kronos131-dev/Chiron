@@ -1,4 +1,4 @@
-package com.kronos.chiron.entity;
+package com.kronos.chiron.exercice.model;
 
 public enum NiveauDifficulte {
     DEBUTANT,
