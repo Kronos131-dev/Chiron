@@ -1,5 +1,7 @@
 package com.kronos.chiron.performance.service;
 
+import com.kronos.chiron.utilisateur.model.Utilisateur;
+
 import com.kronos.chiron.performance.model.PerformanceRecord;
 import com.kronos.chiron.performance.model.PerformanceTier;
 
@@ -8,7 +10,7 @@ import com.kronos.chiron.performance.dto.PerformanceRecordDto;
 import com.kronos.chiron.performance.dto.PerformanceSummaryDto;
 import com.kronos.chiron.entity.*;
 import com.kronos.chiron.performance.persistence.PerformanceRecordRepository;
-import com.kronos.chiron.repository.UtilisateurRepository;
+import com.kronos.chiron.utilisateur.persistence.UtilisateurRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

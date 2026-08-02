@@ -1,7 +1,7 @@
 package com.kronos.chiron.nutrition;
 
-import com.kronos.chiron.entity.Utilisateur;
-import com.kronos.chiron.repository.UtilisateurRepository;
+import com.kronos.chiron.utilisateur.model.Utilisateur;
+import com.kronos.chiron.utilisateur.persistence.UtilisateurRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

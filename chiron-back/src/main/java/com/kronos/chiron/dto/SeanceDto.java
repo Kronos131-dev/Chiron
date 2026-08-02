@@ -1,5 +1,7 @@
 package com.kronos.chiron.dto;
 
+import com.kronos.chiron.utilisateur.dto.ProfileDto;
+
 import java.time.LocalDateTime;
 import java.util.List;
 

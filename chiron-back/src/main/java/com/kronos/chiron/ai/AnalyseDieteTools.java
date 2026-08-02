@@ -1,7 +1,7 @@
 package com.kronos.chiron.ai;
 
-import com.kronos.chiron.entity.Utilisateur;
-import com.kronos.chiron.repository.UtilisateurRepository;
+import com.kronos.chiron.utilisateur.model.Utilisateur;
+import com.kronos.chiron.utilisateur.persistence.UtilisateurRepository;
 import com.kronos.chiron.stats.MuscleStatsDto;
 import com.kronos.chiron.stats.StatsOverviewDto;
 import com.kronos.chiron.stats.StatsService;

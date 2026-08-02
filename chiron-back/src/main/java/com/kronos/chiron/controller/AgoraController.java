@@ -1,7 +1,7 @@
 package com.kronos.chiron.controller;
 
-import com.kronos.chiron.dto.ProfileDto;
-import com.kronos.chiron.service.ProfileService;
+import com.kronos.chiron.utilisateur.dto.ProfileDto;
+import com.kronos.chiron.utilisateur.service.ProfileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

@@ -1,6 +1,6 @@
 package com.kronos.chiron.dto.settings;
 
-import com.kronos.chiron.entity.AiProvider;
+import com.kronos.chiron.utilisateur.model.AiProvider;
 
 /**
  * Fournisseur d'IA choisi par l'utilisateur pour le coach Chiron.

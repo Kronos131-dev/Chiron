@@ -1,9 +1,9 @@
 package com.kronos.chiron.service;
 
-import com.kronos.chiron.entity.AiProvider;
-import com.kronos.chiron.entity.Role;
-import com.kronos.chiron.entity.Utilisateur;
-import com.kronos.chiron.repository.UtilisateurRepository;
+import com.kronos.chiron.utilisateur.model.AiProvider;
+import com.kronos.chiron.utilisateur.model.Role;
+import com.kronos.chiron.utilisateur.model.Utilisateur;
+import com.kronos.chiron.utilisateur.persistence.UtilisateurRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

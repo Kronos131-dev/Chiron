@@ -1,5 +1,8 @@
 package com.kronos.chiron.performance.persistence;
 
+import com.kronos.chiron.utilisateur.model.Role;
+import com.kronos.chiron.utilisateur.model.Utilisateur;
+
 import com.kronos.chiron.performance.model.PerformanceRecord;
 
 import com.kronos.chiron.entity.*;

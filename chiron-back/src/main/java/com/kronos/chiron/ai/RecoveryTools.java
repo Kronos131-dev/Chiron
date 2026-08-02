@@ -1,8 +1,8 @@
 package com.kronos.chiron.ai;
 
 import com.kronos.chiron.journalier.model.EtatJournalier;
-import com.kronos.chiron.entity.Utilisateur;
-import com.kronos.chiron.repository.UtilisateurRepository;
+import com.kronos.chiron.utilisateur.model.Utilisateur;
+import com.kronos.chiron.utilisateur.persistence.UtilisateurRepository;
 import com.kronos.chiron.journalier.service.RecoveryService;
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agent.tool.ToolMemoryId;

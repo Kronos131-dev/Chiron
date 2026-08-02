@@ -1,5 +1,8 @@
 package com.kronos.chiron.repository;
 
+import com.kronos.chiron.utilisateur.model.Role;
+import com.kronos.chiron.utilisateur.model.Utilisateur;
+
 import com.kronos.chiron.entity.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

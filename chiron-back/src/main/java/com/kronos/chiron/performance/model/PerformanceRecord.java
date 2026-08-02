@@ -1,7 +1,7 @@
 package com.kronos.chiron.performance.model;
 
 import com.kronos.chiron.entity.ExerciseType;
-import com.kronos.chiron.entity.Utilisateur;
+import com.kronos.chiron.utilisateur.model.Utilisateur;
 
 import jakarta.persistence.*;
 import lombok.*;

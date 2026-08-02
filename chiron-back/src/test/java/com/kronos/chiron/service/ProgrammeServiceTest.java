@@ -1,11 +1,14 @@
 package com.kronos.chiron.service;
 
+import com.kronos.chiron.utilisateur.model.Role;
+import com.kronos.chiron.utilisateur.model.Utilisateur;
+
 import com.kronos.chiron.dto.ExerciceDto;
 import com.kronos.chiron.dto.SeanceDto;
 import com.kronos.chiron.dto.SerieDto;
 import com.kronos.chiron.entity.*;
 import com.kronos.chiron.repository.SeanceRepository;
-import com.kronos.chiron.repository.UtilisateurRepository;
+import com.kronos.chiron.utilisateur.persistence.UtilisateurRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
