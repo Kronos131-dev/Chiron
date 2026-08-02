@@ -1,10 +1,13 @@
-package com.kronos.chiron.service;
+package com.kronos.chiron.performance.service;
 
-import com.kronos.chiron.dto.ExercisePerformanceDto;
-import com.kronos.chiron.dto.PerformanceRecordDto;
-import com.kronos.chiron.dto.PerformanceSummaryDto;
+import com.kronos.chiron.performance.model.PerformanceRecord;
+import com.kronos.chiron.performance.model.PerformanceTier;
+
+import com.kronos.chiron.performance.dto.ExercisePerformanceDto;
+import com.kronos.chiron.performance.dto.PerformanceRecordDto;
+import com.kronos.chiron.performance.dto.PerformanceSummaryDto;
 import com.kronos.chiron.entity.*;
-import com.kronos.chiron.repository.PerformanceRecordRepository;
+import com.kronos.chiron.performance.persistence.PerformanceRecordRepository;
 import com.kronos.chiron.repository.UtilisateurRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

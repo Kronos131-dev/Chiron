@@ -1,4 +1,4 @@
-package com.kronos.chiron.dto;
+package com.kronos.chiron.performance.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

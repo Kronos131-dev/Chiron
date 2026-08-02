@@ -1,7 +1,7 @@
-package com.kronos.chiron.repository;
+package com.kronos.chiron.performance.persistence;
 
 import com.kronos.chiron.entity.ExerciseType;
-import com.kronos.chiron.entity.PerformanceRecord;
+import com.kronos.chiron.performance.model.PerformanceRecord;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

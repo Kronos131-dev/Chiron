@@ -1,9 +1,9 @@
-package com.kronos.chiron.controller;
+package com.kronos.chiron.performance.controller;
 
-import com.kronos.chiron.dto.ExercisePerformanceDto;
-import com.kronos.chiron.dto.PerformanceRecordDto;
-import com.kronos.chiron.dto.PerformanceSummaryDto;
-import com.kronos.chiron.service.PerformanceService;
+import com.kronos.chiron.performance.dto.ExercisePerformanceDto;
+import com.kronos.chiron.performance.dto.PerformanceRecordDto;
+import com.kronos.chiron.performance.dto.PerformanceSummaryDto;
+import com.kronos.chiron.performance.service.PerformanceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

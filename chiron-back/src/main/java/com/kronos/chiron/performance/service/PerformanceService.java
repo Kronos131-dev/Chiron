@@ -1,15 +1,15 @@
-package com.kronos.chiron.service;
+package com.kronos.chiron.performance.service;
 
-import com.kronos.chiron.dto.ExercisePerformanceDto;
-import com.kronos.chiron.dto.PerformanceRecordDto;
-import com.kronos.chiron.dto.PerformanceSummaryDto;
+import com.kronos.chiron.performance.dto.ExercisePerformanceDto;
+import com.kronos.chiron.performance.dto.PerformanceRecordDto;
+import com.kronos.chiron.performance.dto.PerformanceSummaryDto;
 import com.kronos.chiron.entity.ExerciseType;
-import com.kronos.chiron.entity.PerformanceRecord;
-import com.kronos.chiron.entity.PerformanceTier;
+import com.kronos.chiron.performance.model.PerformanceRecord;
+import com.kronos.chiron.performance.model.PerformanceTier;
 import com.kronos.chiron.entity.Utilisateur;
 import com.kronos.chiron.nutrition.NutritionService;
 import com.kronos.chiron.nutrition.OlympusClient;
-import com.kronos.chiron.repository.PerformanceRecordRepository;
+import com.kronos.chiron.performance.persistence.PerformanceRecordRepository;
 import com.kronos.chiron.repository.UtilisateurRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

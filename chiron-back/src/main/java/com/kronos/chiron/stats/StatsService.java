@@ -1,6 +1,6 @@
 package com.kronos.chiron.stats;
 
-import com.kronos.chiron.dto.PerformanceSummaryDto;
+import com.kronos.chiron.performance.dto.PerformanceSummaryDto;
 import com.kronos.chiron.entity.Degressif;
 import com.kronos.chiron.entity.Exercice;
 import com.kronos.chiron.entity.MuscleGroup;
@@ -11,7 +11,7 @@ import com.kronos.chiron.nutrition.NutritionService;
 import com.kronos.chiron.nutrition.olympusdb.OlympusNutritionDao;
 import com.kronos.chiron.repository.SeanceRepository;
 import com.kronos.chiron.repository.UtilisateurRepository;
-import com.kronos.chiron.service.PerformanceService;
+import com.kronos.chiron.performance.service.PerformanceService;
 import com.kronos.chiron.entity.Utilisateur;
 import com.kronos.chiron.visbody.BodyCompositionRecord;
 import com.kronos.chiron.visbody.BodyCompositionRecordRepository;

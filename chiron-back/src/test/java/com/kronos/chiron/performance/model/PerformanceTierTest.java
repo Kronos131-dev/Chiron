@@ -1,4 +1,4 @@
-package com.kronos.chiron.entity;
+package com.kronos.chiron.performance.model;
 
 import org.junit.jupiter.api.Test;
 

@@ -1,6 +1,6 @@
 package com.kronos.chiron.stats;
 
-import com.kronos.chiron.dto.PerformanceSummaryDto;
+import com.kronos.chiron.performance.dto.PerformanceSummaryDto;
 import com.kronos.chiron.entity.Degressif;
 import com.kronos.chiron.entity.Exercice;
 import com.kronos.chiron.entity.ExerciceDefinition;
@@ -12,7 +12,7 @@ import com.kronos.chiron.nutrition.NutritionService;
 import com.kronos.chiron.nutrition.olympusdb.OlympusNutritionDao;
 import com.kronos.chiron.repository.SeanceRepository;
 import com.kronos.chiron.repository.UtilisateurRepository;
-import com.kronos.chiron.service.PerformanceService;
+import com.kronos.chiron.performance.service.PerformanceService;
 import com.kronos.chiron.visbody.BodyCompositionRecordRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

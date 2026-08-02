@@ -239,6 +239,7 @@
                     <excludes>
                         <exclude>**/controller/**</exclude>
                         <exclude>**/repository/**</exclude>
+                        <exclude>**/persistence/**</exclude>
                         <exclude>**/migration/**</exclude>
                     </excludes>
                 </configuration>
@@ -251,6 +252,7 @@
                     <includes>
                         <include>**/controller/**Test.java</include>
                         <include>**/repository/**Test.java</include>
+                        <include>**/persistence/**Test.java</include>
                         <include>**/migration/**Test.java</include>
                     </includes>
                     <!-- docker-java defaults to API 1.32, which modern Docker daemons (>=29) reject.
