@@ -1,6 +1,6 @@
 package com.kronos.chiron.exercice.dto;
 
-import com.kronos.chiron.entity.CardioType;
+import com.kronos.chiron.seance.model.CardioType;
 import com.kronos.chiron.exercice.model.MuscleGroup;
 import com.kronos.chiron.exercice.model.NiveauDifficulte;
 import com.kronos.chiron.exercice.model.TypeEquipement;

@@ -1,6 +1,6 @@
 package com.kronos.chiron.controller;
 
-import com.kronos.chiron.ai.AiUnavailableException;
+import com.kronos.chiron.coach.agent.AiUnavailableException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;

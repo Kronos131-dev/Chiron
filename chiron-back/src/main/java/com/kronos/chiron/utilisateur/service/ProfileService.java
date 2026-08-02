@@ -4,11 +4,11 @@ import com.kronos.chiron.performance.service.PerformanceService;
 
 import com.kronos.chiron.performance.dto.PerformanceSummaryDto;
 import com.kronos.chiron.utilisateur.dto.ProfileDto;
-import com.kronos.chiron.dto.SeanceSummaryDto;
+import com.kronos.chiron.seance.dto.SeanceSummaryDto;
 import com.kronos.chiron.utilisateur.model.Role;
-import com.kronos.chiron.entity.Seance;
+import com.kronos.chiron.seance.model.Seance;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
-import com.kronos.chiron.repository.SeanceRepository;
+import com.kronos.chiron.seance.persistence.SeanceRepository;
 import com.kronos.chiron.utilisateur.persistence.UtilisateurRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;

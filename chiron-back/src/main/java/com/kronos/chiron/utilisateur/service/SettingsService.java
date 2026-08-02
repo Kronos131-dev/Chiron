@@ -30,7 +30,7 @@ public class SettingsService {
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
     private final JwtService jwtService;
-    private final com.kronos.chiron.ai.ChironAgentRouter chironAgentRouter;
+    private final com.kronos.chiron.coach.agent.ChironAgentRouter chironAgentRouter;
 
     @Value("${chiron.frontend-url}")
     private String frontendUrl;

@@ -1,11 +1,12 @@
 package com.kronos.chiron.performance.persistence;
 
+import com.kronos.chiron.seance.model.ExerciseType;
+
 import com.kronos.chiron.utilisateur.model.Role;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 
 import com.kronos.chiron.performance.model.PerformanceRecord;
 
-import com.kronos.chiron.entity.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
