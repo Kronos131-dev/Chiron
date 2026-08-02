@@ -31,10 +31,6 @@ public class PerformanceService {
     private final NutritionService nutritionService;
     private final OlympusClient olympusClient;
 
-    /**
-     * Returns the full performance summary for a user:
-     * best record per exercise, individual tiers, and overall tier (avg of top 3).
-     */
     @Transactional(readOnly = true)
     public PerformanceSummaryDto getSummary(String username) {
         Utilisateur user = findUser(username);
@@ -53,9 +49,6 @@ public class PerformanceService {
                 .build();
     }
 
-    /**
-     * Records a new performance entry and returns the full updated summary.
-     */
     @Transactional
     public PerformanceSummaryDto addRecord(String username, PerformanceRecordDto dto) {
         Utilisateur user = findUser(username);
@@ -94,9 +87,6 @@ public class PerformanceService {
                 .build();
     }
 
-    /**
-     * Updates the user's bodyweight and returns the refreshed performance summary.
-     */
     @Transactional
     public PerformanceSummaryDto updateBodyweight(String username, Double poidsCorps) {
         Utilisateur user = findUser(username);
@@ -106,11 +96,6 @@ public class PerformanceService {
         return getSummary(username);
     }
 
-    /**
-     * Pousse le poids dans Olympus si le compte est lié. Best-effort : une indisponibilité
-     * d'Olympus ne doit jamais faire échouer la mise à jour du poids dans Chiron. Un token
-     * rejeté (401/403) invalide la liaison locale pour forcer une nouvelle liaison.
-     */
     private void syncWeightToOlympus(String username, Double poidsCorps) {
         if (poidsCorps == null) {
             return;
@@ -120,7 +105,6 @@ public class PerformanceService {
             olympusClient.pushWeight(token, poidsCorps);
             log.info("OLYMPUS_WEIGHT_SYNCED user={} poids={}", username, poidsCorps);
         } catch (NutritionService.NotLinkedException | NutritionService.ExpiredException e) {
-            // Compte non lié : rien à synchroniser.
         } catch (OlympusClient.OlympusUnauthorizedException e) {
             log.warn("OLYMPUS_WEIGHT_SYNC_REJECTED user={} : token rejeté, liaison invalidée", username);
             nutritionService.invalidateLink(username);
@@ -129,9 +113,6 @@ public class PerformanceService {
         }
     }
 
-    /**
-     * Returns the full history of records for one exercise (most recent first).
-     */
     @Transactional(readOnly = true)
     public List<ExercisePerformanceDto> getHistory(String username, String exerciseTypeName) {
         Utilisateur user = findUser(username);
@@ -149,8 +130,6 @@ public class PerformanceService {
                 })
                 .collect(Collectors.toList());
     }
-
-    // -------------------------------------------------------------------------
 
     private List<ExercisePerformanceDto> buildAllExerciseDtos(Long userId, Double poidsCorps) {
         Map<ExerciseType, PerformanceRecord> latestByType = performanceRecordRepository
@@ -178,7 +157,6 @@ public class PerformanceService {
 
         PerformanceRecord r = best.get();
 
-        // Always use current bodyweight for ratio/tier (not the snapshot stored in the record)
         Double currentRatio = (poidsCorps != null && poidsCorps > 0)
                 ? round2(computeRatio(r.getRm1Estime(), poidsCorps))
                 : null;
@@ -203,13 +181,7 @@ public class PerformanceService {
                 .build();
     }
 
-    /**
-     * 1RM formula: effectiveWeight × (36 / (37 − reps)).
-     * For bodyweight exercises: effectiveWeight = lest + poidsCorps.
-     * For barbell exercises:    effectiveWeight = poids (bar weight).
-     */
     double calculateRm1(ExerciseType type, double poids, int reps, Double poidsCorps) {
-        // Cap reps at 10 for bodyweight exercises without added weight (lest=0)
         int effectiveReps = (type.isBodyweightExercise() && poids == 0.0) ? Math.min(reps, 10) : reps;
         double effectiveWeight = (type.isBodyweightExercise() && poidsCorps != null)
                 ? poids + poidsCorps
@@ -217,9 +189,6 @@ public class PerformanceService {
         return effectiveWeight * (36.0 / (37 - effectiveReps));
     }
 
-    /**
-     * Ratio = 1RM / poidsCorps. Same formula for all exercise types.
-     */
     private double computeRatio(double rm1, double poidsCorps) {
         return rm1 / poidsCorps;
     }
@@ -247,9 +216,6 @@ public class PerformanceService {
         return current;
     }
 
-    /**
-     * Overall tier = floor-average of the top-3 exercise tier levels.
-     */
     private PerformanceTier computeOverallTier(List<ExercisePerformanceDto> exercises) {
         List<Integer> levels = exercises.stream()
                 .map(ExercisePerformanceDto::getTierLevel)

@@ -31,23 +31,18 @@ public class EtatJournalier {
     @Column(name = "date", nullable = false)
     private LocalDate date;
 
-    /** Heures de sommeil la nuit précédente. */
     @Column(name = "sommeil_heures")
     private Double sommeilHeures;
 
-    /** Fatigue ressentie 1 (frais) → 5 (épuisé). */
     @Column(name = "fatigue")
     private Integer fatigue;
 
-    /** Courbatures 1 (aucune) → 5 (très douloureux). */
     @Column(name = "courbatures")
     private Integer courbatures;
 
-    /** Stress 1 (zen) → 5 (tendu). */
     @Column(name = "stress")
     private Integer stress;
 
-    /** Énergie 1 (vide) → 5 (à fond). */
     @Column(name = "energie")
     private Integer energie;
 

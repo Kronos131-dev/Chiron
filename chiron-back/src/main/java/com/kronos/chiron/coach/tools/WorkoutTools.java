@@ -45,11 +45,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-/**
- * Component providing a suite of tools accessible by the AI agent.
- * These tools allow the AI to read and modify workout data, manage sessions,
- * and fetch historical performances on behalf of the user.
- */
 @Component
 @RequiredArgsConstructor
 public class WorkoutTools {
@@ -62,11 +57,6 @@ public class WorkoutTools {
     private final ProgrammeService programmeService;
     private final PerformanceService performanceService;
 
-    /**
-     * Retrieves the current system date and time.
-     *
-     * @return A formatted string representing the current date and time.
-     */
     @Tool("Retourne la date et l'heure actuelles et le jour de la semaine.")
     public String getCurrentDate() {
         LocalDateTime now = LocalDateTime.now();
@@ -74,14 +64,6 @@ public class WorkoutTools {
         return "Nous sommes le " + now.format(formatter);
     }
 
-    /**
-     * Retrieves the list of workout templates (presets) for the specified user or a target user.
-     * Enforces privacy and role-based access controls.
-     *
-     * @param userId         The ID of the requesting user.
-     * @param targetUsername The username of the target user to inspect (can be null to inspect self).
-     * @return A formatted string listing the templates and their exercises.
-     */
     @Tool("Récupère la liste des modèles de programmes d'entraînement (presets) de l'utilisateur ou d'un autre utilisateur spécifié.")
     public String getUserProgrammes(@ToolMemoryId String userId, String targetUsername) {
         Utilisateur requestUser = utilisateurRepository.findById(Long.parseLong(userId))
@@ -122,14 +104,6 @@ public class WorkoutTools {
         return res.toString();
     }
 
-    /**
-     * Retrieves the full or recent history of executed workout sessions for a user.
-     * Enforces privacy and role-based access controls.
-     *
-     * @param userId         The ID of the requesting user.
-     * @param targetUsername The username of the target user to inspect (can be null to inspect self).
-     * @return A formatted string listing historical sessions.
-     */
     @Tool("Récupère l'historique complet ou récent des séances réellement effectuées par l'utilisateur ou un autre utilisateur spécifié.")
     public String getUserHistory(@ToolMemoryId String userId, String targetUsername) {
         Utilisateur requestUser = utilisateurRepository.findById(Long.parseLong(userId))
@@ -174,14 +148,6 @@ public class WorkoutTools {
         return res.toString();
     }
 
-    /**
-     * Initializes a new active workout session for the user.
-     * Ends any previously uncompleted active sessions.
-     *
-     * @param userId The ID of the user starting the session.
-     * @param titre  The title of the new session.
-     * @return A status message indicating successful session creation.
-     */
     @Tool("Démarre une nouvelle séance d'entraînement dans l'historique de l'utilisateur.")
     public String startSession(@ToolMemoryId String userId, String titre) {
         Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
@@ -209,13 +175,6 @@ public class WorkoutTools {
         return "Séance '" + titre + "' démarrée en base de données. Tu peux maintenant utiliser [startExercise].";
     }
 
-    /**
-     * Creates a new empty workout template (preset model).
-     *
-     * @param userId The ID of the user creating the template.
-     * @param titre  The title of the new template.
-     * @return A status message indicating successful template creation.
-     */
     @Tool("Crée un NOUVEAU modèle de programme d'entraînement (preset) VIDE.")
     public String createProgramModel(@ToolMemoryId String userId, String titre) {
         Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
@@ -235,13 +194,6 @@ public class WorkoutTools {
         return "Modèle de programme '" + titre + "' créé avec succès. Dis à l'utilisateur qu'il peut le modifier depuis l'interface 'Programme'.";
     }
 
-    /**
-     * Starts a new exercise within the current active session.
-     *
-     * @param userId      The ID of the user.
-     * @param nomExercice The name of the exercise being started.
-     * @return A status message or error if no session is active.
-     */
     @Tool("Démarre un nouvel exercice dans la séance en cours.")
     public String startExercise(@ToolMemoryId String userId, String nomExercice) {
         Seance activeSeance = getActiveSeance(userId);
@@ -257,9 +209,6 @@ public class WorkoutTools {
                 .max()
                 .orElse(-1) + 1;
 
-        // Relie l'exercice à la bibliothèque standardisée si le nom y correspond.
-        // Sans ce lien, les outils d'analyse ([getFullExerciseHistory], [getPersonalRecord]…)
-        // considèrent l'exercice comme non [std] et refusent toute analyse de progression.
         ExerciceDefinition definition = exerciceDefinitionService.search(nomExercice, null, null, null)
                 .stream().findFirst()
                 .flatMap(dto -> exerciceDefinitionRepository.findById(dto.id()))
@@ -279,15 +228,6 @@ public class WorkoutTools {
         return "Exercice '" + nomExercice + "' ajouté à la séance. Tu peux maintenant utiliser [addSet] pour cet exercice.";
     }
 
-    /**
-     * Records a new set (serie) for the current active exercise.
-     *
-     * @param userId      The ID of the user.
-     * @param poids       The weight used.
-     * @param reps        The number of repetitions.
-     * @param commentaire Optional comments for the set.
-     * @return A status message or error if constraints are not met.
-     */
     @Tool("Enregistre une série (poids, répétitions, commentaire) pour l'exercice en cours.")
     public String addSet(@ToolMemoryId String userId, double poids, int reps, String commentaire) {
         Seance activeSeance = getActiveSeance(userId);
@@ -315,12 +255,6 @@ public class WorkoutTools {
         return "Succès : Série enregistrée (" + reps + "x" + poids + "kg).";
     }
 
-    /**
-     * Ends the current active session.
-     *
-     * @param userId The ID of the user finishing their workout.
-     * @return A status message confirming session completion.
-     */
     @Tool("Termine la séance d'entraînement en cours.")
     public String endSession(@ToolMemoryId String userId) {
         Seance activeSeance = getActiveSeance(userId);
@@ -342,13 +276,6 @@ public class WorkoutTools {
         return "Séance terminée et sauvegardée avec succès dans l'historique.";
     }
 
-    /**
-     * Fetches the user's most recent historical performance for a specific exercise.
-     *
-     * @param userId      The ID of the user.
-     * @param nomExercice The name of the exercise to search for.
-     * @return A formatted string detailing the previous sets and performance.
-     */
     @Tool("Récupère les performances de la DERNIÈRE FOIS que l'utilisateur a fait un exercice spécifique.")
     public String getLastExercisePerformance(@ToolMemoryId String userId, String nomExercice) {
         Optional<Exercice> lastExoOpt = exerciceRepository
@@ -385,14 +312,6 @@ public class WorkoutTools {
         return reponse.toString();
     }
 
-    /**
-     * Searches for user profiles matching a specific query string.
-     * Restricted to users with the ADMIN role.
-     *
-     * @param userId The ID of the admin user.
-     * @param query  The search string.
-     * @return A formatted list of matching profiles, or an access denial message.
-     */
     @Tool("Recherche les profils utilisateurs existants (utile pour un admin qui cherche quelqu'un).")
     public String searchAllProfiles(@ToolMemoryId String userId, String query) {
         Utilisateur requestUser = utilisateurRepository.findById(Long.parseLong(userId))
@@ -415,13 +334,6 @@ public class WorkoutTools {
         return res.toString();
     }
 
-    /**
-     * Generates a detailed summary of workouts performed on a specific date.
-     *
-     * @param userId  The ID of the user.
-     * @param dateStr The target date in YYYY-MM-DD format.
-     * @return A formatted summary of exercises and sets for that day.
-     */
     @Tool("Récupère un résumé détaillé des séances de sport effectuées à une date précise (format attendu YYYY-MM-DD).")
     public String getWorkoutSummaryByDate(@ToolMemoryId String userId, String dateStr) {
         Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
@@ -456,13 +368,6 @@ public class WorkoutTools {
         return found ? res.toString() : "Aucune séance trouvée à la date du " + dateStr + ".";
     }
 
-    /**
-     * Returns the full details (exercises, sets, weights, reps) of a specific programme by name.
-     *
-     * @param userId        The ID of the requesting user.
-     * @param programmeName The name (or partial name) of the programme to fetch.
-     * @return A formatted string with all exercises and their sets for the matching programme(s).
-     */
     @Tool("Récupère le contenu détaillé d'un programme (exercices, séries, poids, répétitions) à partir de son nom.")
     public String getProgrammeDetails(@ToolMemoryId String userId, String programmeName) {
         Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
@@ -502,13 +407,6 @@ public class WorkoutTools {
         return res.toString();
     }
 
-    /**
-     * Returns the full details of a specific historical session found by title.
-     *
-     * @param userId       The ID of the user.
-     * @param sessionTitle The title (or partial title) of the session to look up.
-     * @return A formatted string with the date, exercises, sets, and comments for the matching session(s).
-     */
     @Tool("Récupère les détails complets d'une ou plusieurs séances historiques à partir de leur titre (exercices, séries, poids, commentaires).")
     public String getSessionDetails(@ToolMemoryId String userId, String sessionTitle) {
         Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
@@ -556,14 +454,6 @@ public class WorkoutTools {
         return res.toString();
     }
 
-    /**
-     * Returns the complete history of every time the user performed a specific exercise,
-     * with all sets, weights and reps from each session.
-     *
-     * @param userId      The ID of the user.
-     * @param nomExercice The name (or partial name) of the exercise.
-     * @return A formatted string listing every historical occurrence of the exercise.
-     */
     @Tool("Récupère l'historique COMPLET de toutes les fois où l'utilisateur a effectué un exercice donné, avec les détails de chaque série.")
     public String getFullExerciseHistory(@ToolMemoryId String userId, String nomExercice) {
         List<Exercice> exercises = exerciceRepository.findAllHistoricExercises(Long.parseLong(userId), nomExercice);
@@ -597,14 +487,6 @@ public class WorkoutTools {
         return res.toString();
     }
 
-    /**
-     * Finds the personal record (best estimated 1RM and heaviest set) for a specific exercise.
-     * Uses the Epley formula: 1RM = weight × (1 + reps / 30).
-     *
-     * @param userId      The ID of the user.
-     * @param nomExercice The name (or partial name) of the exercise.
-     * @return A formatted string with the best set and estimated 1RM.
-     */
     @Tool("Trouve le record personnel d'un exercice : meilleure série réalisée et 1RM estimé (formule d'Epley).")
     public String getPersonalRecord(@ToolMemoryId String userId, String nomExercice) {
         List<Exercice> exercises = exerciceRepository.findAllHistoricExercises(Long.parseLong(userId), nomExercice);
@@ -647,13 +529,6 @@ public class WorkoutTools {
                 nomExercice, bestSet.getNombreReps(), bestSet.getPoids(), dateStr, best1RM);
     }
 
-    /**
-     * Returns the technical sheet (muscles, equipment, difficulty, French description)
-     * of a standardised exercise found by name.
-     *
-     * @param nomExercice The name (or partial name) of the exercise to look up.
-     * @return A formatted technical description, or an error message if not found.
-     */
     @Tool("Récupère la fiche technique d'un exercice de la bibliothèque standardisée : muscles ciblés, équipement, difficulté, exécution (en français).")
     public String getExerciceTechnique(String nomExercice) {
         if (nomExercice == null || nomExercice.isBlank()) {
@@ -689,15 +564,6 @@ public class WorkoutTools {
         return res.toString();
     }
 
-    /**
-     * Searches the standardised exercise library by muscle, equipment and/or difficulty.
-     * All filters are optional. Returns up to 10 matching exercises.
-     *
-     * @param muscle      Optional muscle group filter (e.g. "DOS", "PECTORAUX"). Null or empty for any.
-     * @param equipement  Optional equipment filter (e.g. "POIDS_DU_CORPS", "BARRE"). Null or empty for any.
-     * @param difficulte  Optional difficulty filter ("DEBUTANT", "INTERMEDIAIRE", "AVANCE"). Null or empty for any.
-     * @return A formatted list of exercises with their muscle, equipment and difficulty.
-     */
     @Tool("Recherche dans la bibliothèque standardisée des exercices selon des critères : groupe musculaire, équipement disponible, niveau de difficulté. Tous les paramètres sont optionnels. Valeurs muscle : PECTORAUX, DOS, EPAULES, BICEPS, TRICEPS, ABDOMINAUX, QUADRICEPS, ISCHIO_JAMBIERS, FESSIERS, MOLLETS, AVANT_BRAS, TRAPEZES, LOMBAIRES, ADDUCTEURS, ABDUCTEURS, CARDIO. Valeurs équipement : POIDS_DU_CORPS, HALTERES, BARRE, MACHINE, POULIE, KETTLEBELL, ELASTIQUE, BARRE_FIXE, ANNEAUX, AUTRE. Valeurs difficulté : DEBUTANT, INTERMEDIAIRE, AVANCE.")
     public String rechercherExercices(String muscle, String equipement, String difficulte) {
         String muscleArg = (muscle != null && !muscle.isBlank()) ? muscle.trim().toUpperCase() : null;
@@ -742,16 +608,6 @@ public class WorkoutTools {
         return res.toString();
     }
 
-    /**
-     * Creates a fully-populated training programme (template) for the requesting user.
-     * Each spec's exercise name is resolved against the standardised library: if any name
-     * cannot be matched the programme is NOT created and the AI is told to retry.
-     *
-     * @param userId     The ID of the requesting user (memory id).
-     * @param titre      The title of the new programme.
-     * @param exercices  Ordered list of exercises with target sets and reps.
-     * @return A status message naming the created programme and its exercises, or an error.
-     */
     @Tool("Crée un programme d'entraînement (modèle) complet avec ses exercices et leurs séries cibles. " +
           "Chaque nom d'exercice doit correspondre à un exercice de la bibliothèque standardisée — appelle [rechercherExercices] avant " +
           "pour récupérer les noms exacts. À utiliser quand l'utilisateur demande de créer / générer / construire un programme.")
@@ -811,15 +667,6 @@ public class WorkoutTools {
                 + ". Il est disponible dans l'onglet Programmes.";
     }
 
-    /**
-     * Aggregates the user's executed sessions over the last N days by primary muscle group.
-     * Reports number of distinct sessions and total sets per muscle, plus muscles that have
-     * not been worked at all in the window.
-     *
-     * @param userId   The ID of the requesting user.
-     * @param nbJours  The look-back window in days (defaults to 7 if null or <=0).
-     * @return A formatted coverage summary, or a message if no session is found.
-     */
     @Tool("Analyse la couverture musculaire des derniers jours : par groupe musculaire, nombre de séances et de séries au total, et muscles négligés.")
     public String analyserCouvertureMusculaire(@ToolMemoryId String userId, Integer nbJours) {
         Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
@@ -884,13 +731,6 @@ public class WorkoutTools {
         return res.toString();
     }
 
-    /**
-     * Returns, for each muscle group, the date of the user's most recent executed session
-     * that included an exercise targeting it. Muscles never worked are listed at the end.
-     *
-     * @param userId The ID of the requesting user.
-     * @return A formatted summary sorted by oldest training first (most neglected on top).
-     */
     @Tool("Retourne la date du dernier entraînement par groupe musculaire, du plus ancien au plus récent.")
     public String getDernierEntrainementParMuscle(@ToolMemoryId String userId) {
         Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
@@ -943,13 +783,6 @@ public class WorkoutTools {
         return res.toString();
     }
 
-    /**
-     * Returns the user's overall performance tier plus the individual tier for each tracked
-     * exercise type (squat, bench, deadlift, pull-up, etc.) based on PerformanceService.
-     *
-     * @param userId The ID of the requesting user.
-     * @return A formatted summary with global tier and per-exercise breakdown.
-     */
     @Tool("Récupère le palier de performance (Éphèbe → Olympien) : palier global et par exercice de référence (squat, développé couché, soulevé de terre, tractions...).")
     public String getPerformanceTier(@ToolMemoryId String userId) {
         Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
@@ -984,11 +817,6 @@ public class WorkoutTools {
         return res.toString();
     }
 
-    /**
-     * Renvoie le profil complet de l'utilisateur (âge, sexe, niveau, objectif, matériel,
-     * blessures, préférences) tel qu'il a été renseigné via l'onboarding ou la page Profil.
-     * Chiron doit l'appeler au début d'un échange technique pour contextualiser ses réponses.
-     */
     @Tool("Récupère le profil sportif complet : âge, sexe, taille, poids, niveau d'expérience, objectif principal, fréquence visée, matériel disponible, blessures, préférences.")
     public String getUserProfileComplet(@ToolMemoryId String userId) {
         Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
@@ -1036,12 +864,6 @@ public class WorkoutTools {
         return d.name().toLowerCase();
     }
 
-    /**
-     * Utility method to fetch the current unfinished active session for the given user.
-     *
-     * @param userId The ID of the user as a string.
-     * @return The active Seance entity, or null if none exists.
-     */
     private Seance getActiveSeance(String userId) {
         return seanceRepository.findFirstByUtilisateurIdAndEndTimeIsNullOrderByStartTimeDesc(Long.parseLong(userId))
                 .orElse(null);

@@ -17,12 +17,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/**
- * REST controller for handling chat interactions with the AI coach.
- * Exposes endpoints for sending messages to the AI and explicitly ending a workout session.
- * Chaque échange est rattaché à une conversation persistée (la mémoire IA est indexée par
- * son id) ; le quota Gemini est appliqué avant chaque appel.
- */
 @RestController
 @RequestMapping("/api")
 public class ChatController {
@@ -50,15 +44,11 @@ public class ChatController {
         this.aiUsageService = aiUsageService;
     }
 
-    /**
-     * Data Transfer Object for chat requests.
-     * {@code conversationId} est null pour démarrer une nouvelle conversation.
-     */
     public static class ChatRequest {
         private String username;
         private String message;
         private Long conversationId;
-        private String language; // 'fr' | 'en' ; null => fr
+        private String language;
 
         public String getUsername() { return username; }
         public void setUsername(String username) { this.username = username; }
@@ -70,7 +60,6 @@ public class ChatController {
         public void setLanguage(String language) { this.language = language; }
     }
 
-    /** Directive de langue de réponse injectée en tête du contexte envoyé au modèle. */
     private static String languageDirective(String language) {
         boolean en = "en".equalsIgnoreCase(language);
         return en
@@ -78,13 +67,6 @@ public class ChatController {
                 : "LANGUE DE RÉPONSE : réponds exclusivement en français.\n";
     }
 
-    /**
-     * Endpoint to send a standard chat message to the AI coach.
-     * Injects systemic context regarding the user's role and identity before passing the message to the model.
-     *
-     * @param request The chat request containing the user's message, username and (optional) conversation id.
-     * @return The AI's generated response and the conversation id it belongs to.
-     */
     @PostMapping("/chat")
     public ChatResponse chat(@RequestBody ChatRequest request) {
         Utilisateur user = utilisateurRepository.findByUsername(request.getUsername())
@@ -126,13 +108,6 @@ public class ChatController {
         return sb.toString();
     }
 
-    /**
-     * Endpoint to explicitly signal the AI to end the current workout session.
-     * Sends a system command to the AI instructing it to summarize the workout and persist the end state.
-     *
-     * @param request The request containing the username and (optional) conversation id.
-     * @return The AI's generated closing response and the conversation id.
-     */
     @PostMapping("/end-session")
     public ChatResponse endSession(@RequestBody ChatRequest request) {
         Utilisateur user = utilisateurRepository.findByUsername(request.getUsername())

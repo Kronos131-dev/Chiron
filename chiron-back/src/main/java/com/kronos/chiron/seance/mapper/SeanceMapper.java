@@ -13,21 +13,9 @@ import org.springframework.stereotype.Component;
 
 import java.util.stream.Collectors;
 
-/**
- * Mapper component responsible for converting entity objects related to workout sessions
- * (Seance, Exercice, Serie) into their corresponding Data Transfer Objects (DTOs).
- * Facilitates the separation of persistence layer models from API response structures.
- */
 @Component
 public class SeanceMapper {
 
-    /**
-     * Converts a Seance entity to a SeanceDto.
-     * Recursively maps all associated exercises and conditionally maps the user profile.
-     *
-     * @param seance The Seance entity to convert.
-     * @return The corresponding SeanceDto, or null if the input is null.
-     */
     public SeanceDto toDto(Seance seance) {
         if (seance == null) return null;
 
@@ -55,13 +43,6 @@ public class SeanceMapper {
         );
     }
 
-    /**
-     * Converts an Exercice entity to an ExerciceDto.
-     * Recursively maps all associated sets (series).
-     *
-     * @param exercice The Exercice entity to convert.
-     * @return The corresponding ExerciceDto, or null if the input is null.
-     */
     public ExerciceDto toExerciceDto(Exercice exercice) {
         if (exercice == null) return null;
 
@@ -87,12 +68,6 @@ public class SeanceMapper {
         );
     }
 
-    /**
-     * Converts a Serie entity to a SerieDto.
-     *
-     * @param serie The Serie entity to convert.
-     * @return The corresponding SerieDto, or null if the input is null.
-     */
     public SerieDto toSerieDto(Serie serie) {
         if (serie == null) return null;
 
@@ -113,12 +88,6 @@ public class SeanceMapper {
         );
     }
 
-    /**
-     * Converts a Degressif entity to a DegressifDto.
-     *
-     * @param degressif The Degressif entity to convert.
-     * @return The corresponding DegressifDto, or null if the input is null.
-     */
     public DegressifDto toDegressifDto(Degressif degressif) {
         if (degressif == null) return null;
 

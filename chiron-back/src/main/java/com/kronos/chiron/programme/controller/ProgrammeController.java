@@ -11,10 +11,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * REST controller for managing workout programs (templates).
- * Provides endpoints for creating, retrieving, copying, and deleting programs.
- */
 @RestController
 @RequestMapping("/api/programmes")
 @RequiredArgsConstructor
@@ -23,12 +19,6 @@ public class ProgrammeController {
     private final ProgrammeService programmeService;
     private final SeanceMapper seanceMapper;
 
-    /**
-     * Retrieves all workout programs belonging to a specific user.
-     *
-     * @param username The username of the user.
-     * @return A ResponseEntity containing a list of SeanceDto representing the user's programs.
-     */
     @GetMapping
     public ResponseEntity<List<SeanceDto>> getProgrammes(@RequestParam String username) {
         List<Seance> programmes = programmeService.getProgrammes(username);
@@ -36,13 +26,6 @@ public class ProgrammeController {
         return ResponseEntity.ok(dtos);
     }
 
-    /**
-     * Creates or updates a workout program for the specified user.
-     *
-     * @param username  The username of the requester.
-     * @param seanceDto The DTO containing the program details.
-     * @return A ResponseEntity confirming the save action.
-     */
     @PostMapping
     public ResponseEntity<?> creerProgramme(@RequestParam String username,
                                             @RequestParam(required = false) String forUsername,
@@ -56,13 +39,6 @@ public class ProgrammeController {
         }
     }
 
-    /**
-     * Retrieves a specific workout program by its ID.
-     *
-     * @param id       The ID of the program.
-     * @param username The username of the requesting user (for privacy checks).
-     * @return A ResponseEntity containing the requested SeanceDto.
-     */
     @GetMapping("/{id}")
     public ResponseEntity<?> getProgrammeById(@PathVariable Long id, @RequestParam String username) {
         try {
@@ -73,13 +49,6 @@ public class ProgrammeController {
         }
     }
 
-    /**
-     * Copies a specific public or authorized program into the target user's profile.
-     *
-     * @param id             The ID of the source program.
-     * @param targetUsername The username of the user receiving the copy.
-     * @return A ResponseEntity confirming the copy action.
-     */
     @PostMapping("/{id}/copy")
     public ResponseEntity<?> copyProgrammeToMyProfile(@PathVariable Long id, @RequestParam String targetUsername) {
         try {
@@ -91,13 +60,6 @@ public class ProgrammeController {
         }
     }
 
-    /**
-     * Persists a new manual display order for the user's programmes (drag-and-drop reorder).
-     *
-     * @param username   The username of the requester.
-     * @param orderedIds The programme IDs in the desired display order (first ID → top).
-     * @return A standard empty successful ResponseEntity, or an error if unauthorized.
-     */
     @PutMapping("/order")
     public ResponseEntity<?> reorderProgrammes(@RequestParam String username, @RequestBody List<Long> orderedIds) {
         try {
@@ -108,13 +70,6 @@ public class ProgrammeController {
         }
     }
 
-    /**
-     * Deletes a specific workout program.
-     *
-     * @param id       The ID of the program to delete.
-     * @param username The username of the requester.
-     * @return A standard empty successful ResponseEntity, or an error if unauthorized.
-     */
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteProgramme(@PathVariable Long id, @RequestParam String username) {
         try {

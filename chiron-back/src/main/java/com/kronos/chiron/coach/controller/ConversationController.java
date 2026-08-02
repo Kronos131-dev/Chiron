@@ -15,11 +15,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-/**
- * Gestion de l'historique des conversations du coach Chiron : liste, rechargement, suppression.
- * L'utilisateur est dérivé du principal JWT (jamais du corps de requête) et l'appartenance des
- * conversations est systématiquement vérifiée.
- */
 @RestController
 @RequestMapping("/api/conversations")
 @RequiredArgsConstructor
@@ -29,7 +24,6 @@ public class ConversationController {
     private final ConversationMemoryManager memoryManager;
     private final UtilisateurRepository utilisateurRepository;
 
-    /** Liste les conversations de l'utilisateur, de la plus récente à la plus ancienne. */
     @GetMapping
     public List<ConversationSummaryDto> list(@AuthenticationPrincipal UserDetails userDetails) {
         Utilisateur user = currentUser(userDetails);
@@ -38,7 +32,6 @@ public class ConversationController {
                 .toList();
     }
 
-    /** Messages d'une conversation (rechargement). */
     @GetMapping("/{id}/messages")
     public List<ConversationMessageDto> messages(@AuthenticationPrincipal UserDetails userDetails,
                                                  @PathVariable Long id) {
@@ -48,7 +41,6 @@ public class ConversationController {
                 .toList();
     }
 
-    /** Supprime une conversation et évince sa mémoire IA. */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@AuthenticationPrincipal UserDetails userDetails,
                                        @PathVariable Long id) {

@@ -27,10 +27,8 @@ public class ExerciceDefinitionService {
         MuscleGroup muscleEnum = muscle != null ? MuscleGroup.valueOf(muscle) : null;
         TypeEquipement equipementEnum = equipement != null ? TypeEquipement.valueOf(equipement) : null;
         NiveauDifficulte difficulteEnum = difficulte != null ? NiveauDifficulte.valueOf(difficulte) : null;
-        // Pattern pré-calculé pour éviter CONCAT dans le JPQL (cause lower(bytea) sur Hibernate 6 + PG)
         String qTrimmed = (q != null && !q.isBlank()) ? q.trim().toLowerCase() : null;
         String qPattern = qTrimmed != null ? "%" + qTrimmed + "%" : null;
-        // "%" matches everything → all rows rank 0 when no query, preserving usageCount order
         String qPrefix = qTrimmed != null ? qTrimmed + "%" : "%";
 
         return repository.search(qPattern, qPrefix, muscleEnum, equipementEnum, difficulteEnum)
@@ -61,7 +59,6 @@ public class ExerciceDefinitionService {
         return new ByteArrayResource(data);
     }
 
-    // Falls back to relative URL when no request context (unit tests).
     private String buildBaseUrl() {
         try {
             return ServletUriComponentsBuilder.fromCurrentContextPath().toUriString();

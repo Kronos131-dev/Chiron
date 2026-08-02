@@ -38,9 +38,6 @@ public class MemoryNoteService {
         return repository.findByUtilisateurAndTypeOrderByCreatedAtDesc(user, type);
     }
 
-    /**
-     * Suppression d'une note ; renvoie true si supprimée, false si introuvable ou pas la propriété de l'user.
-     */
     @Transactional
     public boolean delete(Utilisateur user, Long id) {
         Optional<ChironMemoryNote> note = repository.findByIdAndUtilisateur(id, user);

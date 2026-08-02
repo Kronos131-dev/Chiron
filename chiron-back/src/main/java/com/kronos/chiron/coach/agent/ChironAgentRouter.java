@@ -6,24 +6,15 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Locale;
 
-/**
- * Aiguille le chat vers l'agent Mistral ou Gemini selon la préférence de l'utilisateur, avec une
- * stratégie de résilience : réessais avec backoff court sur erreurs transitoires (Gemini répond
- * souvent {@code 503 UNAVAILABLE} / « overloaded »), puis repli sur Mistral. Avant chaque réessai
- * ou repli, la mémoire de la conversation est réinitialisée depuis la base pour éviter qu'un appel
- * interrompu laisse une requête d'outil orpheline qui ferait échouer les tentatives suivantes.
- */
 public class ChironAgentRouter {
 
     private static final Logger log = LoggerFactory.getLogger(ChironAgentRouter.class);
 
-    /** Nombre de tentatives sur l'agent demandé avant de basculer sur le repli. */
     private static final int MAX_ATTEMPTS = 2;
-    /** Backoff de base entre deux tentatives (doublé à chaque essai). */
     private static final long BASE_BACKOFF_MS = 400L;
 
     private final ChironAgent mistral;
-    private final ChironAgent gemini; // nullable si GEMINI_API_KEY absente
+    private final ChironAgent gemini;
     private final ConversationMemoryManager memoryManager;
 
     public ChironAgentRouter(ChironAgent mistral, ChironAgent gemini, ConversationMemoryManager memoryManager) {
@@ -32,7 +23,6 @@ public class ChironAgentRouter {
         this.memoryManager = memoryManager;
     }
 
-    /** Agent correspondant au fournisseur demandé, avec repli sur Mistral si Gemini indisponible. */
     public ChironAgent forProvider(AiProvider provider) {
         if (provider == AiProvider.GEMINI && gemini != null) {
             return gemini;
@@ -40,10 +30,6 @@ public class ChironAgentRouter {
         return mistral;
     }
 
-    /**
-     * Exécute le chat avec réessais sur erreurs transitoires puis repli sur Mistral. Ne propage
-     * une {@link AiUnavailableException} que si tout a échoué.
-     */
     public String chatWithFallback(AiProvider provider, String memoryId, String message) {
         ChironAgent agent = forProvider(provider);
         RuntimeException last = null;
@@ -55,7 +41,7 @@ public class ChironAgentRouter {
                 last = e;
                 if (attempt < MAX_ATTEMPTS && isTransient(e)) {
                     log.warn("Agent {} : erreur transitoire (tentative {}/{}), réessai", provider, attempt, MAX_ATTEMPTS, e);
-                    memoryManager.reset(memoryId); // repart d'un état propre
+                    memoryManager.reset(memoryId);
                     sleep(BASE_BACKOFF_MS * attempt);
                 } else {
                     break;
@@ -63,7 +49,6 @@ public class ChironAgentRouter {
             }
         }
 
-        // Repli sur Mistral si l'agent en échec n'était pas déjà Mistral.
         if (agent != mistral) {
             log.warn("Agent {} en échec, repli sur Mistral", provider, last);
             memoryManager.reset(memoryId);
@@ -77,7 +62,6 @@ public class ChironAgentRouter {
         throw new AiUnavailableException("Le coach IA est temporairement indisponible.", last);
     }
 
-    /** Erreur jugée transitoire (surcharge, indisponibilité, timeout) → mérite un réessai. */
     private boolean isTransient(Throwable e) {
         for (Throwable t = e; t != null; t = t.getCause()) {
             String msg = t.getMessage();

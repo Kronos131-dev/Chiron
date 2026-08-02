@@ -16,11 +16,6 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.http.HttpMethod;
 import java.util.List;
 
-/**
- * Main security configuration class for the application.
- * It enables web security and defines the security filter chain, CORS settings,
- * and which endpoints are public versus protected.
- */
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -29,13 +24,6 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final AuthenticationProvider authenticationProvider;
 
-    /**
-     * Configures the Cross-Origin Resource Sharing (CORS) settings for the application.
-     * This bean defines which origins, methods, and headers are allowed, enabling
-     * the frontend application to communicate with the backend.
-     *
-     * @return A {@link CorsConfigurationSource} with the defined CORS rules.
-     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
@@ -44,11 +32,9 @@ public class SecurityConfig {
                 "http://localhost:4200",
                 "http://localhost:9090",
                 "http://46.224.227.209",
-                // Domaine perso (Hostinger).
                 "https://chiron-sanctuaire.fr",
                 "https://www.chiron-sanctuaire.fr",
                 "https://olympus.chiron-sanctuaire.fr",
-                // Origines des WebViews Capacitor (apps mobiles natives)
                 "https://localhost",
                 "http://localhost",
                 "capacitor://localhost"
@@ -63,26 +49,14 @@ public class SecurityConfig {
         return source;
     }
 
-    /**
-     * Defines the main security filter chain that protects application endpoints.
-     * It configures request authorization, session management, and integrates the custom JWT filter.
-     *
-     * @param http The {@link HttpSecurity} object to configure.
-     * @return The configured {@link SecurityFilterChain}.
-     * @throws Exception If an error occurs during configuration.
-     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        // Explicitly permit CORS preflight requests
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        // Define public endpoints that do not require authentication
                         .requestMatchers(
-                                // Spring forwarde toute erreur (404/500/…) vers /error : sans cette
-                                // règle, la moindre erreur applicative est masquée par un 403.
                                 "/error",
                                 "/api/auth/**",
                                 "/api/images/**",
@@ -93,19 +67,14 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/swagger-ui.html"
                         ).permitAll()
-                        // Retour OAuth Fitbit : le navigateur y est redirigé sans JWT.
                         .requestMatchers(HttpMethod.GET, "/api/fitbit/callback").permitAll()
-                        // Import exercice dataset — admin seulement
                         .requestMatchers(HttpMethod.POST, "/api/exercices/import").hasRole("ADMIN")
-                        // All other requests must be authenticated
                         .anyRequest().authenticated()
                 )
-                // Configure session management to be stateless, as we are using JWTs
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authenticationProvider(authenticationProvider)
-                // Add the custom JWT filter before the standard username/password authentication filter
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

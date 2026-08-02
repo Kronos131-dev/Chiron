@@ -2,11 +2,6 @@ package com.kronos.chiron.seance.model;
 
 import lombok.Getter;
 
-/**
- * Thresholds are minimum ratios (1RM / bodyweight) to reach each tier,
- * indexed from Argonaute (0) to Olympien (6).
- * For TRACTIONS and DIPS, ratio = (bodyweight + extra_weight_1RM) / bodyweight.
- */
 @Getter
 public enum ExerciseType {
 
@@ -37,9 +32,7 @@ public enum ExerciseType {
     );
 
     private final String nom;
-    /** True if bodyweight is added to compute total load (pullups, dips). */
     private final boolean bodyweightExercise;
-    /** Min ratio to reach Argonaute[0] through Olympien[6]. */
     private final double[] thresholds;
 
     ExerciseType(String nom, boolean bodyweightExercise, double[] thresholds) {

@@ -17,12 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Comparator;
 import java.util.List;
 
-/**
- * Importe un export CSV Boditrax pour un utilisateur : enregistre un
- * {@link com.kronos.chiron.visbody.BodyCompositionRecord} par scan (réutilise la
- * persistance idempotente de {@link VisbodyImportService}) et complète le profil
- * (taille / sexe / date de naissance) s'il est vide.
- */
 @Service
 @RequiredArgsConstructor
 public class BoditraxImportService {
@@ -50,8 +44,6 @@ public class BoditraxImportService {
         }
         scans.sort(Comparator.comparing(VisbodyReport::getMesureLe));
 
-        // Complète le profil seulement s'il est vide (non destructif) : utile pour
-        // personnaliser les bornes des jauges de composition.
         boolean profileChanged = false;
         if (user.getTailleCm() == null && data.tailleCm() != null) {
             user.setTailleCm(data.tailleCm());
@@ -77,7 +69,7 @@ public class BoditraxImportService {
             switch (res.outcome()) {
                 case IMPORTED -> imported++;
                 case DUPLICATE -> duplicates++;
-                default -> { /* ignoré */ }
+                default -> { }
             }
         }
 

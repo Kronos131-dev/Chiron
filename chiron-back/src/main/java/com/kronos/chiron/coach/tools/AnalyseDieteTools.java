@@ -20,11 +20,6 @@ import java.time.Period;
 import java.util.List;
 import java.util.Locale;
 
-/**
- * Outils LangChain4j donnant à Chiron le contexte nécessaire à une analyse diététique
- * approfondie : profil personnel (sexe, âge, taille, poids, objectif), composition
- * corporelle (scans Visbody) et charge d'entraînement récente.
- */
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -105,14 +100,11 @@ public class AnalyseDieteTools {
         return res.toString();
     }
 
-    // --- Helpers ---
-
     private Utilisateur loadUser(String userId) {
         return utilisateurRepository.findById(Long.parseLong(userId))
                 .orElseThrow(() -> notFound("Utilisateur introuvable"));
     }
 
-    /** Formate une valeur (avec unité) et, si une valeur précédente est fournie, la tendance. */
     private String metric(Double value, String unit, Double previous) {
         if (value == null) {
             return "non mesuré";

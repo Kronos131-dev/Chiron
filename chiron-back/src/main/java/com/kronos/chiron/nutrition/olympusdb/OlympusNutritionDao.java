@@ -16,13 +16,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Accès direct, en lecture seule, à la base Olympus pour les données nutrition / poids.
- *
- * <p>Toute erreur d'accès (Olympus injoignable, lien révoqué côté Olympus) est avalée
- * et renvoie un résultat vide : la page Statistiques fonctionne en mode dégradé plutôt
- * que de planter.</p>
- */
 @Repository
 @Slf4j
 public class OlympusNutritionDao {
@@ -33,10 +26,6 @@ public class OlympusNutritionDao {
         this.jdbc = jdbc;
     }
 
-    /**
-     * Résout le token de liaison permanent (stocké chiffré côté Chiron) en identifiant
-     * d'utilisateur Olympus, via la table {@code integration_links}.
-     */
     public Optional<Long> resolveUserId(String linkToken) {
         try {
             List<Long> ids = jdbc.queryForList(
@@ -50,10 +39,6 @@ public class OlympusNutritionDao {
         }
     }
 
-    /**
-     * Série journalière des apports nutritionnels (totaux déjà agrégés dans {@code daily_logs}).
-     * L'objectif calorique du jour est le dernier objectif connu ({@code user_metrics.calorie_goal}).
-     */
     public List<NutritionPointDto> dailyNutrition(Long userId, LocalDate start, LocalDate end) {
         String sql = """
                 SELECT dl.target_date,
@@ -83,7 +68,6 @@ public class OlympusNutritionDao {
         }
     }
 
-    /** Historique des mesures de poids de corps ({@code user_metrics}). */
     public List<BodyweightPointDto> weightHistory(Long userId, LocalDate start, LocalDate end) {
         String sql = """
                 SELECT recorded_date, weight_kg FROM user_metrics

@@ -33,11 +33,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 
-/**
- * Agrège les données d'entraînement (séances réelles) et, via Olympus, la nutrition
- * et le poids de corps, pour alimenter la page Statistiques. Toute l'agrégation est
- * faite côté serveur pour garder un payload léger et de bonnes perfs sur mobile.
- */
 @Service
 @RequiredArgsConstructor
 public class StatsService {
@@ -51,8 +46,6 @@ public class StatsService {
     private final OlympusNutritionDao olympusDao;
     private final BodyCompositionRecordRepository bodyCompositionRepo;
     private final UtilisateurRepository utilisateurRepository;
-
-    // ---------------------------------------------------------------- Overview
 
     @Transactional(readOnly = true)
     public StatsOverviewDto getOverview(String username) {
@@ -96,8 +89,6 @@ public class StatsService {
                 dureeMoyenneMin);
     }
 
-    // ------------------------------------------------------------------ Volume
-
     @Transactional(readOnly = true)
     public List<WeeklyVolumePointDto> getWeeklyVolume(String username, int weeks) {
         int n = Math.min(Math.max(weeks, 1), 52);
@@ -131,8 +122,6 @@ public class StatsService {
         return result;
     }
 
-    // ----------------------------------------------------------------- Muscles
-
     @Transactional(readOnly = true)
     public MuscleStatsDto getMuscleStats(String username, int days) {
         int n = Math.min(Math.max(days, 1), 365);
@@ -140,7 +129,7 @@ public class StatsService {
         List<Seance> sessions = realSessions(username);
         TonnagePrefs tp = tonnagePrefs(username);
 
-        Map<MuscleGroup, double[]> tonnageAndSeries = new EnumMap<>(MuscleGroup.class); // [tonnage, nbSeries]
+        Map<MuscleGroup, double[]> tonnageAndSeries = new EnumMap<>(MuscleGroup.class);
         Map<MuscleGroup, Set<Long>> seancesByMuscle = new EnumMap<>(MuscleGroup.class);
 
         for (Seance s : sessions) {
@@ -174,12 +163,9 @@ public class StatsService {
         return new MuscleStatsDto(muscles, negliges);
     }
 
-    // --------------------------------------------------------- Exercise lists
-
     @Transactional(readOnly = true)
     public List<ExerciseListItemDto> getExerciseList(String username) {
         List<Seance> sessions = realSessions(username);
-        // clé = nom normalisé ; valeur = [nom affiché, set de séances, dernière date]
         Map<String, ExerciseAcc> byName = new LinkedHashMap<>();
 
         for (Seance s : sessions) {
@@ -210,7 +196,6 @@ public class StatsService {
         List<Seance> sessions = realSessions(username);
         TonnagePrefs tp = tonnagePrefs(username);
 
-        // sessions est trié décroissant : on parcourt en ordre chronologique croissant.
         List<Seance> chronological = new ArrayList<>(sessions);
         chronological.sort(Comparator.comparing(Seance::getStartTime,
                 Comparator.nullsLast(Comparator.naturalOrder())));
@@ -236,8 +221,6 @@ public class StatsService {
         }
         return points;
     }
-
-    // --------------------------------------------------- Nutrition / poids (Olympus)
 
     @Transactional(readOnly = true)
     public NutritionStatsDto getNutrition(String username, int days) {
@@ -275,8 +258,6 @@ public class StatsService {
         LocalDate start = end.minusDays(n - 1L);
         return new BodyweightStatsDto(true, olympusDao.weightHistory(userId.get(), start, end));
     }
-
-    // ------------------------------------------------- Composition corporelle (Visbody)
 
     @Transactional(readOnly = true)
     public BodyCompositionStatsDto getBodyComposition(String username, int days) {
@@ -316,26 +297,18 @@ public class StatsService {
         return olympusDao.resolveUserId(token);
     }
 
-    // ----------------------------------------------------------------- Helpers
-
     private List<Seance> realSessions(String username) {
         return seanceRepository.findByUtilisateurUsernameAndIsModeleTrueOrderByStartTimeDesc(username);
     }
 
-    /** Préférences de tonnage d'un utilisateur (conventions de saisie du poids). */
     private record TonnagePrefs(boolean halteresX2, boolean machineX2) {}
 
-    /** Charge les préférences de tonnage de l'utilisateur (défauts : haltères ×2, machine ×1). */
     private TonnagePrefs tonnagePrefs(String username) {
         return utilisateurRepository.findByUsername(username)
                 .map(u -> new TonnagePrefs(u.isPoidsHaltereParImplement(), u.isPoidsMachineParCote()))
                 .orElse(new TonnagePrefs(true, false));
     }
 
-    /**
-     * Facteur ×1/×2 du tonnage d'un exercice, sans cumul (max ×2) :
-     * unilatéral, ou haltères/machine selon les préférences de saisie de l'utilisateur.
-     */
     private int tonnageFactor(Exercice e, TonnagePrefs p) {
         TypeEquipement eq = (e.getDefinition() != null) ? e.getDefinition().getTypeEquipement() : null;
         boolean doubler = e.isUnilateral()
@@ -367,14 +340,12 @@ public class StatsService {
         return c;
     }
 
-    /** Durée d'une séance en minutes, ou null si début/fin manquants ou incohérents. */
     private Double sessionDurationMin(Seance s) {
         if (s.getStartTime() == null || s.getEndTime() == null) return null;
         long min = java.time.Duration.between(s.getStartTime(), s.getEndTime()).toMinutes();
         return min > 0 ? (double) min : null;
     }
 
-    /** 1RM estimé (Epley), reps bornées à [1,36] pour éviter une division par zéro. */
     private double epley(double poids, int reps) {
         int r = Math.min(Math.max(reps, 1), 36);
         return poids * (36.0 / (37 - r));
@@ -406,7 +377,6 @@ public class StatsService {
         return v == null ? 0.0 : v;
     }
 
-    /** Accumulateur interne pour la liste des exercices. */
     private static final class ExerciseAcc {
         final String nom;
         final Set<Long> seances = new java.util.HashSet<>();

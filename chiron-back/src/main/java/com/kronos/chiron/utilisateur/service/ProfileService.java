@@ -32,10 +32,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-/**
- * Service responsible for managing user profiles, visibility, ranks, and coaching relationships.
- * Also handles profile image uploads and aggregates session statistics.
- */
 @Service
 @RequiredArgsConstructor
 public class ProfileService {
@@ -47,14 +43,6 @@ public class ProfileService {
     @Value("${chiron.uploads-dir:./uploads/images}")
     private String uploadsDir;
 
-    /**
-     * Retrieves the detailed profile of a specified user.
-     * Enforces privacy checks and establishes coaching relationships relative to the requesting user.
-     *
-     * @param username        The username of the profile to retrieve.
-     * @param requestUsername The username of the user making the request.
-     * @return A ProfileDto containing user data, statistics, and workout summaries.
-     */
     @Transactional
     public ProfileDto getProfile(String username, String requestUsername) {
         Utilisateur user = utilisateurRepository.findByUsername(username)
@@ -106,14 +94,6 @@ public class ProfileService {
                 .build();
     }
 
-    /**
-     * Searches for public user profiles matching a specific query string.
-     * Admins and assigned coaches bypass visibility restrictions.
-     *
-     * @param query           The partial username to search for.
-     * @param requestUsername The username of the user making the request.
-     * @return A list of matching ProfileDto summaries.
-     */
     @Transactional(readOnly = true)
     public List<ProfileDto> searchProfiles(String query, String requestUsername) {
         Utilisateur requestUser = utilisateurRepository.findByUsername(requestUsername)
@@ -136,13 +116,6 @@ public class ProfileService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Retrieves all accessible user profiles in the system.
-     * Admins and assigned coaches bypass visibility restrictions.
-     *
-     * @param requestUsername The username of the user making the request.
-     * @return A list of ProfileDto summaries.
-     */
     @Transactional(readOnly = true)
     public List<ProfileDto> getAllProfiles(String requestUsername) {
          Utilisateur requestUser = utilisateurRepository.findByUsername(requestUsername)
@@ -170,12 +143,6 @@ public class ProfileService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Updates the public visibility status of a user's profile.
-     *
-     * @param username The target username.
-     * @param isPublic True to make the profile public, false to make it private.
-     */
     @Transactional
     public void updateVisibility(String username, boolean isPublic) {
         Utilisateur user = utilisateurRepository.findByUsername(username)
@@ -184,14 +151,6 @@ public class ProfileService {
         utilisateurRepository.save(user);
     }
 
-    /**
-     * Uploads and updates the profile avatar image for a specific user.
-     * Saves the image to the local filesystem.
-     *
-     * @param username The target username.
-     * @param file     The multipart file containing the new image.
-     * @return The generated filename of the newly saved image.
-     */
     @Transactional
     public String updateIcon(String username, MultipartFile file) {
         Utilisateur user = utilisateurRepository.findByUsername(username)
@@ -223,13 +182,6 @@ public class ProfileService {
         }
     }
 
-    /**
-     * Designates another user as a coach for the requesting user.
-     * Allows the coach to view the requester's private profile and edit their programs.
-     *
-     * @param username      The requesting user's username.
-     * @param coachUsername The username of the user to be added as a coach.
-     */
     @Transactional
     public void addCoach(String username, String coachUsername) {
         Utilisateur user = utilisateurRepository.findByUsername(username)
@@ -241,12 +193,6 @@ public class ProfileService {
         utilisateurRepository.save(user);
     }
 
-    /**
-     * Removes coaching privileges from a previously designated coach.
-     *
-     * @param username      The requesting user's username.
-     * @param coachUsername The username of the coach to be removed.
-     */
     @Transactional
     public void removeCoach(String username, String coachUsername) {
         Utilisateur user = utilisateurRepository.findByUsername(username)
@@ -258,13 +204,6 @@ public class ProfileService {
         utilisateurRepository.save(user);
     }
 
-    /**
-     * Deletes a user profile and all associated data.
-     * Validates that the requesting user is either the profile owner or an administrator.
-     *
-     * @param username        The username of the profile to delete.
-     * @param requestUsername The username of the user making the request.
-     */
     @Transactional
     public void deleteProfile(String username, String requestUsername) {
         Utilisateur userToDelete = utilisateurRepository.findByUsername(username)
@@ -279,7 +218,6 @@ public class ProfileService {
             throw forbidden("Access denied. You can only delete your own profile.");
         }
 
-        // Handle bidirectional relationship cleanup before deletion
         for (Utilisateur coach : userToDelete.getCoaches()) {
             coach.getCoachedUsers().remove(userToDelete);
         }
@@ -292,24 +230,12 @@ public class ProfileService {
         utilisateurRepository.delete(userToDelete);
     }
 
-    /**
-     * Calculates the total number of sets performed by the user over the last 30 days.
-     *
-     * @param userId The ID of the target user.
-     * @return The sum of all series recorded in the past month.
-     */
     private int calculateAverageSeriesPerMonth(Long userId) {
         LocalDateTime oneMonthAgo = LocalDateTime.now().minus(1, ChronoUnit.MONTHS);
         Integer count = seanceRepository.countTotalSeriesForUserSince(userId, oneMonthAgo);
         return count != null ? count : 0;
     }
 
-    /**
-     * Determines the user's platform rank based on their monthly activity volume.
-     *
-     * @param averageSeries The total number of sets performed in the last month.
-     * @return A string representing the calculated rank (e.g., "Olympien", "Spartiate").
-     */
     private String calculateRank(int averageSeries) {
         if (averageSeries >= 200) return "Olympien";
         if (averageSeries >= 150) return "Héros";
@@ -318,12 +244,6 @@ public class ProfileService {
         return "Citoyen";
     }
 
-    /**
-     * Maps a full Seance entity to a lightweight SeanceSummaryDto.
-     *
-     * @param seance The Seance entity to map.
-     * @return The mapped summary DTO.
-     */
     private SeanceSummaryDto toSeanceSummaryDto(Seance seance) {
         int totalSeries = seance.getExercices().stream()
                 .mapToInt(exo -> exo.getSeries().size())

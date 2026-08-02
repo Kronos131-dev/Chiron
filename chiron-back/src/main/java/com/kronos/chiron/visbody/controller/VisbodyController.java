@@ -16,11 +16,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.List;
 
-/**
- * Endpoints Visbody : upload manuel d'un rapport PDF (test / fallback) et liste
- * des scans de l'utilisateur courant. L'ingestion principale se fait par email
- * (voir {@code VisbodyMailService}).
- */
 @RestController
 @RequestMapping("/api/visbody")
 @RequiredArgsConstructor

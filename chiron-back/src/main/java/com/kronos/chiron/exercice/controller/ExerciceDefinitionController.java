@@ -46,7 +46,6 @@ public class ExerciceDefinitionController {
                 .body(image);
     }
 
-    // Admin seulement — protégé dans SecurityConfig
     @PostMapping(value = "/import", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Map<String, Object>> importDataset(
             @RequestParam("file") MultipartFile file,

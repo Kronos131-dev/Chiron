@@ -15,11 +15,6 @@ import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 
-/**
- * Outils donnant à Chiron la lecture/écriture de l'état journalier de l'utilisateur
- * (sommeil, fatigue, courbatures, stress, énergie) et la capacité à recommander
- * un type de séance adapté à l'état actuel.
- */
 @Component
 @RequiredArgsConstructor
 public class RecoveryTools {
@@ -91,7 +86,6 @@ public class RecoveryTools {
 
         EtatJournalier today = etats.get(0);
 
-        // Signaux d'alerte forte
         if (today.getFatigue() != null && today.getFatigue() >= 5) {
             return "Recommandation : REPOS ou mobilité légère. Justification : fatigue déclarée à 5/5 aujourd'hui.";
         }
@@ -102,7 +96,6 @@ public class RecoveryTools {
             return "Recommandation : séance LÉGÈRE ciblant d'autres groupes musculaires, ou mobilité. Justification : courbatures importantes (" + today.getCourbatures() + "/5).";
         }
 
-        // Moyennes sur les 3 jours
         double avgFatigue = avg(etats, EtatJournalier::getFatigue);
         double avgSommeil = avg(etats, e -> e.getSommeilHeures() != null ? (int) Math.round(e.getSommeilHeures()) : null);
         double avgEnergie = avg(etats, EtatJournalier::getEnergie);

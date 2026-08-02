@@ -32,11 +32,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-/**
- * Service responsible for managing workout templates and programs.
- * Handles creation, modification, deletion, and copying of programs while enforcing
- * privacy and coach authorization rules.
- */
 @Service
 @RequiredArgsConstructor
 public class ProgrammeService {
@@ -48,29 +43,11 @@ public class ProgrammeService {
     private final ExerciceDefinitionRepository exerciceDefinitionRepository;
     private final CardioCalorieService cardioCalorieService;
 
-    /**
-     * Saves a new workout program or updates an existing one based on the provided DTO.
-     * Enforces ownership and coach modification rights.
-     *
-     * @param username  The username of the requester performing the save action.
-     * @param seanceDto The data transfer object containing program details.
-     * @return The persisted Seance entity.
-     */
     @Transactional
     public Seance sauvegarderProgramme(String username, SeanceDto seanceDto) {
         return sauvegarderProgramme(username, seanceDto, null);
     }
 
-    /**
-     * Save a programme, optionally on behalf of another user (coach flow).
-     *
-     * @param username       The requester (authenticated user making the call).
-     * @param seanceDto      The programme payload.
-     * @param forUsername    If non-null and different from {@code username}, the programme is
-     *                       saved for that athlete — requires the requester to be one of the
-     *                       athlete's coaches (or an admin). Ignored on update (the owner of
-     *                       the existing programme always takes precedence).
-     */
     @Transactional
     public Seance sauvegarderProgramme(String username, SeanceDto seanceDto, String forUsername) {
         Utilisateur requestUser = utilisateurRepository.findByUsername(username)
@@ -105,7 +82,6 @@ public class ProgrammeService {
             }
         } else {
             seance = new Seance();
-            // Coach flow: requester is creating on behalf of `forUsername` (an athlete).
             if (forUsername != null && !forUsername.equals(username)) {
                 Utilisateur athlete = utilisateurRepository.findByUsername(forUsername)
                         .orElseThrow(() -> notFound("Athlete not found: " + forUsername));
@@ -161,7 +137,6 @@ public class ProgrammeService {
                         serie.setNombreReps(serieDto.reps() != null ? serieDto.reps() : 0);
                         serie.setCommentaire(serieDto.commentaire());
 
-                        // Paramètres cardio + calories (uniquement pour les exercices cardio)
                         serie.setDureeMin(serieDto.dureeMin());
                         serie.setDistanceM(serieDto.distanceM());
                         serie.setAllureKmh(serieDto.allureKmh());
@@ -203,26 +178,12 @@ public class ProgrammeService {
         return saved;
     }
 
-    /**
-     * Retrieves all workout programs (models) owned by the specified user.
-     *
-     * @param username The username of the program owner.
-     * @return A list of Seance entities acting as models.
-     */
     public List<Seance> getProgrammes(String username) {
         List<Seance> programmes = seanceRepository.findByUtilisateurUsernameAndIsModeleFalseOrderByDisplayOrderAscStartTimeDesc(username);
         logger.info("Found {} programmes for user {}", programmes.size(), username);
         return programmes;
     }
 
-    /**
-     * Persists a new manual display order for the user's programme templates.
-     * The list of IDs defines the new order (first ID → top of the list).
-     * Validates ownership (or coach / admin rights) for every programme in the list.
-     *
-     * @param username   The username of the requester performing the reorder.
-     * @param orderedIds The programme IDs in the desired display order.
-     */
     @Transactional
     public void reorderProgrammes(String username, List<Long> orderedIds) {
         if (orderedIds == null || orderedIds.isEmpty()) return;
@@ -252,14 +213,6 @@ public class ProgrammeService {
         }
     }
 
-    /**
-     * Retrieves a specific workout program by its ID.
-     * Validates access rights to ensure the requesting user is allowed to view it.
-     *
-     * @param id       The ID of the program.
-     * @param username The username of the user requesting the program.
-     * @return The requested Seance entity.
-     */
     public Seance getProgrammeById(Long id, String username) {
         Seance seance = seanceRepository.findById(id)
                 .orElseThrow(() -> notFound("Program not found"));
@@ -281,13 +234,6 @@ public class ProgrammeService {
         return seance;
     }
 
-    /**
-     * Deletes a specific workout program.
-     * Validates that the requesting user has the appropriate ownership or coaching rights.
-     *
-     * @param id       The ID of the program to delete.
-     * @param username The username of the user requesting the deletion.
-     */
     @Transactional
     public void deleteProgramme(Long id, String username) {
         Seance seance = seanceRepository.findById(id)
@@ -305,14 +251,6 @@ public class ProgrammeService {
         seanceRepository.delete(seance);
     }
 
-    /**
-     * Creates a deep copy of an existing program and assigns it to the requesting user.
-     * Validates that the source program is publicly accessible or explicitly shared.
-     *
-     * @param programmeId    The ID of the source program to copy.
-     * @param targetUsername The username of the user who will own the new copy.
-     * @return The newly persisted copied Seance entity.
-     */
     @Transactional
     public Seance copyProgramme(Long programmeId, String targetUsername) {
         Utilisateur targetUser = utilisateurRepository.findByUsername(targetUsername)

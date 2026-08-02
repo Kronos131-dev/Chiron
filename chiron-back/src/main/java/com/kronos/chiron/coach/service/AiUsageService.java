@@ -11,11 +11,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.NoSuchElementException;
 
-/**
- * Applique le quota journalier Gemini. Les non-admins sont limités à {@value #DAILY_GEMINI_LIMIT}
- * requêtes Gemini par jour ; au-delà, le coach bascule silencieusement sur Mistral. Les admins ne
- * sont pas comptés. Chaque requête Gemini effectivement servie incrémente le compteur du jour.
- */
 @Service
 @RequiredArgsConstructor
 public class AiUsageService {
@@ -24,11 +19,6 @@ public class AiUsageService {
 
     private final UtilisateurRepository utilisateurRepository;
 
-    /**
-     * Détermine le fournisseur effectif pour cette requête et enregistre la consommation Gemini.
-     * Renvoie {@link AiProvider#GEMINI} si l'utilisateur le demande et reste sous le quota (ou est
-     * admin), sinon {@link AiProvider#MISTRAL}.
-     */
     @Transactional
     public AiProvider resolveProvider(Utilisateur user) {
         if (user.getAiProvider() != AiProvider.GEMINI) {

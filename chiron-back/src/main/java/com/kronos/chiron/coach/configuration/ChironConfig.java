@@ -22,12 +22,6 @@ import org.springframework.context.annotation.Configuration;
 
 import java.time.Duration;
 
-/**
- * Configuration de l'intégration IA de Chiron (LangChain4j).
- * Provisionne un agent Mistral et, si une clé Gemini est configurée, un agent Gemini.
- * Les deux partagent les mêmes outils et la même mémoire de conversation ; un routeur
- * ({@link ChironAgentRouter}) choisit l'agent selon la préférence de l'utilisateur.
- */
 @Configuration
 public class ChironConfig {
 
@@ -43,11 +37,6 @@ public class ChironConfig {
     @Value("${langchain4j.google-ai-gemini.chat-model.model-name:gemini-3.5-flash}")
     private String geminiModel;
 
-    /**
-     * Construit le routeur d'agents : un agent Mistral (toujours) et un agent Gemini
-     * (seulement si {@code GEMINI_API_KEY} est renseignée). Les deux reçoivent l'ensemble
-     * identique d'outils et le même fournisseur de mémoire.
-     */
     @Bean
     public ChironAgentRouter chironAgentRouter(WorkoutTools workoutTools,
                                                NutritionTools nutritionTools,
@@ -95,11 +84,6 @@ public class ChironConfig {
         return new ChironAgentRouter(agentMistral, agentGemini, memoryManager);
     }
 
-    /**
-     * Fournisseur de mémoire délégué au {@link ConversationMemoryManager} : la mémoire est
-     * indexée par id de conversation et reconstructible depuis la base (cf. le manager).
-     * Les agents Mistral et Gemini partagent ainsi la même mémoire pour une conversation donnée.
-     */
     @Bean
     public ChatMemoryProvider chatMemoryProvider(ConversationMemoryManager memoryManager) {
         return memoryManager::getOrCreate;

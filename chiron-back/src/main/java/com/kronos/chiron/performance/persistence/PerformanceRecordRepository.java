@@ -24,7 +24,6 @@ public interface PerformanceRecordRepository extends JpaRepository<PerformanceRe
     Optional<PerformanceRecord> findFirstByUtilisateurIdAndExerciseTypeOrderByRecordedAtDesc(
             Long utilisateurId, ExerciseType exerciseType);
 
-    // Single query replacing N individual findFirst calls in the performance summary
     @Query("""
             SELECT pr FROM PerformanceRecord pr
             WHERE pr.utilisateur.id = :userId

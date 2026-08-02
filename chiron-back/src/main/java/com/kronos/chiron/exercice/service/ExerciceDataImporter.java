@@ -20,25 +20,6 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.util.*;
 
-/**
- * Importe les exercices depuis le dataset free-exercise-db (github.com/wrkout/exercises.json).
- *
- * Format JSON attendu :
- * {
- *   "id": "Barbell_Squat",
- *   "name": "Barbell Squat",
- *   "level": "intermediate",
- *   "equipment": "barbell",
- *   "primaryMuscles": ["quadriceps"],
- *   "secondaryMuscles": ["glutes", "hamstrings"],
- *   "instructions": ["..."],
- *   "category": "strength",
- *   "images": ["Barbell_Squat/0.jpg", "Barbell_Squat/1.jpg"]
- * }
- *
- * Les images sont des chemins relatifs au dossier imageDir.
- * Elles sont copiées dans UPLOADS_DIR/exercices/{exerciceId}/.
- */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -50,18 +31,12 @@ public class ExerciceDataImporter {
     @Value("${chiron.uploads-dir:./uploads/images}")
     private String uploadsDir;
 
-    // ──────────────────────────────────────────────────
-    // Mapping niveau → NiveauDifficulte
-    // ──────────────────────────────────────────────────
     static final Map<String, NiveauDifficulte> LEVEL_MAP = Map.of(
             "beginner", NiveauDifficulte.DEBUTANT,
             "intermediate", NiveauDifficulte.INTERMEDIAIRE,
             "expert", NiveauDifficulte.AVANCE
     );
 
-    // ──────────────────────────────────────────────────
-    // Mapping equipment → TypeEquipement
-    // ──────────────────────────────────────────────────
     static final Map<String, TypeEquipement> EQUIPMENT_MAP = Map.ofEntries(
             Map.entry("barbell", TypeEquipement.BARRE),
             Map.entry("dumbbell", TypeEquipement.HALTERES),
@@ -77,9 +52,6 @@ public class ExerciceDataImporter {
             Map.entry("other", TypeEquipement.AUTRE)
     );
 
-    // ──────────────────────────────────────────────────
-    // Mapping muscle → MuscleGroup
-    // ──────────────────────────────────────────────────
     static final Map<String, MuscleGroup> MUSCLE_MAP = Map.ofEntries(
             Map.entry("abdominals", MuscleGroup.ABDOMINAUX),
             Map.entry("abductors", MuscleGroup.ABDUCTEURS),
@@ -100,16 +72,11 @@ public class ExerciceDataImporter {
             Map.entry("triceps", MuscleGroup.TRICEPS)
     );
 
-    // ──────────────────────────────────────────────────────────────────────────
-    // Traductions françaises — clé = nom anglais en minuscules
-    // Couvre la quasi-totalité des 873 exercices du dataset free-exercise-db
-    // ──────────────────────────────────────────────────────────────────────────
     static final Map<String, String> FR_NAMES;
 
     static {
         FR_NAMES = new HashMap<>();
 
-        // ── Sit-ups / Abdos ────────────────────────────────────────────────
         FR_NAMES.put("3/4 sit-up", "Relevé de buste 3/4");
         FR_NAMES.put("ab crunch machine", "Machine crunch abdominaux");
         FR_NAMES.put("ab roller", "Roue abdominale");
@@ -169,7 +136,6 @@ public class ExerciceDataImporter {
         FR_NAMES.put("lower back curl", "Curl bas du dos");
         FR_NAMES.put("leg-over floor press", "Développé sol jambe croisée");
 
-        // ── Squat & Jambes ──────────────────────────────────────────────────
         FR_NAMES.put("barbell full squat", "Squat complet barre");
         FR_NAMES.put("barbell hack squat", "Hack squat barre");
         FR_NAMES.put("barbell squat", "Squat barre");
@@ -237,7 +203,6 @@ public class ExerciceDataImporter {
         FR_NAMES.put("smith machine hang power clean", "Épaulé de force suspendu Smith");
         FR_NAMES.put("zercher squats", "Squat Zercher");
 
-        // ── Ischio-jambiers / Fessiers ─────────────────────────────────────
         FR_NAMES.put("90/90 hamstring", "Étirement ischio 90/90");
         FR_NAMES.put("ball leg curl", "Curl ischio sur ballon");
         FR_NAMES.put("barbell glute bridge", "Hip bridge barre");
@@ -264,7 +229,6 @@ public class ExerciceDataImporter {
         FR_NAMES.put("donkey calf raises", "Relevé de mollets âne");
         FR_NAMES.put("prone manual hamstring", "Curl ischio manuel allongé");
 
-        // ── Soulevé de terre ───────────────────────────────────────────────
         FR_NAMES.put("axle deadlift", "Soulevé de terre barre axle");
         FR_NAMES.put("barbell deadlift", "Soulevé de terre barre");
         FR_NAMES.put("cable deadlifts", "Soulevé de terre poulie");
@@ -294,7 +258,6 @@ public class ExerciceDataImporter {
         FR_NAMES.put("smith machine stiff-legged deadlift", "Soulevé de terre jambes tendues Smith");
         FR_NAMES.put("leverage deadlift", "Soulevé de terre machine levier");
 
-        // ── Développé couché & Poitrine ────────────────────────────────────
         FR_NAMES.put("barbell bench press - medium grip", "Développé couché barre prise moyenne");
         FR_NAMES.put("barbell guillotine bench press", "Développé guillotine barre");
         FR_NAMES.put("barbell incline bench press - medium grip", "Développé incliné barre prise moyenne");
@@ -374,7 +337,6 @@ public class ExerciceDataImporter {
         FR_NAMES.put("one-arm kettlebell floor press", "Développé sol kettlebell unilatéral");
         FR_NAMES.put("leg-over floor press", "Développé sol jambe croisée");
 
-        // ── Dos / Rowing ───────────────────────────────────────────────────
         FR_NAMES.put("alternating kettlebell row", "Rowing kettlebell alterné");
         FR_NAMES.put("alternating renegade row", "Rowing renegade alterné");
         FR_NAMES.put("barbell incline shoulder raise", "Élévation épaules incliné barre");
@@ -447,7 +409,6 @@ public class ExerciceDataImporter {
         FR_NAMES.put("weighted pull ups", "Tractions lestées");
         FR_NAMES.put("wide-grip standing barbell curl", "Curl barre prise large debout");
 
-        // ── Épaules ────────────────────────────────────────────────────────
         FR_NAMES.put("alternating cable shoulder press", "Développé épaules poulie alterné");
         FR_NAMES.put("alternating deltoid raise", "Élévation deltoïde alternée");
         FR_NAMES.put("alternating kettlebell press", "Développé kettlebell alterné");
@@ -517,7 +478,6 @@ public class ExerciceDataImporter {
         FR_NAMES.put("seated bent-over one-arm dumbbell triceps extension", "Extension triceps unilatérale assise penchée");
         FR_NAMES.put("seated side lateral raise", "Élévation latérale assise");
 
-        // ── Biceps ─────────────────────────────────────────────────────────
         FR_NAMES.put("alternate hammer curl", "Curl marteau alterné");
         FR_NAMES.put("alternate incline dumbbell curl", "Curl incliné haltères alterné");
         FR_NAMES.put("barbell curl", "Curl barre");
@@ -568,7 +528,6 @@ public class ExerciceDataImporter {
         FR_NAMES.put("zottman preacher curl", "Curl Zottman pupitre");
         FR_NAMES.put("dumbbell lying pronation", "Pronation haltère allongé");
 
-        // ── Triceps ────────────────────────────────────────────────────────
         FR_NAMES.put("band skull crusher", "Barre au front avec élastique");
         FR_NAMES.put("bench dips", "Dips sur banc");
         FR_NAMES.put("body tricep press", "Développé triceps poids du corps");
@@ -615,7 +574,6 @@ public class ExerciceDataImporter {
         FR_NAMES.put("weighted bench dip", "Dips sur banc lesté");
         FR_NAMES.put("bench dips", "Dips sur banc");
 
-        // ── Mollets ────────────────────────────────────────────────────────
         FR_NAMES.put("barbell seated calf raise", "Relevé de mollets assis barre");
         FR_NAMES.put("calf press", "Presse mollets");
         FR_NAMES.put("calf press on the leg press machine", "Presse mollets sur presse à cuisses");
@@ -632,7 +590,6 @@ public class ExerciceDataImporter {
         FR_NAMES.put("standing dumbbell calf raise", "Relevé de mollets haltère debout");
         FR_NAMES.put("donkey calf raises", "Relevé de mollets en âne");
 
-        // ── Dos inférieur / Lombaires ──────────────────────────────────────
         FR_NAMES.put("good morning", "Good morning");
         FR_NAMES.put("good morning off pins", "Good morning depuis les goupilles");
         FR_NAMES.put("band good morning", "Good morning avec élastique");
@@ -644,7 +601,6 @@ public class ExerciceDataImporter {
         FR_NAMES.put("weighted ball hyperextension", "Hyperextension avec ballon lesté");
         FR_NAMES.put("superman", "Superman");
 
-        // ── Tractions & Tirage ─────────────────────────────────────────────
         FR_NAMES.put("band assisted pull-up", "Traction assistée par élastique");
         FR_NAMES.put("kipping muscle up", "Muscle-up kipping");
         FR_NAMES.put("muscle up", "Muscle-up");
@@ -652,7 +608,6 @@ public class ExerciceDataImporter {
         FR_NAMES.put("rope climb", "Grimper à la corde");
         FR_NAMES.put("straight raises on incline bench", "Élévation droite sur banc incliné");
 
-        // ── Haussement d'épaules / Trapèzes ───────────────────────────────
         FR_NAMES.put("barbell shrug", "Haussement d'épaules barre");
         FR_NAMES.put("barbell shrug behind the back", "Haussement d'épaules barre derrière le dos");
         FR_NAMES.put("clean shrug", "Haussement d'épaules épaulé");
@@ -664,7 +619,6 @@ public class ExerciceDataImporter {
         FR_NAMES.put("cable shrugs", "Haussement d'épaules poulie");
         FR_NAMES.put("cleans - with shrug", "Épaulé avec haussement d'épaules");
 
-        // ── Avant-bras / Poignet ───────────────────────────────────────────
         FR_NAMES.put("cable wrist curl", "Curl poignet poulie");
         FR_NAMES.put("finger curls", "Curl des doigts");
         FR_NAMES.put("palms-down dumbbell wrist curl over a bench", "Curl poignet haltère prise pronée sur banc");
@@ -682,7 +636,6 @@ public class ExerciceDataImporter {
         FR_NAMES.put("standing palms-up barbell behind the back wrist curl", "Curl poignet barre derrière le dos prise supinée");
         FR_NAMES.put("wrist roller", "Rouleau poignet");
 
-        // ── Haltérophilie / Olympic lifting ───────────────────────────────
         FR_NAMES.put("clean", "Épaulé");
         FR_NAMES.put("clean and jerk", "Épaulé-jeté");
         FR_NAMES.put("clean and press", "Épaulé-développé");
@@ -728,7 +681,6 @@ public class ExerciceDataImporter {
         FR_NAMES.put("two-arm kettlebell jerk", "Jeté deux kettlebells");
         FR_NAMES.put("two-arm kettlebell military press", "Développé militaire deux kettlebells");
 
-        // ── Kettlebell ─────────────────────────────────────────────────────
         FR_NAMES.put("advanced kettlebell windmill", "Windmill kettlebell avancé");
         FR_NAMES.put("double kettlebell windmill", "Windmill deux kettlebells");
         FR_NAMES.put("kettlebell arnold press", "Arnold press kettlebell");
@@ -751,7 +703,6 @@ public class ExerciceDataImporter {
         FR_NAMES.put("one-arm open palm kettlebell clean", "Épaulé paume ouverte kettlebell unilatéral");
         FR_NAMES.put("open palm kettlebell clean", "Épaulé paume ouverte kettlebell");
 
-        // ── Mobilité / Étirements ──────────────────────────────────────────
         FR_NAMES.put("adductor", "Étirement adducteur");
         FR_NAMES.put("adductor/groin", "Étirement adducteur/aine");
         FR_NAMES.put("all fours quad stretch", "Étirement quadriceps à quatre pattes");
@@ -848,7 +799,6 @@ public class ExerciceDataImporter {
         FR_NAMES.put("wrist rotations with straight bar", "Rotations de poignet avec barre droite");
         FR_NAMES.put("downward facing balance", "Équilibre face vers le bas");
 
-        // ── Foam Roll / SMR ────────────────────────────────────────────────
         FR_NAMES.put("anterior tibialis-smr", "Auto-massage tibial antérieur");
         FR_NAMES.put("brachialis-smr", "Auto-massage brachial");
         FR_NAMES.put("calves-smr", "Auto-massage mollets");
@@ -862,7 +812,6 @@ public class ExerciceDataImporter {
         FR_NAMES.put("quadriceps-smr", "Auto-massage quadriceps");
         FR_NAMES.put("rhomboids-smr", "Auto-massage rhomboïdes");
 
-        // ── Cardio / Plyométrie ────────────────────────────────────────────
         FR_NAMES.put("air bike", "Vélo à air");
         FR_NAMES.put("battling ropes", "Cordes ondulatoires");
         FR_NAMES.put("bench jump", "Saut sur banc");
@@ -917,7 +866,6 @@ public class ExerciceDataImporter {
         FR_NAMES.put("walking, treadmill", "Marche sur tapis");
         FR_NAMES.put("wind sprints", "Sprints de vitesse");
 
-        // ── Strongman ─────────────────────────────────────────────────────
         FR_NAMES.put("atlas stone trainer", "Entraîneur atlas stone");
         FR_NAMES.put("atlas stones", "Atlas stones");
         FR_NAMES.put("backward drag", "Traîne arrière");
@@ -949,7 +897,6 @@ public class ExerciceDataImporter {
         FR_NAMES.put("tire flip", "Retournement de pneu");
         FR_NAMES.put("yoke walk", "Marche au joug");
 
-        // ── Exercices spéciaux ─────────────────────────────────────────────
         FR_NAMES.put("balance board", "Plateau d'équilibre");
         FR_NAMES.put("barbell side bend", "Inclinaison latérale barre");
         FR_NAMES.put("bent press", "Développé penché");
@@ -1026,18 +973,11 @@ public class ExerciceDataImporter {
         FR_NAMES.put("lying face down plate neck resistance", "Résistance nuque disque allongé face contre sol");
         FR_NAMES.put("lying face up plate neck resistance", "Résistance nuque disque allongé sur le dos");
 
-        // ── Exercices non couverts — laisser en anglais (nomFr = null) ────
-        // (ab wheel rollout, etc. — déjà couverts implicitement par nom EN)
         FR_NAMES.put("ab roller", "Roue abdominale");
         FR_NAMES.put("barbell rollout from bench", "Rouleau barre depuis le banc");
 
-        // Normalisation des cas mixtes
         FR_NAMES.put("dumbbell alternate bicep curl", "Curl biceps haltères alterné");
     }
-
-    // ──────────────────────────────────────────────────────────────────────────
-    // Import principal
-    // ──────────────────────────────────────────────────────────────────────────
 
     @Transactional
     public int importFromFile(Path jsonFile, Path imageSourceDir) throws IOException {
@@ -1069,14 +1009,12 @@ public class ExerciceDataImporter {
 
         String nomFr = FR_NAMES.get(nameEn.toLowerCase().trim());
 
-        // Muscle principal — premier élément de primaryMuscles
         MuscleGroup musclePrincipal = null;
         JsonNode primaryMuscles = node.path("primaryMuscles");
         if (primaryMuscles.isArray() && primaryMuscles.size() > 0) {
             musclePrincipal = MUSCLE_MAP.get(primaryMuscles.get(0).asText("").toLowerCase());
         }
 
-        // Muscles secondaires
         List<MuscleGroup> musclesSecondaires = new ArrayList<>();
         for (JsonNode m : node.path("secondaryMuscles")) {
             MuscleGroup mg = MUSCLE_MAP.get(m.asText("").toLowerCase());
@@ -1089,14 +1027,12 @@ public class ExerciceDataImporter {
         NiveauDifficulte difficulte = LEVEL_MAP.getOrDefault(
                 node.path("level").asText("").toLowerCase(), NiveauDifficulte.INTERMEDIAIRE);
 
-        // Description EN = instructions concaténées
         StringBuilder desc = new StringBuilder();
         for (JsonNode instr : node.path("instructions")) {
             if (!desc.isEmpty()) desc.append("\n");
             desc.append(instr.asText());
         }
 
-        // Copie des images depuis le dataset source
         String imageFolderName = copyImages(externalId, node.path("images"), exercicesDir, imageSourceDir);
 
         ExerciceDefinition def = ExerciceDefinition.builder()
@@ -1115,10 +1051,6 @@ public class ExerciceDataImporter {
         return true;
     }
 
-    /**
-     * Copie les images depuis imageSourceDir vers exercicesDir/{externalId}/.
-     * Retourne le nom du dossier (= externalId) si au moins une image a été copiée, sinon null.
-     */
     private String copyImages(String externalId, JsonNode imagesNode, Path exercicesDir, Path imageSourceDir) throws IOException {
         if (!imagesNode.isArray() || imagesNode.size() == 0) return null;
         if (imageSourceDir == null) return null;
