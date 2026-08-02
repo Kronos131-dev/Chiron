@@ -2,8 +2,6 @@ package com.kronos.chiron.coach.tools;
 
 import java.time.Clock;
 
-import static com.kronos.chiron.core.exceptions.ErrorFactory.notFound;
-
 import tools.jackson.databind.JsonNode;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 import com.kronos.chiron.nutrition.NutritionService;
@@ -32,9 +30,11 @@ public class NutritionTools {
     private final OlympusClient olympusClient;
 
     private final Clock clock;
+
+    private final ToolUserResolver toolUserResolver;
     @Tool("Récupère l'apport nutritionnel de l'utilisateur pour une date donnée (format YYYY-MM-DD ; null ou vide = aujourd'hui). Retourne calories, protéines, glucides, lipides consommés + cibles + delta + activité du jour. Nécessite que l'utilisateur ait lié son compte Olympus.")
     public String getApportJournalier(@ToolMemoryId String userId, String date) {
-        Utilisateur user = loadUser(userId);
+        Utilisateur user = toolUserResolver.load(userId);
         LocalDate target;
         if (date == null || date.isBlank()) {
             target = LocalDate.now(clock);
@@ -102,7 +102,7 @@ public class NutritionTools {
 
     @Tool("Récupère les objectifs nutritionnels de l'utilisateur : type d'objectif (perte / maintien / prise), cibles calories et macros, poids actuel. Nécessite la liaison Olympus.")
     public String getObjectifsNutritionnels(@ToolMemoryId String userId) {
-        Utilisateur user = loadUser(userId);
+        Utilisateur user = toolUserResolver.load(userId);
         try {
             String token = nutritionService.getValidToken(user.getUsername());
             JsonNode profile = olympusClient.getUserProfile(token);
@@ -141,7 +141,7 @@ public class NutritionTools {
 
     @Tool("Analyse l'équilibre nutritionnel de l'utilisateur sur les N derniers jours (défaut 7) : moyenne calorique vs cible, répartition moyenne en macros, écart à l'objectif. Détecte les déficits/surplus marqués. Nécessite la liaison Olympus.")
     public String analyserEquilibreMacros(@ToolMemoryId String userId, Integer nbJours) {
-        Utilisateur user = loadUser(userId);
+        Utilisateur user = toolUserResolver.load(userId);
         int window = (nbJours != null && nbJours > 0) ? nbJours : 7;
 
         try {
@@ -226,7 +226,7 @@ public class NutritionTools {
 
     @Tool("Récupère l'évolution du poids de l'utilisateur sur les N derniers jours (défaut 30) : première et dernière mesure, tendance (perte / prise / stable). Nécessite la liaison Olympus et que l'utilisateur se pèse régulièrement dans Olympus.")
     public String getEvolutionPoids(@ToolMemoryId String userId, Integer nbJours) {
-        Utilisateur user = loadUser(userId);
+        Utilisateur user = toolUserResolver.load(userId);
         int window = (nbJours != null && nbJours > 0) ? nbJours : 30;
 
         try {
@@ -300,7 +300,7 @@ public class NutritionTools {
 
     @Tool("Récupère le planning de repas hebdomadaire de l'utilisateur (repas prévus jour par jour) ainsi que la liste de ses repas pré-enregistrés avec leurs valeurs nutritionnelles. Nécessite la liaison Olympus.")
     public String getPlanningRepas(@ToolMemoryId String userId) {
-        Utilisateur user = loadUser(userId);
+        Utilisateur user = toolUserResolver.load(userId);
         try {
             String token = nutritionService.getValidToken(user.getUsername());
             JsonNode plan = olympusClient.getWeeklyPlan(token);
@@ -376,11 +376,6 @@ public class NutritionTools {
         if (Math.abs(delta) < 0.05) return "0 kg";
         String sign = delta > 0 ? "+" : "";
         return sign + String.format(java.util.Locale.FRANCE, "%.1f kg", delta);
-    }
-
-    private Utilisateur loadUser(String userId) {
-        return utilisateurRepository.findById(Long.parseLong(userId))
-                .orElseThrow(() -> notFound("Utilisateur introuvable"));
     }
 
     private double asDouble(JsonNode node, String field) {

@@ -2,8 +2,6 @@ package com.kronos.chiron.coach.tools;
 
 import java.time.Clock;
 
-import static com.kronos.chiron.core.exceptions.ErrorFactory.notFound;
-
 import com.kronos.chiron.journalier.model.EtatJournalier;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 import com.kronos.chiron.utilisateur.persistence.UtilisateurRepository;
@@ -25,6 +23,8 @@ public class RecoveryTools {
     private final RecoveryService recoveryService;
 
     private final Clock clock;
+
+    private final ToolUserResolver toolUserResolver;
     @Tool("Enregistre/met à jour l'état du jour : sommeil (heures), fatigue/courbatures/stress/énergie (1-5 ; 1=au mieux→5=au pire pour fatigue/courbatures/stress, inverse pour energie : 1=vide→5=à fond), notes. Date optionnelle (AAAA-MM-JJ, défaut aujourd'hui). Tous les champs sont optionnels — n'enregistre que ce qui est mentionné.")
     public String enregistrerEtatJournalier(@ToolMemoryId String userId,
             String date,
@@ -34,7 +34,7 @@ public class RecoveryTools {
             Integer stress,
             Integer energie,
             String notes) {
-        Utilisateur user = loadUser(userId);
+        Utilisateur user = toolUserResolver.load(userId);
         LocalDate target;
         if (date == null || date.isBlank()) {
             target = LocalDate.now(clock);
@@ -51,7 +51,7 @@ public class RecoveryTools {
 
     @Tool("Récupère l'état journalier (sommeil, fatigue, courbatures, stress, énergie) sur les N derniers jours (défaut 7, max 90).")
     public String getEtatRecent(@ToolMemoryId String userId, Integer nbJours) {
-        Utilisateur user = loadUser(userId);
+        Utilisateur user = toolUserResolver.load(userId);
         int window = (nbJours != null && nbJours > 0) ? nbJours : 7;
         List<EtatJournalier> etats = recoveryService.getRecent(user, window);
 
@@ -80,7 +80,7 @@ public class RecoveryTools {
 
     @Tool("Recommande un type de séance (lourd / modéré / léger / repos) en croisant l'état du jour et des 3 derniers jours.")
     public String recommanderTypeSeance(@ToolMemoryId String userId) {
-        Utilisateur user = loadUser(userId);
+        Utilisateur user = toolUserResolver.load(userId);
         List<EtatJournalier> etats = recoveryService.getRecent(user, 3);
 
         if (etats.isEmpty()) {
@@ -146,8 +146,4 @@ public class RecoveryTools {
         return sb.toString();
     }
 
-    private Utilisateur loadUser(String userId) {
-        return utilisateurRepository.findById(Long.parseLong(userId))
-                .orElseThrow(() -> notFound("Utilisateur introuvable"));
-    }
 }
