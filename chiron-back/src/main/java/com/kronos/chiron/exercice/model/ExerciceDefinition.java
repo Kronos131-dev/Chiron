@@ -1,6 +1,6 @@
 package com.kronos.chiron.exercice.model;
 
-import com.kronos.chiron.entity.CardioType;
+import com.kronos.chiron.seance.model.CardioType;
 
 import jakarta.persistence.*;
 import lombok.*;

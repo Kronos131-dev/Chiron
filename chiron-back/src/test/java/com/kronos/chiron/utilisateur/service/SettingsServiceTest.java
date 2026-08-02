@@ -2,7 +2,7 @@ package com.kronos.chiron.utilisateur.service;
 
 import com.kronos.chiron.auth.service.EmailService;
 
-import com.kronos.chiron.ai.ChironAgentRouter;
+import com.kronos.chiron.coach.agent.ChironAgentRouter;
 import com.kronos.chiron.dto.settings.AiProviderDto;
 import com.kronos.chiron.dto.settings.TrainingPrefsDto;
 import com.kronos.chiron.utilisateur.model.AiProvider;

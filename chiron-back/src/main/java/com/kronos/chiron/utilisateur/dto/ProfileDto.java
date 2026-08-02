@@ -1,6 +1,6 @@
 package com.kronos.chiron.utilisateur.dto;
 
-import com.kronos.chiron.dto.SeanceSummaryDto;
+import com.kronos.chiron.seance.dto.SeanceSummaryDto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;

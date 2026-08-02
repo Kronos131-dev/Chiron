@@ -1,16 +1,16 @@
 package com.kronos.chiron.stats;
 
 import com.kronos.chiron.performance.dto.PerformanceSummaryDto;
-import com.kronos.chiron.entity.Degressif;
-import com.kronos.chiron.entity.Exercice;
+import com.kronos.chiron.seance.model.Degressif;
+import com.kronos.chiron.seance.model.Exercice;
 import com.kronos.chiron.exercice.model.ExerciceDefinition;
-import com.kronos.chiron.entity.Seance;
-import com.kronos.chiron.entity.Serie;
+import com.kronos.chiron.seance.model.Seance;
+import com.kronos.chiron.seance.model.Serie;
 import com.kronos.chiron.exercice.model.TypeEquipement;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 import com.kronos.chiron.nutrition.NutritionService;
 import com.kronos.chiron.nutrition.olympusdb.OlympusNutritionDao;
-import com.kronos.chiron.repository.SeanceRepository;
+import com.kronos.chiron.seance.persistence.SeanceRepository;
 import com.kronos.chiron.utilisateur.persistence.UtilisateurRepository;
 import com.kronos.chiron.performance.service.PerformanceService;
 import com.kronos.chiron.visbody.BodyCompositionRecordRepository;

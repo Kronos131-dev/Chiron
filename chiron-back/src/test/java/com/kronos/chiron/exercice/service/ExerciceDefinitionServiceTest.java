@@ -6,7 +6,6 @@ import com.kronos.chiron.exercice.model.NiveauDifficulte;
 import com.kronos.chiron.exercice.model.TypeEquipement;
 
 import com.kronos.chiron.exercice.dto.ExerciceDefinitionDto;
-import com.kronos.chiron.entity.*;
 import com.kronos.chiron.exercice.persistence.ExerciceDefinitionRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -1,6 +1,6 @@
 package com.kronos.chiron.utilisateur.model;
 
-import com.kronos.chiron.entity.Seance;
+import com.kronos.chiron.seance.model.Seance;
 
 import com.kronos.chiron.exercice.model.TypeEquipement;
 
