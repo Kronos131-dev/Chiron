@@ -64,12 +64,12 @@ public class ProfileService {
         user.setRank(rank);
         utilisateurRepository.save(user);
 
-        List<Seance> programmes = seanceRepository.findByUtilisateurUsernameAndIsModeleFalseOrderByDisplayOrderAscStartTimeDesc(username);
+        List<Seance> programmes = seanceRepository.findByUtilisateurUsernameAndHistoriqueFalseOrderByDisplayOrderAscStartTimeDesc(username);
         List<SeanceSummaryDto> programmeSummaries = programmes.stream()
                 .map(this::toSeanceSummaryDto)
                 .collect(Collectors.toList());
 
-        List<Seance> historique = seanceRepository.findByUtilisateurUsernameAndIsModeleTrueOrderByStartTimeDesc(username);
+        List<Seance> historique = seanceRepository.findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc(username);
         List<SeanceSummaryDto> historiqueSummaries = historique.stream()
                 .map(this::toSeanceSummaryDto)
                 .collect(Collectors.toList());
@@ -255,7 +255,7 @@ public class ProfileService {
                 .startTime(seance.getStartTime())
                 .numberOfExercises(seance.getExercices().size())
                 .totalSeries(totalSeries)
-                .isModele(seance.isModele())
+                .historique(seance.isHistorique())
                 .build();
     }
 }

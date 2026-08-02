@@ -56,7 +56,7 @@ class StatsServiceTest {
     private StatsService statsService;
 
     private void givenSessions(Seance... sessions) {
-        when(seanceRepository.findByUtilisateurUsernameAndIsModeleTrueOrderByStartTimeDesc(USERNAME))
+        when(seanceRepository.findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc(USERNAME))
                 .thenReturn(List.of(sessions));
     }
 
@@ -94,7 +94,7 @@ class StatsServiceTest {
     private static Seance seance(LocalDateTime start, LocalDateTime end, Exercice... exercices) {
         return Seance.builder()
                 .id(1L)
-                .isModele(true)
+                .historique(true)
                 .startTime(start)
                 .endTime(end)
                 .exercices(List.of(exercices))

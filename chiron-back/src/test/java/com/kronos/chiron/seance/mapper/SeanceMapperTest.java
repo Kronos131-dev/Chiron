@@ -70,7 +70,7 @@ class SeanceMapperTest {
         seance.setStartTime(LocalDateTime.of(2025, 1, 15, 10, 0));
         seance.setEndTime(LocalDateTime.of(2025, 1, 15, 11, 0));
         seance.setWeekNumber(3);
-        seance.setModele(true);
+        seance.setHistorique(true);
         seance.setUtilisateur(user);
         for (Exercice e : exercices) seance.addExercice(e);
         return seance;
@@ -91,7 +91,7 @@ class SeanceMapperTest {
 
         assertThat(dto.id()).isEqualTo(1L);
         assertThat(dto.titre()).isEqualTo("Push Day");
-        assertThat(dto.isModele()).isTrue();
+        assertThat(dto.historique()).isTrue();
         assertThat(dto.weekNumber()).isEqualTo(3);
         assertThat(dto.utilisateur().getUsername()).isEqualTo("alice");
         assertThat(dto.exercices()).hasSize(1);

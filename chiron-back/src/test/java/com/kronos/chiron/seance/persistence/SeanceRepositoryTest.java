@@ -41,14 +41,14 @@ class SeanceRepositoryTest {
         em.flush();
     }
 
-    private Seance makeSeance(String titre, boolean isModele, int weekNumber, LocalDateTime start, LocalDateTime end) {
-        return makeSeance(titre, isModele, weekNumber, start, end, 0);
+    private Seance makeSeance(String titre, boolean historique, int weekNumber, LocalDateTime start, LocalDateTime end) {
+        return makeSeance(titre, historique, weekNumber, start, end, 0);
     }
 
-    private Seance makeSeance(String titre, boolean isModele, int weekNumber, LocalDateTime start, LocalDateTime end, int displayOrder) {
+    private Seance makeSeance(String titre, boolean historique, int weekNumber, LocalDateTime start, LocalDateTime end, int displayOrder) {
         Seance s = new Seance();
         s.setTitre(titre);
-        s.setModele(isModele);
+        s.setHistorique(historique);
         s.setWeekNumber(weekNumber);
         s.setStartTime(start);
         s.setEndTime(end);
@@ -94,50 +94,50 @@ class SeanceRepositoryTest {
     }
 
     @Test
-    void findByIsModeleTrue_returnsOnlyRealSessions() {
+    void findByHistoriqueTrue_returnsOnlyRealSessions() {
         makeSeance("RealSession", true, 1, LocalDateTime.now(), LocalDateTime.now());
         makeSeance("Template", false, 0, LocalDateTime.now(), null);
 
         List<Seance> results = seanceRepository
-                .findByUtilisateurUsernameAndIsModeleTrueOrderByStartTimeDesc(user.getUsername());
+                .findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc(user.getUsername());
 
         assertThat(results).hasSize(1);
         assertThat(results.get(0).getTitre()).isEqualTo("RealSession");
     }
 
     @Test
-    void findByIsModeleFalse_returnsOnlyTemplates() {
+    void findByHistoriqueFalse_returnsOnlyTemplates() {
         makeSeance("RealSession", true, 1, LocalDateTime.now(), LocalDateTime.now());
         makeSeance("Template1", false, 0, LocalDateTime.now(), null);
         makeSeance("Template2", false, 0, LocalDateTime.now().minusDays(1), null);
 
         List<Seance> results = seanceRepository
-                .findByUtilisateurUsernameAndIsModeleFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername());
+                .findByUtilisateurUsernameAndHistoriqueFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername());
 
         assertThat(results).hasSize(2);
     }
 
     @Test
-    void findByIsModeleFalse_orderedByDisplayOrderAsc() {
+    void findByHistoriqueFalse_orderedByDisplayOrderAsc() {
         makeSeance("Third",  false, 0, LocalDateTime.now(),               null, 2);
         makeSeance("First",  false, 0, LocalDateTime.now().minusDays(5),  null, 0);
         makeSeance("Second", false, 0, LocalDateTime.now().minusDays(1),  null, 1);
 
         List<Seance> results = seanceRepository
-                .findByUtilisateurUsernameAndIsModeleFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername());
+                .findByUtilisateurUsernameAndHistoriqueFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername());
 
         assertThat(results).extracting(Seance::getTitre)
                 .containsExactly("First", "Second", "Third");
     }
 
     @Test
-    void findByIsModeleFalse_displayOrderTie_fallsBackToStartTimeDesc() {
+    void findByHistoriqueFalse_displayOrderTie_fallsBackToStartTimeDesc() {
         // Same displayOrder → newer startTime wins (so brand-new programmes appear at top).
         makeSeance("Older Default", false, 0, LocalDateTime.now().minusDays(3), null, 0);
         makeSeance("Newer Default", false, 0, LocalDateTime.now(),              null, 0);
 
         List<Seance> results = seanceRepository
-                .findByUtilisateurUsernameAndIsModeleFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername());
+                .findByUtilisateurUsernameAndHistoriqueFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername());
 
         assertThat(results.get(0).getTitre()).isEqualTo("Newer Default");
         assertThat(results.get(1).getTitre()).isEqualTo("Older Default");

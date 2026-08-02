@@ -23,5 +23,5 @@ public class SeanceSummaryDto {
 
     private int totalSeries;
 
-    private boolean isModele;
+    private boolean historique;
 }

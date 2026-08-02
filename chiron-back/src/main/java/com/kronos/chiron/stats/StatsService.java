@@ -298,7 +298,7 @@ public class StatsService {
     }
 
     private List<Seance> realSessions(String username) {
-        return seanceRepository.findByUtilisateurUsernameAndIsModeleTrueOrderByStartTimeDesc(username);
+        return seanceRepository.findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc(username);
     }
 
     private record TonnagePrefs(boolean halteresX2, boolean machineX2) {}

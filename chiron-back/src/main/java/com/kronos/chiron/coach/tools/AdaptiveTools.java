@@ -166,7 +166,7 @@ public class AdaptiveTools {
                 .orElseThrow(() -> notFound("Utilisateur introuvable"));
 
         List<Seance> programmes = seanceRepository
-                .findByUtilisateurUsernameAndIsModeleFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername());
+                .findByUtilisateurUsernameAndHistoriqueFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername());
 
         if (nomProgramme != null && !nomProgramme.isBlank()) {
             String filtre = nomProgramme.toLowerCase();
@@ -197,7 +197,7 @@ public class AdaptiveTools {
 
         LocalDateTime cutoff = LocalDateTime.now().minusWeeks(ROTATION_WEEKS_THRESHOLD);
         List<Seance> historique = seanceRepository
-                .findByUtilisateurUsernameAndIsModeleTrueOrderByStartTimeDesc(user.getUsername());
+                .findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc(user.getUsername());
 
         Map<Long, LocalDateTime> premiereOccurrence = new LinkedHashMap<>();
         for (Seance s : historique) {

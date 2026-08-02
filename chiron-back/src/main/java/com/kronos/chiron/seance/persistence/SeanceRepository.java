@@ -17,10 +17,10 @@ public interface SeanceRepository extends JpaRepository<Seance, Long> {
 
     Optional<Seance> findFirstByUtilisateurIdAndEndTimeIsNullOrderByStartTimeDesc(Long utilisateurId);
 
-    List<Seance> findByUtilisateurUsernameAndIsModeleTrueOrderByStartTimeDesc(String username);
+    List<Seance> findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc(String username);
 
-    List<Seance> findByUtilisateurUsernameAndIsModeleFalseOrderByDisplayOrderAscStartTimeDesc(String username);
+    List<Seance> findByUtilisateurUsernameAndHistoriqueFalseOrderByDisplayOrderAscStartTimeDesc(String username);
 
-    @Query("SELECT COUNT(s) FROM Serie s JOIN s.exercice e JOIN e.seance se WHERE se.utilisateur.id = :userId AND se.isModele = true AND se.startTime >= :startDate")
+    @Query("SELECT COUNT(s) FROM Serie s JOIN s.exercice e JOIN e.seance se WHERE se.utilisateur.id = :userId AND se.historique = true AND se.startTime >= :startDate")
     Integer countTotalSeriesForUserSince(@Param("userId") Long userId, @Param("startDate") LocalDateTime startDate);
 }

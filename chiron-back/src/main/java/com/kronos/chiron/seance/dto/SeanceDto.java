@@ -12,7 +12,7 @@ public record SeanceDto(
         LocalDateTime startTime,
         LocalDateTime endTime,
         Integer weekNumber,
-        Boolean isModele,
+        Boolean historique,
         ProfileDto utilisateur,
         List<ExerciceDto> exercices
 ) {}

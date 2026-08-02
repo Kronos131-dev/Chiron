@@ -70,9 +70,9 @@ public class ProgrammeService {
 
             targetUser = owner;
 
-            boolean requestedIsModele = seanceDto.isModele() != null ? seanceDto.isModele() : false;
+            boolean requestedHistorique = seanceDto.historique() != null ? seanceDto.historique() : false;
 
-            if (existingSeance.isModele() == requestedIsModele) {
+            if (existingSeance.isHistorique() == requestedHistorique) {
                 isUpdate = true;
                 seance = existingSeance;
                 seance.getExercices().clear();
@@ -105,10 +105,10 @@ public class ProgrammeService {
             seance.setWeekNumber(seanceDto.weekNumber());
         }
         
-        if (seanceDto.isModele() != null) {
-            seance.setModele(seanceDto.isModele());
+        if (seanceDto.historique() != null) {
+            seance.setHistorique(seanceDto.historique());
         } else {
-            seance.setModele(false);
+            seance.setHistorique(false);
         }
 
         if (seanceDto.exercices() != null) {
@@ -179,7 +179,7 @@ public class ProgrammeService {
     }
 
     public List<Seance> getProgrammes(String username) {
-        List<Seance> programmes = seanceRepository.findByUtilisateurUsernameAndIsModeleFalseOrderByDisplayOrderAscStartTimeDesc(username);
+        List<Seance> programmes = seanceRepository.findByUtilisateurUsernameAndHistoriqueFalseOrderByDisplayOrderAscStartTimeDesc(username);
         logger.info("Found {} programmes for user {}", programmes.size(), username);
         return programmes;
     }
@@ -273,7 +273,7 @@ public class ProgrammeService {
         newSeance.setNote(sourceSeance.getNote());
         newSeance.setStartTime(LocalDateTime.now());
         newSeance.setUtilisateur(targetUser);
-        newSeance.setModele(false);
+        newSeance.setHistorique(false);
         newSeance.setWeekNumber(0);
 
         int copyPosition = 0;

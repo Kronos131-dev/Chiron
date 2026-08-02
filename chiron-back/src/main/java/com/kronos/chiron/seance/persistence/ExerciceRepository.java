@@ -25,10 +25,10 @@ public interface ExerciceRepository extends JpaRepository<Exercice, Long> {
         return results.isEmpty() ? Optional.empty() : Optional.of(results.get(0));
     }
 
-    @Query("SELECT e FROM Exercice e JOIN e.seance s WHERE s.utilisateur.id = :utilisateurId AND s.isModele = true AND LOWER(e.nom) LIKE LOWER(CONCAT('%', :nomExercice, '%')) ORDER BY e.startTime DESC")
+    @Query("SELECT e FROM Exercice e JOIN e.seance s WHERE s.utilisateur.id = :utilisateurId AND s.historique = true AND LOWER(e.nom) LIKE LOWER(CONCAT('%', :nomExercice, '%')) ORDER BY e.startTime DESC")
     List<Exercice> findAllHistoricExercises(@Param("utilisateurId") Long utilisateurId, @Param("nomExercice") String nomExercice);
 
-    @Query("SELECT e FROM Exercice e JOIN e.seance s WHERE s.utilisateur.id = :utilisateurId AND s.isModele = true AND LOWER(e.nom) LIKE LOWER(CONCAT('%', :nomExercice, '%')) ORDER BY e.startTime DESC")
+    @Query("SELECT e FROM Exercice e JOIN e.seance s WHERE s.utilisateur.id = :utilisateurId AND s.historique = true AND LOWER(e.nom) LIKE LOWER(CONCAT('%', :nomExercice, '%')) ORDER BY e.startTime DESC")
     List<Exercice> findTopHistoricExercises(@Param("utilisateurId") Long utilisateurId, @Param("nomExercice") String nomExercice, Pageable pageable);
 
     default Optional<Exercice> findFirstHistoricExercise(Long utilisateurId, String nomExercice) {

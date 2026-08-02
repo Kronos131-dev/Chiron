@@ -191,7 +191,7 @@ export class Journal implements OnInit {
       titre: draft.titre,
       weekNumber: draft.weekNumber,
       startTime: draft.startTime,
-      isModele: true,
+      historique: true,
       exercices: draft.exercices.map((exo: any) => ({
         id: exo.id ?? null,
         nom: exo.nom,

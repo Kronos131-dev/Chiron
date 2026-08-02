@@ -83,7 +83,7 @@ class WorkoutToolsTest {
         verify(seanceRepository).save(argThat(s ->
                 s.getTitre().equals("Push Day") &&
                 s.getUtilisateur().equals(user) &&
-                s.isModele()
+                s.isHistorique()
         ));
     }
 
@@ -218,7 +218,7 @@ class WorkoutToolsTest {
     void getUserProgrammes_ownProgrammes_returnsList() {
         Seance prog = new Seance();
         prog.setTitre("My Programme");
-        when(seanceRepository.findByUtilisateurUsernameAndIsModeleFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername()))
+        when(seanceRepository.findByUtilisateurUsernameAndHistoriqueFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername()))
                 .thenReturn(List.of(prog));
 
         String result = workoutTools.getUserProgrammes("1", null);
@@ -228,7 +228,7 @@ class WorkoutToolsTest {
 
     @Test
     void getUserProgrammes_noProgrammes_returnsEmptyMessage() {
-        when(seanceRepository.findByUtilisateurUsernameAndIsModeleFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername()))
+        when(seanceRepository.findByUtilisateurUsernameAndHistoriqueFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername()))
                 .thenReturn(List.of());
 
         String result = workoutTools.getUserProgrammes("1", null);
@@ -263,7 +263,7 @@ class WorkoutToolsTest {
         Seance session = new Seance();
         session.setTitre("Back Day");
         session.setStartTime(LocalDateTime.now());
-        when(seanceRepository.findByUtilisateurUsernameAndIsModeleTrueOrderByStartTimeDesc(user.getUsername()))
+        when(seanceRepository.findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc(user.getUsername()))
                 .thenReturn(List.of(session));
 
         String result = workoutTools.getUserHistory("1", null);
@@ -273,7 +273,7 @@ class WorkoutToolsTest {
 
     @Test
     void getUserHistory_noHistory_returnsEmptyMessage() {
-        when(seanceRepository.findByUtilisateurUsernameAndIsModeleTrueOrderByStartTimeDesc(user.getUsername()))
+        when(seanceRepository.findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc(user.getUsername()))
                 .thenReturn(List.of());
 
         String result = workoutTools.getUserHistory("1", null);
@@ -368,7 +368,7 @@ class WorkoutToolsTest {
 
         assertThat(result).containsIgnoringCase("My Template");
         verify(seanceRepository).save(argThat(s ->
-                s.getTitre().equals("My Template") && !s.isModele()
+                s.getTitre().equals("My Template") && !s.isHistorique()
         ));
     }
 
@@ -376,7 +376,7 @@ class WorkoutToolsTest {
 
     @Test
     void getWorkoutSummaryByDate_noMatchingDate_returnsNotFound() {
-        when(seanceRepository.findByUtilisateurUsernameAndIsModeleTrueOrderByStartTimeDesc(user.getUsername()))
+        when(seanceRepository.findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc(user.getUsername()))
                 .thenReturn(List.of());
 
         String result = workoutTools.getWorkoutSummaryByDate("1", "2025-01-01");
@@ -397,7 +397,7 @@ class WorkoutToolsTest {
         exo.addSerie(serie);
         session.addExercice(exo);
 
-        when(seanceRepository.findByUtilisateurUsernameAndIsModeleTrueOrderByStartTimeDesc(user.getUsername()))
+        when(seanceRepository.findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc(user.getUsername()))
                 .thenReturn(List.of(session));
 
         String result = workoutTools.getWorkoutSummaryByDate("1", "2025-01-15");
@@ -419,7 +419,7 @@ class WorkoutToolsTest {
         exo.addSerie(serie);
         prog.addExercice(exo);
 
-        when(seanceRepository.findByUtilisateurUsernameAndIsModeleFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername()))
+        when(seanceRepository.findByUtilisateurUsernameAndHistoriqueFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername()))
                 .thenReturn(List.of(prog));
 
         String result = workoutTools.getProgrammeDetails("1", "Push");
@@ -429,7 +429,7 @@ class WorkoutToolsTest {
 
     @Test
     void getProgrammeDetails_noMatch_returnsNotFound() {
-        when(seanceRepository.findByUtilisateurUsernameAndIsModeleFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername()))
+        when(seanceRepository.findByUtilisateurUsernameAndHistoriqueFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername()))
                 .thenReturn(List.of());
 
         String result = workoutTools.getProgrammeDetails("1", "Unknown");
@@ -442,7 +442,7 @@ class WorkoutToolsTest {
         Seance prog = new Seance();
         prog.setTitre("Empty Programme");
 
-        when(seanceRepository.findByUtilisateurUsernameAndIsModeleFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername()))
+        when(seanceRepository.findByUtilisateurUsernameAndHistoriqueFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername()))
                 .thenReturn(List.of(prog));
 
         String result = workoutTools.getProgrammeDetails("1", "Empty");
@@ -466,7 +466,7 @@ class WorkoutToolsTest {
         exo.addSerie(serie);
         session.addExercice(exo);
 
-        when(seanceRepository.findByUtilisateurUsernameAndIsModeleTrueOrderByStartTimeDesc(user.getUsername()))
+        when(seanceRepository.findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc(user.getUsername()))
                 .thenReturn(List.of(session));
 
         String result = workoutTools.getSessionDetails("1", "Leg");
@@ -476,7 +476,7 @@ class WorkoutToolsTest {
 
     @Test
     void getSessionDetails_noMatch_returnsNotFound() {
-        when(seanceRepository.findByUtilisateurUsernameAndIsModeleTrueOrderByStartTimeDesc(user.getUsername()))
+        when(seanceRepository.findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc(user.getUsername()))
                 .thenReturn(List.of());
 
         String result = workoutTools.getSessionDetails("1", "Ghost Session");
@@ -490,7 +490,7 @@ class WorkoutToolsTest {
         session.setTitre("Rest Day");
         session.setStartTime(LocalDateTime.now());
 
-        when(seanceRepository.findByUtilisateurUsernameAndIsModeleTrueOrderByStartTimeDesc(user.getUsername()))
+        when(seanceRepository.findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc(user.getUsername()))
                 .thenReturn(List.of(session));
 
         String result = workoutTools.getSessionDetails("1", "Rest");
