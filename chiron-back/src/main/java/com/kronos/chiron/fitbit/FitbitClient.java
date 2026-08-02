@@ -155,7 +155,8 @@ public class FitbitClient {
             return new FitbitUnauthorizedException("Token Google Health rejeté (401)");
         }
         if (status.value() == 403) {
-            log.warn("Google Health {} a renvoyé 403 (accès refusé — API activée sur le projet ? scopes accordés ?) : {}",
+            log.warn(
+                    "Google Health {} a renvoyé 403 (accès refusé — API activée sur le projet ? scopes accordés ?) : {}",
                     call, e.getResponseBodyAsString());
             return new FitbitUnavailableException("Accès Google Health refusé (403)");
         }
@@ -167,13 +168,18 @@ public class FitbitClient {
     }
 
     public record TokenResponse(String accessToken, String refreshToken, long expiresInSeconds,
-                                String scope, String fitbitUserId) {}
+            String scope, String fitbitUserId) {
+    }
 
     public static class FitbitUnavailableException extends RuntimeException {
-        public FitbitUnavailableException(String msg) { super(msg); }
+        public FitbitUnavailableException(String msg) {
+            super(msg);
+        }
     }
 
     public static class FitbitUnauthorizedException extends RuntimeException {
-        public FitbitUnauthorizedException(String msg) { super(msg); }
+        public FitbitUnauthorizedException(String msg) {
+            super(msg);
+        }
     }
 }

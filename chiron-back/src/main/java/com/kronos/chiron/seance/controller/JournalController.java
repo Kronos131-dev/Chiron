@@ -5,13 +5,10 @@ import com.kronos.chiron.seance.model.Seance;
 import com.kronos.chiron.seance.mapper.SeanceMapper;
 import com.kronos.chiron.seance.persistence.SeanceRepository;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -30,7 +27,8 @@ public class JournalController {
 
     @GetMapping("/historique")
     public ResponseEntity<List<SeanceDto>> getHistorique(@RequestParam String username) {
-        List<Seance> historique = seanceRepository.findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc(username);
+        List<Seance> historique = seanceRepository
+                .findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc(username);
         List<SeanceDto> dtos = historique.stream().map(seanceMapper::toDto).collect(Collectors.toList());
         return ResponseEntity.ok(dtos);
     }

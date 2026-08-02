@@ -1,4 +1,4 @@
-package com.kronos.chiron.programme.service;
+package com.kronos.chiron.programme.service.impl;
 
 import org.mockito.Spy;
 
@@ -43,14 +43,16 @@ import static org.mockito.Mockito.*;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class ProgrammeServiceTest {
 
-    @Mock private SeanceRepository seanceRepository;
-    @Mock private UtilisateurRepository utilisateurRepository;
+    @Mock
+    private SeanceRepository seanceRepository;
+    @Mock
+    private UtilisateurRepository utilisateurRepository;
 
-        @Spy
+    @Spy
     private Clock clock = Clock.system(ZoneId.of("Europe/Paris"));
 
-@InjectMocks
-    private ProgrammeService programmeService;
+    @InjectMocks
+    private ProgrammeServiceImpl programmeService;
 
     private Utilisateur owner;
     private Utilisateur otherUser;
@@ -75,15 +77,14 @@ class ProgrammeServiceTest {
 
         SeanceDto dto = new SeanceDto(null, "Leg Day", null, LocalDateTime.now(), null, 1, false, null,
                 List.of(new ExerciceDto(null, "Squat", null, null,
-                        List.of(new SerieDto(100.0, 5, null, null, null, null, null, null, null)), null, null, null, false)));
+                        List.of(new SerieDto(100.0, 5, null, null, null, null, null, null, null)), null, null, null,
+                        false)));
 
         Seance result = programmeService.sauvegarderProgramme("owner", dto);
 
-        verify(seanceRepository).save(argThat(s ->
-                s.getTitre().equals("Leg Day") &&
+        verify(seanceRepository).save(argThat(s -> s.getTitre().equals("Leg Day") &&
                 s.getUtilisateur().equals(owner) &&
-                !s.isHistorique()
-        ));
+                !s.isHistorique()));
     }
 
     @Test
@@ -133,10 +134,9 @@ class ProgrammeServiceTest {
 
         SeanceDto dto = new SeanceDto(7L, "Push", null, null, null, null, false, null,
                 List.of(
-                        new ExerciceDto(null, "Dips",  null, null, List.of(), null, null, null, false),
+                        new ExerciceDto(null, "Dips", null, null, List.of(), null, null, null, false),
                         new ExerciceDto(null, "Bench", null, null, List.of(), null, null, null, false),
-                        new ExerciceDto(null, "Squat", null, null, List.of(), null, null, null, false)
-                ));
+                        new ExerciceDto(null, "Squat", null, null, List.of(), null, null, null, false)));
 
         programmeService.sauvegarderProgramme("owner", dto);
 
@@ -145,10 +145,9 @@ class ProgrammeServiceTest {
         assertThat(existing.getExercices())
                 .extracting(Exercice::getNom, Exercice::getDisplayOrder)
                 .containsExactly(
-                        tuple("Dips",  0),
+                        tuple("Dips", 0),
                         tuple("Bench", 1),
-                        tuple("Squat", 2)
-                );
+                        tuple("Squat", 2));
     }
 
     @Test
@@ -182,10 +181,8 @@ class ProgrammeServiceTest {
         programmeService.sauvegarderProgramme("coach", dto, "owner");
 
         // The new programme must belong to the athlete (`owner`), not the coach.
-        verify(seanceRepository).save(argThat(s ->
-                s.getUtilisateur().equals(owner) &&
-                s.getTitre().equals("For my athlete")
-        ));
+        verify(seanceRepository).save(argThat(s -> s.getUtilisateur().equals(owner) &&
+                s.getTitre().equals("For my athlete")));
     }
 
     @Test
@@ -254,9 +251,18 @@ class ProgrammeServiceTest {
 
     @Test
     void reorderProgrammes_byOwner_assignsContiguousPositions() {
-        Seance s1 = new Seance(); s1.setId(10L); s1.setUtilisateur(owner); s1.setDisplayOrder(5);
-        Seance s2 = new Seance(); s2.setId(20L); s2.setUtilisateur(owner); s2.setDisplayOrder(2);
-        Seance s3 = new Seance(); s3.setId(30L); s3.setUtilisateur(owner); s3.setDisplayOrder(7);
+        Seance s1 = new Seance();
+        s1.setId(10L);
+        s1.setUtilisateur(owner);
+        s1.setDisplayOrder(5);
+        Seance s2 = new Seance();
+        s2.setId(20L);
+        s2.setUtilisateur(owner);
+        s2.setDisplayOrder(2);
+        Seance s3 = new Seance();
+        s3.setId(30L);
+        s3.setUtilisateur(owner);
+        s3.setDisplayOrder(7);
 
         when(utilisateurRepository.findByUsername("owner")).thenReturn(Optional.of(owner));
         when(seanceRepository.findAllById(List.of(30L, 10L, 20L))).thenReturn(List.of(s1, s2, s3));
@@ -279,7 +285,9 @@ class ProgrammeServiceTest {
 
     @Test
     void reorderProgrammes_missingProgramme_throwsException() {
-        Seance s1 = new Seance(); s1.setId(10L); s1.setUtilisateur(owner);
+        Seance s1 = new Seance();
+        s1.setId(10L);
+        s1.setUtilisateur(owner);
 
         when(utilisateurRepository.findByUsername("owner")).thenReturn(Optional.of(owner));
         when(seanceRepository.findAllById(List.of(10L, 99L))).thenReturn(List.of(s1));
@@ -292,7 +300,10 @@ class ProgrammeServiceTest {
 
     @Test
     void reorderProgrammes_byUnauthorizedUser_throwsException() {
-        Seance s1 = new Seance(); s1.setId(10L); s1.setUtilisateur(owner); s1.setDisplayOrder(0);
+        Seance s1 = new Seance();
+        s1.setId(10L);
+        s1.setUtilisateur(owner);
+        s1.setDisplayOrder(0);
 
         when(utilisateurRepository.findByUsername("other")).thenReturn(Optional.of(otherUser));
         when(seanceRepository.findAllById(List.of(10L))).thenReturn(List.of(s1));
@@ -310,7 +321,10 @@ class ProgrammeServiceTest {
         Utilisateur coach = Utilisateur.builder().id(3L).username("coach").role(Role.USER).build();
         owner.addCoach(coach);
 
-        Seance s1 = new Seance(); s1.setId(10L); s1.setUtilisateur(owner); s1.setDisplayOrder(7);
+        Seance s1 = new Seance();
+        s1.setId(10L);
+        s1.setUtilisateur(owner);
+        s1.setDisplayOrder(7);
 
         when(utilisateurRepository.findByUsername("coach")).thenReturn(Optional.of(coach));
         when(seanceRepository.findAllById(List.of(10L))).thenReturn(List.of(s1));
@@ -323,8 +337,14 @@ class ProgrammeServiceTest {
     @Test
     void reorderProgrammes_byAdmin_succeeds() {
         Utilisateur admin = Utilisateur.builder().id(9L).username("admin").role(Role.ADMIN).build();
-        Seance s1 = new Seance(); s1.setId(10L); s1.setUtilisateur(owner); s1.setDisplayOrder(3);
-        Seance s2 = new Seance(); s2.setId(20L); s2.setUtilisateur(owner); s2.setDisplayOrder(4);
+        Seance s1 = new Seance();
+        s1.setId(10L);
+        s1.setUtilisateur(owner);
+        s1.setDisplayOrder(3);
+        Seance s2 = new Seance();
+        s2.setId(20L);
+        s2.setUtilisateur(owner);
+        s2.setDisplayOrder(4);
 
         when(utilisateurRepository.findByUsername("admin")).thenReturn(Optional.of(admin));
         when(seanceRepository.findAllById(List.of(20L, 10L))).thenReturn(List.of(s1, s2));
@@ -337,8 +357,14 @@ class ProgrammeServiceTest {
 
     @Test
     void reorderProgrammes_mixedOwners_rejectsIfAnyUnauthorized() {
-        Seance mine = new Seance(); mine.setId(10L); mine.setUtilisateur(owner); mine.setDisplayOrder(0);
-        Seance theirs = new Seance(); theirs.setId(20L); theirs.setUtilisateur(otherUser); theirs.setDisplayOrder(1);
+        Seance mine = new Seance();
+        mine.setId(10L);
+        mine.setUtilisateur(owner);
+        mine.setDisplayOrder(0);
+        Seance theirs = new Seance();
+        theirs.setId(20L);
+        theirs.setUtilisateur(otherUser);
+        theirs.setDisplayOrder(1);
 
         when(utilisateurRepository.findByUsername("owner")).thenReturn(Optional.of(owner));
         when(seanceRepository.findAllById(List.of(10L, 20L))).thenReturn(List.of(mine, theirs));
@@ -449,11 +475,9 @@ class ProgrammeServiceTest {
 
         programmeService.copyProgramme(1L, "other");
 
-        verify(seanceRepository).save(argThat(copy ->
-                copy.getTitre().contains("Copie") &&
+        verify(seanceRepository).save(argThat(copy -> copy.getTitre().contains("Copie") &&
                 copy.getUtilisateur().equals(otherUser) &&
-                !copy.getExercices().isEmpty()
-        ));
+                !copy.getExercices().isEmpty()));
     }
 
     @Test

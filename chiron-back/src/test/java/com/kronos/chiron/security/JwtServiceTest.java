@@ -4,7 +4,6 @@ import com.kronos.chiron.utilisateur.model.Role;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Date;

@@ -1,0 +1,93 @@
+package com.kronos.chiron.exercice.service.impl;
+
+import com.kronos.chiron.exercice.service.ExerciceDefinitionService;
+
+import com.kronos.chiron.exercice.dto.ExerciceDefinitionDto;
+import com.kronos.chiron.exercice.model.ExerciceDefinition;
+import com.kronos.chiron.exercice.model.MuscleGroup;
+import com.kronos.chiron.exercice.model.NiveauDifficulte;
+import com.kronos.chiron.exercice.model.TypeEquipement;
+import com.kronos.chiron.exercice.persistence.ExerciceDefinitionRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import java.util.List;
+import java.util.NoSuchElementException;
+
+@Service
+@RequiredArgsConstructor
+public class ExerciceDefinitionServiceImpl implements ExerciceDefinitionService {
+
+    private final ExerciceDefinitionRepository repository;
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<ExerciceDefinitionDto> search(String q, String muscle, String equipement, String difficulte) {
+        MuscleGroup muscleEnum = muscle != null ? MuscleGroup.valueOf(muscle) : null;
+        TypeEquipement equipementEnum = equipement != null ? TypeEquipement.valueOf(equipement) : null;
+        NiveauDifficulte difficulteEnum = difficulte != null ? NiveauDifficulte.valueOf(difficulte) : null;
+        String qTrimmed = (q != null && !q.isBlank()) ? q.trim().toLowerCase() : null;
+        String qPattern = qTrimmed != null ? "%" + qTrimmed + "%" : null;
+        String qPrefix = qTrimmed != null ? qTrimmed + "%" : "%";
+
+        return repository.search(qPattern, qPrefix, muscleEnum, equipementEnum, difficulteEnum)
+                .stream()
+                .limit(50)
+                .map(this::toDto)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public ExerciceDefinitionDto getById(Long id) {
+        return repository.findById(id)
+                .map(this::toDto)
+                .orElseThrow(() -> new NoSuchElementException("Exercice non trouvé : " + id));
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public Resource streamImage(Long id, int index) {
+        if (index != 0 && index != 1) throw new IllegalArgumentException("Index image invalide : " + index);
+
+        if (!repository.existsById(id))
+            throw new NoSuchElementException("Exercice non trouvé : " + id);
+
+        byte[] data = index == 0 ? repository.findImage0ById(id) : repository.findImage1ById(id);
+        if (data == null || data.length == 0)
+            throw new NoSuchElementException("Pas d'image pour l'exercice : " + id + " index " + index);
+
+        return new ByteArrayResource(data);
+    }
+
+    private String buildBaseUrl() {
+        try {
+            return ServletUriComponentsBuilder.fromCurrentContextPath().toUriString();
+        } catch (IllegalStateException e) {
+            return "";
+        }
+    }
+
+    ExerciceDefinitionDto toDto(ExerciceDefinition e) {
+        String base = buildBaseUrl();
+        String imageUrl = e.getGifPath() != null ? base + "/api/exercices/" + e.getId() + "/image/0" : null;
+        String imageUrl2 = e.getGifPath() != null ? base + "/api/exercices/" + e.getId() + "/image/1" : null;
+        return new ExerciceDefinitionDto(
+                e.getId(),
+                e.getNomFr(),
+                e.getNomEn(),
+                imageUrl,
+                imageUrl2,
+                e.getMusclePrincipal(),
+                e.getMusclesSecondaires(),
+                e.getTypeEquipement(),
+                e.getDifficulte(),
+                e.getDescriptionFr(),
+                e.getDescriptionEn(),
+                e.getCardioType());
+    }
+}

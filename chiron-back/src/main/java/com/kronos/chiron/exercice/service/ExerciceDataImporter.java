@@ -1,7 +1,5 @@
 package com.kronos.chiron.exercice.service;
 
-import com.kronos.chiron.seance.model.Exercice;
-
 import com.kronos.chiron.exercice.model.ExerciceDefinition;
 import com.kronos.chiron.exercice.model.MuscleGroup;
 import com.kronos.chiron.exercice.model.NiveauDifficulte;
@@ -39,8 +37,7 @@ public class ExerciceDataImporter {
     static final Map<String, NiveauDifficulte> LEVEL_MAP = Map.of(
             "beginner", NiveauDifficulte.DEBUTANT,
             "intermediate", NiveauDifficulte.INTERMEDIAIRE,
-            "expert", NiveauDifficulte.AVANCE
-    );
+            "expert", NiveauDifficulte.AVANCE);
 
     static final Map<String, TypeEquipement> EQUIPMENT_MAP = Map.ofEntries(
             Map.entry("barbell", TypeEquipement.BARRE),
@@ -54,8 +51,7 @@ public class ExerciceDataImporter {
             Map.entry("medicine ball", TypeEquipement.AUTRE),
             Map.entry("exercise ball", TypeEquipement.AUTRE),
             Map.entry("foam roll", TypeEquipement.AUTRE),
-            Map.entry("other", TypeEquipement.AUTRE)
-    );
+            Map.entry("other", TypeEquipement.AUTRE));
 
     static final Map<String, MuscleGroup> MUSCLE_MAP = Map.ofEntries(
             Map.entry("abdominals", MuscleGroup.ABDOMINAUX),
@@ -74,8 +70,7 @@ public class ExerciceDataImporter {
             Map.entry("quadriceps", MuscleGroup.QUADRICEPS),
             Map.entry("shoulders", MuscleGroup.EPAULES),
             Map.entry("traps", MuscleGroup.TRAPEZES),
-            Map.entry("triceps", MuscleGroup.TRICEPS)
-    );
+            Map.entry("triceps", MuscleGroup.TRICEPS));
 
     static final Map<String, String> FR_NAMES = loadFrenchNames();
 
@@ -85,7 +80,8 @@ public class ExerciceDataImporter {
                 throw new ChironTechnicalException("Ressource introuvable : " + FR_NAMES_RESOURCE);
             }
             return Map.copyOf(JsonMapper.builder().build()
-                    .readValue(in, new TypeReference<LinkedHashMap<String, String>>() {}));
+                    .readValue(in, new TypeReference<LinkedHashMap<String, String>>() {
+                    }));
         } catch (IOException e) {
             throw new ChironTechnicalException("Lecture de " + FR_NAMES_RESOURCE + " impossible", e);
         }
@@ -163,7 +159,8 @@ public class ExerciceDataImporter {
         return true;
     }
 
-    private String copyImages(String externalId, JsonNode imagesNode, Path exercicesDir, Path imageSourceDir) throws IOException {
+    private String copyImages(String externalId, JsonNode imagesNode, Path exercicesDir, Path imageSourceDir)
+            throws IOException {
         if (!imagesNode.isArray() || imagesNode.size() == 0) return null;
         if (imageSourceDir == null) return null;
 

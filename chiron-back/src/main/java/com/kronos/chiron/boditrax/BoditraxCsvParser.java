@@ -20,8 +20,7 @@ public class BoditraxCsvParser {
 
     private static final Logger log = LoggerFactory.getLogger(BoditraxCsvParser.class);
 
-    private static final DateTimeFormatter US_DATETIME =
-            DateTimeFormatter.ofPattern("M/d/yyyy h:mm:ss a", Locale.US);
+    private static final DateTimeFormatter US_DATETIME = DateTimeFormatter.ofPattern("M/d/yyyy h:mm:ss a", Locale.US);
 
     private static final String SEC_USER = "User Details";
     private static final String SEC_PHYSIQUE = "User Physique Details";
@@ -29,7 +28,8 @@ public class BoditraxCsvParser {
     private static final String SEC_LOGIN = "User Login Details";
 
     public record ParsedBoditrax(List<VisbodyReport> scans, String gender,
-                                 Double tailleCm, LocalDate dateNaissance) {}
+            Double tailleCm, LocalDate dateNaissance) {
+    }
 
     public ParsedBoditrax parse(byte[] csv) {
         String content = new String(csv, StandardCharsets.UTF_8);
@@ -55,7 +55,10 @@ public class BoditraxCsvParser {
                 continue;
             }
             if (section == null) continue;
-            if (skipHeader) { skipHeader = false; continue; }
+            if (skipHeader) {
+                skipHeader = false;
+                continue;
+            }
 
             String[] f = line.split(",", -1);
             switch (section) {
@@ -82,7 +85,8 @@ public class BoditraxCsvParser {
                         }
                     }
                 }
-                default -> { }
+                default -> {
+                }
             }
         }
 
@@ -95,7 +99,7 @@ public class BoditraxCsvParser {
     }
 
     private VisbodyReport toReport(LocalDateTime when, Map<String, Double> m,
-                                   Double heightCm, String gender) {
+            Double heightCm, String gender) {
         VisbodyReport r = new VisbodyReport();
         r.setMesureLe(when);
 

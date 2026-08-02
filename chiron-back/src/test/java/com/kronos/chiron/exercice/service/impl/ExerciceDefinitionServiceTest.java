@@ -1,4 +1,4 @@
-package com.kronos.chiron.exercice.service;
+package com.kronos.chiron.exercice.service.impl;
 
 import com.kronos.chiron.exercice.model.ExerciceDefinition;
 import com.kronos.chiron.exercice.model.MuscleGroup;
@@ -29,7 +29,7 @@ class ExerciceDefinitionServiceTest {
     private ExerciceDefinitionRepository repository;
 
     @InjectMocks
-    private ExerciceDefinitionService service;
+    private ExerciceDefinitionServiceImpl service;
 
     private ExerciceDefinition buildDef(Long id, String nomFr, String nomEn, MuscleGroup muscle) {
         return ExerciceDefinition.builder()
@@ -68,13 +68,15 @@ class ExerciceDefinitionServiceTest {
 
     @Test
     void search_parsesEnumFilters() {
-        when(repository.search("%squat%", "squat%", MuscleGroup.QUADRICEPS, TypeEquipement.BARRE, NiveauDifficulte.INTERMEDIAIRE))
+        when(repository.search("%squat%", "squat%", MuscleGroup.QUADRICEPS, TypeEquipement.BARRE,
+                NiveauDifficulte.INTERMEDIAIRE))
                 .thenReturn(List.of());
 
         List<ExerciceDefinitionDto> results = service.search("squat", "QUADRICEPS", "BARRE", "INTERMEDIAIRE");
 
         assertThat(results).isEmpty();
-        verify(repository).search("%squat%", "squat%", MuscleGroup.QUADRICEPS, TypeEquipement.BARRE, NiveauDifficulte.INTERMEDIAIRE);
+        verify(repository).search("%squat%", "squat%", MuscleGroup.QUADRICEPS, TypeEquipement.BARRE,
+                NiveauDifficulte.INTERMEDIAIRE);
     }
 
     @Test

@@ -30,12 +30,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(value = PerformanceController.class, excludeAutoConfiguration = {SecurityAutoConfiguration.class})
 class PerformanceControllerTest {
 
-    @Autowired private MockMvc mockMvc;
-    @Autowired private JsonMapper objectMapper;
+    @Autowired
+    private MockMvc mockMvc;
+    @Autowired
+    private JsonMapper objectMapper;
 
-    @MockitoBean private PerformanceService performanceService;
-    @MockitoBean private JwtService jwtService;
-    @MockitoBean private UserDetailsService userDetailsService;
+    @MockitoBean
+    private PerformanceService performanceService;
+    @MockitoBean
+    private JwtService jwtService;
+    @MockitoBean
+    private UserDetailsService userDetailsService;
 
     private PerformanceSummaryDto buildSummary() {
         return PerformanceSummaryDto.builder()
@@ -59,8 +64,8 @@ class PerformanceControllerTest {
         PerformanceRecordDto dto = new PerformanceRecordDto("DEVELOPPE_COUCHE", 100.0, 5);
 
         mockMvc.perform(post("/api/performance/alice/record")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(dto)))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isOk());
     }
 
@@ -69,32 +74,32 @@ class PerformanceControllerTest {
         when(performanceService.updateBodyweight("alice", 80.0)).thenReturn(buildSummary());
 
         mockMvc.perform(put("/api/performance/alice/bodyweight")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(Map.of("poidsCorps", 80.0))))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(Map.of("poidsCorps", 80.0))))
                 .andExpect(status().isOk());
     }
 
     @Test
     void updateBodyweight_zeroWeight_returns400() throws Exception {
         mockMvc.perform(put("/api/performance/alice/bodyweight")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(Map.of("poidsCorps", 0.0))))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(Map.of("poidsCorps", 0.0))))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
     void updateBodyweight_negativeWeight_returns400() throws Exception {
         mockMvc.perform(put("/api/performance/alice/bodyweight")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(Map.of("poidsCorps", -5.0))))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(Map.of("poidsCorps", -5.0))))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
     void updateBodyweight_missingField_returns400() throws Exception {
         mockMvc.perform(put("/api/performance/alice/bodyweight")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{}"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}"))
                 .andExpect(status().isBadRequest());
     }
 

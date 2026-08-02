@@ -24,8 +24,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ActiveProfiles("test")
 class SeanceRepositoryTest {
 
-    @Autowired private TestEntityManager em;
-    @Autowired private SeanceRepository seanceRepository;
+    @Autowired
+    private TestEntityManager em;
+    @Autowired
+    private SeanceRepository seanceRepository;
 
     private Utilisateur user;
 
@@ -41,11 +43,13 @@ class SeanceRepositoryTest {
         em.flush();
     }
 
-    private Seance makeSeance(String titre, boolean historique, int weekNumber, LocalDateTime start, LocalDateTime end) {
+    private Seance makeSeance(String titre, boolean historique, int weekNumber, LocalDateTime start,
+            LocalDateTime end) {
         return makeSeance(titre, historique, weekNumber, start, end, 0);
     }
 
-    private Seance makeSeance(String titre, boolean historique, int weekNumber, LocalDateTime start, LocalDateTime end, int displayOrder) {
+    private Seance makeSeance(String titre, boolean historique, int weekNumber, LocalDateTime start, LocalDateTime end,
+            int displayOrder) {
         Seance s = new Seance();
         s.setTitre(titre);
         s.setHistorique(historique);
@@ -119,9 +123,9 @@ class SeanceRepositoryTest {
 
     @Test
     void findByHistoriqueFalse_orderedByDisplayOrderAsc() {
-        makeSeance("Third",  false, 0, LocalDateTime.now(),               null, 2);
-        makeSeance("First",  false, 0, LocalDateTime.now().minusDays(5),  null, 0);
-        makeSeance("Second", false, 0, LocalDateTime.now().minusDays(1),  null, 1);
+        makeSeance("Third", false, 0, LocalDateTime.now(), null, 2);
+        makeSeance("First", false, 0, LocalDateTime.now().minusDays(5), null, 0);
+        makeSeance("Second", false, 0, LocalDateTime.now().minusDays(1), null, 1);
 
         List<Seance> results = seanceRepository
                 .findByUtilisateurUsernameAndHistoriqueFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername());
@@ -134,7 +138,7 @@ class SeanceRepositoryTest {
     void findByHistoriqueFalse_displayOrderTie_fallsBackToStartTimeDesc() {
         // Same displayOrder → newer startTime wins (so brand-new programmes appear at top).
         makeSeance("Older Default", false, 0, LocalDateTime.now().minusDays(3), null, 0);
-        makeSeance("Newer Default", false, 0, LocalDateTime.now(),              null, 0);
+        makeSeance("Newer Default", false, 0, LocalDateTime.now(), null, 0);
 
         List<Seance> results = seanceRepository
                 .findByUtilisateurUsernameAndHistoriqueFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername());
@@ -151,8 +155,14 @@ class SeanceRepositoryTest {
         exo.setSeance(session);
         em.persist(exo);
 
-        Serie s1 = new Serie(); s1.setPoids(80); s1.setNombreReps(5); s1.setExercice(exo);
-        Serie s2 = new Serie(); s2.setPoids(85); s2.setNombreReps(4); s2.setExercice(exo);
+        Serie s1 = new Serie();
+        s1.setPoids(80);
+        s1.setNombreReps(5);
+        s1.setExercice(exo);
+        Serie s2 = new Serie();
+        s2.setPoids(85);
+        s2.setNombreReps(4);
+        s2.setExercice(exo);
         em.persist(s1);
         em.persist(s2);
         em.flush();
@@ -170,7 +180,10 @@ class SeanceRepositoryTest {
         exo.setNom("Squat");
         exo.setSeance(template);
         em.persist(exo);
-        Serie s = new Serie(); s.setPoids(100); s.setNombreReps(5); s.setExercice(exo);
+        Serie s = new Serie();
+        s.setPoids(100);
+        s.setNombreReps(5);
+        s.setExercice(exo);
         em.persist(s);
         em.flush();
 
@@ -185,9 +198,15 @@ class SeanceRepositoryTest {
         Seance template = makeSeance("Push Day", false, 0, LocalDateTime.now(), null);
 
         // Insert in "wrong" PK/insertion order to prove sorting is by displayOrder, not by id.
-        Exercice ohp   = new Exercice(); ohp.setNom("OHP");     ohp.setDisplayOrder(2);
-        Exercice bench = new Exercice(); bench.setNom("Bench"); bench.setDisplayOrder(0);
-        Exercice dips  = new Exercice(); dips.setNom("Dips");   dips.setDisplayOrder(1);
+        Exercice ohp = new Exercice();
+        ohp.setNom("OHP");
+        ohp.setDisplayOrder(2);
+        Exercice bench = new Exercice();
+        bench.setNom("Bench");
+        bench.setDisplayOrder(0);
+        Exercice dips = new Exercice();
+        dips.setNom("Dips");
+        dips.setDisplayOrder(1);
         template.addExercice(ohp);
         template.addExercice(bench);
         template.addExercice(dips);
@@ -202,9 +221,9 @@ class SeanceRepositoryTest {
         // Reorder by swapping displayOrder values, then flush+reload.
         reloaded.getExercices().forEach(e -> {
             switch (e.getNom()) {
-                case "OHP"   -> e.setDisplayOrder(0);
+                case "OHP" -> e.setDisplayOrder(0);
                 case "Bench" -> e.setDisplayOrder(1);
-                case "Dips"  -> e.setDisplayOrder(2);
+                case "Dips" -> e.setDisplayOrder(2);
             }
         });
         em.flush();
@@ -224,7 +243,10 @@ class SeanceRepositoryTest {
         exo.setNom("OldBench");
         exo.setSeance(oldSession);
         em.persist(exo);
-        Serie s = new Serie(); s.setPoids(80); s.setNombreReps(5); s.setExercice(exo);
+        Serie s = new Serie();
+        s.setPoids(80);
+        s.setNombreReps(5);
+        s.setExercice(exo);
         em.persist(s);
         em.flush();
 

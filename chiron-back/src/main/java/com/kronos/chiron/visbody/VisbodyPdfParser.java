@@ -15,8 +15,7 @@ import java.util.regex.Pattern;
 @Component
 public class VisbodyPdfParser {
 
-    private static final DateTimeFormatter DETECTION_FMT =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final DateTimeFormatter DETECTION_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public String extractText(byte[] pdf) {
         try (PDDocument doc = Loader.loadPDF(pdf)) {
@@ -42,7 +41,10 @@ public class VisbodyPdfParser {
         r.setNote(intOf(group(flat, "Note\\s*(\\d+)", 1)));
         String dt = group(flat, "tection\\s*:\\s*(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2})", 1);
         if (dt != null) {
-            try { r.setMesureLe(LocalDateTime.parse(dt, DETECTION_FMT)); } catch (Exception ignored) {}
+            try {
+                r.setMesureLe(LocalDateTime.parse(dt, DETECTION_FMT));
+            } catch (Exception ignored) {
+            }
         }
 
         r.setPoids(valueBeforeRange(flat, "Poids kg"));
@@ -125,7 +127,8 @@ public class VisbodyPdfParser {
     private List<Double> allDecimals(String s) {
         List<Double> out = new java.util.ArrayList<>();
         Matcher m = Pattern.compile("\\d+[.,]\\d+").matcher(s);
-        while (m.find()) out.add(dbl(m.group()));
+        while (m.find())
+            out.add(dbl(m.group()));
         return out;
     }
 
@@ -136,16 +139,29 @@ public class VisbodyPdfParser {
 
     private Double dbl(String s) {
         if (s == null) return null;
-        try { return Double.parseDouble(s.replace(',', '.')); } catch (NumberFormatException e) { return null; }
+        try {
+            return Double.parseDouble(s.replace(',', '.'));
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     private Integer intOf(String s) {
         if (s == null) return null;
-        try { return Integer.parseInt(s.trim()); } catch (NumberFormatException e) { return null; }
+        try {
+            return Integer.parseInt(s.trim());
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     public static class VisbodyParseException extends RuntimeException {
-        public VisbodyParseException(String msg, Throwable cause) { super(msg, cause); }
-        public VisbodyParseException(String msg) { super(msg); }
+        public VisbodyParseException(String msg, Throwable cause) {
+            super(msg, cause);
+        }
+
+        public VisbodyParseException(String msg) {
+            super(msg);
+        }
     }
 }

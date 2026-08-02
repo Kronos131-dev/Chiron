@@ -32,8 +32,7 @@ public class FitbitSyncService {
                 return;
             }
             String token = fitbitService.getValidToken(chironUsername);
-            Map<LocalDate, Double> hoursByDate =
-                    FitbitParser.sleepHoursByDate(fitbitClient.listSleep(token, start));
+            Map<LocalDate, Double> hoursByDate = FitbitParser.sleepHoursByDate(fitbitClient.listSleep(token, start));
 
             int written = 0;
             for (Map.Entry<LocalDate, Double> e : hoursByDate.entrySet()) {

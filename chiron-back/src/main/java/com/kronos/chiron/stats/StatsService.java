@@ -76,7 +76,10 @@ public class StatsService {
         int dureeCount = 0;
         for (Seance s : sessions) {
             Double dm = sessionDurationMin(s);
-            if (dm != null) { dureeSum += dm; dureeCount++; }
+            if (dm != null) {
+                dureeSum += dm;
+                dureeCount++;
+            }
         }
         Double dureeMoyenneMin = dureeCount > 0 ? round1(dureeSum / dureeCount) : null;
 
@@ -116,7 +119,10 @@ public class StatsService {
                 tonnage += sessionTonnage(s, tp);
                 nbSeries += sessionSeriesCount(s);
                 Double dm = sessionDurationMin(s);
-                if (dm != null) { dureeSum += dm; dureeCount++; }
+                if (dm != null) {
+                    dureeSum += dm;
+                    dureeCount++;
+                }
             }
             Double dureeMoyenneMin = dureeCount > 0 ? round1(dureeSum / dureeCount) : null;
             result.add(new WeeklyVolumePointDto(
@@ -238,8 +244,17 @@ public class StatsService {
         double sumK = 0, sumP = 0, sumG = 0, sumL = 0, sumT = 0;
         int nK = 0, nT = 0;
         for (NutritionPointDto j : jours) {
-            if (j.kcal() != null) { sumK += j.kcal(); sumP += orZero(j.proteines()); sumG += orZero(j.glucides()); sumL += orZero(j.lipides()); nK++; }
-            if (j.targetKcal() != null) { sumT += j.targetKcal(); nT++; }
+            if (j.kcal() != null) {
+                sumK += j.kcal();
+                sumP += orZero(j.proteines());
+                sumG += orZero(j.glucides());
+                sumL += orZero(j.lipides());
+                nK++;
+            }
+            if (j.targetKcal() != null) {
+                sumT += j.targetKcal();
+                nT++;
+            }
         }
 
         return new NutritionStatsDto(
@@ -269,8 +284,8 @@ public class StatsService {
         if (user.isEmpty()) return BodyCompositionStatsDto.empty();
 
         LocalDateTime since = LocalDateTime.now(clock).minusDays(n);
-        List<BodyCompositionRecord> records =
-                bodyCompositionRepo.findByUtilisateurAndMesureLeAfterOrderByMesureLeAsc(user.get(), since);
+        List<BodyCompositionRecord> records = bodyCompositionRepo
+                .findByUtilisateurAndMesureLeAfterOrderByMesureLeAsc(user.get(), since);
         if (records.isEmpty()) return BodyCompositionStatsDto.empty();
 
         List<BodyCompositionPointDto> points = new ArrayList<>();
@@ -304,7 +319,8 @@ public class StatsService {
         return seanceRepository.findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc(username);
     }
 
-    private record TonnagePrefs(boolean halteresX2, boolean machineX2) {}
+    private record TonnagePrefs(boolean halteresX2, boolean machineX2) {
+    }
 
     private TonnagePrefs tonnagePrefs(String username) {
         return utilisateurRepository.findByUsername(username)
@@ -322,7 +338,8 @@ public class StatsService {
 
     private double sessionTonnage(Seance s, TonnagePrefs p) {
         double t = 0;
-        for (Exercice e : s.getExercices()) t += exerciseTonnage(e, p);
+        for (Exercice e : s.getExercices())
+            t += exerciseTonnage(e, p);
         return t;
     }
 
@@ -339,7 +356,8 @@ public class StatsService {
 
     private int sessionSeriesCount(Seance s) {
         int c = 0;
-        for (Exercice e : s.getExercices()) c += e.getSeries().size();
+        for (Exercice e : s.getExercices())
+            c += e.getSeries().size();
         return c;
     }
 
@@ -384,6 +402,8 @@ public class StatsService {
         final String nom;
         final Set<Long> seances = new java.util.HashSet<>();
         LocalDate derniere;
-        ExerciseAcc(String nom) { this.nom = nom; }
+        ExerciseAcc(String nom) {
+            this.nom = nom;
+        }
     }
 }

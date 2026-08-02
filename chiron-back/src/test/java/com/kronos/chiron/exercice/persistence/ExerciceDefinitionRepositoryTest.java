@@ -20,8 +20,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ActiveProfiles("test")
 class ExerciceDefinitionRepositoryTest {
 
-    @Autowired private TestEntityManager em;
-    @Autowired private ExerciceDefinitionRepository repository;
+    @Autowired
+    private TestEntityManager em;
+    @Autowired
+    private ExerciceDefinitionRepository repository;
 
     private ExerciceDefinition bench;
     private ExerciceDefinition squat;
@@ -123,7 +125,8 @@ class ExerciceDefinitionRepositoryTest {
 
     @Test
     void search_combinedFilters_appliedTogether() {
-        List<ExerciceDefinition> results = repository.search("%barbell%", "barbell%", MuscleGroup.QUADRICEPS, TypeEquipement.BARRE, null);
+        List<ExerciceDefinition> results = repository.search("%barbell%", "barbell%", MuscleGroup.QUADRICEPS,
+                TypeEquipement.BARRE, null);
         assertThat(results).hasSize(1);
         assertThat(results.get(0).getExternalId()).isEqualTo("Barbell_Squat");
     }

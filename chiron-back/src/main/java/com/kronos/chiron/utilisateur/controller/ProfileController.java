@@ -18,7 +18,8 @@ public class ProfileController {
     private final ProfileService profileService;
 
     @GetMapping("/{username}")
-    public ResponseEntity<ProfileDto> getProfile(@PathVariable String username, @RequestParam(required = false) String requestUsername) {
+    public ResponseEntity<ProfileDto> getProfile(@PathVariable String username,
+            @RequestParam(required = false) String requestUsername) {
         try {
             String reqUser = requestUsername != null ? requestUsername : username;
             return ResponseEntity.ok(profileService.getProfile(username, reqUser));
@@ -28,21 +29,24 @@ public class ProfileController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<ProfileDto>> searchProfiles(@RequestParam String query, @RequestParam String requestUsername) {
+    public ResponseEntity<List<ProfileDto>> searchProfiles(@RequestParam String query,
+            @RequestParam String requestUsername) {
         return ResponseEntity.ok(profileService.searchProfiles(query, requestUsername));
     }
 
     @PutMapping("/{username}/visibility")
-    public ResponseEntity<?> updateVisibility(@PathVariable String username, @RequestParam boolean isPublic, Authentication authentication) {
+    public ResponseEntity<?> updateVisibility(@PathVariable String username, @RequestParam boolean isPublic,
+            Authentication authentication) {
         if (authentication == null || !authentication.getName().equalsIgnoreCase(username)) {
-             return ResponseEntity.status(403).body("Unauthorized");
+            return ResponseEntity.status(403).body("Unauthorized");
         }
         profileService.updateVisibility(username, isPublic);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/{username}/icon")
-    public ResponseEntity<?> updateIcon(@PathVariable String username, @RequestParam("file") MultipartFile file, Authentication authentication) {
+    public ResponseEntity<?> updateIcon(@PathVariable String username, @RequestParam("file") MultipartFile file,
+            Authentication authentication) {
         try {
             if (authentication == null || !authentication.getName().equalsIgnoreCase(username)) {
                 return ResponseEntity.status(403).body("Unauthorized");
@@ -57,7 +61,8 @@ public class ProfileController {
     }
 
     @PostMapping("/{username}/coach/{coachUsername}")
-    public ResponseEntity<?> addCoach(@PathVariable String username, @PathVariable String coachUsername, Authentication authentication) {
+    public ResponseEntity<?> addCoach(@PathVariable String username, @PathVariable String coachUsername,
+            Authentication authentication) {
         try {
             if (authentication == null || !authentication.getName().equalsIgnoreCase(username)) {
                 return ResponseEntity.status(403).body("Unauthorized");
@@ -70,7 +75,8 @@ public class ProfileController {
     }
 
     @DeleteMapping("/{username}/coach/{coachUsername}")
-    public ResponseEntity<?> removeCoach(@PathVariable String username, @PathVariable String coachUsername, Authentication authentication) {
+    public ResponseEntity<?> removeCoach(@PathVariable String username, @PathVariable String coachUsername,
+            Authentication authentication) {
         try {
             if (authentication == null || !authentication.getName().equalsIgnoreCase(username)) {
                 return ResponseEntity.status(403).body("Unauthorized");

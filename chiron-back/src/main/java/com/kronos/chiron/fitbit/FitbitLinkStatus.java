@@ -7,8 +7,7 @@ public record FitbitLinkStatus(
         boolean needsReconnect,
         String fitbitUserId,
         String scope,
-        LocalDateTime linkedAt
-) {
+        LocalDateTime linkedAt) {
     public static FitbitLinkStatus notLinked() {
         return new FitbitLinkStatus(false, false, null, null, null);
     }

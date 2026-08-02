@@ -34,8 +34,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(
             @NonNull HttpServletRequest request,
             @NonNull HttpServletResponse response,
-            @NonNull FilterChain filterChain
-    ) throws ServletException, IOException {
+            @NonNull FilterChain filterChain) throws ServletException, IOException {
 
         final String path = request.getMethod() + " " + request.getRequestURI();
         final String authHeader = request.getHeader("Authorization");
@@ -43,7 +42,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String username;
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            log.info("JWT_FILTER {} NO_BEARER (header={})", path, authHeader == null ? "null" : "\"" + (authHeader.length() > 20 ? authHeader.substring(0, 20) + "..." : authHeader) + "\"");
+            log.info("JWT_FILTER {} NO_BEARER (header={})", path, authHeader == null
+                    ? "null"
+                    : "\"" + (authHeader.length() > 20 ? authHeader.substring(0, 20) + "..." : authHeader) + "\"");
             filterChain.doFilter(request, response);
             return;
         }
@@ -65,18 +66,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userDetails,
                             null,
-                            userDetails.getAuthorities()
-                    );
+                            userDetails.getAuthorities());
                     authToken.setDetails(
-                            new WebAuthenticationDetailsSource().buildDetails(request)
-                    );
+                            new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                     log.info("JWT_FILTER {} AUTH_OK user={}", path, username);
                 } else {
                     log.warn("JWT_FILTER {} TOKEN_INVALID user={}", path, username);
                 }
             } catch (Exception e) {
-                log.warn("JWT_FILTER {} LOAD_USER_FAILED user={} : {}", path, username, e.getClass().getSimpleName() + " " + e.getMessage());
+                log.warn("JWT_FILTER {} LOAD_USER_FAILED user={} : {}", path, username,
+                        e.getClass().getSimpleName() + " " + e.getMessage());
             }
         }
 

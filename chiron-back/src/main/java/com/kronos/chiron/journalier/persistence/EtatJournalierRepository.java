@@ -12,5 +12,6 @@ public interface EtatJournalierRepository extends JpaRepository<EtatJournalier, 
 
     Optional<EtatJournalier> findByUtilisateurAndDate(Utilisateur utilisateur, LocalDate date);
 
-    List<EtatJournalier> findByUtilisateurAndDateGreaterThanEqualOrderByDateDesc(Utilisateur utilisateur, LocalDate from);
+    List<EtatJournalier> findByUtilisateurAndDateGreaterThanEqualOrderByDateDesc(Utilisateur utilisateur,
+            LocalDate from);
 }

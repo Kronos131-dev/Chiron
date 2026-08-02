@@ -27,7 +27,7 @@ public class VisbodyController {
 
     @PostMapping("/import")
     public ResponseEntity<ImportResult> importPdf(@RequestParam("file") MultipartFile file,
-                                                  Authentication auth) throws IOException {
+            Authentication auth) throws IOException {
         if (file.isEmpty()) {
             return ResponseEntity.badRequest()
                     .body(new ImportResult(VisbodyImportService.Outcome.INVALID, "Fichier vide."));

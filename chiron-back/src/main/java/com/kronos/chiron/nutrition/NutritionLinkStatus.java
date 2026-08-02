@@ -7,8 +7,7 @@ public record NutritionLinkStatus(
         boolean expired,
         String olympusUsername,
         LocalDateTime linkedAt,
-        LocalDateTime expiresAt
-) {
+        LocalDateTime expiresAt) {
     public static NutritionLinkStatus notLinked() {
         return new NutritionLinkStatus(false, false, null, null, null);
     }

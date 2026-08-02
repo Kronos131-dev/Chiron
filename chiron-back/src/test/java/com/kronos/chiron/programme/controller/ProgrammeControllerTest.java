@@ -28,13 +28,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(value = ProgrammeController.class, excludeAutoConfiguration = SecurityAutoConfiguration.class)
 class ProgrammeControllerTest {
 
-    @Autowired private MockMvc mockMvc;
-    @Autowired private JsonMapper objectMapper;
+    @Autowired
+    private MockMvc mockMvc;
+    @Autowired
+    private JsonMapper objectMapper;
 
-    @MockitoBean private ProgrammeService programmeService;
-    @MockitoBean private SeanceMapper seanceMapper;
-    @MockitoBean private JwtService jwtService;
-    @MockitoBean private UserDetailsService userDetailsService;
+    @MockitoBean
+    private ProgrammeService programmeService;
+    @MockitoBean
+    private SeanceMapper seanceMapper;
+    @MockitoBean
+    private JwtService jwtService;
+    @MockitoBean
+    private UserDetailsService userDetailsService;
 
     private SeanceDto buildSeanceDto() {
         return new SeanceDto(1L, "Push Day", null, null, null, 1, false, null, List.of());
@@ -69,9 +75,9 @@ class ProgrammeControllerTest {
         when(programmeService.sauvegarderProgramme(eq("alice"), any(), any())).thenReturn(saved);
 
         mockMvc.perform(post("/api/programmes")
-                        .param("username", "alice")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(buildSeanceDto())))
+                .param("username", "alice")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(buildSeanceDto())))
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("42")));
     }
@@ -82,9 +88,9 @@ class ProgrammeControllerTest {
                 .thenThrow(new RuntimeException("Save failed"));
 
         mockMvc.perform(post("/api/programmes")
-                        .param("username", "alice")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(buildSeanceDto())))
+                .param("username", "alice")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(buildSeanceDto())))
                 .andExpect(status().isBadRequest());
     }
 
@@ -149,9 +155,9 @@ class ProgrammeControllerTest {
         doNothing().when(programmeService).reorderProgrammes(eq("alice"), anyList());
 
         mockMvc.perform(put("/api/programmes/order")
-                        .param("username", "alice")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("[3, 1, 2]"))
+                .param("username", "alice")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("[3, 1, 2]"))
                 .andExpect(status().isOk());
 
         verify(programmeService).reorderProgrammes("alice", List.of(3L, 1L, 2L));
@@ -163,9 +169,9 @@ class ProgrammeControllerTest {
                 .when(programmeService).reorderProgrammes(eq("alice"), anyList());
 
         mockMvc.perform(put("/api/programmes/order")
-                        .param("username", "alice")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("[1]"))
+                .param("username", "alice")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("[1]"))
                 .andExpect(status().isBadRequest());
     }
 }

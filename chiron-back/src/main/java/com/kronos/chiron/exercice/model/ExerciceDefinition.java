@@ -39,8 +39,7 @@ public class ExerciceDefinition {
     private MuscleGroup musclePrincipal;
 
     @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "exercice_definition_muscles_secondaires",
-            joinColumns = @JoinColumn(name = "exercice_definition_id"))
+    @CollectionTable(name = "exercice_definition_muscles_secondaires", joinColumns = @JoinColumn(name = "exercice_definition_id"))
     @Enumerated(EnumType.STRING)
     @Column(name = "muscle")
     @BatchSize(size = 50)

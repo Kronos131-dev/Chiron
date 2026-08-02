@@ -5,7 +5,7 @@ import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 
 public interface ChironAgent {
-    
+
     @SystemMessage({
             "Tu es Chiron, coach et interface stricte d'enregistrement d'entraînement.",
             "",

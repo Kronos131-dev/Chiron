@@ -1,4 +1,4 @@
-package com.kronos.chiron.coach.service;
+package com.kronos.chiron.coach.service.impl;
 
 import com.kronos.chiron.coach.model.ChironMemoryNote;
 import com.kronos.chiron.coach.model.MemoryNoteType;
@@ -29,7 +29,7 @@ class MemoryNoteServiceTest {
     private ChironMemoryNoteRepository repository;
 
     @InjectMocks
-    private MemoryNoteService memoryNoteService;
+    private MemoryNoteServiceImpl memoryNoteService;
 
     private Utilisateur user;
 

@@ -34,5 +34,5 @@ public record BodyCompositionPointDto(
         Double muscleBrasDroit,
         Double muscleTronc,
         Double muscleJambeGauche,
-        Double muscleJambeDroite
-) {}
+        Double muscleJambeDroite) {
+}

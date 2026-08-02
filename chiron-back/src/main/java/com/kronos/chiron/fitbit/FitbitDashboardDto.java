@@ -12,8 +12,7 @@ public record FitbitDashboardDto(
         Integer caloriesToday,
         Double sleepHoursLastNight,
         Integer restingHeartRate,
-        List<FitbitDayPoint> days
-) {
+        List<FitbitDayPoint> days) {
     public static FitbitDashboardDto notLinked() {
         return new FitbitDashboardDto(false, false, false, null, null, null, null, null, null, List.of());
     }

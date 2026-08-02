@@ -37,8 +37,7 @@ public class SecurityConfig {
                 "https://olympus.chiron-sanctuaire.fr",
                 "https://localhost",
                 "http://localhost",
-                "capacitor://localhost"
-        ));
+                "capacitor://localhost"));
 
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(List.of("*"));
@@ -65,15 +64,13 @@ public class SecurityConfig {
                                 "/actuator/health",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
-                                "/swagger-ui.html"
-                        ).permitAll()
+                                "/swagger-ui.html")
+                        .permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/fitbit/callback").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/exercices/import").hasRole("ADMIN")
-                        .anyRequest().authenticated()
-                )
+                        .anyRequest().authenticated())
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 

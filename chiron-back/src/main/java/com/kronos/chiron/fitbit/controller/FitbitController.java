@@ -32,7 +32,7 @@ public class FitbitController {
 
     @GetMapping("/dashboard")
     public ResponseEntity<FitbitDashboardDto> getDashboard(@AuthenticationPrincipal UserDetails userDetails,
-                                                           @RequestParam(defaultValue = "7") int days) {
+            @RequestParam(defaultValue = "7") int days) {
         FitbitDashboardDto dashboard = fitbitService.getDashboard(userDetails.getUsername(), days);
         if (dashboard.linked() && dashboard.dataAvailable()) {
             fitbitSyncService.syncEtatJournalier(userDetails.getUsername(), days);
@@ -48,8 +48,8 @@ public class FitbitController {
 
     @GetMapping("/callback")
     public ResponseEntity<String> callback(@RequestParam(required = false) String code,
-                                           @RequestParam(required = false) String state,
-                                           @RequestParam(required = false) String error) {
+            @RequestParam(required = false) String state,
+            @RequestParam(required = false) String error) {
         if (error != null) {
             log.info("FITBIT_CALLBACK_DENIED error={}", error);
             return htmlPage(HttpStatus.OK, false,

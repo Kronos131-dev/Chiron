@@ -31,15 +31,20 @@ class FitbitSyncServiceTest {
 
     private final JsonMapper json = new JsonMapper();
 
-    @Mock private FitbitService fitbitService;
-    @Mock private FitbitClient fitbitClient;
-    @Mock private RecoveryService recoveryService;
-    @Mock private UtilisateurRepository utilisateurRepository;
+    @Mock
+    private FitbitService fitbitService;
+    @Mock
+    private FitbitClient fitbitClient;
+    @Mock
+    private RecoveryService recoveryService;
+    @Mock
+    private UtilisateurRepository utilisateurRepository;
 
-        @Spy
+    @Spy
     private Clock clock = Clock.system(ZoneId.of("Europe/Paris"));
 
-@InjectMocks private FitbitSyncService syncService;
+    @InjectMocks
+    private FitbitSyncService syncService;
 
     @Test
     void syncEtatJournalier_swallowsFitbitErrors() {

@@ -5,8 +5,7 @@ import java.util.List;
 
 public record BodyCompositionStatsDto(
         boolean hasData,
-        List<BodyCompositionPointDto> points
-) {
+        List<BodyCompositionPointDto> points) {
     public static BodyCompositionStatsDto empty() {
         return new BodyCompositionStatsDto(false, Collections.emptyList());
     }

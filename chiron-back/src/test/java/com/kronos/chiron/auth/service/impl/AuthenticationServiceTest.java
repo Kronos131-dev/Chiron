@@ -1,4 +1,4 @@
-package com.kronos.chiron.auth.service;
+package com.kronos.chiron.auth.service.impl;
 
 import com.kronos.chiron.auth.dto.AuthenticationRequest;
 import com.kronos.chiron.auth.dto.AuthenticationResponse;
@@ -30,13 +30,17 @@ import static org.mockito.Mockito.*;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class AuthenticationServiceTest {
 
-    @Mock private UtilisateurRepository repository;
-    @Mock private PasswordEncoder passwordEncoder;
-    @Mock private JwtService jwtService;
-    @Mock private AuthenticationManager authenticationManager;
+    @Mock
+    private UtilisateurRepository repository;
+    @Mock
+    private PasswordEncoder passwordEncoder;
+    @Mock
+    private JwtService jwtService;
+    @Mock
+    private AuthenticationManager authenticationManager;
 
     @InjectMocks
-    private AuthenticationService authenticationService;
+    private AuthenticationServiceImpl authenticationService;
 
     @BeforeEach
     void setUp() {
@@ -50,9 +54,7 @@ class AuthenticationServiceTest {
 
         authenticationService.register(request);
 
-        verify(repository).save(argThat(user ->
-                user.getRole() == Role.USER && user.getUsername().equals("alice")
-        ));
+        verify(repository).save(argThat(user -> user.getRole() == Role.USER && user.getUsername().equals("alice")));
     }
 
     @Test

@@ -24,8 +24,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ActiveProfiles("test")
 class PerformanceRecordRepositoryTest {
 
-    @Autowired private TestEntityManager em;
-    @Autowired private PerformanceRecordRepository repository;
+    @Autowired
+    private TestEntityManager em;
+    @Autowired
+    private PerformanceRecordRepository repository;
 
     private Utilisateur user;
 

@@ -9,5 +9,5 @@ public record NutritionPointDto(
         Double glucides,
         Double lipides,
         Double targetKcal,
-        Integer pas
-) {}
+        Integer pas) {
+}

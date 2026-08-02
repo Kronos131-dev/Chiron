@@ -5,14 +5,9 @@ import lombok.Getter;
 @Getter
 public enum PerformanceTier {
 
-    EPHEBE(1, "Éphèbe", "Novice"),
-    ARGONAUTE(2, "Argonaute", "Novice"),
-    HOPLITE(3, "Hoplite", "Athlète"),
-    MYRMIDON(4, "Myrmidon", "Athlète"),
-    SPARTIATE(5, "Spartiate", "Athlète"),
-    HEROS(6, "Héros", "Légende"),
-    DIEU(7, "Dieu", "Légende"),
-    OLYMPIEN(8, "Olympien", "Légende");
+    EPHEBE(1, "Éphèbe", "Novice"), ARGONAUTE(2, "Argonaute", "Novice"), HOPLITE(3, "Hoplite", "Athlète"), MYRMIDON(4,
+            "Myrmidon", "Athlète"), SPARTIATE(5, "Spartiate", "Athlète"), HEROS(6, "Héros",
+                    "Légende"), DIEU(7, "Dieu", "Légende"), OLYMPIEN(8, "Olympien", "Légende");
 
     private final int level;
     private final String nom;

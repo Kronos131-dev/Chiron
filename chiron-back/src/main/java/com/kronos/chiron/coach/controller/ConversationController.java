@@ -34,7 +34,7 @@ public class ConversationController {
 
     @GetMapping("/{id}/messages")
     public List<ConversationMessageDto> messages(@AuthenticationPrincipal UserDetails userDetails,
-                                                 @PathVariable Long id) {
+            @PathVariable Long id) {
         Utilisateur user = currentUser(userDetails);
         return conversationService.getMessages(user, id).stream()
                 .map(m -> new ConversationMessageDto(m.getRole().name(), m.getContent()))
@@ -43,7 +43,7 @@ public class ConversationController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@AuthenticationPrincipal UserDetails userDetails,
-                                       @PathVariable Long id) {
+            @PathVariable Long id) {
         Utilisateur user = currentUser(userDetails);
         conversationService.delete(user, id);
         memoryManager.evict(String.valueOf(id));

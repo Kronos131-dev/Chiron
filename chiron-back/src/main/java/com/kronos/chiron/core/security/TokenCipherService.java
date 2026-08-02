@@ -78,7 +78,8 @@ public class TokenCipherService {
             cipher.init(Cipher.DECRYPT_MODE, secretKey, new GCMParameterSpec(TAG_LENGTH_BITS, iv));
             return new String(cipher.doFinal(cipherBytes));
         } catch (Exception e) {
-            throw new ChironTechnicalException("Échec du déchiffrement du token (clé changée ou donnée corrompue ?)", e);
+            throw new ChironTechnicalException("Échec du déchiffrement du token (clé changée ou donnée corrompue ?)",
+                    e);
         }
     }
 }

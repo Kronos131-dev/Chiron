@@ -15,7 +15,8 @@ public class FitbitAuthSessionStore {
 
     private static final Duration TTL = Duration.ofMinutes(10);
 
-    public record PendingAuth(Long chironUserId, String codeVerifier, Instant createdAt) {}
+    public record PendingAuth(Long chironUserId, String codeVerifier, Instant createdAt) {
+    }
 
     private final ConcurrentHashMap<String, PendingAuth> pending = new ConcurrentHashMap<>();
 

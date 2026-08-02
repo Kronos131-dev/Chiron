@@ -43,12 +43,17 @@ public class AnalyseDieteTools {
         } else {
             res.append("- Âge : non renseigné\n");
         }
-        res.append("- Taille : ").append(u.getTailleCm() != null ? fmt1(u.getTailleCm()) + " cm" : "non renseignée").append("\n");
-        res.append("- Poids de corps : ").append(u.getPoidsCorps() != null ? fmt1(u.getPoidsCorps()) + " kg" : "non renseigné").append("\n");
-        res.append("- Objectif principal : ").append(u.getObjectifPrincipal() != null ? u.getObjectifPrincipal() : "non défini").append("\n");
-        res.append("- Niveau d'expérience : ").append(u.getNiveauExperience() != null ? u.getNiveauExperience() : "non défini").append("\n");
+        res.append("- Taille : ").append(u.getTailleCm() != null ? fmt1(u.getTailleCm()) + " cm" : "non renseignée")
+                .append("\n");
+        res.append("- Poids de corps : ")
+                .append(u.getPoidsCorps() != null ? fmt1(u.getPoidsCorps()) + " kg" : "non renseigné").append("\n");
+        res.append("- Objectif principal : ")
+                .append(u.getObjectifPrincipal() != null ? u.getObjectifPrincipal() : "non défini").append("\n");
+        res.append("- Niveau d'expérience : ")
+                .append(u.getNiveauExperience() != null ? u.getNiveauExperience() : "non défini").append("\n");
         res.append("- Fréquence d'entraînement visée : ")
-                .append(u.getFrequenceVisee() != null ? u.getFrequenceVisee() + " séances/semaine" : "non définie").append("\n");
+                .append(u.getFrequenceVisee() != null ? u.getFrequenceVisee() + " séances/semaine" : "non définie")
+                .append("\n");
         if (u.getBlessures() != null && !u.getBlessures().isBlank()) {
             res.append("- Blessures : ").append(u.getBlessures()).append("\n");
         }
@@ -67,15 +72,20 @@ public class AnalyseDieteTools {
 
         StringBuilder res = new StringBuilder("Composition corporelle (dernier scan Visbody du ")
                 .append(last.getMesureLe().toLocalDate()).append(") :\n");
-        res.append("- Poids : ").append(metric(last.getPoids(), "kg", prev != null ? prev.getPoids() : null)).append("\n");
-        res.append("- Masse grasse : ").append(metric(last.getTgcPct(), "%", prev != null ? prev.getTgcPct() : null)).append("\n");
-        res.append("- Masse musculaire : ").append(metric(last.getMasseMusculaire(), "kg", prev != null ? prev.getMasseMusculaire() : null)).append("\n");
+        res.append("- Poids : ").append(metric(last.getPoids(), "kg", prev != null ? prev.getPoids() : null))
+                .append("\n");
+        res.append("- Masse grasse : ").append(metric(last.getTgcPct(), "%", prev != null ? prev.getTgcPct() : null))
+                .append("\n");
+        res.append("- Masse musculaire : ")
+                .append(metric(last.getMasseMusculaire(), "kg", prev != null ? prev.getMasseMusculaire() : null))
+                .append("\n");
         res.append("- Masse maigre : ").append(metric(last.getMmc(), "kg", null)).append("\n");
         res.append("- Métabolisme de base : ").append(metric(last.getMbKcal(), "kcal/jour", null)).append("\n");
         res.append("- Graisse viscérale : ").append(metric(last.getGraisseViscerale(), "", null)).append("\n");
         res.append("- Âge métabolique : ").append(metric(last.getAgeMetabolique(), "ans", null)).append("\n");
         if (prev != null) {
-            res.append("(Tendance calculée par rapport au scan du ").append(prev.getMesureLe().toLocalDate()).append(".)");
+            res.append("(Tendance calculée par rapport au scan du ").append(prev.getMesureLe().toLocalDate())
+                    .append(".)");
         }
         return res.toString();
     }

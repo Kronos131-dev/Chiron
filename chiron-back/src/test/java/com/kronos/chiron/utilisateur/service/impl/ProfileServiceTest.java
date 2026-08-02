@@ -1,4 +1,4 @@
-package com.kronos.chiron.utilisateur.service;
+package com.kronos.chiron.utilisateur.service.impl;
 
 import org.mockito.Spy;
 
@@ -15,7 +15,6 @@ import com.kronos.chiron.performance.service.PerformanceService;
 import com.kronos.chiron.performance.dto.PerformanceSummaryDto;
 import com.kronos.chiron.utilisateur.dto.ProfileDto;
 import com.kronos.chiron.utilisateur.model.Role;
-import com.kronos.chiron.seance.model.Seance;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 import com.kronos.chiron.seance.persistence.SeanceRepository;
 import com.kronos.chiron.utilisateur.persistence.UtilisateurRepository;
@@ -39,15 +38,18 @@ import static org.mockito.Mockito.*;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class ProfileServiceTest {
 
-    @Mock private UtilisateurRepository utilisateurRepository;
-    @Mock private SeanceRepository seanceRepository;
-    @Mock private PerformanceService performanceService;
+    @Mock
+    private UtilisateurRepository utilisateurRepository;
+    @Mock
+    private SeanceRepository seanceRepository;
+    @Mock
+    private PerformanceService performanceService;
 
-        @Spy
+    @Spy
     private Clock clock = Clock.system(ZoneId.of("Europe/Paris"));
 
-@InjectMocks
-    private ProfileService profileService;
+    @InjectMocks
+    private ProfileServiceImpl profileService;
 
     private Utilisateur publicUser;
     private Utilisateur privateUser;

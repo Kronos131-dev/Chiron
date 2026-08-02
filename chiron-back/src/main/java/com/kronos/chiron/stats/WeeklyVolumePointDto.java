@@ -8,5 +8,5 @@ public record WeeklyVolumePointDto(
         double tonnage,
         int nbSeances,
         int nbSeries,
-        Double dureeMoyenneMin
-) {}
+        Double dureeMoyenneMin) {
+}

@@ -23,8 +23,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ActiveProfiles("test")
 class ExerciceRepositoryTest {
 
-    @Autowired private TestEntityManager em;
-    @Autowired private ExerciceRepository exerciceRepository;
+    @Autowired
+    private TestEntityManager em;
+    @Autowired
+    private ExerciceRepository exerciceRepository;
 
     private Utilisateur user;
     private Seance historicSession;

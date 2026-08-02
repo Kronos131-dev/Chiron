@@ -72,7 +72,9 @@ public class WorkoutTools {
         Utilisateur requestUser = utilisateurRepository.findById(Long.parseLong(userId))
                 .orElseThrow(() -> notFound("Utilisateur requérant introuvable"));
 
-        String searchUsername = (targetUsername != null && !targetUsername.isBlank()) ? targetUsername : requestUser.getUsername();
+        String searchUsername = (targetUsername != null && !targetUsername.isBlank())
+                ? targetUsername
+                : requestUser.getUsername();
 
         Utilisateur targetUser = utilisateurRepository.findByUsername(searchUsername)
                 .orElse(null);
@@ -83,17 +85,21 @@ public class WorkoutTools {
 
         if (!requestUser.getUsername().equals(searchUsername) && requestUser.getRole() != Role.ADMIN) {
             if (targetUser.getIsPublic() == null || !targetUser.getIsPublic()) {
-                return "Le profil de l'utilisateur '" + searchUsername + "' est privé. Vous n'avez pas l'autorisation de voir ses programmes.";
+                return "Le profil de l'utilisateur '" + searchUsername
+                        + "' est privé. Vous n'avez pas l'autorisation de voir ses programmes.";
             }
         }
 
-        List<Seance> programmes = seanceRepository.findByUtilisateurUsernameAndHistoriqueFalseOrderByDisplayOrderAscStartTimeDesc(targetUser.getUsername());
-        
+        List<Seance> programmes = seanceRepository
+                .findByUtilisateurUsernameAndHistoriqueFalseOrderByDisplayOrderAscStartTimeDesc(
+                        targetUser.getUsername());
+
         if (programmes.isEmpty()) {
             return "L'utilisateur " + searchUsername + " n'a aucun modèle de programme d'entraînement enregistré.";
         }
 
-        StringBuilder res = new StringBuilder("L'utilisateur " + searchUsername + " a " + programmes.size() + " programmes enregistrés :\n");
+        StringBuilder res = new StringBuilder(
+                "L'utilisateur " + searchUsername + " a " + programmes.size() + " programmes enregistrés :\n");
         for (Seance s : programmes) {
             res.append("- Programme '").append(s.getTitre()).append("' (");
             if (s.getExercices() != null && !s.getExercices().isEmpty()) {
@@ -112,7 +118,9 @@ public class WorkoutTools {
         Utilisateur requestUser = utilisateurRepository.findById(Long.parseLong(userId))
                 .orElseThrow(() -> notFound("Utilisateur requérant introuvable"));
 
-        String searchUsername = (targetUsername != null && !targetUsername.isBlank()) ? targetUsername : requestUser.getUsername();
+        String searchUsername = (targetUsername != null && !targetUsername.isBlank())
+                ? targetUsername
+                : requestUser.getUsername();
 
         Utilisateur targetUser = utilisateurRepository.findByUsername(searchUsername)
                 .orElse(null);
@@ -123,23 +131,27 @@ public class WorkoutTools {
 
         if (!requestUser.getUsername().equals(searchUsername) && requestUser.getRole() != Role.ADMIN) {
             if (targetUser.getIsPublic() == null || !targetUser.getIsPublic()) {
-                return "Le profil de l'utilisateur '" + searchUsername + "' est privé. Vous n'avez pas l'autorisation de voir son historique.";
+                return "Le profil de l'utilisateur '" + searchUsername
+                        + "' est privé. Vous n'avez pas l'autorisation de voir son historique.";
             }
         }
 
-        List<Seance> historique = seanceRepository.findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc(targetUser.getUsername());
-        
+        List<Seance> historique = seanceRepository
+                .findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc(targetUser.getUsername());
+
         if (historique.isEmpty()) {
             return "L'utilisateur " + searchUsername + " n'a encore enregistré aucune séance dans son historique.";
         }
 
-        StringBuilder res = new StringBuilder("Voici l'historique des séances effectuées par l'utilisateur " + searchUsername + " :\n");
+        StringBuilder res = new StringBuilder(
+                "Voici l'historique des séances effectuées par l'utilisateur " + searchUsername + " :\n");
         for (Seance s : historique) {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
             String dateStr = s.getStartTime() != null ? s.getStartTime().format(formatter) : "Date inconnue";
-            
-            res.append("- Le ").append(dateStr).append(" : Séance '").append(s.getTitre() != null ? s.getTitre() : "Sans nom").append("' (");
-            
+
+            res.append("- Le ").append(dateStr).append(" : Séance '")
+                    .append(s.getTitre() != null ? s.getTitre() : "Sans nom").append("' (");
+
             if (s.getExercices() != null && !s.getExercices().isEmpty()) {
                 String exos = s.getExercices().stream().map(this::exoLabel).collect(Collectors.joining(", "));
                 res.append("Exercices : ").append(exos);
@@ -194,7 +206,8 @@ public class WorkoutTools {
         if (seance.getExercices() == null) seance.setExercices(new ArrayList<>());
 
         seanceRepository.save(seance);
-        return "Modèle de programme '" + titre + "' créé avec succès. Dis à l'utilisateur qu'il peut le modifier depuis l'interface 'Programme'.";
+        return "Modèle de programme '" + titre
+                + "' créé avec succès. Dis à l'utilisateur qu'il peut le modifier depuis l'interface 'Programme'.";
     }
 
     @Tool("Démarre un nouvel exercice dans la séance en cours.")
@@ -228,7 +241,8 @@ public class WorkoutTools {
 
         activeSeance.addExercice(exercice);
         seanceRepository.save(activeSeance);
-        return "Exercice '" + nomExercice + "' ajouté à la séance. Tu peux maintenant utiliser [addSet] pour cet exercice.";
+        return "Exercice '" + nomExercice
+                + "' ajouté à la séance. Tu peux maintenant utiliser [addSet] pour cet exercice.";
     }
 
     @Tool("Enregistre une série (poids, répétitions, commentaire) pour l'exercice en cours.")
@@ -285,19 +299,22 @@ public class WorkoutTools {
                 .findFirstHistoricExercise(Long.parseLong(userId), nomExercice);
 
         if (lastExoOpt.isEmpty()) {
-            return "Information pour l'IA : L'utilisateur n'a jamais fait l'exercice '" + nomExercice + "' dans son historique.";
+            return "Information pour l'IA : L'utilisateur n'a jamais fait l'exercice '" + nomExercice
+                    + "' dans son historique.";
         }
 
         Exercice exo = lastExoOpt.get();
         if (exo.getDefinition() == null) {
-            return "L'exercice '" + nomExercice + "' n'est pas dans la base standardisée [std]. Analyse de progression indisponible.";
+            return "L'exercice '" + nomExercice
+                    + "' n'est pas dans la base standardisée [std]. Analyse de progression indisponible.";
         }
 
         StringBuilder reponse = new StringBuilder();
 
         if (exo.getStartTime() != null) {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMMM yyyy à HH:mm", Locale.FRANCE);
-            reponse.append("Dernière performance trouvée le ").append(exo.getStartTime().format(formatter)).append(".\n");
+            reponse.append("Dernière performance trouvée le ").append(exo.getStartTime().format(formatter))
+                    .append(".\n");
         } else {
             reponse.append("Dernière performance trouvée (date inconnue).\n");
         }
@@ -321,7 +338,7 @@ public class WorkoutTools {
                 .orElseThrow(() -> notFound("Utilisateur requérant introuvable"));
 
         if (requestUser.getRole() != Role.ADMIN) {
-             return "Accès refusé. Seul un administrateur peut effectuer cette recherche globale.";
+            return "Accès refusé. Seul un administrateur peut effectuer cette recherche globale.";
         }
 
         List<Utilisateur> users = utilisateurRepository.findByUsernameContainingIgnoreCase(query);
@@ -331,8 +348,8 @@ public class WorkoutTools {
 
         StringBuilder res = new StringBuilder("Profils trouvés :\n");
         for (Utilisateur u : users) {
-             res.append("- ").append(u.getUsername()).append(" (Rang: ").append(u.getRank())
-                .append(", Public: ").append(u.getIsPublic() != null ? u.getIsPublic() : false).append(")\n");
+            res.append("- ").append(u.getUsername()).append(" (Rang: ").append(u.getRank())
+                    .append(", Public: ").append(u.getIsPublic() != null ? u.getIsPublic() : false).append(")\n");
         }
         return res.toString();
     }
@@ -341,9 +358,10 @@ public class WorkoutTools {
     public String getWorkoutSummaryByDate(@ToolMemoryId String userId, String dateStr) {
         Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
                 .orElseThrow(() -> notFound("Utilisateur introuvable"));
-                
-        List<Seance> historique = seanceRepository.findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc(user.getUsername());
-        
+
+        List<Seance> historique = seanceRepository
+                .findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc(user.getUsername());
+
         StringBuilder res = new StringBuilder();
         boolean found = false;
 
@@ -376,14 +394,16 @@ public class WorkoutTools {
         Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
                 .orElseThrow(() -> notFound("Utilisateur introuvable"));
 
-        List<Seance> programmes = seanceRepository.findByUtilisateurUsernameAndHistoriqueFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername());
+        List<Seance> programmes = seanceRepository
+                .findByUtilisateurUsernameAndHistoriqueFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername());
 
         List<Seance> matching = programmes.stream()
                 .filter(s -> s.getTitre() != null && s.getTitre().toLowerCase().contains(programmeName.toLowerCase()))
                 .collect(Collectors.toList());
 
         if (matching.isEmpty()) {
-            return "Aucun programme trouvé avec le nom '" + programmeName + "'. Utilise [getUserProgrammes] pour voir les programmes disponibles.";
+            return "Aucun programme trouvé avec le nom '" + programmeName
+                    + "'. Utilise [getUserProgrammes] pour voir les programmes disponibles.";
         }
 
         StringBuilder res = new StringBuilder();
@@ -415,14 +435,16 @@ public class WorkoutTools {
         Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
                 .orElseThrow(() -> notFound("Utilisateur introuvable"));
 
-        List<Seance> historique = seanceRepository.findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc(user.getUsername());
+        List<Seance> historique = seanceRepository
+                .findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc(user.getUsername());
 
         List<Seance> matching = historique.stream()
                 .filter(s -> s.getTitre() != null && s.getTitre().toLowerCase().contains(sessionTitle.toLowerCase()))
                 .collect(Collectors.toList());
 
         if (matching.isEmpty()) {
-            return "Aucune séance trouvée avec le titre '" + sessionTitle + "'. Utilise [getUserHistory] pour voir l'historique complet.";
+            return "Aucune séance trouvée avec le titre '" + sessionTitle
+                    + "'. Utilise [getUserHistory] pour voir l'historique complet.";
         }
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMMM yyyy à HH:mm", Locale.FRANCE);
@@ -467,12 +489,15 @@ public class WorkoutTools {
 
         boolean anyStd = exercises.stream().anyMatch(e -> e.getDefinition() != null);
         if (!anyStd) {
-            return "L'exercice '" + nomExercice + "' n'est pas dans la base standardisée [std]. Analyse de progression indisponible.";
+            return "L'exercice '" + nomExercice
+                    + "' n'est pas dans la base standardisée [std]. Analyse de progression indisponible.";
         }
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.FRANCE);
-        List<Exercice> stdExercises = exercises.stream().filter(e -> e.getDefinition() != null).collect(Collectors.toList());
-        StringBuilder res = new StringBuilder("Historique complet de '" + nomExercice + "' [std] (" + stdExercises.size() + " séance(s)) :\n");
+        List<Exercice> stdExercises = exercises.stream().filter(e -> e.getDefinition() != null)
+                .collect(Collectors.toList());
+        StringBuilder res = new StringBuilder(
+                "Historique complet de '" + nomExercice + "' [std] (" + stdExercises.size() + " séance(s)) :\n");
 
         for (Exercice exo : stdExercises) {
             String dateStr = exo.getStartTime() != null ? exo.getStartTime().format(formatter) : "Date inconnue";
@@ -500,7 +525,8 @@ public class WorkoutTools {
 
         boolean anyStdPR = exercises.stream().anyMatch(e -> e.getDefinition() != null);
         if (!anyStdPR) {
-            return "L'exercice '" + nomExercice + "' n'est pas dans la base standardisée [std]. Analyse de progression indisponible.";
+            return "L'exercice '" + nomExercice
+                    + "' n'est pas dans la base standardisée [std]. Analyse de progression indisponible.";
         }
         exercises = exercises.stream().filter(e -> e.getDefinition() != null).collect(Collectors.toList());
 
@@ -540,7 +566,8 @@ public class WorkoutTools {
 
         List<ExerciceDefinitionDto> results = exerciceDefinitionService.search(nomExercice, null, null, null);
         if (results.isEmpty()) {
-            return "Aucun exercice standardisé trouvé pour '" + nomExercice + "'. Tu peux proposer à l'utilisateur de chercher autrement.";
+            return "Aucun exercice standardisé trouvé pour '" + nomExercice
+                    + "'. Tu peux proposer à l'utilisateur de chercher autrement.";
         }
 
         ExerciceDefinitionDto e = results.get(0);
@@ -581,7 +608,8 @@ public class WorkoutTools {
         try {
             results = exerciceDefinitionService.search(null, muscleArg, equipArg, diffArg);
         } catch (IllegalArgumentException ex) {
-            return "Filtre invalide : " + ex.getMessage() + ". Utilise les valeurs exactes indiquées dans la description de l'outil.";
+            return "Filtre invalide : " + ex.getMessage()
+                    + ". Utilise les valeurs exactes indiquées dans la description de l'outil.";
         }
 
         if (results.isEmpty()) {
@@ -612,8 +640,9 @@ public class WorkoutTools {
     }
 
     @Tool("Crée un programme d'entraînement (modèle) complet avec ses exercices et leurs séries cibles. " +
-          "Chaque nom d'exercice doit correspondre à un exercice de la bibliothèque standardisée — appelle [rechercherExercices] avant " +
-          "pour récupérer les noms exacts. À utiliser quand l'utilisateur demande de créer / générer / construire un programme.")
+            "Chaque nom d'exercice doit correspondre à un exercice de la bibliothèque standardisée — appelle [rechercherExercices] avant "
+            +
+            "pour récupérer les noms exacts. À utiliser quand l'utilisateur demande de créer / générer / construire un programme.")
     public String creerProgramme(@ToolMemoryId String userId, String titre, List<ProgrammeExerciceSpec> exercices) {
         Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
                 .orElseThrow(() -> notFound("Utilisateur introuvable"));
@@ -633,7 +662,8 @@ public class WorkoutTools {
             if (spec == null || spec.nomExercice() == null || spec.nomExercice().isBlank()) {
                 continue;
             }
-            List<ExerciceDefinitionDto> matches = exerciceDefinitionService.search(spec.nomExercice(), null, null, null);
+            List<ExerciceDefinitionDto> matches = exerciceDefinitionService.search(spec.nomExercice(), null, null,
+                    null);
             if (matches.isEmpty()) {
                 introuvables.add(spec.nomExercice());
                 continue;
@@ -707,7 +737,8 @@ public class WorkoutTools {
                 .append(historique.size()).append(" séance(s) exécutée(s)) :\n");
 
         if (sessionsByMuscle.isEmpty()) {
-            res.append("- Aucun exercice rattaché à la bibliothèque standardisée [std]. Analyse par muscle impossible.\n");
+            res.append(
+                    "- Aucun exercice rattaché à la bibliothèque standardisée [std]. Analyse par muscle impossible.\n");
         } else {
             List<MuscleGroup> sorted = sessionsByMuscle.keySet().stream()
                     .sorted((a, b) -> Integer.compare(
@@ -837,9 +868,13 @@ public class WorkoutTools {
         if (user.getSexe() != null) res.append("- Sexe : ").append(user.getSexe().name().toLowerCase()).append("\n");
         if (user.getTailleCm() != null) res.append("- Taille : ").append(user.getTailleCm()).append(" cm\n");
         if (user.getPoidsCorps() != null) res.append("- Poids : ").append(user.getPoidsCorps()).append(" kg\n");
-        if (user.getNiveauExperience() != null) res.append("- Niveau : ").append(user.getNiveauExperience().name().toLowerCase()).append("\n");
-        if (user.getObjectifPrincipal() != null) res.append("- Objectif : ").append(user.getObjectifPrincipal().name().toLowerCase().replace('_', ' ')).append("\n");
-        if (user.getFrequenceVisee() != null) res.append("- Fréquence visée : ").append(user.getFrequenceVisee()).append(" séances/semaine\n");
+        if (user.getNiveauExperience() != null)
+            res.append("- Niveau : ").append(user.getNiveauExperience().name().toLowerCase()).append("\n");
+        if (user.getObjectifPrincipal() != null)
+            res.append("- Objectif : ").append(user.getObjectifPrincipal().name().toLowerCase().replace('_', ' '))
+                    .append("\n");
+        if (user.getFrequenceVisee() != null)
+            res.append("- Fréquence visée : ").append(user.getFrequenceVisee()).append(" séances/semaine\n");
         if (user.getMaterielDisponible() != null && !user.getMaterielDisponible().isEmpty()) {
             String mat = user.getMaterielDisponible().stream()
                     .map(t -> t.name().toLowerCase().replace('_', ' '))

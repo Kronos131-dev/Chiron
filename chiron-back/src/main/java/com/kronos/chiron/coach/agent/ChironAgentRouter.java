@@ -40,7 +40,8 @@ public class ChironAgentRouter {
             } catch (RuntimeException e) {
                 last = e;
                 if (attempt < MAX_ATTEMPTS && isTransient(e)) {
-                    log.warn("Agent {} : erreur transitoire (tentative {}/{}), réessai", provider, attempt, MAX_ATTEMPTS, e);
+                    log.warn("Agent {} : erreur transitoire (tentative {}/{}), réessai", provider, attempt,
+                            MAX_ATTEMPTS, e);
                     memoryManager.reset(memoryId);
                     sleep(BASE_BACKOFF_MS * attempt);
                 } else {

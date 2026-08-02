@@ -4,5 +4,5 @@ import java.util.List;
 
 public record MuscleStatsDto(
         List<MuscleStatDto> muscles,
-        List<String> negliges
-) {}
+        List<String> negliges) {
+}

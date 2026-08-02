@@ -69,7 +69,8 @@ public class BoditraxImportService {
             switch (res.outcome()) {
                 case IMPORTED -> imported++;
                 case DUPLICATE -> duplicates++;
-                default -> { }
+                default -> {
+                }
             }
         }
 

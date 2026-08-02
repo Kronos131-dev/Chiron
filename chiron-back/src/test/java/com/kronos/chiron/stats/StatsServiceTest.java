@@ -58,10 +58,10 @@ class StatsServiceTest {
     @Mock
     private UtilisateurRepository utilisateurRepository;
 
-        @Spy
+    @Spy
     private Clock clock = Clock.system(ZoneId.of("Europe/Paris"));
 
-@InjectMocks
+    @InjectMocks
     private StatsService statsService;
 
     private void givenSessions(Seance... sessions) {

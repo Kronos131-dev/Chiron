@@ -21,9 +21,12 @@ public class VisbodyImportService {
     private final BodyCompositionRecordRepository recordRepo;
     private final UtilisateurRepository utilisateurRepo;
 
-    public enum Outcome { IMPORTED, DUPLICATE, USER_NOT_FOUND, INVALID }
+    public enum Outcome {
+        IMPORTED, DUPLICATE, USER_NOT_FOUND, INVALID
+    }
 
-    public record ImportResult(Outcome outcome, String detail) {}
+    public record ImportResult(Outcome outcome, String detail) {
+    }
 
     @Transactional
     public ImportResult importForUser(byte[] pdf, Utilisateur user) {

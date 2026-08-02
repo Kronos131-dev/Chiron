@@ -34,13 +34,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(value = ExerciceDefinitionController.class, excludeAutoConfiguration = SecurityAutoConfiguration.class)
 class ExerciceDefinitionControllerTest {
 
-    @Autowired private MockMvc mockMvc;
-    @Autowired private JsonMapper objectMapper;
+    @Autowired
+    private MockMvc mockMvc;
+    @Autowired
+    private JsonMapper objectMapper;
 
-    @MockitoBean private ExerciceDefinitionService service;
-    @MockitoBean private ExerciceDataImporter importer;
-    @MockitoBean private JwtService jwtService;
-    @MockitoBean private UserDetailsService userDetailsService;
+    @MockitoBean
+    private ExerciceDefinitionService service;
+    @MockitoBean
+    private ExerciceDataImporter importer;
+    @MockitoBean
+    private JwtService jwtService;
+    @MockitoBean
+    private UserDetailsService userDetailsService;
 
     private ExerciceDefinitionDto buildDto(Long id, String nomFr, String nomEn) {
         return new ExerciceDefinitionDto(
@@ -51,15 +57,15 @@ class ExerciceDefinitionControllerTest {
                 List.of(),
                 TypeEquipement.BARRE,
                 NiveauDifficulte.INTERMEDIAIRE,
-                null, null, null
-        );
+                null, null, null);
     }
 
     // ── GET /api/exercices ────────────────────────────────────────────────────
 
     @Test
     void search_noParams_returnsOk() throws Exception {
-        when(service.search(null, null, null, null)).thenReturn(List.of(buildDto(1L, "Développé couché", "Bench Press")));
+        when(service.search(null, null, null, null))
+                .thenReturn(List.of(buildDto(1L, "Développé couché", "Bench Press")));
 
         mockMvc.perform(get("/api/exercices"))
                 .andExpect(status().isOk())
@@ -83,10 +89,10 @@ class ExerciceDefinitionControllerTest {
         when(service.search("bench", "PECTORAUX", "BARRE", "INTERMEDIAIRE")).thenReturn(List.of());
 
         mockMvc.perform(get("/api/exercices")
-                        .param("q", "bench")
-                        .param("muscle", "PECTORAUX")
-                        .param("equipement", "BARRE")
-                        .param("difficulte", "INTERMEDIAIRE"))
+                .param("q", "bench")
+                .param("muscle", "PECTORAUX")
+                .param("equipement", "BARRE")
+                .param("difficulte", "INTERMEDIAIRE"))
                 .andExpect(status().isOk());
 
         verify(service).search("bench", "PECTORAUX", "BARRE", "INTERMEDIAIRE");
@@ -171,8 +177,8 @@ class ExerciceDefinitionControllerTest {
                 "file", "exercises.json", "application/json", "[]".getBytes());
 
         mockMvc.perform(multipart("/api/exercices/import")
-                        .file(file)
-                        .param("imageDir", "/tmp/images"))
+                .file(file)
+                .param("imageDir", "/tmp/images"))
                 .andExpect(status().isOk());
 
         verify(importer).importFromFile(any(), eq(java.nio.file.Path.of("/tmp/images")));

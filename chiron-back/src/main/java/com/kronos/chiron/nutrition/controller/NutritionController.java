@@ -27,7 +27,7 @@ public class NutritionController {
 
     @PostMapping("/link")
     public ResponseEntity<?> link(@AuthenticationPrincipal UserDetails userDetails,
-                                  @RequestBody LinkRequest req) {
+            @RequestBody LinkRequest req) {
         log.info("NUTRITION_LINK_CALLED principal={} pseudoLen={}",
                 userDetails != null ? userDetails.getUsername() : "<null>",
                 req != null && req.pseudo() != null ? req.pseudo().length() : -1);
@@ -60,7 +60,10 @@ public class NutritionController {
         }
     }
 
-    public record LinkRequest(@NotBlank String pseudo, @NotBlank String password) {}
-    public record ErrorResponse(String message) {}
-    public record HandoffResponse(String token) {}
+    public record LinkRequest(@NotBlank String pseudo, @NotBlank String password) {
+    }
+    public record ErrorResponse(String message) {
+    }
+    public record HandoffResponse(String token) {
+    }
 }
