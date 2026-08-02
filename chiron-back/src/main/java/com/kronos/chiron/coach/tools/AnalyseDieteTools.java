@@ -2,8 +2,6 @@ package com.kronos.chiron.coach.tools;
 
 import java.time.Clock;
 
-import static com.kronos.chiron.core.exceptions.ErrorFactory.notFound;
-
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 import com.kronos.chiron.utilisateur.persistence.UtilisateurRepository;
 import com.kronos.chiron.stats.MuscleStatsDto;
@@ -32,9 +30,11 @@ public class AnalyseDieteTools {
     private final StatsService statsService;
 
     private final Clock clock;
+
+    private final ToolUserResolver toolUserResolver;
     @Tool("Récupère le profil personnel et sportif : sexe, âge, taille, poids de corps, objectif principal, niveau d'expérience, fréquence visée, blessures. Base pour estimer les besoins caloriques.")
     public String getProfilSportif(@ToolMemoryId String userId) {
-        Utilisateur u = loadUser(userId);
+        Utilisateur u = toolUserResolver.load(userId);
         StringBuilder res = new StringBuilder("Profil personnel et sportif :\n");
         res.append("- Sexe : ").append(u.getSexe() != null ? u.getSexe() : "non renseigné").append("\n");
         if (u.getDateNaissance() != null) {
@@ -62,7 +62,7 @@ public class AnalyseDieteTools {
 
     @Tool("Récupère la dernière composition corporelle (scan Visbody) : poids, masse grasse, masse musculaire, masse maigre, métabolisme de base (kcal/j), graisse viscérale, âge métabolique, et tendance vs scan précédent. Le métabolisme de base sert de référence pour la dépense énergétique.")
     public String getCompositionCorporelle(@ToolMemoryId String userId) {
-        Utilisateur u = loadUser(userId);
+        Utilisateur u = toolUserResolver.load(userId);
         List<BodyCompositionRecord> scans = bodyCompositionRepository.findByUtilisateurOrderByMesureLeAsc(u);
         if (scans.isEmpty()) {
             return "Aucun scan de composition corporelle (Visbody) disponible pour cet utilisateur.";
@@ -92,7 +92,7 @@ public class AnalyseDieteTools {
 
     @Tool("Récupère un bilan de la charge d'entraînement récente de l'utilisateur : nombre de séances sur 30 jours, tonnage de la semaine, durée moyenne, série de semaines actives, et groupes musculaires négligés sur la période. Sert à estimer la dépense énergétique liée à l'activité.")
     public String getChargeEntrainement(@ToolMemoryId String userId, Integer nbJours) {
-        Utilisateur u = loadUser(userId);
+        Utilisateur u = toolUserResolver.load(userId);
         int window = (nbJours != null && nbJours > 0) ? nbJours : 30;
         StatsOverviewDto overview = statsService.getOverview(u.getUsername());
 
@@ -111,11 +111,6 @@ public class AnalyseDieteTools {
                     .append(String.join(", ", muscles.negliges())).append("\n");
         }
         return res.toString();
-    }
-
-    private Utilisateur loadUser(String userId) {
-        return utilisateurRepository.findById(Long.parseLong(userId))
-                .orElseThrow(() -> notFound("Utilisateur introuvable"));
     }
 
     private String metric(Double value, String unit, Double previous) {

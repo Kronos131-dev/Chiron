@@ -1,7 +1,5 @@
 package com.kronos.chiron.coach.tools;
 
-import static com.kronos.chiron.core.exceptions.ErrorFactory.notFound;
-
 import com.kronos.chiron.coach.model.ChironMemoryNote;
 import com.kronos.chiron.coach.model.MemoryNoteType;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
@@ -25,9 +23,10 @@ public class MemoryTools {
     private final UtilisateurRepository utilisateurRepository;
     private final MemoryNoteService memoryNoteService;
 
+    private final ToolUserResolver toolUserResolver;
     @Tool("Enregistre une note durable sur l'utilisateur. Types : BLESSURE (douleur, limitation médicale), PREFERENCE (goûts, régime alimentaire), OBJECTIF (objectif précis/chiffré), ENGAGEMENT (promesse), NOTE_LIBRE (autre).")
     public String enregistrerNote(@ToolMemoryId String userId, String type, String contenu) {
-        Utilisateur user = loadUser(userId);
+        Utilisateur user = toolUserResolver.load(userId);
         if (contenu == null || contenu.isBlank()) {
             return "Le contenu de la note est vide — rien enregistré.";
         }
@@ -43,7 +42,7 @@ public class MemoryTools {
 
     @Tool("Récupère les notes durables de l'utilisateur. Si type fourni (BLESSURE, PREFERENCE, OBJECTIF, ENGAGEMENT, NOTE_LIBRE), filtre dessus ; sinon les 20 plus récentes.")
     public String getMesNotes(@ToolMemoryId String userId, String type) {
-        Utilisateur user = loadUser(userId);
+        Utilisateur user = toolUserResolver.load(userId);
         List<ChironMemoryNote> notes;
         if (type != null && !type.isBlank()) {
             MemoryNoteType t;
@@ -72,15 +71,11 @@ public class MemoryTools {
     @Tool("Supprime une note durable à partir de son identifiant numérique.")
     public String oublierNote(@ToolMemoryId String userId, Long id) {
         if (id == null) return "Identifiant de note manquant.";
-        Utilisateur user = loadUser(userId);
+        Utilisateur user = toolUserResolver.load(userId);
         boolean removed = memoryNoteService.delete(user, id);
         return removed
                 ? "Note #" + id + " supprimée."
                 : "Aucune note #" + id + " trouvée pour cet utilisateur.";
     }
 
-    private Utilisateur loadUser(String userId) {
-        return utilisateurRepository.findById(Long.parseLong(userId))
-                .orElseThrow(() -> notFound("Utilisateur introuvable"));
-    }
 }

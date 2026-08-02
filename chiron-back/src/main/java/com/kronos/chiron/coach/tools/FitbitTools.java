@@ -2,8 +2,6 @@ package com.kronos.chiron.coach.tools;
 
 import java.time.Clock;
 
-import static com.kronos.chiron.core.exceptions.ErrorFactory.notFound;
-
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 import com.kronos.chiron.fitbit.FitbitClient;
 import com.kronos.chiron.fitbit.FitbitParser;
@@ -36,9 +34,11 @@ public class FitbitTools {
     private final FitbitSyncService fitbitSyncService;
 
     private final Clock clock;
+
+    private final ToolUserResolver toolUserResolver;
     @Tool("Récupère l'activité physique (nombre de pas) de l'utilisateur pour une date donnée (format YYYY-MM-DD ; null ou vide = aujourd'hui), d'après Fitbit. Nécessite que l'utilisateur ait lié son compte Fitbit.")
     public String getActiviteJournaliere(@ToolMemoryId String userId, String date) {
-        Utilisateur user = loadUser(userId);
+        Utilisateur user = toolUserResolver.load(userId);
         LocalDate target = parseDateOrToday(date);
         if (target == null) {
             return "Date invalide '" + date + "'. Utilise le format AAAA-MM-JJ ou laisse vide pour aujourd'hui.";
@@ -67,7 +67,7 @@ public class FitbitTools {
 
     @Tool("Récupère le sommeil de l'utilisateur sur les N dernières nuits (défaut 7) d'après Fitbit : heures de sommeil par nuit, moyenne, dernière nuit. Nécessite la liaison Fitbit.")
     public String getSommeilRecent(@ToolMemoryId String userId, Integer nbJours) {
-        Utilisateur user = loadUser(userId);
+        Utilisateur user = toolUserResolver.load(userId);
         int window = (nbJours != null && nbJours > 0) ? Math.min(nbJours, 30) : 7;
         try {
             String token = fitbitService.getValidToken(user.getUsername());
@@ -115,7 +115,7 @@ public class FitbitTools {
 
     @Tool("Récupère la fréquence cardiaque de repos de l'utilisateur d'après Fitbit, pour une date donnée (format YYYY-MM-DD ; null ou vide = aujourd'hui) ou, à défaut, la mesure la plus récente. Nécessite la liaison Fitbit.")
     public String getFrequenceCardiaque(@ToolMemoryId String userId, String date) {
-        Utilisateur user = loadUser(userId);
+        Utilisateur user = toolUserResolver.load(userId);
         LocalDate target = parseDateOrToday(date);
         if (target == null) {
             return "Date invalide '" + date + "'. Utilise le format AAAA-MM-JJ ou laisse vide pour aujourd'hui.";
@@ -151,7 +151,7 @@ public class FitbitTools {
 
     @Tool("Analyse la tendance d'activité de l'utilisateur sur les N derniers jours (défaut 7) d'après Fitbit : pas par jour, moyenne, minimum, maximum, tendance. Nécessite la liaison Fitbit.")
     public String getTendanceActivite(@ToolMemoryId String userId, Integer nbJours) {
-        Utilisateur user = loadUser(userId);
+        Utilisateur user = toolUserResolver.load(userId);
         int window = (nbJours != null && nbJours > 0) ? Math.min(nbJours, 30) : 7;
         try {
             String token = fitbitService.getValidToken(user.getUsername());
@@ -226,11 +226,6 @@ public class FitbitTools {
         } catch (DateTimeParseException e) {
             return null;
         }
-    }
-
-    private Utilisateur loadUser(String userId) {
-        return utilisateurRepository.findById(Long.parseLong(userId))
-                .orElseThrow(() -> notFound("Utilisateur introuvable"));
     }
 
     private String fmt1(double v) {
