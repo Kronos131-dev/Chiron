@@ -1,11 +1,11 @@
-package com.kronos.chiron.controller;
+package com.kronos.chiron.performance.controller;
 
 import tools.jackson.databind.json.JsonMapper;
-import com.kronos.chiron.dto.ExercisePerformanceDto;
-import com.kronos.chiron.dto.PerformanceRecordDto;
-import com.kronos.chiron.dto.PerformanceSummaryDto;
+import com.kronos.chiron.performance.dto.ExercisePerformanceDto;
+import com.kronos.chiron.performance.dto.PerformanceRecordDto;
+import com.kronos.chiron.performance.dto.PerformanceSummaryDto;
 import com.kronos.chiron.security.JwtService;
-import com.kronos.chiron.service.PerformanceService;
+import com.kronos.chiron.performance.service.PerformanceService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;

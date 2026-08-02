@@ -1,6 +1,8 @@
 package com.kronos.chiron.service;
 
-import com.kronos.chiron.dto.PerformanceSummaryDto;
+import com.kronos.chiron.performance.service.PerformanceService;
+
+import com.kronos.chiron.performance.dto.PerformanceSummaryDto;
 import com.kronos.chiron.dto.ProfileDto;
 import com.kronos.chiron.entity.Role;
 import com.kronos.chiron.entity.Seance;

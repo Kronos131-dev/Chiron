@@ -1,4 +1,6 @@
-package com.kronos.chiron.repository;
+package com.kronos.chiron.performance.persistence;
+
+import com.kronos.chiron.performance.model.PerformanceRecord;
 
 import com.kronos.chiron.entity.*;
 import org.junit.jupiter.api.BeforeEach;
