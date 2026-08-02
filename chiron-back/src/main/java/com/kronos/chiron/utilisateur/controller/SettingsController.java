@@ -1,12 +1,12 @@
 package com.kronos.chiron.utilisateur.controller;
 
 import com.kronos.chiron.auth.dto.AuthenticationResponse;
-import com.kronos.chiron.dto.settings.ChangeEmailRequest;
-import com.kronos.chiron.dto.settings.ChangeIdentityRequest;
-import com.kronos.chiron.dto.settings.ChangePasswordRequest;
-import com.kronos.chiron.dto.settings.ChangeUsernameRequest;
-import com.kronos.chiron.dto.settings.TrainingPrefsDto;
-import com.kronos.chiron.dto.settings.UserInfoResponse;
+import com.kronos.chiron.utilisateur.dto.ChangeEmailRequest;
+import com.kronos.chiron.utilisateur.dto.ChangeIdentityRequest;
+import com.kronos.chiron.utilisateur.dto.ChangePasswordRequest;
+import com.kronos.chiron.utilisateur.dto.ChangeUsernameRequest;
+import com.kronos.chiron.utilisateur.dto.TrainingPrefsDto;
+import com.kronos.chiron.utilisateur.dto.UserInfoResponse;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 import com.kronos.chiron.utilisateur.service.SettingsService;
 import lombok.RequiredArgsConstructor;
@@ -67,7 +67,7 @@ public class SettingsController {
     }
 
     @GetMapping("/ai-provider")
-    public ResponseEntity<com.kronos.chiron.dto.settings.AiProviderDto> getAiProvider(
+    public ResponseEntity<com.kronos.chiron.utilisateur.dto.AiProviderDto> getAiProvider(
             @AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(settingsService.getAiProvider(userDetails.getUsername()));
     }
@@ -75,7 +75,7 @@ public class SettingsController {
     @PutMapping("/ai-provider")
     public ResponseEntity<Void> updateAiProvider(
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestBody com.kronos.chiron.dto.settings.AiProviderDto request) {
+            @RequestBody com.kronos.chiron.utilisateur.dto.AiProviderDto request) {
         settingsService.updateAiProvider(userDetails.getUsername(), request.provider());
         return ResponseEntity.ok().build();
     }

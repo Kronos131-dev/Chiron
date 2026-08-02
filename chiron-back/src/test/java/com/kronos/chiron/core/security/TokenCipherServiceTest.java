@@ -1,4 +1,4 @@
-package com.kronos.chiron.util;
+package com.kronos.chiron.core.security;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;

@@ -1,8 +1,9 @@
-package com.kronos.chiron.controller;
+package com.kronos.chiron.visbody.controller;
 
-import com.kronos.chiron.boditrax.BoditraxImportService;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 import com.kronos.chiron.utilisateur.persistence.UtilisateurRepository;
+import com.kronos.chiron.visbody.BodyCompositionRecord;
+import com.kronos.chiron.visbody.BodyCompositionRecordRepository;
 import com.kronos.chiron.visbody.VisbodyImportService;
 import com.kronos.chiron.visbody.VisbodyImportService.ImportResult;
 import lombok.RequiredArgsConstructor;
@@ -13,21 +14,24 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
- * Endpoint Boditrax : upload manuel d'un export CSV. Les scans sont enregistrés dans
- * le même modèle que Visbody et apparaissent dans la page Composition.
+ * Endpoints Visbody : upload manuel d'un rapport PDF (test / fallback) et liste
+ * des scans de l'utilisateur courant. L'ingestion principale se fait par email
+ * (voir {@code VisbodyMailService}).
  */
 @RestController
-@RequestMapping("/api/boditrax")
+@RequestMapping("/api/visbody")
 @RequiredArgsConstructor
-public class BoditraxController {
+public class VisbodyController {
 
-    private final BoditraxImportService importService;
+    private final VisbodyImportService importService;
+    private final BodyCompositionRecordRepository recordRepo;
     private final UtilisateurRepository utilisateurRepo;
 
     @PostMapping("/import")
-    public ResponseEntity<ImportResult> importCsv(@RequestParam("file") MultipartFile file,
+    public ResponseEntity<ImportResult> importPdf(@RequestParam("file") MultipartFile file,
                                                   Authentication auth) throws IOException {
         if (file.isEmpty()) {
             return ResponseEntity.badRequest()
@@ -36,12 +40,19 @@ public class BoditraxController {
         Utilisateur user = utilisateurRepo.findByUsername(auth.getName())
                 .orElseThrow(() -> new IllegalStateException("Utilisateur courant introuvable"));
 
-        ImportResult result = importService.importCsv(file.getBytes(), user);
+        ImportResult result = importService.importForUser(file.getBytes(), user);
         HttpStatus status = switch (result.outcome()) {
             case IMPORTED -> HttpStatus.CREATED;
             case DUPLICATE -> HttpStatus.OK;
             default -> HttpStatus.UNPROCESSABLE_ENTITY;
         };
         return ResponseEntity.status(status).body(result);
+    }
+
+    @GetMapping("/records")
+    public ResponseEntity<List<BodyCompositionRecord>> records(Authentication auth) {
+        Utilisateur user = utilisateurRepo.findByUsername(auth.getName())
+                .orElseThrow(() -> new IllegalStateException("Utilisateur courant introuvable"));
+        return ResponseEntity.ok(recordRepo.findByUtilisateurOrderByMesureLeAsc(user));
     }
 }

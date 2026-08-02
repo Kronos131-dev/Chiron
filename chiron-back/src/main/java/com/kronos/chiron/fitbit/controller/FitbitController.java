@@ -1,4 +1,4 @@
-package com.kronos.chiron.controller;
+package com.kronos.chiron.fitbit.controller;
 
 import com.kronos.chiron.fitbit.FitbitClient;
 import com.kronos.chiron.fitbit.FitbitDashboardDto;

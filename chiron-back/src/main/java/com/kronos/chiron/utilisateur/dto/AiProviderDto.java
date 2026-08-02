@@ -1,4 +1,4 @@
-package com.kronos.chiron.dto.settings;
+package com.kronos.chiron.utilisateur.dto;
 
 import com.kronos.chiron.utilisateur.model.AiProvider;
 

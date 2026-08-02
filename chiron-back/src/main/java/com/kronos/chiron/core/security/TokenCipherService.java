@@ -1,4 +1,4 @@
-package com.kronos.chiron.util;
+package com.kronos.chiron.core.security;
 
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;

@@ -2,7 +2,7 @@ package com.kronos.chiron.fitbit;
 
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 import com.kronos.chiron.utilisateur.persistence.UtilisateurRepository;
-import com.kronos.chiron.util.TokenCipherService;
+import com.kronos.chiron.core.security.TokenCipherService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
