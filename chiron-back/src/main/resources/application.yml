@@ -60,6 +60,10 @@ langchain4j:
       model-name: ${CHIRON_GEMINI_MODEL:gemini-3.5-flash}
 
 jwt:
+  # Clé de signature HMAC, hexadécimale, 64 caractères minimum. Obligatoire :
+  # sans JWT_SECRET l'application refuse de démarrer, plutôt que de signer les
+  # jetons avec une clé de repli qui serait publique.
+  secret: ${JWT_SECRET}
   # Expiration du token (ex: 2592000000ms = 30 jours)
   expiration: 2592000000
 
