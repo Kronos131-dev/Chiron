@@ -19,5 +19,5 @@ public record ExerciceDefinitionDto(
         NiveauDifficulte difficulte,
         String descriptionFr,
         String descriptionEn,
-        CardioType cardioType
-) {}
+        CardioType cardioType) {
+}

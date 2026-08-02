@@ -23,11 +23,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(value = AgoraController.class, excludeAutoConfiguration = SecurityAutoConfiguration.class)
 class AgoraControllerTest {
 
-    @Autowired private MockMvc mockMvc;
+    @Autowired
+    private MockMvc mockMvc;
 
-    @MockitoBean private ProfileService profileService;
-    @MockitoBean private JwtService jwtService;
-    @MockitoBean private UserDetailsService userDetailsService;
+    @MockitoBean
+    private ProfileService profileService;
+    @MockitoBean
+    private JwtService jwtService;
+    @MockitoBean
+    private UserDetailsService userDetailsService;
 
     @Test
     void getAllParticipants_withUsername_returnsProfiles() throws Exception {

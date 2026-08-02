@@ -17,8 +17,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ActiveProfiles("test")
 class UtilisateurRepositoryTest {
 
-    @Autowired private TestEntityManager em;
-    @Autowired private UtilisateurRepository repository;
+    @Autowired
+    private TestEntityManager em;
+    @Autowired
+    private UtilisateurRepository repository;
 
     private Utilisateur persist(String username) {
         Utilisateur u = Utilisateur.builder()

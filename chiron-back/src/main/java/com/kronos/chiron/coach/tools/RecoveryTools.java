@@ -27,13 +27,13 @@ public class RecoveryTools {
     private final Clock clock;
     @Tool("Enregistre/met à jour l'état du jour : sommeil (heures), fatigue/courbatures/stress/énergie (1-5 ; 1=au mieux→5=au pire pour fatigue/courbatures/stress, inverse pour energie : 1=vide→5=à fond), notes. Date optionnelle (AAAA-MM-JJ, défaut aujourd'hui). Tous les champs sont optionnels — n'enregistre que ce qui est mentionné.")
     public String enregistrerEtatJournalier(@ToolMemoryId String userId,
-                                             String date,
-                                             Double sommeilHeures,
-                                             Integer fatigue,
-                                             Integer courbatures,
-                                             Integer stress,
-                                             Integer energie,
-                                             String notes) {
+            String date,
+            Double sommeilHeures,
+            Integer fatigue,
+            Integer courbatures,
+            Integer stress,
+            Integer energie,
+            String notes) {
         Utilisateur user = loadUser(userId);
         LocalDate target;
         if (date == null || date.isBlank()) {
@@ -56,7 +56,8 @@ public class RecoveryTools {
         List<EtatJournalier> etats = recoveryService.getRecent(user, window);
 
         if (etats.isEmpty()) {
-            return "Aucun état enregistré sur les " + window + " derniers jours. Demande à l'utilisateur comment il se sent.";
+            return "Aucun état enregistré sur les " + window
+                    + " derniers jours. Demande à l'utilisateur comment il se sent.";
         }
 
         StringBuilder res = new StringBuilder("État sur les ").append(window).append(" derniers jours (")
@@ -65,11 +66,10 @@ public class RecoveryTools {
             res.append("- ").append(e.getDate()).append(" : ");
             res.append(joinNonNull(
                     e.getSommeilHeures() != null ? "sommeil " + e.getSommeilHeures() + "h" : null,
-                    e.getFatigue() != null       ? "fatigue " + e.getFatigue() + "/5" : null,
-                    e.getCourbatures() != null   ? "courb " + e.getCourbatures() + "/5" : null,
-                    e.getStress() != null        ? "stress " + e.getStress() + "/5" : null,
-                    e.getEnergie() != null       ? "énergie " + e.getEnergie() + "/5" : null
-            ));
+                    e.getFatigue() != null ? "fatigue " + e.getFatigue() + "/5" : null,
+                    e.getCourbatures() != null ? "courb " + e.getCourbatures() + "/5" : null,
+                    e.getStress() != null ? "stress " + e.getStress() + "/5" : null,
+                    e.getEnergie() != null ? "énergie " + e.getEnergie() + "/5" : null));
             if (e.getNotes() != null && !e.getNotes().isBlank()) {
                 res.append(" — ").append(e.getNotes());
             }
@@ -96,21 +96,28 @@ public class RecoveryTools {
             return "Recommandation : séance LÉGÈRE (~50-60 % de l'intensité habituelle) ou repos actif. Justification : sommeil < 5h la nuit dernière.";
         }
         if (today.getCourbatures() != null && today.getCourbatures() >= 4) {
-            return "Recommandation : séance LÉGÈRE ciblant d'autres groupes musculaires, ou mobilité. Justification : courbatures importantes (" + today.getCourbatures() + "/5).";
+            return "Recommandation : séance LÉGÈRE ciblant d'autres groupes musculaires, ou mobilité. Justification : courbatures importantes ("
+                    + today.getCourbatures() + "/5).";
         }
 
         double avgFatigue = avg(etats, EtatJournalier::getFatigue);
-        double avgSommeil = avg(etats, e -> e.getSommeilHeures() != null ? (int) Math.round(e.getSommeilHeures()) : null);
+        double avgSommeil = avg(etats,
+                e -> e.getSommeilHeures() != null ? (int) Math.round(e.getSommeilHeures()) : null);
         double avgEnergie = avg(etats, EtatJournalier::getEnergie);
 
         if (avgFatigue >= 3.5) {
-            return String.format("Recommandation : séance MODÉRÉE (70-80 %% intensité). Justification : fatigue moyenne %.1f/5 sur 3 jours.", avgFatigue);
+            return String.format(
+                    "Recommandation : séance MODÉRÉE (70-80 %% intensité). Justification : fatigue moyenne %.1f/5 sur 3 jours.",
+                    avgFatigue);
         }
         if (avgEnergie > 0 && avgEnergie >= 4) {
-            return String.format("Recommandation : tout est vert, séance LOURDE possible. Justification : énergie moyenne %.1f/5, fatigue %.1f/5.", avgEnergie, avgFatigue);
+            return String.format(
+                    "Recommandation : tout est vert, séance LOURDE possible. Justification : énergie moyenne %.1f/5, fatigue %.1f/5.",
+                    avgEnergie, avgFatigue);
         }
         if (avgSommeil > 0 && avgSommeil < 6) {
-            return String.format("Recommandation : séance MODÉRÉE. Justification : sommeil moyen ~%.1fh sur 3 jours.", avgSommeil);
+            return String.format("Recommandation : séance MODÉRÉE. Justification : sommeil moyen ~%.1fh sur 3 jours.",
+                    avgSommeil);
         }
         return "Recommandation : séance NORMALE (intensité habituelle). Aucun signal alarmant détecté.";
     }
@@ -119,7 +126,10 @@ public class RecoveryTools {
         int sum = 0, n = 0;
         for (EtatJournalier e : etats) {
             Integer v = extractor.apply(e);
-            if (v != null) { sum += v; n++; }
+            if (v != null) {
+                sum += v;
+                n++;
+            }
         }
         return n > 0 ? (double) sum / n : 0.0;
     }

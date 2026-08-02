@@ -96,14 +96,17 @@ public class NutritionService {
                 false,
                 user.getOlympusUsername(),
                 user.getOlympusLinkedAt(),
-                user.getOlympusTokenExpiresAt()
-        );
+                user.getOlympusTokenExpiresAt());
     }
 
     public static class InvalidCredentialsException extends RuntimeException {
-        public InvalidCredentialsException(String msg) { super(msg); }
+        public InvalidCredentialsException(String msg) {
+            super(msg);
+        }
     }
 
-    public static class NotLinkedException extends RuntimeException {}
-    public static class ExpiredException extends RuntimeException {}
+    public static class NotLinkedException extends RuntimeException {
+    }
+    public static class ExpiredException extends RuntimeException {
+    }
 }

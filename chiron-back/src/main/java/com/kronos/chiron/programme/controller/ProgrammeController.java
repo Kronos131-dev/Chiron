@@ -28,8 +28,8 @@ public class ProgrammeController {
 
     @PostMapping
     public ResponseEntity<?> creerProgramme(@RequestParam String username,
-                                            @RequestParam(required = false) String forUsername,
-                                            @RequestBody SeanceDto seanceDto) {
+            @RequestParam(required = false) String forUsername,
+            @RequestBody SeanceDto seanceDto) {
         try {
             Seance savedSeance = programmeService.sauvegarderProgramme(username, seanceDto, forUsername);
             return ResponseEntity.ok("Program saved with ID: " + savedSeance.getId());

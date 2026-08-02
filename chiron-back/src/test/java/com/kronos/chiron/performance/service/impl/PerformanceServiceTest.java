@@ -1,4 +1,4 @@
-package com.kronos.chiron.performance.service;
+package com.kronos.chiron.performance.service.impl;
 
 import com.kronos.chiron.seance.model.ExerciseType;
 
@@ -33,11 +33,13 @@ import static org.mockito.Mockito.*;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class PerformanceServiceTest {
 
-    @Mock private PerformanceRecordRepository performanceRecordRepository;
-    @Mock private UtilisateurRepository utilisateurRepository;
+    @Mock
+    private PerformanceRecordRepository performanceRecordRepository;
+    @Mock
+    private UtilisateurRepository utilisateurRepository;
 
     @InjectMocks
-    private PerformanceService performanceService;
+    private PerformanceServiceImpl performanceService;
 
     private Utilisateur user;
 
@@ -158,11 +160,10 @@ class PerformanceServiceTest {
 
         performanceService.addRecord("athlete", dto);
 
-        verify(performanceRecordRepository).saveAndFlush(argThat(r ->
-                r.getExerciseType() == ExerciseType.DEVELOPPE_COUCHE &&
-                r.getPoids() == 100.0 &&
-                r.getNombreReps() == 5
-        ));
+        verify(performanceRecordRepository)
+                .saveAndFlush(argThat(r -> r.getExerciseType() == ExerciseType.DEVELOPPE_COUCHE &&
+                        r.getPoids() == 100.0 &&
+                        r.getNombreReps() == 5));
     }
 
     @Test
@@ -194,9 +195,8 @@ class PerformanceServiceTest {
 
         performanceService.addRecord("athlete", dto);
 
-        verify(performanceRecordRepository).saveAndFlush(argThat(r ->
-                r.getRatioPerformance() != null && r.getRatioPerformance() > 0
-        ));
+        verify(performanceRecordRepository)
+                .saveAndFlush(argThat(r -> r.getRatioPerformance() != null && r.getRatioPerformance() > 0));
     }
 
     @Test

@@ -4,5 +4,5 @@ import java.time.LocalDate;
 
 public record BodyweightPointDto(
         LocalDate date,
-        double poids
-) {}
+        double poids) {
+}

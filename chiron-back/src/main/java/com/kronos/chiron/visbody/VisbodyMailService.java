@@ -24,12 +24,18 @@ public class VisbodyMailService {
 
     private final VisbodyImportService importService;
 
-    @Value("${chiron.visbody.mailbox.enabled:false}") private boolean enabled;
-    @Value("${chiron.visbody.mailbox.host:imap.gmail.com}") private String host;
-    @Value("${chiron.visbody.mailbox.port:993}") private int port;
-    @Value("${chiron.visbody.mailbox.username:}") private String username;
-    @Value("${chiron.visbody.mailbox.password:}") private String password;
-    @Value("${chiron.visbody.mailbox.folder:INBOX}") private String folderName;
+    @Value("${chiron.visbody.mailbox.enabled:false}")
+    private boolean enabled;
+    @Value("${chiron.visbody.mailbox.host:imap.gmail.com}")
+    private String host;
+    @Value("${chiron.visbody.mailbox.port:993}")
+    private int port;
+    @Value("${chiron.visbody.mailbox.username:}")
+    private String username;
+    @Value("${chiron.visbody.mailbox.password:}")
+    private String password;
+    @Value("${chiron.visbody.mailbox.folder:INBOX}")
+    private String folderName;
 
     @Scheduled(fixedDelayString = "${chiron.visbody.mailbox.poll-interval-ms:300000}")
     public void pollMailbox() {
@@ -111,17 +117,26 @@ public class VisbodyMailService {
         if (contentType.contains("application/pdf")) return true;
         String filename = part.getFileName();
         if (filename != null) {
-            try { filename = MimeUtility.decodeText(filename); } catch (Exception ignored) {}
+            try {
+                filename = MimeUtility.decodeText(filename);
+            } catch (Exception ignored) {
+            }
             return filename.toLowerCase().endsWith(".pdf");
         }
         return false;
     }
 
     private void closeQuietly(Folder folder) {
-        try { if (folder != null && folder.isOpen()) folder.close(false); } catch (Exception ignored) {}
+        try {
+            if (folder != null && folder.isOpen()) folder.close(false);
+        } catch (Exception ignored) {
+        }
     }
 
     private void closeQuietly(Store store) {
-        try { if (store != null && store.isConnected()) store.close(); } catch (Exception ignored) {}
+        try {
+            if (store != null && store.isConnected()) store.close();
+        } catch (Exception ignored) {
+        }
     }
 }

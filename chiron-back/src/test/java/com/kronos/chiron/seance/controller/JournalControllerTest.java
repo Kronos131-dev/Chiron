@@ -26,12 +26,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(value = JournalController.class, excludeAutoConfiguration = {SecurityAutoConfiguration.class})
 class JournalControllerTest {
 
-    @Autowired private MockMvc mockMvc;
+    @Autowired
+    private MockMvc mockMvc;
 
-    @MockitoBean private SeanceRepository seanceRepository;
-    @MockitoBean private SeanceMapper seanceMapper;
-    @MockitoBean private JwtService jwtService;
-    @MockitoBean private UserDetailsService userDetailsService;
+    @MockitoBean
+    private SeanceRepository seanceRepository;
+    @MockitoBean
+    private SeanceMapper seanceMapper;
+    @MockitoBean
+    private JwtService jwtService;
+    @MockitoBean
+    private UserDetailsService userDetailsService;
 
     @Test
     void getHistorique_returnsListOfSessions() throws Exception {

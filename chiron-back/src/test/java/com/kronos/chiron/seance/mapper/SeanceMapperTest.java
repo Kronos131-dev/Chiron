@@ -14,7 +14,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -43,7 +42,8 @@ class SeanceMapperTest {
         Exercice e = new Exercice();
         e.setNom(nom);
         e.setCommentaire("exo note");
-        for (Serie s : series) e.addSerie(s);
+        for (Serie s : series)
+            e.addSerie(s);
         return e;
     }
 
@@ -52,12 +52,12 @@ class SeanceMapperTest {
         e.setNom(nom);
         e.setCommentaire("note");
         if (definitionId != null) {
-            com.kronos.chiron.exercice.model.ExerciceDefinition def =
-                    com.kronos.chiron.exercice.model.ExerciceDefinition.builder()
-                            .id(definitionId)
-                            .nomEn("Bench Press")
-                            .musclesSecondaires(new java.util.ArrayList<>())
-                            .build();
+            com.kronos.chiron.exercice.model.ExerciceDefinition def = com.kronos.chiron.exercice.model.ExerciceDefinition
+                    .builder()
+                    .id(definitionId)
+                    .nomEn("Bench Press")
+                    .musclesSecondaires(new java.util.ArrayList<>())
+                    .build();
             e.setDefinition(def);
         }
         return e;
@@ -72,7 +72,8 @@ class SeanceMapperTest {
         seance.setWeekNumber(3);
         seance.setHistorique(true);
         seance.setUtilisateur(user);
-        for (Exercice e : exercices) seance.addExercice(e);
+        for (Exercice e : exercices)
+            seance.addExercice(e);
         return seance;
     }
 

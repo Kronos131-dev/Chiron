@@ -33,8 +33,7 @@ public class SettingsController {
     @PutMapping("/identity")
     public ResponseEntity<Void> changeIdentity(
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestBody ChangeIdentityRequest request
-    ) {
+            @RequestBody ChangeIdentityRequest request) {
         settingsService.changeIdentity(userDetails.getUsername(), request.prenom(), request.nom());
         return ResponseEntity.ok().build();
     }
@@ -42,8 +41,7 @@ public class SettingsController {
     @PutMapping("/password")
     public ResponseEntity<Void> changePassword(
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestBody ChangePasswordRequest request
-    ) {
+            @RequestBody ChangePasswordRequest request) {
         settingsService.changePassword(userDetails.getUsername(), request.currentPassword(), request.newPassword());
         return ResponseEntity.ok().build();
     }
@@ -51,8 +49,7 @@ public class SettingsController {
     @PutMapping("/email")
     public ResponseEntity<Void> changeEmail(
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestBody ChangeEmailRequest request
-    ) {
+            @RequestBody ChangeEmailRequest request) {
         settingsService.changeEmail(userDetails.getUsername(), request.newEmail());
         return ResponseEntity.ok().build();
     }
@@ -60,8 +57,7 @@ public class SettingsController {
     @PutMapping("/username")
     public ResponseEntity<AuthenticationResponse> changeUsername(
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestBody ChangeUsernameRequest request
-    ) {
+            @RequestBody ChangeUsernameRequest request) {
         String newToken = settingsService.changeUsername(userDetails.getUsername(), request.newUsername());
         return ResponseEntity.ok(new AuthenticationResponse(newToken));
     }
@@ -88,8 +84,7 @@ public class SettingsController {
     @PutMapping("/training-prefs")
     public ResponseEntity<Void> updateTrainingPrefs(
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestBody TrainingPrefsDto request
-    ) {
+            @RequestBody TrainingPrefsDto request) {
         settingsService.updateTrainingPrefs(
                 userDetails.getUsername(), request.halteresParImplement(), request.machineParCote());
         return ResponseEntity.ok().build();

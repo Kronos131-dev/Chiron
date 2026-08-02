@@ -39,15 +39,15 @@ public class ChironConfig {
 
     @Bean
     public ChironAgentRouter chironAgentRouter(WorkoutTools workoutTools,
-                                               NutritionTools nutritionTools,
-                                               MemoryTools memoryTools,
-                                               RecoveryTools recoveryTools,
-                                               AdaptiveTools adaptiveTools,
-                                               FitbitTools fitbitTools,
-                                               AppGuideTools appGuideTools,
-                                               AnalyseDieteTools analyseDieteTools,
-                                               ChatMemoryProvider chatMemoryProvider,
-                                               ConversationMemoryManager memoryManager) {
+            NutritionTools nutritionTools,
+            MemoryTools memoryTools,
+            RecoveryTools recoveryTools,
+            AdaptiveTools adaptiveTools,
+            FitbitTools fitbitTools,
+            AppGuideTools appGuideTools,
+            AnalyseDieteTools analyseDieteTools,
+            ChatMemoryProvider chatMemoryProvider,
+            ConversationMemoryManager memoryManager) {
 
         Object[] tools = {workoutTools, nutritionTools, memoryTools, recoveryTools,
                 adaptiveTools, fitbitTools, appGuideTools, analyseDieteTools};

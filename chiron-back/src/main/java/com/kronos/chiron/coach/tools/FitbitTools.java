@@ -26,12 +26,9 @@ import java.util.Map;
 @Slf4j
 public class FitbitTools {
 
-    private static final String MSG_NON_LIE =
-            "L'utilisateur n'a pas lié son compte Fitbit à Chiron. Demande-lui de le faire depuis la page Profil.";
-    private static final String MSG_EXPIRE =
-            "La liaison Fitbit de l'utilisateur a expiré. Demande-lui de se reconnecter depuis la page Profil.";
-    private static final String MSG_INDISPO =
-            "Le service Fitbit est temporairement injoignable. Réessaie plus tard.";
+    private static final String MSG_NON_LIE = "L'utilisateur n'a pas lié son compte Fitbit à Chiron. Demande-lui de le faire depuis la page Profil.";
+    private static final String MSG_EXPIRE = "La liaison Fitbit de l'utilisateur a expiré. Demande-lui de se reconnecter depuis la page Profil.";
+    private static final String MSG_INDISPO = "Le service Fitbit est temporairement injoignable. Réessaie plus tard.";
 
     private final UtilisateurRepository utilisateurRepository;
     private final FitbitService fitbitService;
@@ -76,8 +73,7 @@ public class FitbitTools {
             String token = fitbitService.getValidToken(user.getUsername());
             LocalDate today = LocalDate.now(clock);
             LocalDate start = today.minusDays(window - 1L);
-            Map<LocalDate, Double> hoursByDate =
-                    FitbitParser.sleepHoursByDate(fitbitClient.listSleep(token, start));
+            Map<LocalDate, Double> hoursByDate = FitbitParser.sleepHoursByDate(fitbitClient.listSleep(token, start));
 
             if (hoursByDate.isEmpty()) {
                 triggerSync(user);
@@ -190,7 +186,8 @@ public class FitbitTools {
             String tendance;
             if (premier == 0 || Math.abs(dernier - premier) < moyenne * 0.1) tendance = "stable";
             else if (dernier > premier) tendance = "en hausse";
-            else tendance = "en baisse";
+            else
+                tendance = "en baisse";
 
             StringBuilder res = new StringBuilder("Tendance d'activité Fitbit sur ")
                     .append(window).append(" jours (").append(n).append(" jour(s) avec données) :\n");

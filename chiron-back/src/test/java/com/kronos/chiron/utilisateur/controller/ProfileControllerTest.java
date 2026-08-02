@@ -27,12 +27,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(value = ProfileController.class)
 class ProfileControllerTest {
 
-    @Autowired private MockMvc mockMvc;
-    @Autowired private JsonMapper objectMapper;
+    @Autowired
+    private MockMvc mockMvc;
+    @Autowired
+    private JsonMapper objectMapper;
 
-    @MockitoBean private ProfileService profileService;
-    @MockitoBean private JwtService jwtService;
-    @MockitoBean private UserDetailsService userDetailsService;
+    @MockitoBean
+    private ProfileService profileService;
+    @MockitoBean
+    private JwtService jwtService;
+    @MockitoBean
+    private UserDetailsService userDetailsService;
 
     private ProfileDto buildProfile(String username) {
         return ProfileDto.builder()
@@ -77,8 +82,8 @@ class ProfileControllerTest {
         when(profileService.searchProfiles("ali", "bob")).thenReturn(List.of(buildProfile("alice")));
 
         mockMvc.perform(get("/api/profile/search")
-                        .param("query", "ali")
-                        .param("requestUsername", "bob"))
+                .param("query", "ali")
+                .param("requestUsername", "bob"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].username").value("alice"));
     }
@@ -90,8 +95,8 @@ class ProfileControllerTest {
         doNothing().when(profileService).updateVisibility("alice", true);
 
         mockMvc.perform(put("/api/profile/alice/visibility")
-                        .param("isPublic", "true")
-                        .with(csrf()))
+                .param("isPublic", "true")
+                .with(csrf()))
                 .andExpect(status().isOk());
     }
 
@@ -99,8 +104,8 @@ class ProfileControllerTest {
     @WithMockUser(username = "bob")
     void updateVisibility_differentUser_returns403() throws Exception {
         mockMvc.perform(put("/api/profile/alice/visibility")
-                        .param("isPublic", "true")
-                        .with(csrf()))
+                .param("isPublic", "true")
+                .with(csrf()))
                 .andExpect(status().isForbidden());
     }
 
@@ -108,8 +113,8 @@ class ProfileControllerTest {
     @Disabled("Spring Security filters désactivés via addFilters=false — couvert par les tests d'intégration end-to-end")
     void updateVisibility_noAuthentication_returns401() throws Exception {
         mockMvc.perform(put("/api/profile/alice/visibility")
-                        .param("isPublic", "true")
-                        .with(csrf()))
+                .param("isPublic", "true")
+                .with(csrf()))
                 .andExpect(status().isUnauthorized());
     }
 

@@ -14,5 +14,5 @@ public record SeanceDto(
         Integer weekNumber,
         Boolean historique,
         ProfileDto utilisateur,
-        List<ExerciceDto> exercices
-) {}
+        List<ExerciceDto> exercices) {
+}

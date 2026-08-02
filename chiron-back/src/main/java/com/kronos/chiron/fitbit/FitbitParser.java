@@ -8,7 +8,8 @@ import java.util.Map;
 
 public final class FitbitParser {
 
-    private FitbitParser() {}
+    private FitbitParser() {
+    }
 
     public static Map<LocalDate, Integer> stepsByDate(JsonNode rollUpResponse) {
         Map<LocalDate, Integer> result = new HashMap<>();

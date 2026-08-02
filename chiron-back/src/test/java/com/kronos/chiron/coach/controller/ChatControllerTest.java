@@ -36,17 +36,27 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(value = ChatController.class, excludeAutoConfiguration = SecurityAutoConfiguration.class)
 class ChatControllerTest {
 
-    @Autowired private MockMvc mockMvc;
-    @Autowired private JsonMapper objectMapper;
+    @Autowired
+    private MockMvc mockMvc;
+    @Autowired
+    private JsonMapper objectMapper;
 
-    @MockitoBean private ChironAgentRouter chironAgentRouter;
-    @MockitoBean private UtilisateurRepository utilisateurRepository;
-    @MockitoBean private MemoryNoteService memoryNoteService;
-    @MockitoBean private ConversationService conversationService;
-    @MockitoBean private ConversationMemoryManager memoryManager;
-    @MockitoBean private AiUsageService aiUsageService;
-    @MockitoBean private JwtService jwtService;
-    @MockitoBean private UserDetailsService userDetailsService;
+    @MockitoBean
+    private ChironAgentRouter chironAgentRouter;
+    @MockitoBean
+    private UtilisateurRepository utilisateurRepository;
+    @MockitoBean
+    private MemoryNoteService memoryNoteService;
+    @MockitoBean
+    private ConversationService conversationService;
+    @MockitoBean
+    private ConversationMemoryManager memoryManager;
+    @MockitoBean
+    private AiUsageService aiUsageService;
+    @MockitoBean
+    private JwtService jwtService;
+    @MockitoBean
+    private UserDetailsService userDetailsService;
 
     private Utilisateur buildUser() {
         return Utilisateur.builder()
@@ -70,8 +80,8 @@ class ChatControllerTest {
         when(chironAgentRouter.chatWithFallback(any(), eq("42"), anyString())).thenReturn("Séance enregistrée.");
 
         mockMvc.perform(post("/api/chat")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(Map.of("username", "alice", "message", "Je commence"))))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(Map.of("username", "alice", "message", "Je commence"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.conversationId").value(42))
                 .andExpect(jsonPath("$.reply").value("Séance enregistrée."));
@@ -83,8 +93,8 @@ class ChatControllerTest {
         when(chironAgentRouter.chatWithFallback(any(), anyString(), anyString())).thenReturn("OK");
 
         mockMvc.perform(post("/api/chat")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(Map.of("username", "alice", "message", "Bonjour"))))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(Map.of("username", "alice", "message", "Bonjour"))))
                 .andExpect(status().isOk());
 
         verify(chironAgentRouter).chatWithFallback(any(), eq("42"), contains("alice"));
@@ -96,8 +106,8 @@ class ChatControllerTest {
         when(chironAgentRouter.chatWithFallback(any(), eq("42"), anyString())).thenReturn("Bien joué, soldat.");
 
         mockMvc.perform(post("/api/end-session")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(Map.of("username", "alice", "message", ""))))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(Map.of("username", "alice", "message", ""))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.reply").value("Bien joué, soldat."));
     }

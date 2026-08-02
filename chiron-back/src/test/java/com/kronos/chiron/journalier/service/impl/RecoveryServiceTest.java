@@ -1,4 +1,4 @@
-package com.kronos.chiron.journalier.service;
+package com.kronos.chiron.journalier.service.impl;
 
 import org.mockito.Spy;
 
@@ -35,11 +35,11 @@ class RecoveryServiceTest {
     @Mock
     private EtatJournalierRepository repository;
 
-        @Spy
+    @Spy
     private Clock clock = Clock.system(ZoneId.of("Europe/Paris"));
 
-@InjectMocks
-    private RecoveryService recoveryService;
+    @InjectMocks
+    private RecoveryServiceImpl recoveryService;
 
     private Utilisateur user;
 

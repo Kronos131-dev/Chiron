@@ -40,8 +40,7 @@ public interface ExerciceDefinitionRepository extends JpaRepository<ExerciceDefi
             @Param("qPrefix") String qPrefix,
             @Param("muscle") MuscleGroup muscle,
             @Param("equipement") TypeEquipement equipement,
-            @Param("difficulte") NiveauDifficulte difficulte
-    );
+            @Param("difficulte") NiveauDifficulte difficulte);
 
     @Modifying
     @Query("UPDATE ExerciceDefinition e SET e.usageCount = e.usageCount + 1 WHERE e.id IN :ids")

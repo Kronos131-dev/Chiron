@@ -36,7 +36,8 @@ public class OlympusTokenService {
             byte[] keyBytes = new byte[32];
             random.nextBytes(keyBytes);
             this.secretKey = new SecretKeySpec(keyBytes, ALG);
-            log.warn("CHIRON_SECRET_KEY non fournie : clé éphémère générée. Les tokens Olympus persistés ne seront plus déchiffrables après redémarrage. À éviter en production.");
+            log.warn(
+                    "CHIRON_SECRET_KEY non fournie : clé éphémère générée. Les tokens Olympus persistés ne seront plus déchiffrables après redémarrage. À éviter en production.");
             return;
         }
         byte[] keyBytes = Base64.getDecoder().decode(configuredKeyB64);
@@ -77,7 +78,8 @@ public class OlympusTokenService {
             cipher.init(Cipher.DECRYPT_MODE, secretKey, new GCMParameterSpec(TAG_LENGTH_BITS, iv));
             return new String(cipher.doFinal(cipherBytes));
         } catch (Exception e) {
-            throw new ChironTechnicalException("Échec du déchiffrement du token Olympus (clé changée ou donnée corrompue ?)", e);
+            throw new ChironTechnicalException(
+                    "Échec du déchiffrement du token Olympus (clé changée ou donnée corrompue ?)", e);
         }
     }
 }

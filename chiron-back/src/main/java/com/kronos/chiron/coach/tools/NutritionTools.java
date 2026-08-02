@@ -23,12 +23,9 @@ import java.time.format.DateTimeParseException;
 @Slf4j
 public class NutritionTools {
 
-    private static final String MSG_NON_LIE =
-            "L'utilisateur n'a pas lié son compte Olympus à Chiron. Demande-lui de le faire depuis la page Profil.";
-    private static final String MSG_EXPIRE =
-            "La liaison Olympus de l'utilisateur a expiré. Demande-lui de se relier depuis la page Profil.";
-    private static final String MSG_INDISPO =
-            "Le service Olympus est temporairement injoignable. Réessaie plus tard.";
+    private static final String MSG_NON_LIE = "L'utilisateur n'a pas lié son compte Olympus à Chiron. Demande-lui de le faire depuis la page Profil.";
+    private static final String MSG_EXPIRE = "La liaison Olympus de l'utilisateur a expiré. Demande-lui de se relier depuis la page Profil.";
+    private static final String MSG_INDISPO = "Le service Olympus est temporairement injoignable. Réessaie plus tard.";
 
     private final UtilisateurRepository utilisateurRepository;
     private final NutritionService nutritionService;
@@ -56,16 +53,18 @@ public class NutritionTools {
 
             double consoKcal = asDouble(log, "totalKcal");
             double consoProt = asDouble(log, "totalProteins");
-            double consoGlu  = asDouble(log, "totalCarbs");
-            double consoLip  = asDouble(log, "totalFats");
+            double consoGlu = asDouble(log, "totalCarbs");
+            double consoLip = asDouble(log, "totalFats");
             Integer pas = log.hasNonNull("stepCount") ? log.get("stepCount").asInt() : null;
-            Integer dureeMin = log.hasNonNull("workoutDurationMinutes") ? log.get("workoutDurationMinutes").asInt() : null;
+            Integer dureeMin = log.hasNonNull("workoutDurationMinutes")
+                    ? log.get("workoutDurationMinutes").asInt()
+                    : null;
             double extraBrul = asDouble(log, "extraKcalBurned");
 
             double cibleKcal = asDouble(profile, "targetKcal");
             double cibleProt = asDouble(profile, "targetProteins");
-            double cibleGlu  = asDouble(profile, "targetCarbs");
-            double cibleLip  = asDouble(profile, "targetFats");
+            double cibleGlu = asDouble(profile, "targetCarbs");
+            double cibleLip = asDouble(profile, "targetFats");
             String goal = profile.hasNonNull("goal") ? profile.get("goal").asText() : null;
 
             StringBuilder res = new StringBuilder();
@@ -114,8 +113,8 @@ public class NutritionTools {
             double taille = asDouble(profile, "heightCm");
             double cibleKcal = asDouble(profile, "targetKcal");
             double cibleProt = asDouble(profile, "targetProteins");
-            double cibleGlu  = asDouble(profile, "targetCarbs");
-            double cibleLip  = asDouble(profile, "targetFats");
+            double cibleGlu = asDouble(profile, "targetCarbs");
+            double cibleLip = asDouble(profile, "targetFats");
 
             StringBuilder res = new StringBuilder("Profil nutritionnel :\n");
             res.append("- Objectif : ").append(goal).append("\n");
@@ -165,8 +164,8 @@ public class NutritionTools {
                     boolean hasIntake = pt.hasNonNull("totalKcal");
                     if (hasIntake) {
                         sumProt += asDouble(pt, "totalProteins");
-                        sumGlu  += asDouble(pt, "totalCarbs");
-                        sumLip  += asDouble(pt, "totalFats");
+                        sumGlu += asDouble(pt, "totalCarbs");
+                        sumLip += asDouble(pt, "totalFats");
                         joursAvecDonnees++;
                     }
                     if (pt.hasNonNull("targetKcal")) {
@@ -181,12 +180,12 @@ public class NutritionTools {
             }
 
             double avgProt = sumProt / joursAvecDonnees;
-            double avgGlu  = sumGlu  / joursAvecDonnees;
-            double avgLip  = sumLip  / joursAvecDonnees;
+            double avgGlu = sumGlu / joursAvecDonnees;
+            double avgLip = sumLip / joursAvecDonnees;
             double totalGrammes = avgProt + avgGlu + avgLip;
             double pctProt = totalGrammes > 0 ? (avgProt * 4.0) / (avgProt * 4 + avgGlu * 4 + avgLip * 9) * 100 : 0;
-            double pctGlu  = totalGrammes > 0 ? (avgGlu  * 4.0) / (avgProt * 4 + avgGlu * 4 + avgLip * 9) * 100 : 0;
-            double pctLip  = totalGrammes > 0 ? (avgLip  * 9.0) / (avgProt * 4 + avgGlu * 4 + avgLip * 9) * 100 : 0;
+            double pctGlu = totalGrammes > 0 ? (avgGlu * 4.0) / (avgProt * 4 + avgGlu * 4 + avgLip * 9) * 100 : 0;
+            double pctLip = totalGrammes > 0 ? (avgLip * 9.0) / (avgProt * 4 + avgGlu * 4 + avgLip * 9) * 100 : 0;
 
             StringBuilder res = new StringBuilder();
             res.append("Bilan nutrition sur ").append(window).append(" jours (")
@@ -251,7 +250,10 @@ public class NutritionTools {
                 if (!pt.hasNonNull("weightKg")) continue;
                 double w = pt.get("weightKg").asDouble();
                 String d = pt.hasNonNull("date") ? pt.get("date").asText() : null;
-                if (premiereDate == null) { premiereDate = d; premierPoids = w; }
+                if (premiereDate == null) {
+                    premiereDate = d;
+                    premierPoids = w;
+                }
                 derniereDate = d;
                 dernierPoids = w;
                 sommePoids += w;
@@ -268,7 +270,8 @@ public class NutritionTools {
             String tendance;
             if (Math.abs(delta) < 0.3) tendance = "stable";
             else if (delta < 0) tendance = "perte";
-            else tendance = "prise";
+            else
+                tendance = "prise";
 
             StringBuilder res = new StringBuilder();
             res.append("Évolution du poids sur ").append(window).append(" jours (")
@@ -355,7 +358,8 @@ public class NutritionTools {
         if (food != null && food.hasNonNull("name")) {
             String n = food.get("name").asText();
             return entry.hasNonNull("quantityGrams")
-                    ? n + " (" + fmt(entry.get("quantityGrams").asDouble()) + " g)" : n;
+                    ? n + " (" + fmt(entry.get("quantityGrams").asDouble()) + " g)"
+                    : n;
         }
         JsonNode preset = entry.get("mealPreset");
         if (preset != null && preset.hasNonNull("name")) {

@@ -29,15 +29,20 @@ import static org.mockito.Mockito.*;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class FitbitServiceTest {
 
-    @Mock private UtilisateurRepository utilisateurRepository;
-    @Mock private FitbitClient fitbitClient;
-    @Mock private TokenCipherService tokenCipher;
-    @Mock private FitbitAuthSessionStore authSessionStore;
+    @Mock
+    private UtilisateurRepository utilisateurRepository;
+    @Mock
+    private FitbitClient fitbitClient;
+    @Mock
+    private TokenCipherService tokenCipher;
+    @Mock
+    private FitbitAuthSessionStore authSessionStore;
 
-        @Spy
+    @Spy
     private Clock clock = Clock.system(ZoneId.of("Europe/Paris"));
 
-@InjectMocks private FitbitService fitbitService;
+    @InjectMocks
+    private FitbitService fitbitService;
 
     private Utilisateur user;
 

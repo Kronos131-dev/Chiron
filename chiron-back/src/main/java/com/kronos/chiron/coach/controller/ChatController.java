@@ -31,11 +31,11 @@ public class ChatController {
     private static final int MEMORY_INJECTION_LIMIT = 10;
 
     public ChatController(ChironAgentRouter chironAgentRouter,
-                          UtilisateurRepository utilisateurRepository,
-                          MemoryNoteService memoryNoteService,
-                          ConversationService conversationService,
-                          ConversationMemoryManager memoryManager,
-                          AiUsageService aiUsageService) {
+            UtilisateurRepository utilisateurRepository,
+            MemoryNoteService memoryNoteService,
+            ConversationService conversationService,
+            ConversationMemoryManager memoryManager,
+            AiUsageService aiUsageService) {
         this.chironAgentRouter = chironAgentRouter;
         this.utilisateurRepository = utilisateurRepository;
         this.memoryNoteService = memoryNoteService;
@@ -50,14 +50,37 @@ public class ChatController {
         private Long conversationId;
         private String language;
 
-        public String getUsername() { return username; }
-        public void setUsername(String username) { this.username = username; }
-        public String getMessage() { return message; }
-        public void setMessage(String message) { this.message = message; }
-        public Long getConversationId() { return conversationId; }
-        public void setConversationId(Long conversationId) { this.conversationId = conversationId; }
-        public String getLanguage() { return language; }
-        public void setLanguage(String language) { this.language = language; }
+        public String getUsername() {
+            return username;
+        }
+
+        public void setUsername(String username) {
+            this.username = username;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        public void setMessage(String message) {
+            this.message = message;
+        }
+
+        public Long getConversationId() {
+            return conversationId;
+        }
+
+        public void setConversationId(Long conversationId) {
+            this.conversationId = conversationId;
+        }
+
+        public String getLanguage() {
+            return language;
+        }
+
+        public void setLanguage(String language) {
+            this.language = language;
+        }
     }
 
     private static String languageDirective(String language) {

@@ -19,5 +19,5 @@ public record UserProfileSetupDto(
         Integer frequenceVisee,
         Set<TypeEquipement> materielDisponible,
         String blessures,
-        String preferences
-) {}
+        String preferences) {
+}

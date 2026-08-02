@@ -41,7 +41,8 @@ public class OlympusClient {
 
             String token = body.get("linkToken").asText();
             String olympusUsername = body.hasNonNull("olympusUsername")
-                    ? body.get("olympusUsername").asText() : pseudo;
+                    ? body.get("olympusUsername").asText()
+                    : pseudo;
 
             return new AuthenticationResult(token, olympusUsername);
         } catch (HttpClientErrorException e) {
@@ -120,13 +121,18 @@ public class OlympusClient {
         }
     }
 
-    public record AuthenticationResult(String token, String olympusUsername) {}
+    public record AuthenticationResult(String token, String olympusUsername) {
+    }
 
     public static class OlympusUnavailableException extends RuntimeException {
-        public OlympusUnavailableException(String msg) { super(msg); }
+        public OlympusUnavailableException(String msg) {
+            super(msg);
+        }
     }
 
     public static class OlympusUnauthorizedException extends RuntimeException {
-        public OlympusUnauthorizedException(String msg) { super(msg); }
+        public OlympusUnauthorizedException(String msg) {
+            super(msg);
+        }
     }
 }

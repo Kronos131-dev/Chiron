@@ -10,8 +10,7 @@ public record NutritionStatsDto(
         Double moyProteines,
         Double moyGlucides,
         Double moyLipides,
-        Double moyTargetKcal
-) {
+        Double moyTargetKcal) {
     public static NutritionStatsDto notLinked() {
         return new NutritionStatsDto(false, Collections.emptyList(), null, null, null, null, null);
     }

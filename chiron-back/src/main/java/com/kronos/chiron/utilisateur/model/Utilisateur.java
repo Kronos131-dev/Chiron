@@ -117,10 +117,7 @@ public class Utilisateur implements UserDetails {
     private int geminiCallCount = 0;
 
     @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(
-            name = "utilisateur_materiel",
-            joinColumns = @JoinColumn(name = "utilisateur_id")
-    )
+    @CollectionTable(name = "utilisateur_materiel", joinColumns = @JoinColumn(name = "utilisateur_id"))
     @Column(name = "equipement", length = 32)
     @Enumerated(EnumType.STRING)
     @Builder.Default
@@ -167,11 +164,7 @@ public class Utilisateur implements UserDetails {
     private LocalDateTime fitbitLinkedAt;
 
     @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "user_coaches",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "coach_id")
-    )
+    @JoinTable(name = "user_coaches", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "coach_id"))
     @JsonIgnore
     @Builder.Default
     private Set<Utilisateur> coaches = new HashSet<>();

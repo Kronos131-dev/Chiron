@@ -56,7 +56,8 @@ public class AdaptiveTools {
         }
         List<Exercice> std = historique.stream().filter(e -> e.getDefinition() != null).collect(Collectors.toList());
         if (std.isEmpty()) {
-            return "L'exercice '" + nomExercice + "' n'est pas dans la base standardisée [std]. Suggestion de progression indisponible.";
+            return "L'exercice '" + nomExercice
+                    + "' n'est pas dans la base standardisée [std]. Suggestion de progression indisponible.";
         }
 
         Exercice derniere = std.get(0);
@@ -95,20 +96,25 @@ public class AdaptiveTools {
         if (max1RMprec != null) {
             double delta = max1RMderniere - max1RMprec;
             if (delta > 0.5) {
-                res.append("Progression vs séance précédente : +").append(String.format("%.1f", delta)).append(" kg de 1RM. ");
+                res.append("Progression vs séance précédente : +").append(String.format("%.1f", delta))
+                        .append(" kg de 1RM. ");
             } else if (delta < -0.5) {
-                res.append("Régression vs séance précédente : ").append(String.format("%.1f", delta)).append(" kg de 1RM. ");
+                res.append("Régression vs séance précédente : ").append(String.format("%.1f", delta))
+                        .append(" kg de 1RM. ");
             } else {
-                res.append("Stable vs séance précédente (1RM ").append(String.format("%.1f", max1RMprec)).append(" → ").append(String.format("%.1f", max1RMderniere)).append("). ");
+                res.append("Stable vs séance précédente (1RM ").append(String.format("%.1f", max1RMprec)).append(" → ")
+                        .append(String.format("%.1f", max1RMderniere)).append("). ");
             }
         }
 
         if (chargeStable && repsStables && minReps >= 8) {
-            res.append("Recommandation : +2.5 kg sur la charge de travail dès la prochaine séance (séries propres, reps cible atteinte).");
+            res.append(
+                    "Recommandation : +2.5 kg sur la charge de travail dès la prochaine séance (séries propres, reps cible atteinte).");
         } else if (chargeStable && repsStables && minReps >= 5) {
             res.append("Recommandation : viser +1 à +2 reps sur chaque série avant de monter la charge.");
         } else if (!chargeStable || !repsStables) {
-            res.append("Recommandation : maintenir la charge actuelle. Drop-off détecté (séries non homogènes), consolide avant d'ajouter du poids.");
+            res.append(
+                    "Recommandation : maintenir la charge actuelle. Drop-off détecté (séries non homogènes), consolide avant d'ajouter du poids.");
         } else {
             res.append("Recommandation : maintenir et viser une exécution plus propre avant d'augmenter.");
         }
@@ -128,7 +134,8 @@ public class AdaptiveTools {
             return "Aucune donnée [std] sur '" + nomExercice + "'. Analyse de périodisation impossible.";
         }
         if (std.size() < 3) {
-            return "Pas assez de séances [std] sur '" + nomExercice + "' (seulement " + std.size() + "). Il faut au moins 3 séances pour analyser une tendance.";
+            return "Pas assez de séances [std] sur '" + nomExercice + "' (seulement " + std.size()
+                    + "). Il faut au moins 3 séances pour analyser une tendance.";
         }
 
         List<Exercice> window = std.stream().limit(PERIODISATION_SESSIONS_WINDOW).collect(Collectors.toList());
@@ -147,18 +154,23 @@ public class AdaptiveTools {
 
         StringBuilder res = new StringBuilder();
         res.append("Périodisation sur '").append(nomExercice).append("' (").append(n).append(" séances analysées) :\n");
-        res.append("- 1RM moyen ").append(half).append(" récentes : ").append(String.format("%.1f", avgRecent)).append(" kg\n");
-        res.append("- 1RM moyen ").append(half).append(" anciennes : ").append(String.format("%.1f", avgEarly)).append(" kg\n");
+        res.append("- 1RM moyen ").append(half).append(" récentes : ").append(String.format("%.1f", avgRecent))
+                .append(" kg\n");
+        res.append("- 1RM moyen ").append(half).append(" anciennes : ").append(String.format("%.1f", avgEarly))
+                .append(" kg\n");
         res.append("- Variation : ").append(String.format("%+.1f", deltaPct)).append(" %\n");
 
         if (deltaPct > 5) {
             res.append("Diagnostic : PROGRESSION CONTINUE. Maintiens la trajectoire actuelle.");
         } else if (deltaPct >= -2) {
-            res.append("Diagnostic : PLATEAU (variation < 2 %). Envisage un changement de schéma (reps cibles différentes, variante d'exercice, semaine plus légère puis push).");
+            res.append(
+                    "Diagnostic : PLATEAU (variation < 2 %). Envisage un changement de schéma (reps cibles différentes, variante d'exercice, semaine plus légère puis push).");
         } else if (deltaPct >= -8) {
-            res.append("Diagnostic : LÉGÈRE RÉGRESSION. Vérifie sommeil, alimentation, stress. Une semaine de deload (charges -20 %) peut débloquer.");
+            res.append(
+                    "Diagnostic : LÉGÈRE RÉGRESSION. Vérifie sommeil, alimentation, stress. Une semaine de deload (charges -20 %) peut débloquer.");
         } else {
-            res.append("Diagnostic : RÉGRESSION MARQUÉE. Overreaching probable — recommande un deload de 1 semaine (volume -50 %, charges -20 %) avant de relancer.");
+            res.append(
+                    "Diagnostic : RÉGRESSION MARQUÉE. Overreaching probable — recommande un deload de 1 semaine (volume -50 %, charges -20 %) avant de relancer.");
         }
         return res.toString();
     }
@@ -177,7 +189,8 @@ public class AdaptiveTools {
                     .filter(p -> p.getTitre() != null && p.getTitre().toLowerCase().contains(filtre))
                     .collect(Collectors.toList());
             if (programmes.isEmpty()) {
-                return "Aucun programme correspondant à '" + nomProgramme + "'. Utilise [getUserProgrammes] pour voir la liste.";
+                return "Aucun programme correspondant à '" + nomProgramme
+                        + "'. Utilise [getUserProgrammes] pour voir la liste.";
             }
         }
 
@@ -220,7 +233,8 @@ public class AdaptiveTools {
                 .collect(Collectors.toList());
 
         if (candidats.isEmpty()) {
-            return "Aucun exercice du(des) programme(s) n'est pratiqué depuis plus de " + ROTATION_WEEKS_THRESHOLD + " semaines. Pas de rotation prioritaire.";
+            return "Aucun exercice du(des) programme(s) n'est pratiqué depuis plus de " + ROTATION_WEEKS_THRESHOLD
+                    + " semaines. Pas de rotation prioritaire.";
         }
 
         Set<Long> alreadyUsedIds = new HashSet<>(defsParId.keySet());
@@ -231,7 +245,8 @@ public class AdaptiveTools {
 
         for (Map.Entry<Long, LocalDateTime> en : candidats) {
             ExerciceDefinition def = defsParId.get(en.getKey());
-            long semaines = ChronoUnit.WEEKS.between(en.getValue().toLocalDate(), LocalDateTime.now(clock).toLocalDate());
+            long semaines = ChronoUnit.WEEKS.between(en.getValue().toLocalDate(),
+                    LocalDateTime.now(clock).toLocalDate());
             String nomDef = def.getNomFr() != null ? def.getNomFr() : def.getNomEn();
             res.append("- ").append(nomDef).append(" (depuis ").append(semaines).append(" semaines)");
 
@@ -271,7 +286,10 @@ public class AdaptiveTools {
         double sum = 0;
         int n = 0;
         for (Double v : values) {
-            if (v != null && v > 0) { sum += v; n++; }
+            if (v != null && v > 0) {
+                sum += v;
+                n++;
+            }
         }
         return n > 0 ? sum / n : 0;
     }

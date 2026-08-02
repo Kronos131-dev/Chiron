@@ -1,4 +1,6 @@
-package com.kronos.chiron.seance.service;
+package com.kronos.chiron.seance.service.impl;
+
+import com.kronos.chiron.seance.service.CardioCalorieService;
 
 import com.kronos.chiron.seance.model.CardioType;
 import org.junit.jupiter.api.Test;
@@ -10,7 +12,7 @@ class CardioCalorieServiceTest {
 
     private static final double POIDS_KG = 80.0;
 
-    private final CardioCalorieService cardioCalorieService = new CardioCalorieService();
+    private final CardioCalorieService cardioCalorieService = new CardioCalorieServiceImpl();
 
     @Test
     void estimate_nullType_returnsZero() {

@@ -9,5 +9,5 @@ public record StatsOverviewDto(
         String tier,
         int tierLevel,
         String tierCategorie,
-        Double dureeMoyenneMin
-) {}
+        Double dureeMoyenneMin) {
+}

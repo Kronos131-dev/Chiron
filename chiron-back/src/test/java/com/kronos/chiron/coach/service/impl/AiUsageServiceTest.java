@@ -1,4 +1,6 @@
-package com.kronos.chiron.coach.service;
+package com.kronos.chiron.coach.service.impl;
+
+import com.kronos.chiron.coach.service.AiUsageService;
 
 import org.mockito.Spy;
 
@@ -32,11 +34,11 @@ class AiUsageServiceTest {
     @Mock
     private UtilisateurRepository utilisateurRepository;
 
-        @Spy
+    @Spy
     private Clock clock = Clock.system(ZoneId.of("Europe/Paris"));
 
-@InjectMocks
-    private AiUsageService aiUsageService;
+    @InjectMocks
+    private AiUsageServiceImpl aiUsageService;
 
     private static Utilisateur user(AiProvider provider, Role role, LocalDate callDate, int callCount) {
         Utilisateur u = new Utilisateur();

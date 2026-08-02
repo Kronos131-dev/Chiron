@@ -78,7 +78,8 @@ public class FitbitService {
         FitbitClient.TokenResponse tr = fitbitClient.exchangeCode(code, pending.codeVerifier());
 
         Utilisateur user = utilisateurRepository.findById(pending.chironUserId())
-                .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable id=" + pending.chironUserId()));
+                .orElseThrow(
+                        () -> new IllegalArgumentException("Utilisateur introuvable id=" + pending.chironUserId()));
 
         applyTokens(user, tr);
         user.setFitbitLinkedAt(LocalDateTime.now(clock));
@@ -160,12 +161,11 @@ public class FitbitService {
         LocalDate today = LocalDate.now(clock);
         LocalDate start = today.minusDays(n - 1L);
         try {
-            Map<LocalDate, Integer> stepsByDate =
-                    FitbitParser.stepsByDate(fitbitClient.rollUpDailySteps(token, start, today));
-            Map<LocalDate, Double> sleepByDate =
-                    FitbitParser.sleepHoursByDate(fitbitClient.listSleep(token, start));
-            Map<LocalDate, Integer> hrByDate =
-                    FitbitParser.restingHeartRateByDate(fitbitClient.listRestingHeartRate(token, start));
+            Map<LocalDate, Integer> stepsByDate = FitbitParser
+                    .stepsByDate(fitbitClient.rollUpDailySteps(token, start, today));
+            Map<LocalDate, Double> sleepByDate = FitbitParser.sleepHoursByDate(fitbitClient.listSleep(token, start));
+            Map<LocalDate, Integer> hrByDate = FitbitParser
+                    .restingHeartRateByDate(fitbitClient.listRestingHeartRate(token, start));
 
             List<FitbitDayPoint> dayPoints = new ArrayList<>();
             for (int i = 0; i < n; i++) {
@@ -224,7 +224,7 @@ public class FitbitService {
         }
         boolean needsReconnect = user.getFitbitRefreshTokenEncrypted() == null
                 && (user.getFitbitTokenExpiresAt() == null
-                    || user.getFitbitTokenExpiresAt().isBefore(LocalDateTime.now(clock)));
+                        || user.getFitbitTokenExpiresAt().isBefore(LocalDateTime.now(clock)));
         return new FitbitLinkStatus(true, needsReconnect, user.getFitbitUserId(),
                 user.getFitbitScope(), user.getFitbitLinkedAt());
     }
@@ -245,7 +245,10 @@ public class FitbitService {
         }
     }
 
-    public static class NotLinkedException extends RuntimeException {}
-    public static class ExpiredException extends RuntimeException {}
-    public static class InvalidStateException extends RuntimeException {}
+    public static class NotLinkedException extends RuntimeException {
+    }
+    public static class ExpiredException extends RuntimeException {
+    }
+    public static class InvalidStateException extends RuntimeException {
+    }
 }

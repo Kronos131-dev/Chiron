@@ -6,5 +6,5 @@ public record ExerciseProgressPointDto(
         LocalDate date,
         double chargeMax,
         double e1rm,
-        double volume
-) {}
+        double volume) {
+}

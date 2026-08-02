@@ -31,7 +31,6 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -43,17 +42,23 @@ import static org.mockito.Mockito.*;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class WorkoutToolsTest {
 
-    @Mock private SeanceRepository seanceRepository;
-    @Mock private UtilisateurRepository utilisateurRepository;
-    @Mock private ExerciceRepository exerciceRepository;
-    @Mock private ExerciceDefinitionService exerciceDefinitionService;
-    @Mock private ExerciceDefinitionRepository exerciceDefinitionRepository;
-    @Mock private ProgrammeService programmeService;
+    @Mock
+    private SeanceRepository seanceRepository;
+    @Mock
+    private UtilisateurRepository utilisateurRepository;
+    @Mock
+    private ExerciceRepository exerciceRepository;
+    @Mock
+    private ExerciceDefinitionService exerciceDefinitionService;
+    @Mock
+    private ExerciceDefinitionRepository exerciceDefinitionRepository;
+    @Mock
+    private ProgrammeService programmeService;
 
-        @Spy
+    @Spy
     private Clock clock = Clock.system(ZoneId.of("Europe/Paris"));
 
-@InjectMocks
+    @InjectMocks
     private WorkoutTools workoutTools;
 
     private Utilisateur user;
@@ -89,11 +94,9 @@ class WorkoutToolsTest {
         String result = workoutTools.startSession("1", "Push Day");
 
         assertThat(result).contains("Push Day");
-        verify(seanceRepository).save(argThat(s ->
-                s.getTitre().equals("Push Day") &&
+        verify(seanceRepository).save(argThat(s -> s.getTitre().equals("Push Day") &&
                 s.getUtilisateur().equals(user) &&
-                s.isHistorique()
-        ));
+                s.isHistorique()));
     }
 
     @Test
@@ -227,7 +230,8 @@ class WorkoutToolsTest {
     void getUserProgrammes_ownProgrammes_returnsList() {
         Seance prog = new Seance();
         prog.setTitre("My Programme");
-        when(seanceRepository.findByUtilisateurUsernameAndHistoriqueFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername()))
+        when(seanceRepository
+                .findByUtilisateurUsernameAndHistoriqueFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername()))
                 .thenReturn(List.of(prog));
 
         String result = workoutTools.getUserProgrammes("1", null);
@@ -237,7 +241,8 @@ class WorkoutToolsTest {
 
     @Test
     void getUserProgrammes_noProgrammes_returnsEmptyMessage() {
-        when(seanceRepository.findByUtilisateurUsernameAndHistoriqueFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername()))
+        when(seanceRepository
+                .findByUtilisateurUsernameAndHistoriqueFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername()))
                 .thenReturn(List.of());
 
         String result = workoutTools.getUserProgrammes("1", null);
@@ -376,9 +381,7 @@ class WorkoutToolsTest {
         String result = workoutTools.createProgramModel("1", "My Template");
 
         assertThat(result).containsIgnoringCase("My Template");
-        verify(seanceRepository).save(argThat(s ->
-                s.getTitre().equals("My Template") && !s.isHistorique()
-        ));
+        verify(seanceRepository).save(argThat(s -> s.getTitre().equals("My Template") && !s.isHistorique()));
     }
 
     // --- getWorkoutSummaryByDate ---
@@ -428,7 +431,8 @@ class WorkoutToolsTest {
         exo.addSerie(serie);
         prog.addExercice(exo);
 
-        when(seanceRepository.findByUtilisateurUsernameAndHistoriqueFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername()))
+        when(seanceRepository
+                .findByUtilisateurUsernameAndHistoriqueFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername()))
                 .thenReturn(List.of(prog));
 
         String result = workoutTools.getProgrammeDetails("1", "Push");
@@ -438,7 +442,8 @@ class WorkoutToolsTest {
 
     @Test
     void getProgrammeDetails_noMatch_returnsNotFound() {
-        when(seanceRepository.findByUtilisateurUsernameAndHistoriqueFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername()))
+        when(seanceRepository
+                .findByUtilisateurUsernameAndHistoriqueFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername()))
                 .thenReturn(List.of());
 
         String result = workoutTools.getProgrammeDetails("1", "Unknown");
@@ -451,7 +456,8 @@ class WorkoutToolsTest {
         Seance prog = new Seance();
         prog.setTitre("Empty Programme");
 
-        when(seanceRepository.findByUtilisateurUsernameAndHistoriqueFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername()))
+        when(seanceRepository
+                .findByUtilisateurUsernameAndHistoriqueFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername()))
                 .thenReturn(List.of(prog));
 
         String result = workoutTools.getProgrammeDetails("1", "Empty");

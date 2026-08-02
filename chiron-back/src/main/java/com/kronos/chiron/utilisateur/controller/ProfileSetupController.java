@@ -31,7 +31,7 @@ public class ProfileSetupController {
     @PutMapping
     @Transactional
     public ResponseEntity<UserProfileSetupDto> saveSetup(@AuthenticationPrincipal UserDetails userDetails,
-                                                          @RequestBody UserProfileSetupDto dto) {
+            @RequestBody UserProfileSetupDto dto) {
         Utilisateur user = utilisateurRepository.findByUsername(userDetails.getUsername())
                 .orElseThrow(() -> notFound("Utilisateur introuvable"));
 
@@ -45,8 +45,7 @@ public class ProfileSetupController {
         user.setMaterielDisponible(
                 dto.materielDisponible() == null || dto.materielDisponible().isEmpty()
                         ? EnumSet.noneOf(com.kronos.chiron.exercice.model.TypeEquipement.class)
-                        : EnumSet.copyOf(dto.materielDisponible())
-        );
+                        : EnumSet.copyOf(dto.materielDisponible()));
         user.setBlessures(dto.blessures());
         user.setPreferences(dto.preferences());
         user.setIsOnboarded(true);
@@ -67,7 +66,6 @@ public class ProfileSetupController {
                 u.getFrequenceVisee(),
                 u.getMaterielDisponible(),
                 u.getBlessures(),
-                u.getPreferences()
-        );
+                u.getPreferences());
     }
 }

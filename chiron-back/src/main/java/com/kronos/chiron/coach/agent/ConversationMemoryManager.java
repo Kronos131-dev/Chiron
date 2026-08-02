@@ -1,6 +1,5 @@
 package com.kronos.chiron.coach.agent;
 
-import com.kronos.chiron.coach.model.Conversation;
 import com.kronos.chiron.coach.model.ConversationMessage;
 import com.kronos.chiron.coach.persistence.ConversationMessageRepository;
 import com.kronos.chiron.coach.persistence.ConversationRepository;
@@ -47,8 +46,8 @@ public class ConversationMemoryManager {
         memory.clear();
         try {
             Long conversationId = Long.parseLong(memoryId);
-            conversationRepository.findById(conversationId).ifPresent(conv ->
-                    replay(memory, conversationMessageRepository.findByConversationOrderByCreatedAtAsc(conv)));
+            conversationRepository.findById(conversationId).ifPresent(
+                    conv -> replay(memory, conversationMessageRepository.findByConversationOrderByCreatedAtAsc(conv)));
         } catch (NumberFormatException e) {
             log.warn("memoryId non numérique '{}', mémoire repartie à vide", memoryId);
         }

@@ -4,5 +4,5 @@ public record MuscleStatDto(
         String muscle,
         double tonnage,
         int nbSeries,
-        int nbSeances
-) {}
+        int nbSeances) {
+}

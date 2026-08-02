@@ -1,4 +1,4 @@
-package com.kronos.chiron.seance.service;
+package com.kronos.chiron.seance.service.impl;
 
 import org.mockito.Spy;
 
@@ -22,21 +22,22 @@ import java.util.List;
 import java.util.Locale;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class JournalServiceTest {
 
-    @Mock private SeanceRepository seanceRepository;
-    @Mock private SeanceMapper seanceMapper;
+    @Mock
+    private SeanceRepository seanceRepository;
+    @Mock
+    private SeanceMapper seanceMapper;
 
-        @Spy
+    @Spy
     private Clock clock = Clock.system(ZoneId.of("Europe/Paris"));
 
-@InjectMocks
-    private JournalService journalService;
+    @InjectMocks
+    private JournalServiceImpl journalService;
 
     @Test
     void getCurrentWeekNumber_matchesFrenchLocale() {
@@ -76,8 +77,10 @@ class JournalServiceTest {
     @Test
     void getSeancesForCurrentWeek_multipleSeances_returnsAll() {
         int currentWeek = journalService.getCurrentWeekNumber();
-        Seance s1 = new Seance(); s1.setId(1L);
-        Seance s2 = new Seance(); s2.setId(2L);
+        Seance s1 = new Seance();
+        s1.setId(1L);
+        Seance s2 = new Seance();
+        s2.setId(2L);
         SeanceDto d1 = new SeanceDto(1L, "A", null, null, null, currentWeek, true, null, List.of());
         SeanceDto d2 = new SeanceDto(2L, "B", null, null, null, currentWeek, true, null, List.of());
 

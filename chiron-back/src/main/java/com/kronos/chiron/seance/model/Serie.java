@@ -44,11 +44,11 @@ public class Serie {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "exercice_id")
     private Exercice exercice;
-    
+
     @OneToMany(mappedBy = "serie", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Degressif> degressifs = new ArrayList<>();
-    
+
     public void addDegressif(Degressif degressif) {
         degressifs.add(degressif);
         degressif.setSerie(this);

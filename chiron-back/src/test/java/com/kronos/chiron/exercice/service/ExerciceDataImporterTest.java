@@ -163,7 +163,8 @@ class ExerciceDataImporterTest {
         assertThat(saved.getMusclePrincipal()).isEqualTo(MuscleGroup.QUADRICEPS);
         assertThat(saved.getTypeEquipement()).isEqualTo(TypeEquipement.BARRE);
         assertThat(saved.getDifficulte()).isEqualTo(NiveauDifficulte.INTERMEDIAIRE);
-        assertThat(saved.getMusclesSecondaires()).containsExactlyInAnyOrder(MuscleGroup.FESSIERS, MuscleGroup.ISCHIO_JAMBIERS);
+        assertThat(saved.getMusclesSecondaires()).containsExactlyInAnyOrder(MuscleGroup.FESSIERS,
+                MuscleGroup.ISCHIO_JAMBIERS);
         assertThat(saved.getDescriptionEn()).contains("Stand with bar on back.");
     }
 
