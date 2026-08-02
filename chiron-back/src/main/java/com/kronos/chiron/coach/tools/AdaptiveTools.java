@@ -1,5 +1,7 @@
 package com.kronos.chiron.coach.tools;
 
+import static com.kronos.chiron.core.exceptions.ErrorFactory.notFound;
+
 import com.kronos.chiron.exercice.dto.ExerciceDefinitionDto;
 import com.kronos.chiron.seance.model.Exercice;
 import com.kronos.chiron.exercice.model.ExerciceDefinition;
@@ -167,7 +169,7 @@ public class AdaptiveTools {
     @Tool("Identifie les exercices pratiqués de longue date (> 8 semaines) et propose 1-2 alternatives par exercice, même muscle et équipement compatible. nomProgramme optionnel pour cibler un programme (sinon tous).")
     public String proposerRotation(@ToolMemoryId String userId, String nomProgramme) {
         Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
-                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+                .orElseThrow(() -> notFound("Utilisateur introuvable"));
 
         List<Seance> programmes = seanceRepository
                 .findByUtilisateurUsernameAndIsModeleFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername());

@@ -1,5 +1,7 @@
 package com.kronos.chiron.coach.tools;
 
+import static com.kronos.chiron.core.exceptions.ErrorFactory.notFound;
+
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 import com.kronos.chiron.fitbit.FitbitClient;
 import com.kronos.chiron.fitbit.FitbitParser;
@@ -244,7 +246,7 @@ public class FitbitTools {
 
     private Utilisateur loadUser(String userId) {
         return utilisateurRepository.findById(Long.parseLong(userId))
-                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+                .orElseThrow(() -> notFound("Utilisateur introuvable"));
     }
 
     private String fmt1(double v) {

@@ -1,5 +1,10 @@
 package com.kronos.chiron.utilisateur.service;
 
+import static com.kronos.chiron.core.exceptions.ErrorFactory.badRequest;
+import static com.kronos.chiron.core.exceptions.ErrorFactory.forbidden;
+import static com.kronos.chiron.core.exceptions.ErrorFactory.notFound;
+import com.kronos.chiron.core.exceptions.ChironTechnicalException;
+
 import com.kronos.chiron.performance.service.PerformanceService;
 
 import com.kronos.chiron.performance.dto.PerformanceSummaryDto;
@@ -53,17 +58,17 @@ public class ProfileService {
     @Transactional
     public ProfileDto getProfile(String username, String requestUsername) {
         Utilisateur user = utilisateurRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found : " + username));
+                .orElseThrow(() -> notFound("User not found : " + username));
 
         Utilisateur requestUser = utilisateurRepository.findByUsername(requestUsername)
-                .orElseThrow(() -> new RuntimeException("Requesting user not found : " + requestUsername));
+                .orElseThrow(() -> notFound("Requesting user not found : " + requestUsername));
 
         boolean amICoach = user.getCoaches().contains(requestUser);
         boolean isMyCoach = requestUser.getCoaches().contains(user);
 
         boolean isRequestUserAdmin = requestUser.getRole() == Role.ADMIN || "kronos".equalsIgnoreCase(requestUsername) || "chiron".equalsIgnoreCase(requestUsername);
         if (!username.equals(requestUsername) && (user.getIsPublic() == null || !user.getIsPublic()) && !isRequestUserAdmin && !amICoach) {
-            throw new RuntimeException("Access denied. This profile is private.");
+            throw forbidden("Access denied. This profile is private.");
         }
 
         int averageSeriesPerMonth = calculateAverageSeriesPerMonth(user.getId());
@@ -112,7 +117,7 @@ public class ProfileService {
     @Transactional(readOnly = true)
     public List<ProfileDto> searchProfiles(String query, String requestUsername) {
         Utilisateur requestUser = utilisateurRepository.findByUsername(requestUsername)
-                .orElseThrow(() -> new RuntimeException("Requesting user not found"));
+                .orElseThrow(() -> notFound("Requesting user not found"));
 
         boolean isRequestUserAdmin = requestUser.getRole() == Role.ADMIN || "kronos".equalsIgnoreCase(requestUsername) || "chiron".equalsIgnoreCase(requestUsername);
 
@@ -141,7 +146,7 @@ public class ProfileService {
     @Transactional(readOnly = true)
     public List<ProfileDto> getAllProfiles(String requestUsername) {
          Utilisateur requestUser = utilisateurRepository.findByUsername(requestUsername)
-                 .orElseThrow(() -> new RuntimeException("Requesting user not found"));
+                 .orElseThrow(() -> notFound("Requesting user not found"));
 
          boolean isRequestUserAdmin = requestUser.getRole() == Role.ADMIN || "kronos".equalsIgnoreCase(requestUsername) || "chiron".equalsIgnoreCase(requestUsername);
 
@@ -174,7 +179,7 @@ public class ProfileService {
     @Transactional
     public void updateVisibility(String username, boolean isPublic) {
         Utilisateur user = utilisateurRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> notFound("User not found"));
         user.setIsPublic(isPublic);
         utilisateurRepository.save(user);
     }
@@ -190,10 +195,10 @@ public class ProfileService {
     @Transactional
     public String updateIcon(String username, MultipartFile file) {
         Utilisateur user = utilisateurRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> notFound("User not found"));
 
         if (file.isEmpty()) {
-            throw new RuntimeException("File is empty");
+            throw badRequest("File is empty");
         }
 
         try {
@@ -214,7 +219,7 @@ public class ProfileService {
             return fileName;
 
         } catch (IOException e) {
-            throw new RuntimeException("Error while saving the image", e);
+            throw new ChironTechnicalException("Error while saving the image", e);
         }
     }
 
@@ -228,9 +233,9 @@ public class ProfileService {
     @Transactional
     public void addCoach(String username, String coachUsername) {
         Utilisateur user = utilisateurRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> notFound("User not found"));
         Utilisateur coach = utilisateurRepository.findByUsername(coachUsername)
-                .orElseThrow(() -> new RuntimeException("Coach not found"));
+                .orElseThrow(() -> notFound("Coach not found"));
 
         user.addCoach(coach);
         utilisateurRepository.save(user);
@@ -245,9 +250,9 @@ public class ProfileService {
     @Transactional
     public void removeCoach(String username, String coachUsername) {
         Utilisateur user = utilisateurRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> notFound("User not found"));
         Utilisateur coach = utilisateurRepository.findByUsername(coachUsername)
-                .orElseThrow(() -> new RuntimeException("Coach not found"));
+                .orElseThrow(() -> notFound("Coach not found"));
 
         user.removeCoach(coach);
         utilisateurRepository.save(user);
@@ -263,15 +268,15 @@ public class ProfileService {
     @Transactional
     public void deleteProfile(String username, String requestUsername) {
         Utilisateur userToDelete = utilisateurRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User to delete not found"));
+                .orElseThrow(() -> notFound("User to delete not found"));
 
         Utilisateur requestUser = utilisateurRepository.findByUsername(requestUsername)
-                .orElseThrow(() -> new RuntimeException("Requesting user not found"));
+                .orElseThrow(() -> notFound("Requesting user not found"));
 
         boolean isRequestUserAdmin = requestUser.getRole() == Role.ADMIN || "kronos".equalsIgnoreCase(requestUsername) || "chiron".equalsIgnoreCase(requestUsername);
 
         if (!username.equals(requestUsername) && !isRequestUserAdmin) {
-            throw new RuntimeException("Access denied. You can only delete your own profile.");
+            throw forbidden("Access denied. You can only delete your own profile.");
         }
 
         // Handle bidirectional relationship cleanup before deletion

@@ -1,5 +1,7 @@
 package com.kronos.chiron.utilisateur.controller;
 
+import static com.kronos.chiron.core.exceptions.ErrorFactory.notFound;
+
 import com.kronos.chiron.utilisateur.dto.UserProfileSetupDto;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 import com.kronos.chiron.utilisateur.persistence.UtilisateurRepository;
@@ -22,7 +24,7 @@ public class ProfileSetupController {
     @GetMapping
     public ResponseEntity<UserProfileSetupDto> getSetup(@AuthenticationPrincipal UserDetails userDetails) {
         Utilisateur user = utilisateurRepository.findByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+                .orElseThrow(() -> notFound("Utilisateur introuvable"));
         return ResponseEntity.ok(toDto(user));
     }
 
@@ -31,7 +33,7 @@ public class ProfileSetupController {
     public ResponseEntity<UserProfileSetupDto> saveSetup(@AuthenticationPrincipal UserDetails userDetails,
                                                           @RequestBody UserProfileSetupDto dto) {
         Utilisateur user = utilisateurRepository.findByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+                .orElseThrow(() -> notFound("Utilisateur introuvable"));
 
         user.setDateNaissance(dto.dateNaissance());
         user.setSexe(dto.sexe());

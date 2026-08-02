@@ -1,5 +1,7 @@
 package com.kronos.chiron.coach.tools;
 
+import static com.kronos.chiron.core.exceptions.ErrorFactory.notFound;
+
 import tools.jackson.databind.JsonNode;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 import com.kronos.chiron.nutrition.NutritionService;
@@ -376,7 +378,7 @@ public class NutritionTools {
 
     private Utilisateur loadUser(String userId) {
         return utilisateurRepository.findById(Long.parseLong(userId))
-                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+                .orElseThrow(() -> notFound("Utilisateur introuvable"));
     }
 
     private double asDouble(JsonNode node, String field) {

@@ -1,5 +1,7 @@
 package com.kronos.chiron.journalier.controller;
 
+import static com.kronos.chiron.core.exceptions.ErrorFactory.notFound;
+
 import com.kronos.chiron.journalier.model.EtatJournalier;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 import com.kronos.chiron.utilisateur.persistence.UtilisateurRepository;
@@ -25,7 +27,7 @@ public class EtatJournalierController {
     public ResponseEntity<EtatJournalierDto> upsert(@AuthenticationPrincipal UserDetails userDetails,
                                                      @RequestBody EtatJournalierDto body) {
         Utilisateur user = utilisateurRepository.findByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+                .orElseThrow(() -> notFound("Utilisateur introuvable"));
         LocalDate date = body.date() != null ? body.date() : LocalDate.now();
         EtatJournalier saved = recoveryService.upsert(
                 user, date,
@@ -39,7 +41,7 @@ public class EtatJournalierController {
     public ResponseEntity<List<EtatJournalierDto>> recent(@AuthenticationPrincipal UserDetails userDetails,
                                                            @RequestParam(defaultValue = "7") int days) {
         Utilisateur user = utilisateurRepository.findByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+                .orElseThrow(() -> notFound("Utilisateur introuvable"));
         List<EtatJournalierDto> dtos = recoveryService.getRecent(user, days).stream().map(this::toDto).toList();
         return ResponseEntity.ok(dtos);
     }

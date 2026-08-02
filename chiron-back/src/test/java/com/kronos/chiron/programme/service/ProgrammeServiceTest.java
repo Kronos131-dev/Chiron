@@ -1,5 +1,9 @@
 package com.kronos.chiron.programme.service;
 
+import org.springframework.web.ErrorResponseException;
+
+import org.springframework.http.HttpStatus;
+
 import com.kronos.chiron.seance.model.Exercice;
 import com.kronos.chiron.seance.model.Seance;
 import com.kronos.chiron.seance.model.Serie;
@@ -151,7 +155,8 @@ class ProgrammeServiceTest {
         SeanceDto dto = new SeanceDto(5L, "Hack", null, null, null, null, false, null, List.of());
 
         assertThatThrownBy(() -> programmeService.sauvegarderProgramme("other", dto))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOfSatisfying(ErrorResponseException.class,
+                        ex -> assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN))
                 .hasMessageContaining("not authorized");
     }
 
@@ -183,7 +188,8 @@ class ProgrammeServiceTest {
         SeanceDto dto = new SeanceDto(null, "Hack", null, null, null, 0, false, null, List.of());
 
         assertThatThrownBy(() -> programmeService.sauvegarderProgramme("other", dto, "owner"))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOfSatisfying(ErrorResponseException.class,
+                        ex -> assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN))
                 .hasMessageContaining("not a coach");
 
         verify(seanceRepository, never()).save(any());
@@ -270,7 +276,8 @@ class ProgrammeServiceTest {
         when(seanceRepository.findAllById(List.of(10L, 99L))).thenReturn(List.of(s1));
 
         assertThatThrownBy(() -> programmeService.reorderProgrammes("owner", List.of(10L, 99L)))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOfSatisfying(ErrorResponseException.class,
+                        ex -> assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND))
                 .hasMessageContaining("not found");
     }
 
@@ -282,7 +289,8 @@ class ProgrammeServiceTest {
         when(seanceRepository.findAllById(List.of(10L))).thenReturn(List.of(s1));
 
         assertThatThrownBy(() -> programmeService.reorderProgrammes("other", List.of(10L)))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOfSatisfying(ErrorResponseException.class,
+                        ex -> assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN))
                 .hasMessageContaining("Access denied");
 
         assertThat(s1.getDisplayOrder()).isEqualTo(0);
@@ -327,7 +335,8 @@ class ProgrammeServiceTest {
         when(seanceRepository.findAllById(List.of(10L, 20L))).thenReturn(List.of(mine, theirs));
 
         assertThatThrownBy(() -> programmeService.reorderProgrammes("owner", List.of(10L, 20L)))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOfSatisfying(ErrorResponseException.class,
+                        ex -> assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN))
                 .hasMessageContaining("Access denied");
     }
 
@@ -373,7 +382,8 @@ class ProgrammeServiceTest {
         when(utilisateurRepository.findByUsername("other")).thenReturn(Optional.of(otherUser));
 
         assertThatThrownBy(() -> programmeService.getProgrammeById(10L, "other"))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOfSatisfying(ErrorResponseException.class,
+                        ex -> assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN))
                 .hasMessageContaining("private");
     }
 
@@ -403,7 +413,8 @@ class ProgrammeServiceTest {
         when(utilisateurRepository.findByUsername("other")).thenReturn(Optional.of(otherUser));
 
         assertThatThrownBy(() -> programmeService.deleteProgramme(10L, "other"))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOfSatisfying(ErrorResponseException.class,
+                        ex -> assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN))
                 .hasMessageContaining("Access denied");
     }
 
@@ -446,7 +457,8 @@ class ProgrammeServiceTest {
         when(seanceRepository.findById(1L)).thenReturn(Optional.of(source));
 
         assertThatThrownBy(() -> programmeService.copyProgramme(1L, "owner"))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOfSatisfying(ErrorResponseException.class,
+                        ex -> assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN))
                 .hasMessageContaining("private");
     }
 

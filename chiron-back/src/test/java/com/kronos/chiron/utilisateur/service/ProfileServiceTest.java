@@ -1,5 +1,9 @@
 package com.kronos.chiron.utilisateur.service;
 
+import org.springframework.web.ErrorResponseException;
+
+import org.springframework.http.HttpStatus;
+
 import com.kronos.chiron.performance.service.PerformanceService;
 
 import com.kronos.chiron.performance.dto.PerformanceSummaryDto;
@@ -89,7 +93,8 @@ class ProfileServiceTest {
         when(utilisateurRepository.findByUsername("requester")).thenReturn(Optional.of(requestUser));
 
         assertThatThrownBy(() -> profileService.getProfile("private", "requester"))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOfSatisfying(ErrorResponseException.class,
+                        ex -> assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN))
                 .hasMessageContaining("private");
     }
 
@@ -124,7 +129,7 @@ class ProfileServiceTest {
         when(utilisateurRepository.findByUsername("ghost")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> profileService.getProfile("ghost", "someone"))
-                .isInstanceOf(RuntimeException.class);
+                .isInstanceOf(ErrorResponseException.class);
     }
 
     // --- calculateRank boundaries ---
@@ -208,7 +213,7 @@ class ProfileServiceTest {
         when(utilisateurRepository.findByUsername("nobody")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> profileService.addCoach("student", "nobody"))
-                .isInstanceOf(RuntimeException.class);
+                .isInstanceOf(ErrorResponseException.class);
     }
 
     @Test
@@ -257,7 +262,8 @@ class ProfileServiceTest {
         when(utilisateurRepository.findByUsername("other")).thenReturn(Optional.of(requester));
 
         assertThatThrownBy(() -> profileService.deleteProfile("victim", "other"))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOfSatisfying(ErrorResponseException.class,
+                        ex -> assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN))
                 .hasMessageContaining("Access denied");
     }
 

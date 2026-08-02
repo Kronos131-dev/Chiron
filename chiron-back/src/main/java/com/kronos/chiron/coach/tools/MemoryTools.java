@@ -1,5 +1,7 @@
 package com.kronos.chiron.coach.tools;
 
+import static com.kronos.chiron.core.exceptions.ErrorFactory.notFound;
+
 import com.kronos.chiron.coach.model.ChironMemoryNote;
 import com.kronos.chiron.coach.model.MemoryNoteType;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
@@ -83,6 +85,6 @@ public class MemoryTools {
 
     private Utilisateur loadUser(String userId) {
         return utilisateurRepository.findById(Long.parseLong(userId))
-                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+                .orElseThrow(() -> notFound("Utilisateur introuvable"));
     }
 }
