@@ -1,5 +1,7 @@
 package com.kronos.chiron.coach.tools;
 
+import java.time.Clock;
+
 import static com.kronos.chiron.core.exceptions.ErrorFactory.notFound;
 
 import com.kronos.chiron.journalier.model.EtatJournalier;
@@ -22,6 +24,7 @@ public class RecoveryTools {
     private final UtilisateurRepository utilisateurRepository;
     private final RecoveryService recoveryService;
 
+    private final Clock clock;
     @Tool("Enregistre/met à jour l'état du jour : sommeil (heures), fatigue/courbatures/stress/énergie (1-5 ; 1=au mieux→5=au pire pour fatigue/courbatures/stress, inverse pour energie : 1=vide→5=à fond), notes. Date optionnelle (AAAA-MM-JJ, défaut aujourd'hui). Tous les champs sont optionnels — n'enregistre que ce qui est mentionné.")
     public String enregistrerEtatJournalier(@ToolMemoryId String userId,
                                              String date,
@@ -34,7 +37,7 @@ public class RecoveryTools {
         Utilisateur user = loadUser(userId);
         LocalDate target;
         if (date == null || date.isBlank()) {
-            target = LocalDate.now();
+            target = LocalDate.now(clock);
         } else {
             try {
                 target = LocalDate.parse(date.trim());

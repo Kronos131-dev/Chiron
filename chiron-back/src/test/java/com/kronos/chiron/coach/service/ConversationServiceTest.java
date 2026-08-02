@@ -1,5 +1,11 @@
 package com.kronos.chiron.coach.service;
 
+import org.mockito.Spy;
+
+import java.time.ZoneId;
+
+import java.time.Clock;
+
 import com.kronos.chiron.coach.model.Conversation;
 import com.kronos.chiron.coach.model.ConversationMessage;
 import com.kronos.chiron.coach.model.MessageRole;
@@ -33,7 +39,10 @@ class ConversationServiceTest {
     @Mock
     private ConversationMessageRepository conversationMessageRepository;
 
-    @InjectMocks
+        @Spy
+    private Clock clock = Clock.system(ZoneId.of("Europe/Paris"));
+
+@InjectMocks
     private ConversationService conversationService;
 
     private Utilisateur user;

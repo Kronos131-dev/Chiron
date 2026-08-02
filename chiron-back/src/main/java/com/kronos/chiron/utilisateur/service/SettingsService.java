@@ -1,5 +1,7 @@
 package com.kronos.chiron.utilisateur.service;
 
+import java.time.Clock;
+
 import com.kronos.chiron.auth.service.EmailService;
 
 import com.kronos.chiron.auth.model.PasswordResetToken;
@@ -32,6 +34,7 @@ public class SettingsService {
     private final JwtService jwtService;
     private final com.kronos.chiron.coach.agent.ChironAgentRouter chironAgentRouter;
 
+    private final Clock clock;
     @Value("${chiron.frontend-url}")
     private String frontendUrl;
 
@@ -121,7 +124,7 @@ public class SettingsService {
         PasswordResetToken token = PasswordResetToken.builder()
                 .token(tokenValue)
                 .utilisateur(user)
-                .expiresAt(LocalDateTime.now().plusHours(24))
+                .expiresAt(LocalDateTime.now(clock).plusHours(24))
                 .build();
         tokenRepository.save(token);
 
@@ -141,7 +144,7 @@ public class SettingsService {
         if (token.getUsed()) {
             throw new IllegalArgumentException("Ce lien a déjà été utilisé");
         }
-        if (token.getExpiresAt().isBefore(LocalDateTime.now())) {
+        if (token.getExpiresAt().isBefore(LocalDateTime.now(clock))) {
             throw new IllegalArgumentException("Ce lien a expiré");
         }
         Utilisateur user = token.getUtilisateur();

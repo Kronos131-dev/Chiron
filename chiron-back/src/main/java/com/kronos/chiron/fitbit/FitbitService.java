@@ -1,5 +1,7 @@
 package com.kronos.chiron.fitbit;
 
+import java.time.Clock;
+
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 import com.kronos.chiron.utilisateur.persistence.UtilisateurRepository;
 import com.kronos.chiron.core.security.TokenCipherService;
@@ -30,6 +32,7 @@ public class FitbitService {
     private final TokenCipherService tokenCipher;
     private final FitbitAuthSessionStore authSessionStore;
 
+    private final Clock clock;
     @Value("${fitbit.authorize-url}")
     private String authorizeUrl;
     @Value("${fitbit.client-id}")
@@ -78,7 +81,7 @@ public class FitbitService {
                 .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable id=" + pending.chironUserId()));
 
         applyTokens(user, tr);
-        user.setFitbitLinkedAt(LocalDateTime.now());
+        user.setFitbitLinkedAt(LocalDateTime.now(clock));
         utilisateurRepository.save(user);
         log.info("FITBIT_LINKED user={} fitbitUserId={}", user.getUsername(), tr.fitbitUserId());
         return buildStatus(user);
@@ -110,7 +113,7 @@ public class FitbitService {
 
         if (user.getFitbitAccessTokenEncrypted() != null
                 && user.getFitbitTokenExpiresAt() != null
-                && user.getFitbitTokenExpiresAt().isAfter(LocalDateTime.now().plusSeconds(REFRESH_SKEW_SECONDS))) {
+                && user.getFitbitTokenExpiresAt().isAfter(LocalDateTime.now(clock).plusSeconds(REFRESH_SKEW_SECONDS))) {
             try {
                 return tokenCipher.decrypt(user.getFitbitAccessTokenEncrypted());
             } catch (RuntimeException e) {
@@ -154,7 +157,7 @@ public class FitbitService {
             return FitbitDashboardDto.reconnectNeeded();
         }
 
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(clock);
         LocalDate start = today.minusDays(n - 1L);
         try {
             Map<LocalDate, Integer> stepsByDate =
@@ -198,7 +201,7 @@ public class FitbitService {
         if (tr.refreshToken() != null) {
             user.setFitbitRefreshTokenEncrypted(tokenCipher.encrypt(tr.refreshToken()));
         }
-        user.setFitbitTokenExpiresAt(LocalDateTime.now().plusSeconds(tr.expiresInSeconds()));
+        user.setFitbitTokenExpiresAt(LocalDateTime.now(clock).plusSeconds(tr.expiresInSeconds()));
         if (tr.scope() != null) user.setFitbitScope(tr.scope());
         if (tr.fitbitUserId() != null) user.setFitbitUserId(tr.fitbitUserId());
     }
@@ -221,7 +224,7 @@ public class FitbitService {
         }
         boolean needsReconnect = user.getFitbitRefreshTokenEncrypted() == null
                 && (user.getFitbitTokenExpiresAt() == null
-                    || user.getFitbitTokenExpiresAt().isBefore(LocalDateTime.now()));
+                    || user.getFitbitTokenExpiresAt().isBefore(LocalDateTime.now(clock)));
         return new FitbitLinkStatus(true, needsReconnect, user.getFitbitUserId(),
                 user.getFitbitScope(), user.getFitbitLinkedAt());
     }

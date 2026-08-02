@@ -1,5 +1,7 @@
 package com.kronos.chiron.programme.service;
 
+import java.time.Clock;
+
 import static com.kronos.chiron.core.exceptions.ErrorFactory.forbidden;
 import static com.kronos.chiron.core.exceptions.ErrorFactory.notFound;
 
@@ -43,6 +45,7 @@ public class ProgrammeService {
     private final ExerciceDefinitionRepository exerciceDefinitionRepository;
     private final CardioCalorieService cardioCalorieService;
 
+    private final Clock clock;
     @Transactional
     public Seance sauvegarderProgramme(String username, SeanceDto seanceDto) {
         return sauvegarderProgramme(username, seanceDto, null);
@@ -94,7 +97,7 @@ public class ProgrammeService {
 
         if (!isUpdate) {
             seance.setUtilisateur(targetUser);
-            seance.setStartTime(seanceDto.startTime() != null ? seanceDto.startTime() : LocalDateTime.now());
+            seance.setStartTime(seanceDto.startTime() != null ? seanceDto.startTime() : LocalDateTime.now(clock));
             seance.setEndTime(seanceDto.endTime());
         }
 
@@ -271,7 +274,7 @@ public class ProgrammeService {
         Seance newSeance = new Seance();
         newSeance.setTitre(sourceSeance.getTitre() + " (Copie)");
         newSeance.setNote(sourceSeance.getNote());
-        newSeance.setStartTime(LocalDateTime.now());
+        newSeance.setStartTime(LocalDateTime.now(clock));
         newSeance.setUtilisateur(targetUser);
         newSeance.setHistorique(false);
         newSeance.setWeekNumber(0);

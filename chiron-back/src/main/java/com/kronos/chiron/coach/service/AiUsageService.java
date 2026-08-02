@@ -1,5 +1,7 @@
 package com.kronos.chiron.coach.service;
 
+import java.time.Clock;
+
 import com.kronos.chiron.utilisateur.model.AiProvider;
 import com.kronos.chiron.utilisateur.model.Role;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
@@ -19,6 +21,8 @@ public class AiUsageService {
 
     private final UtilisateurRepository utilisateurRepository;
 
+
+    private final Clock clock;
     @Transactional
     public AiProvider resolveProvider(Utilisateur user) {
         if (user.getAiProvider() != AiProvider.GEMINI) {
@@ -31,7 +35,7 @@ public class AiUsageService {
         Utilisateur managed = utilisateurRepository.findById(user.getId())
                 .orElseThrow(() -> new NoSuchElementException("Utilisateur introuvable"));
 
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(clock);
         if (!today.equals(managed.getGeminiCallDate())) {
             managed.setGeminiCallDate(today);
             managed.setGeminiCallCount(0);

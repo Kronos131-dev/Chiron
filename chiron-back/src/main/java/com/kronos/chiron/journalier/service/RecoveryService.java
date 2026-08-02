@@ -1,5 +1,7 @@
 package com.kronos.chiron.journalier.service;
 
+import java.time.Clock;
+
 import com.kronos.chiron.journalier.model.EtatJournalier;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 import com.kronos.chiron.journalier.persistence.EtatJournalierRepository;
@@ -16,6 +18,8 @@ public class RecoveryService {
 
     private final EtatJournalierRepository repository;
 
+
+    private final Clock clock;
     @Transactional
     public EtatJournalier upsert(Utilisateur user, LocalDate date,
                                   Double sommeilHeures,
@@ -60,7 +64,7 @@ public class RecoveryService {
     @Transactional(readOnly = true)
     public List<EtatJournalier> getRecent(Utilisateur user, int nbJours) {
         int days = Math.max(1, Math.min(nbJours, 90));
-        LocalDate from = LocalDate.now().minusDays(days - 1L);
+        LocalDate from = LocalDate.now(clock).minusDays(days - 1L);
         return repository.findByUtilisateurAndDateGreaterThanEqualOrderByDateDesc(user, from);
     }
 

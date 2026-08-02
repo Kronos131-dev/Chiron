@@ -1,5 +1,7 @@
 package com.kronos.chiron.nutrition;
 
+import java.time.Clock;
+
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 import com.kronos.chiron.utilisateur.persistence.UtilisateurRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +20,7 @@ public class NutritionService {
     private final OlympusClient olympusClient;
     private final OlympusTokenService tokenService;
 
+    private final Clock clock;
     @Transactional
     public NutritionLinkStatus link(String chironUsername, String olympusPseudo, String olympusPassword) {
         Utilisateur user = utilisateurRepository.findByUsername(chironUsername)
@@ -31,7 +34,7 @@ public class NutritionService {
         user.setOlympusTokenEncrypted(tokenService.encrypt(result.token()));
         user.setOlympusTokenExpiresAt(null);
         user.setOlympusUsername(result.olympusUsername());
-        user.setOlympusLinkedAt(LocalDateTime.now());
+        user.setOlympusLinkedAt(LocalDateTime.now(clock));
         utilisateurRepository.save(user);
         log.info("OLYMPUS_LINKED user={} olympusUsername={}", chironUsername, result.olympusUsername());
 

@@ -1,5 +1,11 @@
 package com.kronos.chiron.utilisateur.service;
 
+import org.mockito.Spy;
+
+import java.time.ZoneId;
+
+import java.time.Clock;
+
 import org.springframework.web.ErrorResponseException;
 
 import org.springframework.http.HttpStatus;
@@ -37,7 +43,10 @@ class ProfileServiceTest {
     @Mock private SeanceRepository seanceRepository;
     @Mock private PerformanceService performanceService;
 
-    @InjectMocks
+        @Spy
+    private Clock clock = Clock.system(ZoneId.of("Europe/Paris"));
+
+@InjectMocks
     private ProfileService profileService;
 
     private Utilisateur publicUser;

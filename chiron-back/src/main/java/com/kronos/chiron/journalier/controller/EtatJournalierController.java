@@ -1,5 +1,7 @@
 package com.kronos.chiron.journalier.controller;
 
+import java.time.Clock;
+
 import static com.kronos.chiron.core.exceptions.ErrorFactory.notFound;
 
 import com.kronos.chiron.journalier.model.EtatJournalier;
@@ -23,12 +25,13 @@ public class EtatJournalierController {
     private final RecoveryService recoveryService;
     private final UtilisateurRepository utilisateurRepository;
 
+    private final Clock clock;
     @PostMapping
     public ResponseEntity<EtatJournalierDto> upsert(@AuthenticationPrincipal UserDetails userDetails,
                                                      @RequestBody EtatJournalierDto body) {
         Utilisateur user = utilisateurRepository.findByUsername(userDetails.getUsername())
                 .orElseThrow(() -> notFound("Utilisateur introuvable"));
-        LocalDate date = body.date() != null ? body.date() : LocalDate.now();
+        LocalDate date = body.date() != null ? body.date() : LocalDate.now(clock);
         EtatJournalier saved = recoveryService.upsert(
                 user, date,
                 body.sommeilHeures(), body.fatigue(), body.courbatures(),

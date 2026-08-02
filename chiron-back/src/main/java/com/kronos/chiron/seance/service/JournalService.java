@@ -4,8 +4,10 @@ import com.kronos.chiron.seance.dto.SeanceDto;
 import com.kronos.chiron.seance.model.Seance;
 import com.kronos.chiron.seance.mapper.SeanceMapper;
 import com.kronos.chiron.seance.persistence.SeanceRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.temporal.WeekFields;
 import java.util.List;
@@ -13,15 +15,12 @@ import java.util.Locale;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class JournalService {
 
     private final SeanceRepository seanceRepository;
     private final SeanceMapper seanceMapper;
-
-    public JournalService(SeanceRepository seanceRepository, SeanceMapper seanceMapper) {
-        this.seanceRepository = seanceRepository;
-        this.seanceMapper = seanceMapper;
-    }
+    private final Clock clock;
 
     public List<SeanceDto> getSeancesForCurrentWeek(Long utilisateurId) {
         int currentWeek = getCurrentWeekNumber();
@@ -34,6 +33,6 @@ public class JournalService {
 
     public int getCurrentWeekNumber() {
         WeekFields weekFields = WeekFields.of(Locale.FRANCE);
-        return LocalDate.now().get(weekFields.weekOfWeekBasedYear());
+        return LocalDate.now(clock).get(weekFields.weekOfWeekBasedYear());
     }
 }

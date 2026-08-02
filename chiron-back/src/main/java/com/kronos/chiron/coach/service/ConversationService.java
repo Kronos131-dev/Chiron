@@ -1,5 +1,7 @@
 package com.kronos.chiron.coach.service;
 
+import java.time.Clock;
+
 import com.kronos.chiron.coach.model.Conversation;
 import com.kronos.chiron.coach.model.ConversationMessage;
 import com.kronos.chiron.coach.model.MessageRole;
@@ -23,6 +25,7 @@ public class ConversationService {
     private final ConversationRepository conversationRepository;
     private final ConversationMessageRepository conversationMessageRepository;
 
+    private final Clock clock;
     @Transactional(readOnly = true)
     public List<Conversation> listForUser(Utilisateur user) {
         return conversationRepository.findByUtilisateurOrderByUpdatedAtDesc(user);
@@ -57,7 +60,7 @@ public class ConversationService {
         if (conversation.getTitre() == null || conversation.getTitre().isBlank()) {
             conversation.setTitre(deriveTitle(userMessage));
         }
-        conversation.setUpdatedAt(LocalDateTime.now());
+        conversation.setUpdatedAt(LocalDateTime.now(clock));
         conversationRepository.save(conversation);
     }
 
