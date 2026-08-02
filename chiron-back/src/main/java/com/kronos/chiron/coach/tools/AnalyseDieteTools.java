@@ -1,5 +1,7 @@
 package com.kronos.chiron.coach.tools;
 
+import java.time.Clock;
+
 import static com.kronos.chiron.core.exceptions.ErrorFactory.notFound;
 
 import com.kronos.chiron.utilisateur.model.Utilisateur;
@@ -29,13 +31,14 @@ public class AnalyseDieteTools {
     private final BodyCompositionRecordRepository bodyCompositionRepository;
     private final StatsService statsService;
 
+    private final Clock clock;
     @Tool("Récupère le profil personnel et sportif : sexe, âge, taille, poids de corps, objectif principal, niveau d'expérience, fréquence visée, blessures. Base pour estimer les besoins caloriques.")
     public String getProfilSportif(@ToolMemoryId String userId) {
         Utilisateur u = loadUser(userId);
         StringBuilder res = new StringBuilder("Profil personnel et sportif :\n");
         res.append("- Sexe : ").append(u.getSexe() != null ? u.getSexe() : "non renseigné").append("\n");
         if (u.getDateNaissance() != null) {
-            int age = Period.between(u.getDateNaissance(), LocalDate.now()).getYears();
+            int age = Period.between(u.getDateNaissance(), LocalDate.now(clock)).getYears();
             res.append("- Âge : ").append(age).append(" ans\n");
         } else {
             res.append("- Âge : non renseigné\n");

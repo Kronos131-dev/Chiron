@@ -1,5 +1,7 @@
 package com.kronos.chiron.fitbit;
 
+import java.time.Clock;
+
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 import com.kronos.chiron.utilisateur.persistence.UtilisateurRepository;
 import com.kronos.chiron.journalier.service.RecoveryService;
@@ -20,9 +22,10 @@ public class FitbitSyncService {
     private final RecoveryService recoveryService;
     private final UtilisateurRepository utilisateurRepository;
 
+    private final Clock clock;
     public void syncEtatJournalier(String chironUsername, int nbJours) {
         int days = Math.max(1, Math.min(nbJours, 30));
-        LocalDate start = LocalDate.now().minusDays(days - 1L);
+        LocalDate start = LocalDate.now(clock).minusDays(days - 1L);
         try {
             Utilisateur user = utilisateurRepository.findByUsername(chironUsername).orElse(null);
             if (user == null) {

@@ -1,5 +1,11 @@
 package com.kronos.chiron.fitbit;
 
+import org.mockito.Spy;
+
+import java.time.ZoneId;
+
+import java.time.Clock;
+
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 import com.kronos.chiron.utilisateur.persistence.UtilisateurRepository;
 import com.kronos.chiron.journalier.service.RecoveryService;
@@ -30,7 +36,10 @@ class FitbitSyncServiceTest {
     @Mock private RecoveryService recoveryService;
     @Mock private UtilisateurRepository utilisateurRepository;
 
-    @InjectMocks private FitbitSyncService syncService;
+        @Spy
+    private Clock clock = Clock.system(ZoneId.of("Europe/Paris"));
+
+@InjectMocks private FitbitSyncService syncService;
 
     @Test
     void syncEtatJournalier_swallowsFitbitErrors() {

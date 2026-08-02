@@ -1,5 +1,11 @@
 package com.kronos.chiron.coach.tools;
 
+import org.mockito.Spy;
+
+import java.time.ZoneId;
+
+import java.time.Clock;
+
 import com.kronos.chiron.seance.model.Exercice;
 import com.kronos.chiron.seance.model.Seance;
 import com.kronos.chiron.seance.model.Serie;
@@ -44,7 +50,10 @@ class WorkoutToolsTest {
     @Mock private ExerciceDefinitionRepository exerciceDefinitionRepository;
     @Mock private ProgrammeService programmeService;
 
-    @InjectMocks
+        @Spy
+    private Clock clock = Clock.system(ZoneId.of("Europe/Paris"));
+
+@InjectMocks
     private WorkoutTools workoutTools;
 
     private Utilisateur user;

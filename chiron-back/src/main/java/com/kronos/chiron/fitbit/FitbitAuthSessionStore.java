@@ -1,13 +1,16 @@
 package com.kronos.chiron.fitbit;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
+@RequiredArgsConstructor
 public class FitbitAuthSessionStore {
 
     private static final Duration TTL = Duration.ofMinutes(10);
@@ -16,10 +19,12 @@ public class FitbitAuthSessionStore {
 
     private final ConcurrentHashMap<String, PendingAuth> pending = new ConcurrentHashMap<>();
 
+    private final Clock clock;
+
     public String register(Long chironUserId, String codeVerifier) {
         purgeExpired();
         String state = UUID.randomUUID().toString();
-        pending.put(state, new PendingAuth(chironUserId, codeVerifier, Instant.now()));
+        pending.put(state, new PendingAuth(chironUserId, codeVerifier, clock.instant()));
         return state;
     }
 
@@ -27,12 +32,12 @@ public class FitbitAuthSessionStore {
         if (state == null) return null;
         PendingAuth p = pending.remove(state);
         if (p == null) return null;
-        if (p.createdAt().plus(TTL).isBefore(Instant.now())) return null;
+        if (p.createdAt().plus(TTL).isBefore(clock.instant())) return null;
         return p;
     }
 
     private void purgeExpired() {
-        Instant cutoff = Instant.now().minus(TTL);
+        Instant cutoff = clock.instant().minus(TTL);
         pending.entrySet().removeIf(e -> e.getValue().createdAt().isBefore(cutoff));
     }
 }

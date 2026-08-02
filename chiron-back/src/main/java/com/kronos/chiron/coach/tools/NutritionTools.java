@@ -1,5 +1,7 @@
 package com.kronos.chiron.coach.tools;
 
+import java.time.Clock;
+
 import static com.kronos.chiron.core.exceptions.ErrorFactory.notFound;
 
 import tools.jackson.databind.JsonNode;
@@ -32,12 +34,13 @@ public class NutritionTools {
     private final NutritionService nutritionService;
     private final OlympusClient olympusClient;
 
+    private final Clock clock;
     @Tool("Récupère l'apport nutritionnel de l'utilisateur pour une date donnée (format YYYY-MM-DD ; null ou vide = aujourd'hui). Retourne calories, protéines, glucides, lipides consommés + cibles + delta + activité du jour. Nécessite que l'utilisateur ait lié son compte Olympus.")
     public String getApportJournalier(@ToolMemoryId String userId, String date) {
         Utilisateur user = loadUser(userId);
         LocalDate target;
         if (date == null || date.isBlank()) {
-            target = LocalDate.now();
+            target = LocalDate.now(clock);
         } else {
             try {
                 target = LocalDate.parse(date.trim());
@@ -144,7 +147,7 @@ public class NutritionTools {
 
         try {
             String token = nutritionService.getValidToken(user.getUsername());
-            LocalDate end = LocalDate.now();
+            LocalDate end = LocalDate.now(clock);
             LocalDate start = end.minusDays(window - 1L);
             JsonNode analytics = olympusClient.getAnalytics(token, start, end);
 
@@ -229,7 +232,7 @@ public class NutritionTools {
 
         try {
             String token = nutritionService.getValidToken(user.getUsername());
-            LocalDate end = LocalDate.now();
+            LocalDate end = LocalDate.now(clock);
             LocalDate start = end.minusDays(window - 1L);
             JsonNode analytics = olympusClient.getAnalytics(token, start, end);
 

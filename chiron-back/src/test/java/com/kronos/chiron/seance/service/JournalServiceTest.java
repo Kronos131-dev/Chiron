@@ -1,5 +1,11 @@
 package com.kronos.chiron.seance.service;
 
+import org.mockito.Spy;
+
+import java.time.ZoneId;
+
+import java.time.Clock;
+
 import com.kronos.chiron.seance.dto.SeanceDto;
 import com.kronos.chiron.seance.model.Seance;
 import com.kronos.chiron.seance.mapper.SeanceMapper;
@@ -26,7 +32,10 @@ class JournalServiceTest {
     @Mock private SeanceRepository seanceRepository;
     @Mock private SeanceMapper seanceMapper;
 
-    @InjectMocks
+        @Spy
+    private Clock clock = Clock.system(ZoneId.of("Europe/Paris"));
+
+@InjectMocks
     private JournalService journalService;
 
     @Test

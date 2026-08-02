@@ -1,5 +1,7 @@
 package com.kronos.chiron.coach.tools;
 
+import java.time.Clock;
+
 import static com.kronos.chiron.core.exceptions.ErrorFactory.notFound;
 
 import com.kronos.chiron.exercice.dto.ExerciceDefinitionDto;
@@ -57,9 +59,10 @@ public class WorkoutTools {
     private final ProgrammeService programmeService;
     private final PerformanceService performanceService;
 
+    private final Clock clock;
     @Tool("Retourne la date et l'heure actuelles et le jour de la semaine.")
     public String getCurrentDate() {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(clock);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEEE dd MMMM yyyy à HH:mm", Locale.FRANCE);
         return "Nous sommes le " + now.format(formatter);
     }
@@ -155,15 +158,15 @@ public class WorkoutTools {
 
         seanceRepository.findFirstByUtilisateurIdAndEndTimeIsNullOrderByStartTimeDesc(user.getId())
                 .ifPresent(s -> {
-                    s.setEndTime(LocalDateTime.now());
+                    s.setEndTime(LocalDateTime.now(clock));
                     seanceRepository.save(s);
                 });
 
-        int currentWeek = LocalDate.now().get(WeekFields.of(Locale.FRANCE).weekOfWeekBasedYear());
+        int currentWeek = LocalDate.now(clock).get(WeekFields.of(Locale.FRANCE).weekOfWeekBasedYear());
 
         Seance seance = Seance.builder()
                 .titre(titre)
-                .startTime(LocalDateTime.now())
+                .startTime(LocalDateTime.now(clock))
                 .weekNumber(currentWeek)
                 .historique(true)
                 .utilisateur(user)
@@ -182,7 +185,7 @@ public class WorkoutTools {
 
         Seance seance = Seance.builder()
                 .titre(titre)
-                .startTime(LocalDateTime.now())
+                .startTime(LocalDateTime.now(clock))
                 .weekNumber(0)
                 .historique(false)
                 .utilisateur(user)
@@ -217,7 +220,7 @@ public class WorkoutTools {
         Exercice exercice = Exercice.builder()
                 .nom(nomExercice)
                 .definition(definition)
-                .startTime(LocalDateTime.now())
+                .startTime(LocalDateTime.now(clock))
                 .displayOrder(nextPosition)
                 .build();
 
@@ -263,12 +266,12 @@ public class WorkoutTools {
             return "L'utilisateur a demandé à terminer, mais il n'y a aucune séance en cours.";
         }
 
-        activeSeance.setEndTime(LocalDateTime.now());
+        activeSeance.setEndTime(LocalDateTime.now(clock));
 
         if (activeSeance.getExercices() != null && !activeSeance.getExercices().isEmpty()) {
             Exercice lastExo = activeSeance.getExercices().get(activeSeance.getExercices().size() - 1);
             if (lastExo.getEndTime() == null) {
-                lastExo.setEndTime(LocalDateTime.now());
+                lastExo.setEndTime(LocalDateTime.now(clock));
             }
         }
 
@@ -673,7 +676,7 @@ public class WorkoutTools {
                 .orElseThrow(() -> notFound("Utilisateur introuvable"));
 
         int window = (nbJours != null && nbJours > 0) ? nbJours : 7;
-        LocalDateTime cutoff = LocalDateTime.now().minusDays(window);
+        LocalDateTime cutoff = LocalDateTime.now(clock).minusDays(window);
 
         List<Seance> historique = seanceRepository
                 .findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc(user.getUsername())
@@ -758,7 +761,7 @@ public class WorkoutTools {
         }
 
         StringBuilder res = new StringBuilder("Dernier entraînement par muscle :\n");
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(clock);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.FRANCE);
 
         List<Map.Entry<MuscleGroup, LocalDateTime>> entries = lastByMuscle.entrySet().stream()
@@ -828,7 +831,7 @@ public class WorkoutTools {
 
         StringBuilder res = new StringBuilder("Profil sportif :\n");
         if (user.getDateNaissance() != null) {
-            int age = Period.between(user.getDateNaissance(), java.time.LocalDate.now()).getYears();
+            int age = Period.between(user.getDateNaissance(), java.time.LocalDate.now(clock)).getYears();
             res.append("- Âge : ").append(age).append(" ans\n");
         }
         if (user.getSexe() != null) res.append("- Sexe : ").append(user.getSexe().name().toLowerCase()).append("\n");

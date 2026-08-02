@@ -1,5 +1,11 @@
 package com.kronos.chiron.utilisateur.service;
 
+import org.mockito.Spy;
+
+import java.time.ZoneId;
+
+import java.time.Clock;
+
 import com.kronos.chiron.auth.service.EmailService;
 
 import com.kronos.chiron.coach.agent.ChironAgentRouter;
@@ -52,7 +58,10 @@ class SettingsServiceTest {
     @Mock
     private ChironAgentRouter chironAgentRouter;
 
-    @InjectMocks
+        @Spy
+    private Clock clock = Clock.system(ZoneId.of("Europe/Paris"));
+
+@InjectMocks
     private SettingsService settingsService;
 
     private Utilisateur user;

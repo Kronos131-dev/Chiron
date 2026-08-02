@@ -1,5 +1,11 @@
 package com.kronos.chiron.fitbit;
 
+import org.mockito.Spy;
+
+import java.time.ZoneId;
+
+import java.time.Clock;
+
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 import com.kronos.chiron.utilisateur.persistence.UtilisateurRepository;
 import com.kronos.chiron.core.security.TokenCipherService;
@@ -28,7 +34,10 @@ class FitbitServiceTest {
     @Mock private TokenCipherService tokenCipher;
     @Mock private FitbitAuthSessionStore authSessionStore;
 
-    @InjectMocks private FitbitService fitbitService;
+        @Spy
+    private Clock clock = Clock.system(ZoneId.of("Europe/Paris"));
+
+@InjectMocks private FitbitService fitbitService;
 
     private Utilisateur user;
 

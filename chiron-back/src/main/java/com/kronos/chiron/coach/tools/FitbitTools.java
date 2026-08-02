@@ -1,5 +1,7 @@
 package com.kronos.chiron.coach.tools;
 
+import java.time.Clock;
+
 import static com.kronos.chiron.core.exceptions.ErrorFactory.notFound;
 
 import com.kronos.chiron.utilisateur.model.Utilisateur;
@@ -36,6 +38,7 @@ public class FitbitTools {
     private final FitbitClient fitbitClient;
     private final FitbitSyncService fitbitSyncService;
 
+    private final Clock clock;
     @Tool("Récupère l'activité physique (nombre de pas) de l'utilisateur pour une date donnée (format YYYY-MM-DD ; null ou vide = aujourd'hui), d'après Fitbit. Nécessite que l'utilisateur ait lié son compte Fitbit.")
     public String getActiviteJournaliere(@ToolMemoryId String userId, String date) {
         Utilisateur user = loadUser(userId);
@@ -71,7 +74,7 @@ public class FitbitTools {
         int window = (nbJours != null && nbJours > 0) ? Math.min(nbJours, 30) : 7;
         try {
             String token = fitbitService.getValidToken(user.getUsername());
-            LocalDate today = LocalDate.now();
+            LocalDate today = LocalDate.now(clock);
             LocalDate start = today.minusDays(window - 1L);
             Map<LocalDate, Double> hoursByDate =
                     FitbitParser.sleepHoursByDate(fitbitClient.listSleep(token, start));
@@ -156,7 +159,7 @@ public class FitbitTools {
         int window = (nbJours != null && nbJours > 0) ? Math.min(nbJours, 30) : 7;
         try {
             String token = fitbitService.getValidToken(user.getUsername());
-            LocalDate today = LocalDate.now();
+            LocalDate today = LocalDate.now(clock);
             LocalDate start = today.minusDays(window - 1L);
             Map<LocalDate, Integer> stepsByDate = FitbitParser.stepsByDate(
                     fitbitClient.rollUpDailySteps(token, start, today));
@@ -219,7 +222,7 @@ public class FitbitTools {
 
     private LocalDate parseDateOrToday(String date) {
         if (date == null || date.isBlank()) {
-            return LocalDate.now();
+            return LocalDate.now(clock);
         }
         try {
             return LocalDate.parse(date.trim());

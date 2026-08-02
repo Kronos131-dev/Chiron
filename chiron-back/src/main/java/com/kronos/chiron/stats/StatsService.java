@@ -1,5 +1,7 @@
 package com.kronos.chiron.stats;
 
+import java.time.Clock;
+
 import com.kronos.chiron.performance.dto.PerformanceSummaryDto;
 import com.kronos.chiron.seance.model.Degressif;
 import com.kronos.chiron.seance.model.Exercice;
@@ -47,10 +49,11 @@ public class StatsService {
     private final BodyCompositionRecordRepository bodyCompositionRepo;
     private final UtilisateurRepository utilisateurRepository;
 
+    private final Clock clock;
     @Transactional(readOnly = true)
     public StatsOverviewDto getOverview(String username) {
         List<Seance> sessions = realSessions(username);
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(clock);
         LocalDate today = now.toLocalDate();
 
         long seances30 = sessions.stream()
@@ -94,7 +97,7 @@ public class StatsService {
         int n = Math.min(Math.max(weeks, 1), 52);
         List<Seance> sessions = realSessions(username);
         TonnagePrefs tp = tonnagePrefs(username);
-        LocalDate monday = LocalDate.now().with(ISO.dayOfWeek(), 1);
+        LocalDate monday = LocalDate.now(clock).with(ISO.dayOfWeek(), 1);
 
         List<WeeklyVolumePointDto> result = new ArrayList<>();
         for (int i = n - 1; i >= 0; i--) {
@@ -125,7 +128,7 @@ public class StatsService {
     @Transactional(readOnly = true)
     public MuscleStatsDto getMuscleStats(String username, int days) {
         int n = Math.min(Math.max(days, 1), 365);
-        LocalDateTime since = LocalDateTime.now().minusDays(n);
+        LocalDateTime since = LocalDateTime.now(clock).minusDays(n);
         List<Seance> sessions = realSessions(username);
         TonnagePrefs tp = tonnagePrefs(username);
 
@@ -228,7 +231,7 @@ public class StatsService {
         Optional<Long> userId = resolveOlympusUser(username);
         if (userId.isEmpty()) return NutritionStatsDto.notLinked();
 
-        LocalDate end = LocalDate.now();
+        LocalDate end = LocalDate.now(clock);
         LocalDate start = end.minusDays(n - 1L);
         List<NutritionPointDto> jours = olympusDao.dailyNutrition(userId.get(), start, end);
 
@@ -254,7 +257,7 @@ public class StatsService {
         Optional<Long> userId = resolveOlympusUser(username);
         if (userId.isEmpty()) return BodyweightStatsDto.notLinked();
 
-        LocalDate end = LocalDate.now();
+        LocalDate end = LocalDate.now(clock);
         LocalDate start = end.minusDays(n - 1L);
         return new BodyweightStatsDto(true, olympusDao.weightHistory(userId.get(), start, end));
     }
@@ -265,7 +268,7 @@ public class StatsService {
         Optional<Utilisateur> user = utilisateurRepository.findByUsername(username);
         if (user.isEmpty()) return BodyCompositionStatsDto.empty();
 
-        LocalDateTime since = LocalDateTime.now().minusDays(n);
+        LocalDateTime since = LocalDateTime.now(clock).minusDays(n);
         List<BodyCompositionRecord> records =
                 bodyCompositionRepo.findByUtilisateurAndMesureLeAfterOrderByMesureLeAsc(user.get(), since);
         if (records.isEmpty()) return BodyCompositionStatsDto.empty();

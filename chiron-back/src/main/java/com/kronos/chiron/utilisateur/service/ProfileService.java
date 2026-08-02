@@ -1,5 +1,7 @@
 package com.kronos.chiron.utilisateur.service;
 
+import java.time.Clock;
+
 import static com.kronos.chiron.core.exceptions.ErrorFactory.badRequest;
 import static com.kronos.chiron.core.exceptions.ErrorFactory.forbidden;
 import static com.kronos.chiron.core.exceptions.ErrorFactory.notFound;
@@ -40,6 +42,7 @@ public class ProfileService {
     private final SeanceRepository seanceRepository;
     private final PerformanceService performanceService;
 
+    private final Clock clock;
     @Value("${chiron.uploads-dir:./uploads/images}")
     private String uploadsDir;
 
@@ -231,7 +234,7 @@ public class ProfileService {
     }
 
     private int calculateAverageSeriesPerMonth(Long userId) {
-        LocalDateTime oneMonthAgo = LocalDateTime.now().minus(1, ChronoUnit.MONTHS);
+        LocalDateTime oneMonthAgo = LocalDateTime.now(clock).minus(1, ChronoUnit.MONTHS);
         Integer count = seanceRepository.countTotalSeriesForUserSince(userId, oneMonthAgo);
         return count != null ? count : 0;
     }

@@ -1,5 +1,7 @@
 package com.kronos.chiron.coach.tools;
 
+import java.time.Clock;
+
 import static com.kronos.chiron.core.exceptions.ErrorFactory.notFound;
 
 import com.kronos.chiron.exercice.dto.ExerciceDefinitionDto;
@@ -40,6 +42,7 @@ public class AdaptiveTools {
     private final SeanceRepository seanceRepository;
     private final ExerciceDefinitionService exerciceDefinitionService;
 
+    private final Clock clock;
     @Tool("Propose la prochaine progression sur un exercice d'après la dernière séance (cohérence des charges, drop-off, comparaison N-1). Renvoie une reco chiffrée (+2.5 kg, maintien, baisse, +1 rep…).")
     public String getProgressionSuggeree(@ToolMemoryId String userId, String nomExercice) {
         if (nomExercice == null || nomExercice.isBlank()) {
@@ -195,7 +198,7 @@ public class AdaptiveTools {
             return "Aucun exercice [std] dans le(s) programme(s) examiné(s). Rotation impossible.";
         }
 
-        LocalDateTime cutoff = LocalDateTime.now().minusWeeks(ROTATION_WEEKS_THRESHOLD);
+        LocalDateTime cutoff = LocalDateTime.now(clock).minusWeeks(ROTATION_WEEKS_THRESHOLD);
         List<Seance> historique = seanceRepository
                 .findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc(user.getUsername());
 
@@ -228,7 +231,7 @@ public class AdaptiveTools {
 
         for (Map.Entry<Long, LocalDateTime> en : candidats) {
             ExerciceDefinition def = defsParId.get(en.getKey());
-            long semaines = ChronoUnit.WEEKS.between(en.getValue().toLocalDate(), LocalDateTime.now().toLocalDate());
+            long semaines = ChronoUnit.WEEKS.between(en.getValue().toLocalDate(), LocalDateTime.now(clock).toLocalDate());
             String nomDef = def.getNomFr() != null ? def.getNomFr() : def.getNomEn();
             res.append("- ").append(nomDef).append(" (depuis ").append(semaines).append(" semaines)");
 

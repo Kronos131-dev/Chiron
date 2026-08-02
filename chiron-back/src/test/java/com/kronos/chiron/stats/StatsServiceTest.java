@@ -1,5 +1,11 @@
 package com.kronos.chiron.stats;
 
+import org.mockito.Spy;
+
+import java.time.ZoneId;
+
+import java.time.Clock;
+
 import com.kronos.chiron.performance.dto.PerformanceSummaryDto;
 import com.kronos.chiron.seance.model.Degressif;
 import com.kronos.chiron.seance.model.Exercice;
@@ -52,7 +58,10 @@ class StatsServiceTest {
     @Mock
     private UtilisateurRepository utilisateurRepository;
 
-    @InjectMocks
+        @Spy
+    private Clock clock = Clock.system(ZoneId.of("Europe/Paris"));
+
+@InjectMocks
     private StatsService statsService;
 
     private void givenSessions(Seance... sessions) {
