@@ -8,16 +8,24 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+import java.time.Clock;
+import java.time.ZoneId;
 import java.util.TimeZone;
 
 @SpringBootApplication
 @EnableScheduling
 public class ChironApplication {
 
+    private static final ZoneId APPLICATION_ZONE = ZoneId.of("Europe/Paris");
+
     @PostConstruct
     public void init() {
-        TimeZone.setDefault(TimeZone.getTimeZone("Europe/Paris"));
-        System.out.println("⏰ Fuseau horaire réglé sur : " + TimeZone.getDefault().getID());
+        TimeZone.setDefault(TimeZone.getTimeZone(APPLICATION_ZONE));
+    }
+
+    @Bean
+    public Clock clock() {
+        return Clock.system(APPLICATION_ZONE);
     }
 
     @Bean
