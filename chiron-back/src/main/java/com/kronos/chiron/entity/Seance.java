@@ -1,5 +1,7 @@
 package com.kronos.chiron.entity;
 
+import com.kronos.chiron.utilisateur.model.Utilisateur;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;

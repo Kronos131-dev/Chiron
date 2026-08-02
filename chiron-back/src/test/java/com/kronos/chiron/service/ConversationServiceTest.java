@@ -3,7 +3,7 @@ package com.kronos.chiron.service;
 import com.kronos.chiron.entity.Conversation;
 import com.kronos.chiron.entity.ConversationMessage;
 import com.kronos.chiron.entity.MessageRole;
-import com.kronos.chiron.entity.Utilisateur;
+import com.kronos.chiron.utilisateur.model.Utilisateur;
 import com.kronos.chiron.repository.ConversationMessageRepository;
 import com.kronos.chiron.repository.ConversationRepository;
 import org.junit.jupiter.api.BeforeEach;

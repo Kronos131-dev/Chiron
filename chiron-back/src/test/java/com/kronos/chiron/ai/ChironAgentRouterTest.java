@@ -1,6 +1,6 @@
 package com.kronos.chiron.ai;
 
-import com.kronos.chiron.entity.AiProvider;
+import com.kronos.chiron.utilisateur.model.AiProvider;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;

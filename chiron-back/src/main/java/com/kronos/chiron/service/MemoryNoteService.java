@@ -2,7 +2,7 @@ package com.kronos.chiron.service;
 
 import com.kronos.chiron.entity.ChironMemoryNote;
 import com.kronos.chiron.entity.MemoryNoteType;
-import com.kronos.chiron.entity.Utilisateur;
+import com.kronos.chiron.utilisateur.model.Utilisateur;
 import com.kronos.chiron.repository.ChironMemoryNoteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;

@@ -1,6 +1,6 @@
 package com.kronos.chiron.visbody;
 
-import com.kronos.chiron.entity.Utilisateur;
+import com.kronos.chiron.utilisateur.model.Utilisateur;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

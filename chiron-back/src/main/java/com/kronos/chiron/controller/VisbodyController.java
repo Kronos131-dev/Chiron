@@ -1,7 +1,7 @@
 package com.kronos.chiron.controller;
 
-import com.kronos.chiron.entity.Utilisateur;
-import com.kronos.chiron.repository.UtilisateurRepository;
+import com.kronos.chiron.utilisateur.model.Utilisateur;
+import com.kronos.chiron.utilisateur.persistence.UtilisateurRepository;
 import com.kronos.chiron.visbody.BodyCompositionRecord;
 import com.kronos.chiron.visbody.BodyCompositionRecordRepository;
 import com.kronos.chiron.visbody.VisbodyImportService;

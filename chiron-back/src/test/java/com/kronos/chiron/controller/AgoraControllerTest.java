@@ -1,8 +1,8 @@
 package com.kronos.chiron.controller;
 
-import com.kronos.chiron.dto.ProfileDto;
+import com.kronos.chiron.utilisateur.dto.ProfileDto;
 import com.kronos.chiron.security.JwtService;
-import com.kronos.chiron.service.ProfileService;
+import com.kronos.chiron.utilisateur.service.ProfileService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;

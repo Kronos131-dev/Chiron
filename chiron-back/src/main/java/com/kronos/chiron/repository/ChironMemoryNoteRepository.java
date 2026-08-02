@@ -2,7 +2,7 @@ package com.kronos.chiron.repository;
 
 import com.kronos.chiron.entity.ChironMemoryNote;
 import com.kronos.chiron.entity.MemoryNoteType;
-import com.kronos.chiron.entity.Utilisateur;
+import com.kronos.chiron.utilisateur.model.Utilisateur;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 

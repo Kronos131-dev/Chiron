@@ -1,7 +1,7 @@
 package com.kronos.chiron.security;
 
-import com.kronos.chiron.entity.Role;
-import com.kronos.chiron.entity.Utilisateur;
+import com.kronos.chiron.utilisateur.model.Role;
+import com.kronos.chiron.utilisateur.model.Utilisateur;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.userdetails.UserDetails;

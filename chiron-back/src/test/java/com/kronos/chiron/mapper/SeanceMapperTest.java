@@ -1,5 +1,7 @@
 package com.kronos.chiron.mapper;
 
+import com.kronos.chiron.utilisateur.model.Utilisateur;
+
 import com.kronos.chiron.dto.ExerciceDto;
 import com.kronos.chiron.dto.SeanceDto;
 import com.kronos.chiron.dto.SerieDto;

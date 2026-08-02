@@ -1,7 +1,7 @@
 package com.kronos.chiron.core.security;
 
-import com.kronos.chiron.entity.Role;
-import com.kronos.chiron.entity.Utilisateur;
+import com.kronos.chiron.utilisateur.model.Role;
+import com.kronos.chiron.utilisateur.model.Utilisateur;
 
 import java.util.Set;
 

@@ -1,11 +1,11 @@
 package com.kronos.chiron.ai;
 
-import com.kronos.chiron.entity.Utilisateur;
+import com.kronos.chiron.utilisateur.model.Utilisateur;
 import com.kronos.chiron.fitbit.FitbitClient;
 import com.kronos.chiron.fitbit.FitbitParser;
 import com.kronos.chiron.fitbit.FitbitService;
 import com.kronos.chiron.fitbit.FitbitSyncService;
-import com.kronos.chiron.repository.UtilisateurRepository;
+import com.kronos.chiron.utilisateur.persistence.UtilisateurRepository;
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agent.tool.ToolMemoryId;
 import lombok.RequiredArgsConstructor;

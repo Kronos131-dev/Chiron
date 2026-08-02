@@ -1,7 +1,7 @@
 package com.kronos.chiron.core.security;
 
-import com.kronos.chiron.entity.Utilisateur;
-import com.kronos.chiron.repository.UtilisateurRepository;
+import com.kronos.chiron.utilisateur.model.Utilisateur;
+import com.kronos.chiron.utilisateur.persistence.UtilisateurRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;

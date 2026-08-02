@@ -1,6 +1,6 @@
 package com.kronos.chiron.journalier.model;
 
-import com.kronos.chiron.entity.Utilisateur;
+import com.kronos.chiron.utilisateur.model.Utilisateur;
 
 import jakarta.persistence.*;
 import lombok.*;

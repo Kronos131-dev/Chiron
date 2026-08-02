@@ -1,7 +1,7 @@
 package com.kronos.chiron.mapper;
 
 import com.kronos.chiron.dto.ExerciceDto;
-import com.kronos.chiron.dto.ProfileDto;
+import com.kronos.chiron.utilisateur.dto.ProfileDto;
 import com.kronos.chiron.dto.SeanceDto;
 import com.kronos.chiron.dto.SerieDto;
 import com.kronos.chiron.dto.DegressifDto;

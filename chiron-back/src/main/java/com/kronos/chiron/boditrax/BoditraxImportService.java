@@ -1,9 +1,9 @@
 package com.kronos.chiron.boditrax;
 
 import com.kronos.chiron.boditrax.BoditraxCsvParser.ParsedBoditrax;
-import com.kronos.chiron.entity.Sexe;
-import com.kronos.chiron.entity.Utilisateur;
-import com.kronos.chiron.repository.UtilisateurRepository;
+import com.kronos.chiron.utilisateur.model.Sexe;
+import com.kronos.chiron.utilisateur.model.Utilisateur;
+import com.kronos.chiron.utilisateur.persistence.UtilisateurRepository;
 import com.kronos.chiron.visbody.VisbodyImportService;
 import com.kronos.chiron.visbody.VisbodyImportService.ImportResult;
 import com.kronos.chiron.visbody.VisbodyImportService.Outcome;
