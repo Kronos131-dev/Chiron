@@ -16,15 +16,6 @@ import tools.jackson.databind.JsonNode;
 import java.time.LocalDate;
 import java.util.Map;
 
-/**
- * Client HTTP des données santé Fitbit, via la <b>Google Health API</b>
- * ({@code health.googleapis.com}) — l'API Fitbit Web legacy étant arrêtée en
- * septembre 2026. L'OAuth est délégué à Google ({@code oauth2.googleapis.com}).
- *
- * <p>NB : certains noms de champs/filtres ci-dessous sont issus de la doc
- * Google Health et n'ont pas pu être validés contre un compte réel — ils sont
- * signalés par « VÉRIFIER » et le parsing les traite de façon défensive.
- */
 @Component
 @Slf4j
 public class FitbitClient {
@@ -49,9 +40,6 @@ public class FitbitClient {
         log.info("FitbitClient configuré (Google Health API, apiBaseUrl={})", apiBaseUrl);
     }
 
-    // ─────────────────────────── OAuth (Google) ───────────────────────────
-
-    /** Échange un code d'autorisation Google contre des tokens (PKCE inclus). */
     public TokenResponse exchangeCode(String code, String codeVerifier) {
         MultiValueMap<String, String> form = baseForm();
         form.add("grant_type", "authorization_code");
@@ -61,11 +49,6 @@ public class FitbitClient {
         return postToken(form);
     }
 
-    /**
-     * Rafraîchit l'access token. Contrairement à Fitbit legacy, Google NE fait
-     * PAS tourner le refresh token : la réponse ne contient en général pas de
-     * nouveau {@code refresh_token}, et l'ancien reste valable.
-     */
     public TokenResponse refresh(String refreshToken) {
         MultiValueMap<String, String> form = baseForm();
         form.add("grant_type", "refresh_token");
@@ -73,7 +56,6 @@ public class FitbitClient {
         return postToken(form);
     }
 
-    /** Form de base : Google attend les identifiants client dans le corps. */
     private MultiValueMap<String, String> baseForm() {
         MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
         form.add("client_id", clientId);
@@ -102,7 +84,6 @@ public class FitbitClient {
         } catch (HttpClientErrorException e) {
             HttpStatusCode status = e.getStatusCode();
             if (status.value() == 400 || status.value() == 401) {
-                // invalid_grant (code/refresh révoqué) ou identifiants client invalides
                 throw new FitbitUnauthorizedException("Google a refusé la demande de token (" + status.value() + ")");
             }
             log.warn("Google token endpoint a renvoyé {} : {}", status, e.getResponseBodyAsString());
@@ -113,12 +94,6 @@ public class FitbitClient {
         }
     }
 
-    // ─────────────────────── Données santé (v4) ───────────────────────────
-
-    /**
-     * Pas quotidiens agrégés entre deux dates ({@code steps:dailyRollUp}).
-     * Réponse : {@code rollupDataPoints[{civilStartTime,steps}]}.
-     */
     public JsonNode rollUpDailySteps(String accessToken, LocalDate start, LocalDate end) {
         Map<String, Object> requestBody = Map.of(
                 "range", Map.of(
@@ -128,27 +103,16 @@ public class FitbitClient {
         return doPost(accessToken, "/v4/users/me/dataTypes/steps/dataPoints:dailyRollUp", requestBody);
     }
 
-    /**
-     * Sessions de sommeil depuis {@code from} (GET dataPoints filtrés).
-     * Réponse : {@code dataPoints[{sleep:{interval,summary}}]}.
-     */
     public JsonNode listSleep(String accessToken, LocalDate from) {
-        // VÉRIFIER : syntaxe du filtre civil_start_time vs un compte réel.
         return doGet(accessToken, "/v4/users/me/dataTypes/sleep/dataPoints",
                 "sleep.interval.civil_start_time >= \"" + from + "\"");
     }
 
-    /**
-     * Fréquence cardiaque de repos quotidienne depuis {@code from}.
-     * Réponse : {@code dataPoints[{dailyRestingHeartRate:{beatsPerMinute}}]}.
-     */
     public JsonNode listRestingHeartRate(String accessToken, LocalDate from) {
-        // VÉRIFIER : champ de date 'dailyRestingHeartRate.date' vs un compte réel.
         return doGet(accessToken, "/v4/users/me/dataTypes/dailyRestingHeartRate/dataPoints",
                 "dailyRestingHeartRate.date >= \"" + from + "\"");
     }
 
-    /** Construit un objet {@code google.type.Date}. */
     private static Map<String, Integer> googleDate(LocalDate d) {
         return Map.of("year", d.getYear(), "month", d.getMonthValue(), "day", d.getDayOfMonth());
     }
@@ -187,10 +151,6 @@ public class FitbitClient {
 
     private RuntimeException mapHttpError(String call, HttpClientErrorException e) {
         HttpStatusCode status = e.getStatusCode();
-        // 401 = access token rejeté → vrai problème de token.
-        // 403 = requête interdite : API Google Health non activée sur le projet,
-        // scope OAuth absent, ou endpoint erroné. Ce n'est PAS une expiration de
-        // token et ne doit jamais entraîner la suppression de la liaison OAuth.
         if (status.value() == 401) {
             return new FitbitUnauthorizedException("Token Google Health rejeté (401)");
         }
@@ -206,7 +166,6 @@ public class FitbitClient {
         return new FitbitUnavailableException("Google Health a renvoyé " + status);
     }
 
-    /** Réponse du endpoint de token OAuth Google. {@code fitbitUserId} reste null. */
     public record TokenResponse(String accessToken, String refreshToken, long expiresInSeconds,
                                 String scope, String fitbitUserId) {}
 

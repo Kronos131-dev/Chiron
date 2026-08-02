@@ -6,23 +6,10 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Parsing des réponses JSON de la Google Health API. Centralisé ici car les
- * noms de champs (issus de la doc Google, non validés contre un compte réel)
- * sont la zone la plus incertaine de l'intégration : un seul endroit à corriger
- * une fois la forme réelle observée.
- *
- * <p>Tout le parsing est défensif : un champ manquant ou mal nommé produit une
- * map vide ou une entrée ignorée, jamais une exception.
- */
 public final class FitbitParser {
 
     private FitbitParser() {}
 
-    /**
-     * Pas par jour depuis une réponse {@code steps:dailyRollUp}.
-     * Forme attendue : {@code {rollupDataPoints:[{civilStartTime:{y,m,d}, steps:{...}}]}}.
-     */
     public static Map<LocalDate, Integer> stepsByDate(JsonNode rollUpResponse) {
         Map<LocalDate, Integer> result = new HashMap<>();
         if (rollUpResponse == null) return result;
@@ -41,11 +28,6 @@ public final class FitbitParser {
         return result;
     }
 
-    /**
-     * Heures de sommeil par jour depuis une liste de dataPoints sommeil.
-     * Forme attendue : {@code {dataPoints:[{sleep:{interval,summary:{minutesAsleep}}}]}}.
-     * Jour retenu = date civile de fin de sommeil (réveil).
-     */
     public static Map<LocalDate, Double> sleepHoursByDate(JsonNode listResponse) {
         Map<LocalDate, Long> minutesByDate = new HashMap<>();
         if (listResponse != null) {
@@ -67,10 +49,6 @@ public final class FitbitParser {
         return hours;
     }
 
-    /**
-     * FC de repos par jour depuis une liste de dataPoints {@code dailyRestingHeartRate}.
-     * Forme attendue : {@code {dataPoints:[{dailyRestingHeartRate:{beatsPerMinute}, date}]}}.
-     */
     public static Map<LocalDate, Integer> restingHeartRateByDate(JsonNode listResponse) {
         Map<LocalDate, Integer> result = new HashMap<>();
         if (listResponse == null) return result;
@@ -89,9 +67,6 @@ public final class FitbitParser {
         return result;
     }
 
-    // ─────────────────────────── helpers ──────────────────────────────────
-
-    /** Convertit un objet {@code google.type.Date} {year,month,day} en LocalDate. */
     static LocalDate googleDate(JsonNode dateNode) {
         if (dateNode == null || !dateNode.hasNonNull("year")
                 || !dateNode.hasNonNull("month") || !dateNode.hasNonNull("day")) {
@@ -105,7 +80,6 @@ public final class FitbitParser {
         }
     }
 
-    /** Date civile d'un sommeil : fin d'intervalle de préférence, sinon début. */
     private static LocalDate sleepDate(JsonNode sleep) {
         JsonNode interval = sleep.get("interval");
         if (interval == null) return null;
@@ -122,7 +96,6 @@ public final class FitbitParser {
         return fromSummary != null ? fromSummary : longField(sleep, "minutesAsleep");
     }
 
-    /** Date d'un dataPoint quotidien : champ {@code date} de la valeur ou du point. */
     private static LocalDate dataPointDate(JsonNode dataPoint, JsonNode value) {
         LocalDate d = googleDate(value.get("date"));
         if (d != null) return d;
@@ -132,7 +105,6 @@ public final class FitbitParser {
         return d != null ? d : parseDatePrefix(dataPoint.get("date"));
     }
 
-    /** Lit les 10 premiers caractères (AAAA-MM-JJ) d'un champ texte date/datetime. */
     private static LocalDate parseDatePrefix(JsonNode node) {
         if (node == null) return null;
         String s = node.asText();
@@ -144,7 +116,6 @@ public final class FitbitParser {
         }
     }
 
-    /** Premier des champs nommés convertible en entier (gère les int64 en chaîne). */
     static Long longField(JsonNode obj, String... names) {
         if (obj == null) return null;
         for (String n : names) {
@@ -154,16 +125,11 @@ public final class FitbitParser {
             try {
                 return Long.parseLong(f.asText().trim());
             } catch (NumberFormatException ignored) {
-                // champ non numérique : on tente le suivant
             }
         }
         return null;
     }
 
-    /**
-     * Premier entier trouvé en profondeur dans un nœud JSON — filet de sécurité
-     * quand le nom exact du champ numérique est inconnu (count / stepsSum…).
-     */
     static Long firstLong(JsonNode node) {
         if (node == null || node.isNull()) return null;
         if (node.isNumber()) return node.asLong();

@@ -4,21 +4,8 @@ import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 
-/**
- * Interface representing the AI agent (Chiron) responsible for interacting with users.
- * Uses LangChain4j annotations to define system instructions, constraints, and tool usage rules
- * for the language model.
- */
 public interface ChironAgent {
     
-    /**
-     * Processes a user's chat message using the AI model, maintaining conversational context via memory.
-     * The AI follows strict formatting and behavioral rules defined in the {@link SystemMessage}.
-     *
-     * @param memoryId    The unique identifier for the user's conversation memory.
-     * @param userMessage The message input provided by the user.
-     * @return The AI's generated text response.
-     */
     @SystemMessage({
             "Tu es Chiron, coach et interface stricte d'enregistrement d'entraînement.",
             "",

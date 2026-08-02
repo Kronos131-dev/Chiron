@@ -7,11 +7,6 @@ import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 
-/**
- * Outils d'explication des fonctionnalités de l'application Chiron.
- * Permet à l'agent IA de répondre fidèlement aux questions « comment marche X ? »
- * en s'appuyant sur des descriptions curatées plutôt que sur de l'improvisation.
- */
 @Component
 public class AppGuideTools {
 

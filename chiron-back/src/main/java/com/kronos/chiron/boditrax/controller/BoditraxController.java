@@ -14,10 +14,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 
-/**
- * Endpoint Boditrax : upload manuel d'un export CSV. Les scans sont enregistrés dans
- * le même modèle que Visbody et apparaissent dans la page Composition.
- */
 @RestController
 @RequestMapping("/api/boditrax")
 @RequiredArgsConstructor

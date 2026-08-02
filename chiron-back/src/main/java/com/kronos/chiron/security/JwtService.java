@@ -14,10 +14,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-/**
- * Service responsible for creating, validating, and extracting information from JSON Web Tokens (JWT).
- * It acts as the core utility for token-based authentication within the application.
- */
 @Service
 public class JwtService {
 

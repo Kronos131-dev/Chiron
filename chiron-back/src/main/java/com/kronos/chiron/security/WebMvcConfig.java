@@ -15,7 +15,6 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // Resolve to absolute path so it works regardless of working directory
         String absolutePath = "file:" + Paths.get(uploadsDir).toAbsolutePath().normalize() + "/";
         registry.addResourceHandler("/api/images/**")
                 .addResourceLocations(absolutePath, "classpath:/static/images/");

@@ -16,10 +16,6 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 
-/**
- * Outils LangChain4j donnant à Chiron accès aux données nutritionnelles
- * de l'utilisateur via son compte Olympus lié.
- */
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -351,7 +347,6 @@ public class NutritionTools {
         }
     }
 
-    /** Nom lisible d'une entrée de planning : aliment (+ quantité) ou repas pré-enregistré. */
     private String nomEntreePlanifiee(JsonNode entry) {
         JsonNode food = entry.get("foodItem");
         if (food != null && food.hasNonNull("name")) {

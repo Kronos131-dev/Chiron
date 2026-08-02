@@ -20,10 +20,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
 
-/**
- * Entity representing a system user.
- * Implements Spring Security's UserDetails interface for authentication and authorization.
- */
 @Entity
 @Getter
 @Setter
@@ -36,41 +32,23 @@ public class Utilisateur implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /**
-     * Unique username for authentication and identification.
-     */
     @Column(unique = true, nullable = false)
     private String username;
 
-    /**
-     * Encrypted password.
-     */
     private String password;
 
-    /**
-     * Profile icon filename or URL.
-     */
     @Column(name = "icon")
     @Builder.Default
     private String icon = "default_icon.png";
 
-    /**
-     * The user's current rank or title within the platform.
-     */
     @Column(name = "rank")
     @Builder.Default
     private String rank = "Citoyen";
 
-    /**
-     * Indicates whether the user's profile is public.
-     */
     @Column(name = "is_public")
     @Builder.Default
     private Boolean isPublic = false;
 
-    /**
-     * The user's primary system role.
-     */
     @Enumerated(EnumType.STRING)
     @Builder.Default
     private Role role = Role.USER;
@@ -78,23 +56,19 @@ public class Utilisateur implements UserDetails {
     @Column(unique = true)
     private String email;
 
-    /** Prénom de l'utilisateur (sert à identifier le destinataire d'un rapport Visbody). */
     @Column(name = "prenom", length = 100)
     private String prenom;
 
-    /** Nom de l'utilisateur (sert à identifier le destinataire d'un rapport Visbody). */
     @Column(name = "nom", length = 100)
     private String nom;
 
     @Column(name = "poids_corps")
     private Double poidsCorps;
 
-    /** Aux haltères, le poids saisi est celui d'une seule haltère → tonnage ×2 (défaut true). */
     @Column(name = "poids_haltere_par_implement", nullable = false)
     @Builder.Default
     private boolean poidsHaltereParImplement = true;
 
-    /** Aux machines, le poids saisi est celui d'un seul côté → tonnage ×2 (défaut false). */
     @Column(name = "poids_machine_par_cote", nullable = false)
     @Builder.Default
     private boolean poidsMachineParCote = false;
@@ -135,11 +109,9 @@ public class Utilisateur implements UserDetails {
     @Builder.Default
     private AiProvider aiProvider = AiProvider.MISTRAL;
 
-    /** Jour de comptage des requêtes Gemini (réinitialisé quand la date change). */
     @Column(name = "gemini_call_date")
     private LocalDate geminiCallDate;
 
-    /** Nombre de requêtes Gemini consommées pour {@link #geminiCallDate}. */
     @Column(name = "gemini_call_count", nullable = false)
     @Builder.Default
     private int geminiCallCount = 0;
@@ -170,7 +142,6 @@ public class Utilisateur implements UserDetails {
     @JsonIgnore
     private LocalDateTime olympusLinkedAt;
 
-    // Liaison Fitbit (OAuth2). Tokens chiffrés AES-256-GCM via TokenCipherService.
     @Column(name = "fitbit_access_token_encrypted", columnDefinition = "TEXT")
     @JsonIgnore
     private String fitbitAccessTokenEncrypted;
@@ -195,11 +166,6 @@ public class Utilisateur implements UserDetails {
     @JsonIgnore
     private LocalDateTime fitbitLinkedAt;
 
-    /**
-     * The set of users who act as coaches for this user.
-     * These coaches have access to this user's programs.
-     * Ignored during JSON serialization to prevent infinite recursion.
-     */
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "user_coaches",
@@ -210,28 +176,16 @@ public class Utilisateur implements UserDetails {
     @Builder.Default
     private Set<Utilisateur> coaches = new HashSet<>();
 
-    /**
-     * The set of users whom this user coaches.
-     * Ignored during JSON serialization to prevent infinite recursion.
-     */
     @ManyToMany(mappedBy = "coaches", fetch = FetchType.LAZY)
     @JsonIgnore
     @Builder.Default
     private Set<Utilisateur> coachedUsers = new HashSet<>();
 
-    /**
-     * The list of workout sessions owned by this user.
-     */
     @OneToMany(mappedBy = "utilisateur", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     @JsonIgnore
     private List<Seance> seances = new ArrayList<>();
 
-    /**
-     * Returns the authorities granted to the user based on their role.
-     *
-     * @return A collection of granted authorities.
-     */
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         if (this.role == null) {
@@ -270,23 +224,11 @@ public class Utilisateur implements UserDetails {
         return true;
     }
 
-    /**
-     * Adds a coach to this user's list of coaches.
-     * Maintains the bidirectional many-to-many relationship.
-     *
-     * @param coach The user to be added as a coach.
-     */
     public void addCoach(Utilisateur coach) {
         this.coaches.add(coach);
         coach.getCoachedUsers().add(this);
     }
 
-    /**
-     * Removes a coach from this user's list of coaches.
-     * Maintains the bidirectional many-to-many relationship.
-     *
-     * @param coach The user to be removed as a coach.
-     */
     public void removeCoach(Utilisateur coach) {
         this.coaches.remove(coach);
         coach.getCoachedUsers().remove(this);

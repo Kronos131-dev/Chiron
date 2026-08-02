@@ -28,11 +28,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-/**
- * Outils donnant à Chiron la capacité de raisonner sur la PROGRESSION et la PÉRIODISATION
- * du travail de l'utilisateur, et de proposer des rotations d'exercices après une longue
- * exposition au même mouvement.
- */
 @Component
 @RequiredArgsConstructor
 public class AdaptiveTools {
@@ -142,7 +137,6 @@ public class AdaptiveTools {
 
         int n = rms.size();
         int half = n / 2;
-        // rms est en ordre desc (plus récent en tête) → recent = 0..half-1, early = n-half..n-1
         double avgRecent = avg(rms.subList(0, half));
         double avgEarly = avg(rms.subList(n - half, n));
 
@@ -188,7 +182,6 @@ public class AdaptiveTools {
             return "L'utilisateur n'a aucun programme enregistré.";
         }
 
-        // Map: definition.id → (nom, definition)
         Map<Long, ExerciceDefinition> defsParId = new LinkedHashMap<>();
         for (Seance p : programmes) {
             if (p.getExercices() == null) continue;
@@ -206,7 +199,6 @@ public class AdaptiveTools {
         List<Seance> historique = seanceRepository
                 .findByUtilisateurUsernameAndIsModeleTrueOrderByStartTimeDesc(user.getUsername());
 
-        // Pour chaque définition, trouver la première occurrence historique [std]
         Map<Long, LocalDateTime> premiereOccurrence = new LinkedHashMap<>();
         for (Seance s : historique) {
             if (s.getStartTime() == null || s.getExercices() == null) continue;

@@ -16,11 +16,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
-/**
- * API REST de la liaison Fitbit. Calque {@code NutritionController}, avec une
- * spécificité : {@code GET /callback} est <b>non authentifié</b> (le navigateur
- * Fitbit y est redirigé sans JWT) et rend une page HTML, pas du JSON.
- */
 @RestController
 @RequestMapping("/api/fitbit")
 @RequiredArgsConstructor
@@ -30,16 +25,11 @@ public class FitbitController {
     private final FitbitService fitbitService;
     private final FitbitSyncService fitbitSyncService;
 
-    /** État de la liaison Fitbit de l'utilisateur courant. */
     @GetMapping("/status")
     public ResponseEntity<FitbitLinkStatus> getStatus(@AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(fitbitService.getStatus(userDetails.getUsername()));
     }
 
-    /**
-     * Dashboard Fitbit (activité, sommeil, FC) sur {@code days} jours (défaut 7).
-     * Déclenche au passage la sync best-effort du sommeil vers l'État journalier.
-     */
     @GetMapping("/dashboard")
     public ResponseEntity<FitbitDashboardDto> getDashboard(@AuthenticationPrincipal UserDetails userDetails,
                                                            @RequestParam(defaultValue = "7") int days) {
@@ -50,18 +40,12 @@ public class FitbitController {
         return ResponseEntity.ok(dashboard);
     }
 
-    /** URL de consentement Fitbit (le front l'ouvre dans le navigateur système). */
     @GetMapping("/authorize-url")
     public ResponseEntity<Map<String, String>> getAuthorizeUrl(@AuthenticationPrincipal UserDetails userDetails) {
         String url = fitbitService.buildAuthorizationUrl(userDetails.getUsername());
         return ResponseEntity.ok(Map.of("authorizeUrl", url));
     }
 
-    /**
-     * Retour OAuth de Fitbit — <b>non authentifié</b> (permitAll dans SecurityConfig).
-     * Échange le code contre des tokens et rend une page HTML demandant à l'utilisateur
-     * de revenir dans l'app. Le front détecte la liaison par polling sur {@code /status}.
-     */
     @GetMapping("/callback")
     public ResponseEntity<String> callback(@RequestParam(required = false) String code,
                                            @RequestParam(required = false) String state,
@@ -100,14 +84,12 @@ public class FitbitController {
         }
     }
 
-    /** Délie le compte Fitbit de l'utilisateur courant. */
     @DeleteMapping("/link")
     public ResponseEntity<Void> unlink(@AuthenticationPrincipal UserDetails userDetails) {
         fitbitService.unlink(userDetails.getUsername());
         return ResponseEntity.noContent().build();
     }
 
-    /** Rend une page HTML autoportante (pas de ressource externe) pour le retour OAuth. */
     private ResponseEntity<String> htmlPage(HttpStatus status, boolean success, String title, String message) {
         String accent = success ? "#3fae6b" : "#c2532f";
         String icon = success ? "&#10003;" : "&#9888;";

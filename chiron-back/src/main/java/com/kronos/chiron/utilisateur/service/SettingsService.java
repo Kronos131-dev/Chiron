@@ -101,7 +101,6 @@ public class SettingsService {
     public String changeUsername(String username, String newUsername) {
         Utilisateur user = utilisateurRepository.findByUsername(username)
                 .orElseThrow(() -> new NoSuchElementException("Utilisateur introuvable"));
-        // Unicité insensible à la casse (exclut l'utilisateur lui-même)
         utilisateurRepository.findByUsernameIgnoreCase(newUsername)
                 .filter(existing -> !existing.getId().equals(user.getId()))
                 .ifPresent(__ -> { throw new IllegalArgumentException("Ce pseudo est déjà pris"); });
@@ -114,10 +113,8 @@ public class SettingsService {
     public void forgotPassword(String email) {
         Utilisateur user = utilisateurRepository.findByEmail(email).orElse(null);
         if (user == null) {
-            // Ne pas révéler si l'email existe ou non
             return;
         }
-        // Invalider les tokens précédents non utilisés
         tokenRepository.deleteByUtilisateurAndUsedFalse(user);
 
         String tokenValue = UUID.randomUUID().toString();

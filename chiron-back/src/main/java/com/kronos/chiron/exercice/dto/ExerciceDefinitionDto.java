@@ -11,8 +11,8 @@ public record ExerciceDefinitionDto(
         Long id,
         String nomFr,
         String nomEn,
-        String imageUrl,   // première image (position de départ)
-        String imageUrl2,  // deuxième image (position finale) — nullable
+        String imageUrl,
+        String imageUrl2,
         MuscleGroup musclePrincipal,
         List<MuscleGroup> musclesSecondaires,
         TypeEquipement typeEquipement,

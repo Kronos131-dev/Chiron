@@ -5,10 +5,6 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
-/**
- * Un message affichable d'une conversation (texte brut user ou réponse IA en Markdown).
- * Distinct de la mémoire LangChain4j : sert l'historique et la reconstruction de mémoire.
- */
 @Entity
 @Table(name = "conversation_message")
 @Getter

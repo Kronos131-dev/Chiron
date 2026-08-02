@@ -15,23 +15,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-/**
- * Parse un export CSV Boditrax vers une liste de {@link VisbodyReport} (un par scan),
- * réutilisant le même modèle que l'import Visbody afin d'alimenter la page Composition
- * sans traitement spécifique côté affichage.
- *
- * <p>Le fichier est multi-sections (« User Details », « User Physique Details »,
- * « User Scan Details », « User Login Details ») : chaque section a un titre seul sur sa
- * ligne, puis une ligne d'en-têtes de colonnes, puis ses données. Les mesures (section
- * « User Scan Details ») sont une liste {@code BodyMetricTypeId,Value,CreatedDate} ;
- * elles sont regroupées par {@code CreatedDate} (un scan = un instant de mesure).
- */
 @Component
 public class BoditraxCsvParser {
 
     private static final Logger log = LoggerFactory.getLogger(BoditraxCsvParser.class);
 
-    /** Format des dates Boditrax, ex. « 6/2/2026 11:18:33 AM ». */
     private static final DateTimeFormatter US_DATETIME =
             DateTimeFormatter.ofPattern("M/d/yyyy h:mm:ss a", Locale.US);
 
@@ -40,7 +28,6 @@ public class BoditraxCsvParser {
     private static final String SEC_SCAN = "User Scan Details";
     private static final String SEC_LOGIN = "User Login Details";
 
-    /** Données extraites : les scans + le profil (taille / sexe / date de naissance). */
     public record ParsedBoditrax(List<VisbodyReport> scans, String gender,
                                  Double tailleCm, LocalDate dateNaissance) {}
 
@@ -51,7 +38,6 @@ public class BoditraxCsvParser {
         String gender = null;
         LocalDate dateNaissance = null;
         Double heightCm = null;
-        // Métriques regroupées par instant de mesure (ordre d'apparition conservé).
         Map<LocalDateTime, Map<String, Double>> byScan = new LinkedHashMap<>();
 
         String section = null;
@@ -65,7 +51,7 @@ public class BoditraxCsvParser {
             if (titre.equals(SEC_USER) || titre.equals(SEC_PHYSIQUE)
                     || titre.equals(SEC_SCAN) || titre.equals(SEC_LOGIN)) {
                 section = titre;
-                skipHeader = true; // la ligne suivante est l'en-tête de colonnes
+                skipHeader = true;
                 continue;
             }
             if (section == null) continue;
@@ -74,8 +60,6 @@ public class BoditraxCsvParser {
             String[] f = line.split(",", -1);
             switch (section) {
                 case SEC_USER -> {
-                    // Email,FirstName LastName,DateOfBirth,Gender — le nom peut contenir
-                    // une virgule : le genre est toujours en dernier, la date juste avant.
                     if (f.length >= 2) {
                         gender = f[f.length - 1].trim();
                         LocalDateTime dob = tryDateTime(f[f.length - 2].trim());
@@ -98,7 +82,7 @@ public class BoditraxCsvParser {
                         }
                     }
                 }
-                default -> { /* SEC_LOGIN : ignoré */ }
+                default -> { }
             }
         }
 
@@ -110,7 +94,6 @@ public class BoditraxCsvParser {
         return new ParsedBoditrax(scans, gender, heightCm, dateNaissance);
     }
 
-    /** Construit un rapport à partir des métriques d'un scan (best-effort, nullable). */
     private VisbodyReport toReport(LocalDateTime when, Map<String, Double> m,
                                    Double heightCm, String gender) {
         VisbodyReport r = new VisbodyReport();
@@ -127,35 +110,30 @@ public class BoditraxCsvParser {
         r.setEauIntra(m.get("IntraCellularWaterMass"));
         r.setEauExtra(m.get("ExtraCellularWaterMass"));
         r.setAgeMetabolique(m.get("MetabolicAge"));
-        r.setSelInorganique(m.get("BoneMass")); // minéraux / os
+        r.setSelInorganique(m.get("BoneMass"));
 
         Double score = m.get("BoditraxScore");
         if (score != null) r.setNote((int) Math.round(score));
 
-        // Segments — masse grasse.
         r.setMgcBrasGauche(m.get("LeftArmFatMass"));
         r.setMgcBrasDroit(m.get("RightArmFatMass"));
         r.setMgcTronc(m.get("TrunkFatMass"));
         r.setMgcJambeGauche(m.get("LeftLegFatMass"));
         r.setMgcJambeDroite(m.get("RightLegFatMass"));
-        // Segments — masse musculaire.
         r.setMuscleBrasGauche(m.get("LeftArmMuscleMass"));
         r.setMuscleBrasDroit(m.get("RightArmMuscleMass"));
         r.setMuscleTronc(m.get("TrunkMuscleMass"));
         r.setMuscleJambeGauche(m.get("LeftLegMuscleMass"));
         r.setMuscleJambeDroite(m.get("RightLegMuscleMass"));
 
-        // Champs calculés (Boditrax ne les fournit pas directement).
         Double fat = m.get("FatMass");
         if (fat != null && bw != null && bw > 0) r.setTgcPct(fat / bw * 100.0);
         Double kj = m.get("BasalMetabolicRatekJ");
-        if (kj != null) r.setMbKcal(kj / 4.184); // kJ -> kcal
+        if (kj != null) r.setMbKcal(kj / 4.184);
         Double ecw = m.get("ExtraCellularWaterMass");
         Double tbw = m.get("WaterMass");
         if (ecw != null && tbw != null && tbw > 0) r.setRatioEcwTbw(ecw / tbw);
 
-        // Masse musculaire squelettique reconstruite depuis l'indice SMI : la jauge MMS
-        // recalcule SMI = mms / taille² et retombe sur la valeur Boditrax.
         Double smi = m.get("SarcopeniaSMI");
         Double hCm = heightCm != null ? heightCm : m.get("Height");
         if (smi != null && hCm != null && hCm > 0) {
@@ -163,7 +141,6 @@ public class BoditraxCsvParser {
             r.setMms(smi * hm * hm);
         }
 
-        // Profil porté par le report (complète le mapping si besoin).
         r.setTailleCm(hCm);
         Double age = m.get("Age");
         if (age != null) r.setAge((int) Math.round(age));
@@ -188,9 +165,6 @@ public class BoditraxCsvParser {
 
     private static LocalDateTime tryDateTime(String s) {
         if (s == null || s.isBlank()) return null;
-        // Boditrax sépare l'heure de AM/PM par une espace fine insécable (U+202F) et
-        // peut utiliser une espace insécable (U+00A0) : on les normalise en espace
-        // simple (java \\s ne couvre pas ces caractères) avant le parsing.
         String v = s.trim().replace("\"", "")
                 .replace(' ', ' ')
                 .replace(' ', ' ')

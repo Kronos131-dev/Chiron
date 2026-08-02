@@ -14,10 +14,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-/**
- * Service responsible for user registration and authentication logic.
- * Handles password encryption, JWT generation, and role assignment.
- */
 @Service
 @RequiredArgsConstructor
 public class AuthenticationService {
@@ -27,13 +23,6 @@ public class AuthenticationService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
 
-    /**
-     * Registers a new user in the system.
-     * Automatically assigns the ADMIN role to specific predefined usernames.
-     *
-     * @param request The registration request containing user details.
-     * @return An AuthenticationResponse containing the generated JWT token.
-     */
     public AuthenticationResponse register(RegisterRequest request) {
         Role userRole = Role.USER;
         
@@ -54,14 +43,6 @@ public class AuthenticationService {
         return new AuthenticationResponse(jwtToken);
     }
 
-    /**
-     * Authenticates an existing user based on their credentials.
-     * Generates a new JWT token upon successful authentication.
-     * Ensures predefined admin accounts are correctly upgraded if their roles were missing.
-     *
-     * @param request The authentication request containing the username and password.
-     * @return An AuthenticationResponse containing the newly generated JWT token.
-     */
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.username(), request.password())

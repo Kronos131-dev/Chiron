@@ -10,10 +10,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-/**
- * Endpoints agrégés alimentant la page Statistiques (routes « /api/stats/** »).
- * L'utilisateur courant est résolu depuis le JWT ({@link Authentication}).
- */
 @RestController
 @RequestMapping("/api/stats")
 @RequiredArgsConstructor

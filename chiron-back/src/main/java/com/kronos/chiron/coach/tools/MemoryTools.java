@@ -16,10 +16,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
 
-/**
- * Outils donnant à Chiron une mémoire long-terme par utilisateur.
- * Les notes survivent à la fenêtre de chat (20 messages) et au redémarrage.
- */
 @Component
 @RequiredArgsConstructor
 public class MemoryTools {

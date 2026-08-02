@@ -20,11 +20,6 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Façade de la liaison Fitbit (OAuth2 Authorization Code + PKCE). Calque
- * {@code NutritionService}. Pièce nouvelle vs Olympus : {@link #getValidToken}
- * rafraîchit automatiquement l'access token via le refresh token stocké.
- */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -45,10 +40,8 @@ public class FitbitService {
     private String scope;
 
     private static final SecureRandom RANDOM = new SecureRandom();
-    /** Marge de sécurité : on rafraîchit dès qu'il reste moins de 60 s de validité. */
     private static final long REFRESH_SKEW_SECONDS = 60;
 
-    /** Construit l'URL de consentement Fitbit pour un utilisateur (génère PKCE + state). */
     @Transactional(readOnly = true)
     public String buildAuthorizationUrl(String chironUsername) {
         Utilisateur user = utilisateurRepository.findByUsername(chironUsername)
@@ -58,8 +51,6 @@ public class FitbitService {
         String codeChallenge = deriveCodeChallenge(codeVerifier);
         String state = authSessionStore.register(user.getId(), codeVerifier);
 
-        // access_type=offline + prompt=consent : indispensables pour que Google
-        // délivre un refresh token (et le redélivre à chaque reconsentement).
         return UriComponentsBuilder.fromUriString(authorizeUrl)
                 .queryParam("response_type", "code")
                 .queryParam("client_id", clientId)
@@ -75,7 +66,6 @@ public class FitbitService {
                 .toUriString();
     }
 
-    /** Traite le retour OAuth : échange le code contre des tokens et les persiste. */
     @Transactional
     public FitbitLinkStatus handleCallback(String code, String state) {
         FitbitAuthSessionStore.PendingAuth pending = authSessionStore.consume(state);
@@ -109,12 +99,6 @@ public class FitbitService {
         log.info("FITBIT_UNLINKED user={}", chironUsername);
     }
 
-    /**
-     * Renvoie un access token Fitbit valide, en le rafraîchissant si nécessaire.
-     *
-     * @throws NotLinkedException si l'utilisateur n'a pas lié Fitbit
-     * @throws ExpiredException   si le token ne peut être rafraîchi (refresh révoqué / illisible)
-     */
     @Transactional
     public String getValidToken(String chironUsername) {
         Utilisateur user = utilisateurRepository.findByUsername(chironUsername)
@@ -124,7 +108,6 @@ public class FitbitService {
             throw new NotLinkedException();
         }
 
-        // Access token encore valide (avec marge) → on le renvoie directement.
         if (user.getFitbitAccessTokenEncrypted() != null
                 && user.getFitbitTokenExpiresAt() != null
                 && user.getFitbitTokenExpiresAt().isAfter(LocalDateTime.now().plusSeconds(REFRESH_SKEW_SECONDS))) {
@@ -136,7 +119,6 @@ public class FitbitService {
             }
         }
 
-        // Sinon : rafraîchir via le refresh token.
         if (user.getFitbitRefreshTokenEncrypted() == null) {
             throw new ExpiredException();
         }
@@ -160,12 +142,6 @@ public class FitbitService {
         }
     }
 
-    /**
-     * Construit le dashboard Fitbit (activité du jour, sommeil, FC de repos, séries
-     * journalières) sur {@code days} jours. Best-effort vis-à-vis de l'état de liaison :
-     * renvoie un DTO {@code linked=false} / {@code needsReconnect=true} / {@code unavailable}
-     * plutôt que de lever une exception, pour un front simple.
-     */
     @Transactional
     public FitbitDashboardDto getDashboard(String chironUsername, int days) {
         int n = Math.max(1, Math.min(days, 30));
@@ -195,16 +171,13 @@ public class FitbitService {
             }
             return new FitbitDashboardDto(true, false, true,
                     stepsByDate.get(today),
-                    null,   // minutes actives — non exposées par cette 1re version Google Health
-                    null,   // distance — idem
-                    null,   // calories — idem
+                    null,
+                    null,
+                    null,
                     sleepByDate.get(today),
                     mostRecent(hrByDate),
                     dayPoints);
         } catch (FitbitClient.FitbitUnauthorizedException e) {
-            // L'API data a rejeté le token, mais le refresh token reste valable :
-            // on NE délie PAS le compte ici. Seul un refresh rejeté (getValidToken)
-            // prouve que le grant OAuth est révoqué et justifie une reconnexion.
             log.warn("FITBIT_DASHBOARD_UNAUTHORIZED user={} : {}", chironUsername, e.getMessage());
             return FitbitDashboardDto.unavailable();
         } catch (FitbitClient.FitbitUnavailableException e) {
@@ -213,7 +186,6 @@ public class FitbitService {
         }
     }
 
-    /** Valeur la plus récente (date la plus grande) d'une map indexée par jour. */
     private static Integer mostRecent(Map<LocalDate, Integer> byDate) {
         return byDate.entrySet().stream()
                 .max(Map.Entry.comparingByKey())
@@ -221,7 +193,6 @@ public class FitbitService {
                 .orElse(null);
     }
 
-    /** Applique une réponse de token sur l'utilisateur (chiffre access + refresh, rotation incluse). */
     private void applyTokens(Utilisateur user, FitbitClient.TokenResponse tr) {
         user.setFitbitAccessTokenEncrypted(tokenCipher.encrypt(tr.accessToken()));
         if (tr.refreshToken() != null) {
@@ -248,7 +219,6 @@ public class FitbitService {
         if (!linked) {
             return FitbitLinkStatus.notLinked();
         }
-        // needsReconnect : lié, mais plus de refresh token et access token expiré.
         boolean needsReconnect = user.getFitbitRefreshTokenEncrypted() == null
                 && (user.getFitbitTokenExpiresAt() == null
                     || user.getFitbitTokenExpiresAt().isBefore(LocalDateTime.now()));
@@ -256,14 +226,12 @@ public class FitbitService {
                 user.getFitbitScope(), user.getFitbitLinkedAt());
     }
 
-    /** code_verifier PKCE : 48 octets aléatoires → 64 caractères base64url (43-128 requis). */
     private String generateCodeVerifier() {
         byte[] bytes = new byte[48];
         RANDOM.nextBytes(bytes);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }
 
-    /** code_challenge = base64url(SHA-256(code_verifier)), sans padding. */
     private String deriveCodeChallenge(String verifier) {
         try {
             MessageDigest sha256 = MessageDigest.getInstance("SHA-256");

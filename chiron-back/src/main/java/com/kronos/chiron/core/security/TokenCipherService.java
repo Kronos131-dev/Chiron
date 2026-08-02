@@ -15,15 +15,6 @@ import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.util.Base64;
 
-/**
- * Chiffre/déchiffre des secrets stockés en base (tokens externes) via AES-256-GCM.
- * La clé vient de la propriété {@code chiron.secret-key} (base64, 32 octets) ; si
- * elle est absente, une clé éphémère est générée au boot — les secrets persistés
- * deviennent alors illisibles après redémarrage (à éviter en production).
- *
- * <p>Service générique réutilisable par toute intégration externe (Fitbit, …).
- * Même logique que {@code OlympusTokenService}, même clé.
- */
 @Service
 @Slf4j
 public class TokenCipherService {
@@ -56,7 +47,6 @@ public class TokenCipherService {
         this.secretKey = new SecretKeySpec(keyBytes, ALG);
     }
 
-    /** Chiffre un texte ; renvoie une chaîne base64 (IV + ciphertext + tag). */
     public String encrypt(String plaintext) {
         if (plaintext == null) return null;
         try {
@@ -75,7 +65,6 @@ public class TokenCipherService {
         }
     }
 
-    /** Déchiffre une chaîne produite par {@link #encrypt(String)}. */
     public String decrypt(String ciphertextB64) {
         if (ciphertextB64 == null) return null;
         try {

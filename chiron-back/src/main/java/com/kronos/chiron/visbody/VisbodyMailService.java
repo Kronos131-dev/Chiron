@@ -16,12 +16,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-/**
- * Relève périodiquement une boîte mail IMAP (compte Gmail de l'app) et importe les
- * rapports Visbody reçus en pièce jointe PDF. Best-effort : toute erreur est loggée
- * sans interrompre le service. Désactivé tant que {@code chiron.visbody.mailbox.enabled}
- * est faux.
- */
 @Service
 @RequiredArgsConstructor
 public class VisbodyMailService {
@@ -68,7 +62,6 @@ public class VisbodyMailService {
                 } catch (Exception e) {
                     log.warn("Visbody : échec traitement d'un mail : {}", e.getMessage());
                 } finally {
-                    // Marqué lu dans tous les cas pour ne pas retraiter en boucle.
                     message.setFlag(Flags.Flag.SEEN, true);
                 }
             }
@@ -98,7 +91,6 @@ public class VisbodyMailService {
         return from[0].toString();
     }
 
-    /** Récupère les pièces jointes PDF d'un message (parcours récursif des multiparts). */
     private List<byte[]> extractPdfAttachments(Part part) throws Exception {
         List<byte[]> result = new ArrayList<>();
         Object content = part.getContent();

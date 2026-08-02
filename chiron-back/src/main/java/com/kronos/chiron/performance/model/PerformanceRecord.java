@@ -29,22 +29,18 @@ public class PerformanceRecord {
     @Column(name = "exercise_type", nullable = false, length = 50)
     private ExerciseType exerciseType;
 
-    /** Weight entered by user: bar weight for compound lifts, extra weight for bodyweight exercises. */
     @Column(nullable = false)
     private Double poids;
 
     @Column(name = "nombre_reps", nullable = false)
     private Integer nombreReps;
 
-    /** Estimated 1RM calculated at record time. */
     @Column(name = "rm1_estime", nullable = false)
     private Double rm1Estime;
 
-    /** 1RM / bodyweight ratio (null if bodyweight unknown). */
     @Column(name = "ratio_performance")
     private Double ratioPerformance;
 
-    /** Snapshot of bodyweight used for ratio calculation. */
     @Column(name = "poids_corporel")
     private Double poidsCorporel;
 

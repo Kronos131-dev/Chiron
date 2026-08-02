@@ -11,10 +11,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Importe un rapport Visbody (PDF) : parse les métriques, identifie l'utilisateur
- * destinataire, puis enregistre un {@link BodyCompositionRecord} (idempotent).
- */
 @Service
 @RequiredArgsConstructor
 public class VisbodyImportService {
@@ -29,9 +25,6 @@ public class VisbodyImportService {
 
     public record ImportResult(Outcome outcome, String detail) {}
 
-    /**
-     * Import depuis un upload manuel : l'utilisateur est déjà connu (forcé).
-     */
     @Transactional
     public ImportResult importForUser(byte[] pdf, Utilisateur user) {
         VisbodyReport report;
@@ -46,12 +39,6 @@ public class VisbodyImportService {
         return persist(report, user, "VISBODY_PDF");
     }
 
-    /**
-     * Import depuis un email reçu : résout l'utilisateur via l'expéditeur (le plus
-     * fiable), sinon l'email masqué du PDF, sinon le nom du champ « ID ».
-     *
-     * @param senderEmail adresse « From » du mail (peut être null).
-     */
     @Transactional
     public ImportResult importFromEmail(byte[] pdf, String senderEmail) {
         VisbodyReport report;
@@ -74,21 +61,10 @@ public class VisbodyImportService {
         return persist(report, user.get(), "VISBODY_PDF");
     }
 
-    // ----------------------------------------------------------------- Matching
-
-    /**
-     * Stratégie de match. Visbody envoie toujours les rapports depuis sa propre
-     * adresse ({@code no_reply@email.visbody.com}) et l'email du PDF est tronqué
-     * (peu fiable). Le critère <b>principal et fiable est donc le champ « ID »</b>
-     * du rapport (nom / prénom de l'utilisateur). L'expéditeur ne sert que de repli
-     * pour un éventuel envoi manuel depuis l'email du compte.
-     */
     Optional<Utilisateur> resolveUser(VisbodyReport report, String senderEmail) {
-        // 1) Champ « ID » du rapport comparé au nom / prénom du compte.
         Optional<Utilisateur> byName = matchByName(report.getIdLabel());
         if (byName.isPresent()) return byName;
 
-        // 2) Repli : envoi manuel depuis l'adresse exacte d'un compte.
         if (senderEmail != null && !senderEmail.isBlank()) {
             Optional<Utilisateur> bySender = utilisateurRepo.findByEmail(senderEmail.trim().toLowerCase());
             if (bySender.isPresent()) return bySender;
@@ -96,19 +72,12 @@ public class VisbodyImportService {
         return Optional.empty();
     }
 
-    /**
-     * Résout l'utilisateur à partir du champ « ID » du rapport. Gère un ID à un seul
-     * mot (« Tellier » → nom ou prénom) comme un ID « Prénom Nom ». N'enregistre pas
-     * si l'ID est ambigu (plusieurs comptes correspondent).
-     */
     private Optional<Utilisateur> matchByName(String idLabel) {
         if (idLabel == null || idLabel.isBlank()) return Optional.empty();
         String id = idLabel.trim();
 
-        // ID complet == nom OU prénom.
         List<Utilisateur> matches = utilisateurRepo.findByNomIgnoreCaseOrPrenomIgnoreCase(id, id);
 
-        // ID « Prénom Nom » : essaie la combinaison, puis le dernier mot seul.
         if (matches.isEmpty() && id.contains(" ")) {
             String[] parts = id.split("\\s+");
             String first = parts[0];
@@ -128,13 +97,6 @@ public class VisbodyImportService {
         return Optional.empty();
     }
 
-    // ----------------------------------------------------------------- Persist
-
-    /**
-     * Enregistre un rapport pour un utilisateur (idempotent par couple
-     * {@code (utilisateur, mesureLe)}). {@code source} identifie l'origine
-     * ("VISBODY_PDF", "BODITRAX_CSV", …) ; réutilisable par d'autres imports.
-     */
     @Transactional
     public ImportResult persist(VisbodyReport report, Utilisateur user, String source) {
         if (recordRepo.existsByUtilisateurAndMesureLe(user, report.getMesureLe())) {
@@ -175,7 +137,6 @@ public class VisbodyImportService {
                 .build();
         recordRepo.save(rec);
 
-        // Met à jour le poids de corps courant si présent (utile aux autres stats).
         if (report.getPoids() != null) {
             user.setPoidsCorps(report.getPoids());
             utilisateurRepo.save(user);

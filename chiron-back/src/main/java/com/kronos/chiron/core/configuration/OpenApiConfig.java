@@ -7,11 +7,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import org.springframework.context.annotation.Configuration;
 
-/**
- * Configuration class for OpenAPI (Swagger) documentation generation.
- * This sets up the global metadata for the API documentation and configures
- * the JWT bearer authentication requirement for the endpoints.
- */
 @Configuration
 @OpenAPIDefinition(
         info = @Info(

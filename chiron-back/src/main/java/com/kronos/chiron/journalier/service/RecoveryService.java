@@ -16,9 +16,6 @@ public class RecoveryService {
 
     private final EtatJournalierRepository repository;
 
-    /**
-     * Upsert : crée l'état du jour si absent, ou met à jour les champs non-null fournis.
-     */
     @Transactional
     public EtatJournalier upsert(Utilisateur user, LocalDate date,
                                   Double sommeilHeures,
@@ -41,14 +38,6 @@ public class RecoveryService {
         return repository.save(etat);
     }
 
-    /**
-     * Pré-remplit le sommeil d'un jour depuis Fitbit, <b>sans jamais écraser</b> une
-     * valeur déjà présente : la saisie manuelle de l'utilisateur reste prioritaire.
-     * Crée l'état du jour s'il n'existe pas encore.
-     *
-     * @return {@code true} si la valeur a été écrite, {@code false} si un sommeil
-     *         existait déjà (ou si {@code sommeilHeures} est null/non valide)
-     */
     @Transactional
     public boolean upsertFromFitbit(Utilisateur user, LocalDate date, Double sommeilHeures) {
         if (sommeilHeures == null || sommeilHeures <= 0) {

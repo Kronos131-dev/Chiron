@@ -19,11 +19,6 @@ import java.time.format.DateTimeParseException;
 import java.util.Locale;
 import java.util.Map;
 
-/**
- * Outils LangChain4j donnant à Chiron accès aux données santé de l'utilisateur
- * (activité, sommeil, fréquence cardiaque) via la Google Health API (compte
- * Fitbit lié). Calque {@code NutritionTools}.
- */
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -63,8 +58,6 @@ public class FitbitTools {
         } catch (FitbitService.ExpiredException e) {
             return MSG_EXPIRE;
         } catch (FitbitClient.FitbitUnauthorizedException e) {
-            // Token rejeté par l'API data : le compte reste lié (refresh token
-            // intact), on ne le délie pas. Cf. FitbitService.getDashboard.
             log.warn("FITBIT_TOOL_UNAUTHORIZED user={} : {}", user.getUsername(), e.getMessage());
             return MSG_INDISPO;
         } catch (FitbitClient.FitbitUnavailableException e) {
@@ -114,8 +107,6 @@ public class FitbitTools {
         } catch (FitbitService.ExpiredException e) {
             return MSG_EXPIRE;
         } catch (FitbitClient.FitbitUnauthorizedException e) {
-            // Token rejeté par l'API data : le compte reste lié (refresh token
-            // intact), on ne le délie pas. Cf. FitbitService.getDashboard.
             log.warn("FITBIT_TOOL_UNAUTHORIZED user={} : {}", user.getUsername(), e.getMessage());
             return MSG_INDISPO;
         } catch (FitbitClient.FitbitUnavailableException e) {
@@ -132,8 +123,6 @@ public class FitbitTools {
         }
         try {
             String token = fitbitService.getValidToken(user.getUsername());
-            // La FC de repos est calculée en fin de journée : on élargit la fenêtre
-            // pour pouvoir retomber sur la dernière mesure connue.
             Map<LocalDate, Integer> hrByDate = FitbitParser.restingHeartRateByDate(
                     fitbitClient.listRestingHeartRate(token, target.minusDays(6)));
             triggerSync(user);
@@ -154,8 +143,6 @@ public class FitbitTools {
         } catch (FitbitService.ExpiredException e) {
             return MSG_EXPIRE;
         } catch (FitbitClient.FitbitUnauthorizedException e) {
-            // Token rejeté par l'API data : le compte reste lié (refresh token
-            // intact), on ne le délie pas. Cf. FitbitService.getDashboard.
             log.warn("FITBIT_TOOL_UNAUTHORIZED user={} : {}", user.getUsername(), e.getMessage());
             return MSG_INDISPO;
         } catch (FitbitClient.FitbitUnavailableException e) {
@@ -215,8 +202,6 @@ public class FitbitTools {
         } catch (FitbitService.ExpiredException e) {
             return MSG_EXPIRE;
         } catch (FitbitClient.FitbitUnauthorizedException e) {
-            // Token rejeté par l'API data : le compte reste lié (refresh token
-            // intact), on ne le délie pas. Cf. FitbitService.getDashboard.
             log.warn("FITBIT_TOOL_UNAUTHORIZED user={} : {}", user.getUsername(), e.getMessage());
             return MSG_INDISPO;
         } catch (FitbitClient.FitbitUnavailableException e) {
@@ -224,7 +209,6 @@ public class FitbitTools {
         }
     }
 
-    /** Recopie best-effort du sommeil Fitbit récent dans l'État journalier. Ne lève jamais. */
     private void triggerSync(Utilisateur user) {
         try {
             fitbitSyncService.syncEtatJournalier(user.getUsername(), 3);

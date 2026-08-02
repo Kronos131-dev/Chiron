@@ -15,12 +15,6 @@ import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.util.Base64;
 
-/**
- * Chiffre et déchiffre les tokens externes (Olympus) stockés en base
- * via AES-GCM. La clé vient de la propriété chiron.secret-key (base64, 32 octets) ;
- * si elle est absente en dev, une clé éphémère est générée au boot —
- * les tokens persistés deviendront alors illisibles après redémarrage.
- */
 @Service
 @Slf4j
 public class OlympusTokenService {
