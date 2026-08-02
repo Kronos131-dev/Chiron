@@ -17,7 +17,7 @@ public class OlympusDbConfig implements DisposableBean {
     public NamedParameterJdbcTemplate olympusJdbcTemplate(
             @Value("${olympus.db.url:jdbc:postgresql://olympus-db:5432/olympus_db}") String url,
             @Value("${olympus.db.username:olympus_user}") String username,
-            @Value("${olympus.db.password:olympus_password}") String password) {
+            @Value("${olympus.db.password:}") String password) {
 
         HikariConfig cfg = new HikariConfig();
         cfg.setJdbcUrl(url);
