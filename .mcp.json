@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "github": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/"
+    },
+    "angular": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@angular/cli@21", "mcp"]
+    }
+  }
+}

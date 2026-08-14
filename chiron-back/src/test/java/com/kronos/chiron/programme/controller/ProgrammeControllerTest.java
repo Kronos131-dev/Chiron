@@ -4,6 +4,7 @@ import tools.jackson.databind.json.JsonMapper;
 import com.kronos.chiron.seance.dto.SeanceDto;
 import com.kronos.chiron.seance.model.Seance;
 import com.kronos.chiron.seance.mapper.SeanceMapper;
+import com.kronos.chiron.core.exceptions.GlobalExceptionHandler;
 import com.kronos.chiron.security.JwtService;
 import com.kronos.chiron.programme.service.ProgrammeService;
 import org.junit.jupiter.api.Test;
@@ -19,12 +20,15 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
+import static com.kronos.chiron.core.exceptions.ErrorFactory.badRequest;
+import static com.kronos.chiron.core.exceptions.ErrorFactory.forbidden;
+import static com.kronos.chiron.core.exceptions.ErrorFactory.notFound;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@Import(JacksonAutoConfiguration.class)
+@Import({JacksonAutoConfiguration.class, GlobalExceptionHandler.class})
 @WebMvcTest(value = ProgrammeController.class, excludeAutoConfiguration = SecurityAutoConfiguration.class)
 class ProgrammeControllerTest {
 
@@ -83,9 +87,9 @@ class ProgrammeControllerTest {
     }
 
     @Test
-    void creerProgramme_serviceThrows_returns400() throws Exception {
+    void creerProgramme_serviceThrows_propagatesStatus() throws Exception {
         when(programmeService.sauvegarderProgramme(any(), any(), any()))
-                .thenThrow(new RuntimeException("Save failed"));
+                .thenThrow(badRequest("Save failed"));
 
         mockMvc.perform(post("/api/programmes")
                 .param("username", "alice")
@@ -106,12 +110,12 @@ class ProgrammeControllerTest {
     }
 
     @Test
-    void getProgrammeById_serviceThrows_returns400() throws Exception {
+    void getProgrammeById_serviceThrows_propagatesStatus() throws Exception {
         when(programmeService.getProgrammeById(1L, "alice"))
-                .thenThrow(new RuntimeException("Not found"));
+                .thenThrow(notFound("Not found"));
 
         mockMvc.perform(get("/api/programmes/1").param("username", "alice"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -126,12 +130,12 @@ class ProgrammeControllerTest {
     }
 
     @Test
-    void copyProgramme_serviceThrows_returns400() throws Exception {
+    void copyProgramme_serviceThrows_propagatesStatus() throws Exception {
         when(programmeService.copyProgramme(1L, "bob"))
-                .thenThrow(new RuntimeException("Private profile"));
+                .thenThrow(forbidden("Private profile"));
 
         mockMvc.perform(post("/api/programmes/1/copy").param("targetUsername", "bob"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -143,11 +147,11 @@ class ProgrammeControllerTest {
     }
 
     @Test
-    void deleteProgramme_serviceThrows_returns400() throws Exception {
-        doThrow(new RuntimeException("Access denied")).when(programmeService).deleteProgramme(1L, "alice");
+    void deleteProgramme_serviceThrows_propagatesStatus() throws Exception {
+        doThrow(forbidden("Access denied")).when(programmeService).deleteProgramme(1L, "alice");
 
         mockMvc.perform(delete("/api/programmes/1").param("username", "alice"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -164,14 +168,14 @@ class ProgrammeControllerTest {
     }
 
     @Test
-    void reorderProgrammes_serviceThrows_returns400() throws Exception {
-        doThrow(new RuntimeException("Access denied"))
+    void reorderProgrammes_serviceThrows_propagatesStatus() throws Exception {
+        doThrow(forbidden("Access denied"))
                 .when(programmeService).reorderProgrammes(eq("alice"), anyList());
 
         mockMvc.perform(put("/api/programmes/order")
                 .param("username", "alice")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("[1]"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isForbidden());
     }
 }
