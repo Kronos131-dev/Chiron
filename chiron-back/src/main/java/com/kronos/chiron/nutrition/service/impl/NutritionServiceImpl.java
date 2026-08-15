@@ -77,6 +77,9 @@ public class NutritionServiceImpl implements NutritionService {
         try {
             return tokenService.decrypt(user.getOlympusTokenEncrypted());
         } catch (RuntimeException e) {
+            // WHY: token illisible parce que la clé de chiffrement a changé depuis la liaison
+            // (CHIRON_SECRET_KEY absente → clé éphémère régénérée au boot). On traite comme une
+            // liaison à refaire, au lieu de laisser l'exception faire planter l'outil Chiron.
             log.warn("OLYMPUS_TOKEN_UNDECRYPTABLE user={} : {}", chironUsername, e.getMessage());
             throw new ExpiredException();
         }

@@ -56,6 +56,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(
+                                // WHY: Spring forwarde toute erreur (404/500/…) vers /error ;
+                                // sans cette règle, la moindre erreur applicative est masquée
+                                // par un 403.
                                 "/error",
                                 "/api/auth/**",
                                 "/api/images/**",

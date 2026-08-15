@@ -101,6 +101,9 @@ public class VisbodyPdfParser {
             }
         }
 
+        // WHY: les trois ancres musculaires visent la 2e occurrence du motif, la 1re étant la
+        // masse grasse : bras « X Gauche Droit Y », tronc « éval valeur éval ». Le motif jambes
+        // « v1 v2 éval éval » est lui unique au bloc musculaire, donc lu à la première passe.
         Matcher bras = Pattern.compile("([\\d.]+)\\s+Gauche\\s+Droit\\s+([\\d.]+)").matcher(flat);
         if (bras.find() && bras.find()) {
             r.setMuscleBrasGauche(dbl(bras.group(1)));

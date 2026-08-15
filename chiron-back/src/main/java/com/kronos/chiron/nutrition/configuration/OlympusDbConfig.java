@@ -31,6 +31,7 @@ public class OlympusDbConfig implements DisposableBean {
         cfg.setConnectionTimeout(4000);
         cfg.setValidationTimeout(2000);
         cfg.setIdleTimeout(30000);
+        // WHY: ne pas bloquer ni faire échouer le boot quand Olympus est down.
         cfg.setInitializationFailTimeout(-1);
 
         this.dataSource = new HikariDataSource(cfg);

@@ -132,6 +132,7 @@ public class SettingsServiceImpl implements SettingsService {
     public void forgotPassword(String email) {
         Utilisateur user = utilisateurRepository.findByEmail(email).orElse(null);
         if (user == null) {
+            // WHY: ne pas révéler si l'email existe ou non.
             return;
         }
         tokenRepository.deleteByUtilisateurAndUsedFalse(user);

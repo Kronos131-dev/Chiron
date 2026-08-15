@@ -23,6 +23,9 @@ public interface ExerciceDefinitionRepository extends JpaRepository<ExerciceDefi
     @Query(value = "SELECT image1 FROM exercice_definition WHERE id = :id", nativeQuery = true)
     byte[] findImage1ById(@Param("id") Long id);
 
+    // WHY: :q arrive déjà formaté en "%pattern%" (ou null) depuis le service, et
+    // COALESCE(:q,'')='' remplace :q IS NULL pour éviter l'inférence de type bytea de
+    // Hibernate 6 + PostgreSQL sur un paramètre nommé utilisé dans une expression CONCAT.
     @Query("""
             SELECT e FROM ExerciceDefinition e
             WHERE (COALESCE(:q, '') = '' OR LOWER(COALESCE(e.nomFr, '')) LIKE :q

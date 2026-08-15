@@ -66,6 +66,8 @@ public class FitbitServiceImpl implements FitbitService {
         String codeChallenge = deriveCodeChallenge(codeVerifier);
         String state = authSessionStore.register(user.getId(), codeVerifier);
 
+        // WHY: access_type=offline + prompt=consent sont indispensables pour que Google
+        // délivre un refresh token, et le redélivre à chaque reconsentement.
         return UriComponentsBuilder.fromUriString(authorizeUrl)
                 .queryParam("response_type", "code")
                 .queryParam("client_id", clientId)
@@ -198,6 +200,9 @@ public class FitbitServiceImpl implements FitbitService {
                     mostRecent(hrByDate),
                     dayPoints);
         } catch (FitbitClient.FitbitUnauthorizedException e) {
+            // WHY: l'API data a rejeté le token, mais le refresh token reste valable : on NE
+            // délie PAS le compte ici. Seul un refresh rejeté (getValidToken) prouve que le
+            // grant OAuth est révoqué et justifie une reconnexion.
             log.warn("FITBIT_DASHBOARD_UNAUTHORIZED user={} : {}", chironUsername, e.getMessage());
             return FitbitDashboardDto.unavailable();
         } catch (FitbitClient.FitbitUnavailableException e) {

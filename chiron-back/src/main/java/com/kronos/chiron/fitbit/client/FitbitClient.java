@@ -104,11 +104,13 @@ public class FitbitClient {
     }
 
     public JsonNode listSleep(String accessToken, LocalDate from) {
+        // WHY: syntaxe du filtre civil_start_time jamais confrontée à un compte réel.
         return doGet(accessToken, "/v4/users/me/dataTypes/sleep/dataPoints",
                 "sleep.interval.civil_start_time >= \"" + from + "\"");
     }
 
     public JsonNode listRestingHeartRate(String accessToken, LocalDate from) {
+        // WHY: champ de date 'dailyRestingHeartRate.date' jamais confronté à un compte réel.
         return doGet(accessToken, "/v4/users/me/dataTypes/dailyRestingHeartRate/dataPoints",
                 "dailyRestingHeartRate.date >= \"" + from + "\"");
     }
@@ -151,6 +153,9 @@ public class FitbitClient {
 
     private RuntimeException mapHttpError(String call, HttpClientErrorException e) {
         HttpStatusCode status = e.getStatusCode();
+        // WHY: 401 = access token rejeté, vrai problème de token. 403 = requête interdite :
+        // API Google Health non activée sur le projet, scope OAuth absent, ou endpoint erroné.
+        // Ce n'est PAS une expiration et ne doit jamais entraîner la suppression de la liaison.
         if (status.value() == 401) {
             return new FitbitUnauthorizedException("Token Google Health rejeté (401)");
         }
