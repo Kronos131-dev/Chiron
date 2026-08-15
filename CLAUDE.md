@@ -146,8 +146,6 @@ a red pipeline may point at a repository this working tree does not contain.
   because V34–V36 were deleted after having run in production.
 - Spotless uses the Eclipse formatter, not google-java-format: the latter reaches into javac
   internals and breaks on any JDK newer than the one it was built against. CI compiles on 25.
-- `README.md` is stale — it claims Angular 17, Java 17 and Mistral only. Trust `pom.xml` and
-  `package.json`.
 - `application.yml` currently ships `DEBUG` logging for Spring Security, left over from a 403
   investigation.
 - `JWT_SECRET` has no default. It is mandatory in every environment, including a local
