@@ -15,7 +15,7 @@ on:
           - production
 
 env:
-  JAVA_VERSION: '21'
+  JAVA_VERSION: '25'
   NODE_VERSION: '22'
   SERVER_HOST: 46.224.227.209
   DEPLOY_DIR: /opt/chiron
@@ -141,7 +141,7 @@ jobs:
           path: chiron-back/target/failsafe-reports/
           retention-days: 7
 
-  # ── 1c. Build backend Olympus (repo séparé, Java 17) ─────────────────────────
+  # ── 1c. Build backend Olympus (repo séparé) ──────────────────────────────────
   build-olympus-backend:
     name: Build Olympus Backend
     runs-on: ubuntu-latest
@@ -154,7 +154,7 @@ jobs:
 
       - uses: actions/setup-java@v5
         with:
-          java-version: '17'   # Olympus cible Java 17 (Chiron est en 21)
+          java-version: ${{ env.JAVA_VERSION }}
           distribution: temurin
           cache: maven
 
@@ -199,7 +199,7 @@ jobs:
           path: olympus/olympus-pwa/dist/
           retention-days: 1
 
-  # ── 3c. Tests Olympus (unitaires + intégration, Java 17 + PostgreSQL) ─────────
+  # ── 3c. Tests Olympus (unitaires + intégration, PostgreSQL) ──────────────────
   test-olympus:
     name: Olympus Tests
     runs-on: ubuntu-latest
@@ -227,7 +227,7 @@ jobs:
 
       - uses: actions/setup-java@v5
         with:
-          java-version: '17'
+          java-version: ${{ env.JAVA_VERSION }}
           distribution: temurin
           cache: maven
 
