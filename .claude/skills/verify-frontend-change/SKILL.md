@@ -1,18 +1,16 @@
 ---
 name: verify-frontend-change
-description: Verifies and diagnoses a chiron-front change before hand-off. Use before committing frontend work, when TypeScript reports an error, when the Angular build breaks, or when the Vitest suite fails. Covers the tsc, prettier, test and build sequence, the fact that npm run build defaults to the production configuration, the absence of ESLint in this project, the known-broken state of two spec files that makes npm test fail to compile on a clean checkout, and the symptom-to-cause mapping for the failures this application produces. Do not use for writing components or services (see add-angular-feature), for writing the tests themselves (see write-frontend-tests), or for backend verification (see verify-backend-change).
+description: Verifies and diagnoses a chiron-front change before hand-off. Use before committing frontend work, when TypeScript reports an error, when the Angular build breaks, or when the Vitest suite fails. Covers the tsc, prettier, test and build sequence, the fact that npm run build defaults to the production configuration, the absence of ESLint in this project, the fact that the pipeline never runs npm test so a red suite reaches main unnoticed, and the symptom-to-cause mapping for the failures this application produces. Do not use for writing components or services (see add-angular-feature), for writing the tests themselves (see write-frontend-tests), or for backend verification (see verify-backend-change).
 ---
 
 # Verify a frontend change
 
-Three facts about this project's baseline decide what a green result means.
+Two facts about this project's baseline decide what a green result means.
 
 **There is no ESLint.** No config, no script, no dependency. Never report that lint passed.
 
-**`npm test` currently fails to compile on a clean checkout.** `session.spec.ts` and
-`programme-builder.spec.ts` build `ExerciceDefinitionDto` fixtures that predate the required
-`cardioType` field. The failure is pre-existing and unrelated to any new change — see Step 4 before
-concluding that a change broke the suite.
+**The pipeline never runs `npm test`.** The workflow builds the frontend and stops there, so a red
+suite reaches `main` without turning anything red. Run it locally, every time — nothing else will.
 
 **`npx tsc --noEmit -p tsconfig.json` does not cover the specs.** `tsconfig.json` excludes them;
 they are compiled by `tsconfig.spec.json` during the test run. A green `tsc` says nothing about test
@@ -44,10 +42,9 @@ Run everything from `chiron-front/`.
 
 **Step 4: Run the tests**
 1. Run `npm test`.
-2. If it fails to compile in `session.spec.ts` or `programme-builder.spec.ts` on `cardioType`, that
-   is the known-broken baseline. Confirm with `git stash list` and `git status` that the change did
-   not touch those files, state that the suite is broken independently of this work, and do not
-   report the suite as passing.
+2. The whole suite must compile and pass: 42 tests over 11 files. A compile error in any spec stops
+   the run before a single test executes, so a type error in a fixture reads as a green-looking
+   silence, not as a failure of the spec you were writing.
 3. Read `references/failure-modes.md` for anything else.
 4. If the change added or modified a spec, that spec must run and pass. Apply the
    `write-frontend-tests` skill.
@@ -66,9 +63,9 @@ Run everything from `chiron-front/`.
 
 ## Error Handling
 
-* If `npm test` fails on `cardioType` in `session.spec.ts` or `programme-builder.spec.ts`, it is the
-  pre-existing baseline. Adding the missing field to the fixtures fixes it, but that is a separate
-  change with its own commit.
+* If `npm test` stops on a type error in a fixture — a DTO interface gained a required field and the
+  factories building it were not updated — fix every factory. `makeDef` in `session.spec.ts` and
+  `programme-builder.spec.ts` is the one that has already been caught out this way.
 * If `tsc` passes and `npm test` reports type errors, the errors are in spec files, which `tsc` does
   not compile.
 * If a template error mentions a property that exists, `strictTemplates` is rejecting a nullable or a

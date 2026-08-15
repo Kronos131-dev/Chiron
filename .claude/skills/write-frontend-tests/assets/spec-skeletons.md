@@ -114,9 +114,9 @@ function makeDef(id: number, nom: string): ExerciceDefinitionDto {
 }
 ```
 
-The `cardioType: null` line is exactly the one missing on `main` today, which is why the whole suite
-fails to compile. When a DTO interface gains a required field, every factory building it must be
-updated in the same change.
+The `cardioType: null` line is the one whose absence once stopped the whole suite from compiling.
+When a DTO interface gains a required field, every factory building it must be updated in the same
+change.
 
 ## A component using the `| t` pipe
 

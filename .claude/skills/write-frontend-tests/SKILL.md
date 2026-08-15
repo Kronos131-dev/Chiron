@@ -1,15 +1,15 @@
 ---
 name: write-frontend-tests
-description: Writes and fixes Vitest specs in chiron-front. Use when adding a spec for a standalone component, a signal-driven behaviour or a ChironApi method, or when replacing one of the generated should-create smoke tests with a real behaviour test. Covers Vitest 4 with explicit imports, TestBed.configureTestingModule for standalone components, stubbing the ChironApi facade, provideHttpClientTesting with HttpTestingController, and the pre-existing cardioType compile failure that currently stops the whole suite. Do not use for running the suite or diagnosing a build failure (see verify-frontend-change), for backend tests (see write-backend-tests), or for writing the component itself (see add-angular-feature).
+description: Writes and fixes Vitest specs in chiron-front. Use when adding a spec for a standalone component, a signal-driven behaviour or a ChironApi method, or when replacing one of the generated should-create smoke tests with a real behaviour test. Covers Vitest 4 with explicit imports, TestBed.configureTestingModule for standalone components, stubbing the ChironApi facade, provideHttpClientTesting with HttpTestingController, and the fact that one spec failing to type-check stops the whole suite before any test runs. Do not use for running the suite or diagnosing a build failure (see verify-frontend-change), for backend tests (see write-backend-tests), or for writing the component itself (see add-angular-feature).
 ---
 
 # Write a frontend spec
 
 The Angular builder compiles the **whole** spec graph before running anything, so one spec that does
-not type-check stops the entire suite. That is the current state of `main`: `session.spec.ts` and
-`programme-builder.spec.ts` build `ExerciceDefinitionDto` fixtures missing the required `cardioType`
-field, and `npm test` therefore runs zero tests. Expect that failure, do not attribute it to the
-change in progress, and read `verify-frontend-change` before concluding anything about the suite.
+not type-check stops the entire suite — zero tests run, and the output looks nothing like a test
+failure. This has already happened once: `ExerciceDefinitionDto` gained a required `cardioType` and
+the `makeDef` factories in `session.spec.ts` and `programme-builder.spec.ts` kept building it
+without. When a DTO interface gains a field, grep for every factory that builds it.
 
 Most existing specs are still the generated "should create" smoke test. Replacing one with a real
 behaviour test is an improvement.
@@ -53,16 +53,16 @@ behaviour test is an improvement.
 
 **Step 6: Run it**
 1. Run `npm test`.
-2. If the run stops on the `cardioType` baseline failure, the new spec never executed. Either fix the
-   fixtures as a separate change first, or verify the new spec by temporarily narrowing the run —
-   and say which was done.
+2. The baseline is 42 tests over 11 files, all green. If the run stops on a compile error anywhere in
+   the spec graph, the new spec never executed — fix the compile error before reading anything into
+   the result.
 3. Apply the `verify-frontend-change` skill for the full sequence.
 4. Confirm every item in `references/checklist.md`.
 
 ## Error Handling
 
-* If the suite fails to compile on `cardioType`, that is the pre-existing baseline in
-  `session.spec.ts` and `programme-builder.spec.ts`, not the new spec.
+* If the suite fails to compile in a spec the change did not touch, a DTO interface gained a
+  required field and its fixtures were not updated.
 * If `'app-x' is not a known element`, the standalone component is missing from `imports`.
 * If `The pipe 't' could not be found`, `TranslatePipe` is missing from `imports`.
 * If `NullInjectorError: No provider for ChironApi`, the facade was not stubbed in `providers`.

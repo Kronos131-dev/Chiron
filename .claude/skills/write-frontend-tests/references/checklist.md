@@ -26,7 +26,7 @@
 
 ## Running
 * [ ] `npm test` was run.
-* [ ] A `cardioType` compile failure was identified as the pre-existing baseline, not as this
+* [ ] A compile failure in an untouched spec was identified as a stale DTO fixture, not as this
       change's doing.
 * [ ] If the baseline failure prevented the new spec from running, that was stated plainly rather
       than reported as a pass.
