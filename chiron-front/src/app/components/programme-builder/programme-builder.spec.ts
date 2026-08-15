@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ProgrammeBuilder } from './programme-builder';
 import { ChironApi, ExerciceDefinitionDto } from '../../service/chiron-api';
 import { AuthService } from '../../service/auth.service';
+import { I18nService } from '../../service/i18n.service';
 
 describe('ProgrammeBuilder', () => {
   let component: ProgrammeBuilder;
@@ -22,7 +23,7 @@ describe('ProgrammeBuilder', () => {
     return {
       id, nomFr: nom, nomEn: nom, imageUrl: null, imageUrl2: null,
       musclePrincipal: null, musclesSecondaires: [], typeEquipement: null,
-      difficulte: null, descriptionFr: null, descriptionEn: null,
+      difficulte: null, descriptionFr: null, descriptionEn: null, cardioType: null,
     };
   }
 
@@ -59,7 +60,7 @@ describe('ProgrammeBuilder', () => {
 
     it('starts empty with the default title', () => {
       expect(component.exercices()).toEqual([]);
-      expect(component.titre()).toBe('Nouveau programme');
+      expect(component.titre()).toBe(TestBed.inject(I18nService).t('builder.defaultTitle'));
       expect(component.programmeId).toBeNull();
       expect(component.isCoachMode()).toBe(false);
     });
@@ -169,7 +170,7 @@ describe('ProgrammeBuilder', () => {
     it('flashes an error status if the save fails', () => {
       chironApi.sauvegarderProgramme.mockReturnValueOnce(throwError(() => new Error('boom')));
       component.save();
-      expect(component.saveStatus()).toContain('Erreur');
+      expect(component.saveStatus()).toBe(TestBed.inject(I18nService).t('builder.saveError'));
     });
   });
 
