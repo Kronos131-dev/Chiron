@@ -63,6 +63,8 @@ public class BoditraxCsvParser {
             String[] f = line.split(",", -1);
             switch (section) {
                 case SEC_USER -> {
+                    // WHY: Email,FirstName LastName,DateOfBirth,Gender — le nom peut contenir
+                    // une virgule ; le genre est toujours en dernier, la date juste avant.
                     if (f.length >= 2) {
                         gender = f[f.length - 1].trim();
                         LocalDateTime dob = tryDateTime(f[f.length - 2].trim());
@@ -138,6 +140,8 @@ public class BoditraxCsvParser {
         Double tbw = m.get("WaterMass");
         if (ecw != null && tbw != null && tbw > 0) r.setRatioEcwTbw(ecw / tbw);
 
+        // WHY: la masse musculaire squelettique est reconstruite depuis l'indice SMI, parce que
+        // la jauge MMS recalcule SMI = mms / taille² et doit retomber sur la valeur Boditrax.
         Double smi = m.get("SarcopeniaSMI");
         Double hCm = heightCm != null ? heightCm : m.get("Height");
         if (smi != null && hCm != null && hCm > 0) {
@@ -169,6 +173,9 @@ public class BoditraxCsvParser {
 
     private static LocalDateTime tryDateTime(String s) {
         if (s == null || s.isBlank()) return null;
+        // WHY: Boditrax sépare l'heure de AM/PM par une espace fine insécable (U+202F) et peut
+        // utiliser une espace insécable (U+00A0) : java \s ne couvre ni l'une ni l'autre, il
+        // faut donc les normaliser en espace simple avant le parsing.
         String v = s.trim().replace("\"", "")
                 .replace(' ', ' ')
                 .replace(' ', ' ')

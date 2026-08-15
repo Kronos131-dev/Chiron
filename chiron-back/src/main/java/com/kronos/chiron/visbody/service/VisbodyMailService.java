@@ -70,6 +70,7 @@ public class VisbodyMailService {
                 } catch (Exception e) {
                     log.warn("Visbody : échec traitement d'un mail : {}", e.getMessage());
                 } finally {
+                    // WHY: marqué lu même en cas d'échec, sinon le mail est retraité en boucle.
                     message.setFlag(Flags.Flag.SEEN, true);
                 }
             }

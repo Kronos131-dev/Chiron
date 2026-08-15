@@ -50,6 +50,7 @@ public class ChironAgentRouter {
             }
         }
 
+        // WHY: repli sur Mistral seulement si l'agent en échec n'était pas déjà Mistral.
         if (agent != mistral) {
             log.warn("Agent {} en échec, repli sur Mistral", provider, last);
             memoryManager.reset(memoryId);

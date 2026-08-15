@@ -223,6 +223,7 @@ public class StatsServiceImpl implements StatsService {
         List<Seance> sessions = realSessions(username);
         TonnagePrefs tp = tonnagePrefs(username);
 
+        // WHY: sessions arrive trié décroissant ; la progression se lit en ordre chronologique.
         List<Seance> chronological = new ArrayList<>(sessions);
         chronological.sort(Comparator.comparing(Seance::getStartTime,
                 Comparator.nullsLast(Comparator.naturalOrder())));

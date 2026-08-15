@@ -225,6 +225,9 @@ public class WorkoutTools {
                 .max()
                 .orElse(-1) + 1;
 
+        // WHY: relier l'exercice à la bibliothèque standardisée conditionne les analyses : sans
+        // ce lien, [getFullExerciseHistory], [getPersonalRecord]… le considèrent comme non [std]
+        // et refusent toute analyse de progression.
         ExerciceDefinition definition = exerciceDefinitionService.search(nomExercice, null, null, null)
                 .stream().findFirst()
                 .flatMap(dto -> exerciceDefinitionRepository.findById(dto.id()))

@@ -166,6 +166,8 @@ public class PerformanceServiceImpl implements PerformanceService {
 
         PerformanceRecord r = best.get();
 
+        // WHY: le ratio et le palier se calculent sur le poids de corps courant, pas sur celui
+        // figé dans l'enregistrement — sinon un athlète qui prend du poids garde son ancien palier.
         Double currentRatio = (poidsCorps != null && poidsCorps > 0)
                 ? round2(computeRatio(r.getRm1Estime(), poidsCorps))
                 : null;
@@ -191,6 +193,8 @@ public class PerformanceServiceImpl implements PerformanceService {
     }
 
     double calculateRm1(ExerciseType type, double poids, int reps, Double poidsCorps) {
+        // WHY: au poids du corps sans lest, les répétitions sont plafonnées à 10 : au-delà, la
+        // formule de Brzycki dérive et donne un 1RM absurde.
         int effectiveReps = (type.isBodyweightExercise() && poids == 0.0) ? Math.min(reps, 10) : reps;
         double effectiveWeight = (type.isBodyweightExercise() && poidsCorps != null)
                 ? poids + poidsCorps
