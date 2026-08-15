@@ -4,9 +4,9 @@ import java.time.Clock;
 
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 import com.kronos.chiron.utilisateur.persistence.UtilisateurRepository;
-import com.kronos.chiron.stats.MuscleStatsDto;
-import com.kronos.chiron.stats.StatsOverviewDto;
-import com.kronos.chiron.stats.StatsService;
+import com.kronos.chiron.stats.dto.MuscleStatsDto;
+import com.kronos.chiron.stats.dto.StatsOverviewDto;
+import com.kronos.chiron.stats.service.StatsService;
 import com.kronos.chiron.visbody.BodyCompositionRecord;
 import com.kronos.chiron.visbody.BodyCompositionRecordRepository;
 import dev.langchain4j.agent.tool.Tool;

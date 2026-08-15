@@ -1,4 +1,4 @@
-package com.kronos.chiron.stats;
+package com.kronos.chiron.stats.dto;
 
 import java.util.Collections;
 import java.util.List;

@@ -1,7 +1,7 @@
 package com.kronos.chiron.nutrition.olympusdb;
 
-import com.kronos.chiron.stats.BodyweightPointDto;
-import com.kronos.chiron.stats.NutritionPointDto;
+import com.kronos.chiron.stats.dto.BodyweightPointDto;
+import com.kronos.chiron.stats.dto.NutritionPointDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DataAccessException;

@@ -1,5 +1,11 @@
-package com.kronos.chiron.stats;
+package com.kronos.chiron.stats.service.impl;
 
+import com.kronos.chiron.stats.dto.BodyCompositionStatsDto;
+import com.kronos.chiron.stats.dto.BodyweightStatsDto;
+import com.kronos.chiron.stats.dto.ExerciseListItemDto;
+import com.kronos.chiron.stats.dto.NutritionStatsDto;
+import com.kronos.chiron.stats.dto.StatsOverviewDto;
+import com.kronos.chiron.stats.dto.WeeklyVolumePointDto;
 import org.mockito.Spy;
 
 import java.time.ZoneId;
@@ -62,7 +68,7 @@ class StatsServiceTest {
     private Clock clock = Clock.system(ZoneId.of("Europe/Paris"));
 
     @InjectMocks
-    private StatsService statsService;
+    private StatsServiceImpl statsService;
 
     private void givenSessions(Seance... sessions) {
         when(seanceRepository.findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc(USERNAME))
