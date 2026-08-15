@@ -1,4 +1,6 @@
-package com.kronos.chiron.visbody;
+package com.kronos.chiron.visbody.persistence;
+
+import com.kronos.chiron.visbody.model.BodyCompositionRecord;
 
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 import org.springframework.data.jpa.repository.JpaRepository;

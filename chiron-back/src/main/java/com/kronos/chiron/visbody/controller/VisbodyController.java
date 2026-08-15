@@ -2,10 +2,10 @@ package com.kronos.chiron.visbody.controller;
 
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 import com.kronos.chiron.utilisateur.persistence.UtilisateurRepository;
-import com.kronos.chiron.visbody.BodyCompositionRecord;
-import com.kronos.chiron.visbody.BodyCompositionRecordRepository;
-import com.kronos.chiron.visbody.VisbodyImportService;
-import com.kronos.chiron.visbody.VisbodyImportService.ImportResult;
+import com.kronos.chiron.visbody.model.BodyCompositionRecord;
+import com.kronos.chiron.visbody.persistence.BodyCompositionRecordRepository;
+import com.kronos.chiron.visbody.service.VisbodyImportService;
+import com.kronos.chiron.visbody.service.VisbodyImportService.ImportResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

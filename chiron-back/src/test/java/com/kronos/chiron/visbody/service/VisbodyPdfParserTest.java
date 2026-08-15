@@ -1,4 +1,6 @@
-package com.kronos.chiron.visbody;
+package com.kronos.chiron.visbody.service;
+
+import com.kronos.chiron.visbody.dto.VisbodyReport;
 
 import org.junit.jupiter.api.Test;
 

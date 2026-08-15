@@ -1,4 +1,4 @@
-package com.kronos.chiron.visbody;
+package com.kronos.chiron.visbody.dto;
 
 import lombok.Getter;
 import lombok.Setter;

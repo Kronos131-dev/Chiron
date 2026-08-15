@@ -1,4 +1,4 @@
-package com.kronos.chiron.visbody;
+package com.kronos.chiron.visbody.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.kronos.chiron.utilisateur.model.Utilisateur;

@@ -1,6 +1,11 @@
-package com.kronos.chiron.visbody;
+package com.kronos.chiron.visbody.service.impl;
 
 import com.kronos.chiron.utilisateur.model.Utilisateur;
+import com.kronos.chiron.visbody.dto.VisbodyReport;
+import com.kronos.chiron.visbody.model.BodyCompositionRecord;
+import com.kronos.chiron.visbody.persistence.BodyCompositionRecordRepository;
+import com.kronos.chiron.visbody.service.VisbodyImportService;
+import com.kronos.chiron.visbody.service.VisbodyPdfParser;
 import com.kronos.chiron.utilisateur.persistence.UtilisateurRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -13,22 +18,16 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class VisbodyImportService {
+public class VisbodyImportServiceImpl implements VisbodyImportService {
 
-    private static final Logger log = LoggerFactory.getLogger(VisbodyImportService.class);
+    private static final Logger log = LoggerFactory.getLogger(VisbodyImportServiceImpl.class);
 
     private final VisbodyPdfParser parser;
     private final BodyCompositionRecordRepository recordRepo;
     private final UtilisateurRepository utilisateurRepo;
 
-    public enum Outcome {
-        IMPORTED, DUPLICATE, USER_NOT_FOUND, INVALID
-    }
-
-    public record ImportResult(Outcome outcome, String detail) {
-    }
-
     @Transactional
+    @Override
     public ImportResult importForUser(byte[] pdf, Utilisateur user) {
         VisbodyReport report;
         try {
@@ -43,6 +42,7 @@ public class VisbodyImportService {
     }
 
     @Transactional
+    @Override
     public ImportResult importFromEmail(byte[] pdf, String senderEmail) {
         VisbodyReport report;
         try {
@@ -101,6 +101,7 @@ public class VisbodyImportService {
     }
 
     @Transactional
+    @Override
     public ImportResult persist(VisbodyReport report, Utilisateur user, String source) {
         if (recordRepo.existsByUtilisateurAndMesureLe(user, report.getMesureLe())) {
             return new ImportResult(Outcome.DUPLICATE, "Scan déjà importé (" + report.getMesureLe() + ").");
