@@ -134,9 +134,9 @@ a red pipeline may point at a repository this working tree does not contain.
 
 ## Gotchas
 
-- `mvn test` runs **unit tests only**. Surefire excludes `controller/`, `repository/` and
+- `mvn test` runs **unit tests only**. Surefire excludes `controller/`, `persistence/` and
   `migration/`; those run under `mvn verify` through Failsafe and need a live Docker daemon for
-  Testcontainers.
+  Testcontainers. A test's phase follows the package you file it in, nothing else.
 - `npm run build` builds the **production** configuration by default — it swaps in
   `environment.prod.ts` and enables the service worker.
 - This is Spring Boot **4.x**, not 3.x: test slices come from the split starters
@@ -144,9 +144,13 @@ a red pipeline may point at a repository this working tree does not contain.
   `spring-boot-starter-flyway` or migrations silently never run.
 - An applied migration is never edited. `spring.flyway.ignore-migration-patterns: "*:missing"` exists
   because V34–V36 were deleted after having run in production.
-- The local JDK is 25 while CI builds on 21. Spotless therefore uses the Eclipse formatter, not
-  google-java-format, which cannot run on JDK 25.
+- Spotless uses the Eclipse formatter, not google-java-format: the latter reaches into javac
+  internals and breaks on any JDK newer than the one it was built against. CI compiles on 21.
 - `README.md` is stale — it claims Angular 17, Java 17 and Mistral only. Trust `pom.xml` and
   `package.json`.
 - `application.yml` currently ships `DEBUG` logging for Spring Security, left over from a 403
   investigation.
+- `JWT_SECRET` has no default. It is mandatory in every environment, including a local
+  `chiron-back/.env`, and the application refuses to start without it — `JwtService` rejects an
+  absent, blank, non-base64 or under-32-byte key, and the deploy workflow fails before touching
+  the server when the GitHub secret is missing.

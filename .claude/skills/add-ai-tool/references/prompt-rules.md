@@ -1,6 +1,6 @@
 # Editing the `ChironAgent` system prompt
 
-`ai/ChironAgent.java` holds the whole coach personality and routing logic in a single
+`coach/agent/ChironAgent.java` holds the whole coach personality and routing logic in a single
 `@SystemMessage({...})` array of French strings. It is sent on **every** message, to both providers.
 Every line added is paid for on every call, in latency and in tokens.
 

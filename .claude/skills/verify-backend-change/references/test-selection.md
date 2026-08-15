@@ -6,8 +6,8 @@
 
 | Package | Runner | Command |
 |---------|--------|---------|
-| `service/`, `entity/`, `ai/`, `mapper/`, `security/`, `util/`, `fitbit/`, `visbody/` | Surefire | `mvn test` |
-| `controller/`, `repository/`, `migration/` | Failsafe | `mvn verify` |
+| `service/`, `service/impl/`, `model/`, `mapper/`, `client/`, `coach/agent/`, `coach/tools/`, `security/`, `core/` | Surefire | `mvn test` |
+| `controller/`, `persistence/`, `migration/` | Failsafe | `mvn verify` |
 
 Surefire's `<excludes>` are `**/controller/**`, `**/repository/**`, `**/migration/**`. Failsafe's
 `<includes>` are `**/controller/**Test.java`, `**/repository/**Test.java`, `**/migration/**Test.java`.
@@ -49,7 +49,7 @@ mvn -Dit.test='*ControllerTest' verify -DskipUTs=true
 ## What plain `mvn test` covers
 
 18 classes, 225 tests: `service/` (6), `fitbit/` (3), `entity/` (3), `util/` (2), and one each in
-`ai/`, `mapper/`, `security/`, `visbody/`. The `controller/` (8), `repository/` (5) and `migration/`
+`coach/`, `mapper/`, `security/`, `visbody/`. The `controller/` (8), `persistence/` (5) and `migration/`
 (1) classes are excluded and run only under `mvn verify`. A green `mvn test` therefore says nothing
 about an endpoint or a migration.
 

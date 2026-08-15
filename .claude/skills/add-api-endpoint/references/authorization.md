@@ -61,8 +61,8 @@ Reference implementations to copy:
 
 | Concern | Where |
 |---------|-------|
-| Public-profile gate, returning a message | `ai/WorkoutTools.getUserProgrammes` |
-| Admin bypass | `ai/WorkoutTools`, `Role.ADMIN` comparisons |
+| Public-profile gate, returning a message | `coach/tools/WorkoutTools.getUserProgrammes` |
+| Admin bypass | `coach/tools/WorkoutTools`, `Role.ADMIN` comparisons |
 | Coach relationship | `Utilisateur.coaches` / `coachedUsers`, used by `AgoraController` and `ProgrammeController` |
 
 Note that `getIsPublic()` returns a nullable `Boolean` — a null means private, and

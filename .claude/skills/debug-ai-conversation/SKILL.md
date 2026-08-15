@@ -24,7 +24,7 @@ similar from the outside and cost a lot to explore blind.
 1. Read `references/symptom-map.md` and match the report to a layer before opening a file.
 2. The four layers, in the order a message traverses them: `ChatController` builds the prompt
    context, `ChironAgentRouter` picks the model and retries, `ConversationMemoryManager` supplies the
-   history, the `ai/*Tools` components do the work.
+   history, the `coach/tools/*Tools` components do the work.
 
 **Step 3: Read the backend log for the exchange**
 1. Both providers log requests and responses — `logRequests(true)` and `logResponses(true)` for
@@ -41,7 +41,7 @@ similar from the outside and cost a lot to explore blind.
 3. Fix it through the `add-ai-tool` skill, which owns the prompt rules.
 
 **Step 5: If the coach lost the thread**
-1. Read `ai/ConversationMemoryManager`. Memory is a `MessageWindowChatMemory.withMaxMessages(20)`
+1. Read `coach/agent/ConversationMemoryManager`. Memory is a `MessageWindowChatMemory.withMaxMessages(20)`
    held in a `ConcurrentHashMap` keyed by **conversation id**, not by user.
 2. Twenty messages is ten exchanges. Losing context beyond that is the design, not a defect.
 3. On a cold start the window is seeded from the database by replaying **USER and AI text only** —
@@ -70,7 +70,7 @@ similar from the outside and cost a lot to explore blind.
 
 **Step 8: Reproduce and fix under test**
 1. A tool that returns the wrong thing is ordinary Java — write a unit test against the tool class,
-   as `ai/WorkoutToolsTest` does. No model required.
+   as `coach/tools/WorkoutToolsTest` does. No model required.
 2. A routing or memory bug is testable the same way against `ChironAgentRouter` and
    `ConversationMemoryManager` with mocked agents.
 3. A prompt bug has no unit test. Verify it by conversation, on both providers, and confirm a

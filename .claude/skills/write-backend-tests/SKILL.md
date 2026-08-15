@@ -6,8 +6,8 @@ description: Writes and fixes tests in the chiron-back backend. Use when adding 
 # Write a backend test
 
 The package a test lives in decides which runner executes it, and therefore whether it runs at all in
-a given command. `service/`, `entity/`, `ai/`, `mapper/`, `security/`, `util/`, `fitbit/` and
-`visbody/` run under Surefire on `mvn test`; `controller/`, `repository/` and `migration/` run under
+a given command. `service/`, `service/impl/`, `model/`, `coach/`, `mapper/`, `security/`, `client/` and
+`visbody/` run under Surefire on `mvn test`; `controller/`, `persistence/` and `migration/` run under
 Failsafe on `mvn verify`. Putting a slice test in the wrong package means it never runs in CI's
 `test-unit` job and fails confusingly in `test-integration`.
 
@@ -20,7 +20,7 @@ from a Boot 3 example will not resolve.
 1. A service, an AI tool, a mapper, an enum or a pure helper → a plain unit test with Mockito. Fast,
    no Spring context, runs on `mvn test`.
 2. An endpoint's mapping, status codes and payload → `@WebMvcTest` in `controller/`.
-3. A repository query, especially a long derived name → `@DataJpaTest` in `repository/`.
+3. A repository query, especially a long derived name → `@DataJpaTest` in `persistence/`.
 4. A schema change → nothing new; `migration/FlywaySchemaValidationTest` already replays every
    migration.
 5. Read `references/test-kinds.md` when the choice is not obvious.

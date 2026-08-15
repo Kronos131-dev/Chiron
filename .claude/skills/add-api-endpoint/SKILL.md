@@ -18,35 +18,39 @@ conversions live in the service or in the DTO itself.
 ## Procedures
 
 **Step 1: Place the endpoint**
-1. Read `references/layering.md` and decide whether the feature belongs in the layered core
-   (`controller/` + `service/` + `repository/`) or in one of the vertical slices (`stats/`, `fitbit/`,
-   `nutrition/`, `visbody/`, `boditrax/`), where the controller, service and DTOs sit together.
+1. Read `references/layering.md` and decide which business module owns the feature. Every module
+   has the same inside — `controller/ dto/ model/ persistence/ service/ service/impl/` — so the
+   only question is which domain the endpoint belongs to, never which layout to use.
 2. Extend the existing controller for the domain rather than creating a sibling. `JournalController`,
    `ProgrammeController` and `ProfileController` each own a coherent surface.
 3. Keep the `/api` prefix — every controller carries it in its `@RequestMapping`.
 
 **Step 2: Define the DTOs**
-1. Write request and response DTOs as Java `record`s in `dto/`, or in the slice's own package.
+1. Write request and response DTOs as Java `record`s in the module's `dto/`.
 2. Never return an entity from a controller. `Seance`, `Exercice` and `Utilisateur` carry lazy
    associations and password hashes.
-3. Name them `<Thing>Dto`, and put auth, chat and settings DTOs in their existing subpackages.
+3. Name them `<Thing>Dto`, and file them in the owning module — `auth/dto/`, `coach/dto/`,
+   `utilisateur/dto/`.
 4. Do not add a Lombok `@Builder` DTO class; the few that exist are legacy.
 5. Copy the shape from `assets/endpoint-layers.md`.
 
 **Step 3: Write the repository query**
-1. Add the method to the existing Spring Data interface in `repository/`.
+1. Add the method to the existing Spring Data interface in `persistence/`.
 2. Prefer a derived query name; the codebase already uses long ones
-   (`findByUtilisateurUsernameAndIsModeleFalseOrderByDisplayOrderAscStartTimeDesc`).
+   (`findByUtilisateurUsernameAndHistoriqueFalseOrderByDisplayOrderAscStartTimeDesc`).
 3. Return `Optional<T>` for a single result and `List<T>` for many. Never return `null`.
 4. If the read walks a lazy association, fetch it in the query rather than touching it later.
 
 **Step 4: Write the service**
-1. Put the business logic in a `@Service`, with `@RequiredArgsConstructor` for injection.
+1. Declare the contract as an interface in `service/`, and put the business logic in a `@Service`
+   named `<Thing>ServiceImpl` in `service/impl/`, with `@RequiredArgsConstructor` for injection.
+   A collaborator nobody injects or mocks — a parser, a client, a scheduled poller — stays a single
+   concrete class.
 2. Annotate the write methods `@Transactional`. The transactional boundary lives here and nowhere
-   else — never in a controller, never in an `ai/` tool.
-3. Throw `NoSuchElementException` for a missing entity, `IllegalArgumentException` for bad input and
-   `SecurityException` for a refused access. `GlobalExceptionHandler` maps them to 404, 400 and 403.
-   Never throw a bare `RuntimeException`.
+   else — never in a controller, never in a `coach/tools/` tool.
+3. Throw through `core/exceptions/ErrorFactory`: `notFound` for a missing entity, `badRequest` for
+   bad input, `forbidden` for a refused access, `conflict` for a duplicate. A technical failure that
+   is not the caller's fault is a `ChironTechnicalException`. Never a bare exception.
 
 **Step 5: Verify the caller by hand**
 1. Take the caller from the `Authentication` parameter, which Spring injects into a controller

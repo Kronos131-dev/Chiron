@@ -1,6 +1,6 @@
 ---
 name: add-ai-tool
-description: Gives the Chiron AI coach a new capability by adding a LangChain4j @Tool method to one of the ai/*Tools components. Use when the coach should be able to read or write something it currently cannot, when a tool exists but the coach never calls it, or when editing the ChironAgent @SystemMessage. Covers choosing the right tool component, the @Tool and @ToolMemoryId signature, returning text a language model can use, enforcing ownership and coach rules inside the tool, registering the bean in ChironConfig for both the Mistral and the Gemini agent, and declaring the tool in the system prompt. Do not use for a plain REST endpoint the frontend calls (see add-api-endpoint), for a coach that answers wrongly or forgets (see debug-ai-conversation), or for schema changes (see add-flyway-migration).
+description: Gives the Chiron AI coach a new capability by adding a LangChain4j @Tool method to one of the coach/tools/*Tools components. Use when the coach should be able to read or write something it currently cannot, when a tool exists but the coach never calls it, or when editing the ChironAgent @SystemMessage. Covers choosing the right tool component, the @Tool and @ToolMemoryId signature, returning text a language model can use, enforcing ownership and coach rules inside the tool, registering the bean in ChironConfig for both the Mistral and the Gemini agent, and declaring the tool in the system prompt. Do not use for a plain REST endpoint the frontend calls (see add-api-endpoint), for a coach that answers wrongly or forgets (see debug-ai-conversation), or for schema changes (see add-flyway-migration).
 ---
 
 # Give the coach a new capability
@@ -54,7 +54,7 @@ whatever ownership rule the feature needs must be written inside the tool itself
    possible in the current structure, and must stay that way.
 
 **Step 5: Declare the tool in the system prompt — the step that makes it real**
-1. Open `ai/ChironAgent.java` and find the rule block that matches the domain (SÉANCE, LECTURE
+1. Open `coach/agent/ChironAgent.java` and find the rule block that matches the domain (SÉANCE, LECTURE
    PERFORMANCES, BIBLIOTHÈQUE, ANALYSE/PLANIF, RÉCUPÉRATION, MÉMOIRE LONG-TERME, NUTRITION OLYMPUS,
    FITBIT, APP…).
 2. Add the trigger and the tool name in the established form: a short French clause, then
@@ -65,7 +65,7 @@ whatever ownership rule the feature needs must be written inside the tool itself
    changing anything that is not an addition.
 
 **Step 6: Test the tool without the model**
-1. Write a unit test against the tool class directly, as `ai/WorkoutToolsTest` does — mock the
+1. Write a unit test against the tool class directly, as `coach/tools/WorkoutToolsTest` does — mock the
    repositories, call the method, assert on the returned sentence.
 2. Cover the refusal path and the empty-result path, not just the happy one. Apply the
    `write-backend-tests` skill.

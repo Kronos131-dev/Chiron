@@ -1,12 +1,12 @@
 # Layer skeletons
 
 Copy the structure of each block. The shapes are taken from the existing `controller/`, `service/`,
-`repository/` and `dto/` packages.
+`persistence/` and `dto/` packages.
 
 ## DTO — a Java record
 
 ```java
-package com.kronos.chiron.dto;
+package com.kronos.chiron.seance.dto;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -18,7 +18,7 @@ public record SeanceDto(
         LocalDateTime startTime,
         LocalDateTime endTime,
         Integer weekNumber,
-        boolean isModele,
+        Boolean historique,
         ProfileDto utilisateur,
         List<ExerciceDto> exercices
 ) {}
@@ -39,11 +39,11 @@ public record EtatJournalierDto(LocalDate date, int sommeil, int fatigue, int en
 ## Repository
 
 ```java
-package com.kronos.chiron.repository;
+package com.kronos.chiron.seance.persistence;
 
 public interface SeanceRepository extends JpaRepository<Seance, Long> {
 
-    List<Seance> findByUtilisateurUsernameAndIsModeleFalseOrderByDisplayOrderAscStartTimeDesc(
+    List<Seance> findByUtilisateurUsernameAndHistoriqueFalseOrderByDisplayOrderAscStartTimeDesc(
             String username);
 
     Optional<Seance> findByIdAndUtilisateurUsername(Long id, String username);
@@ -52,57 +52,70 @@ public interface SeanceRepository extends JpaRepository<Seance, Long> {
 
 Derived names are long here by convention. `Optional<T>` for one, `List<T>` for many, never `null`.
 
-## Service
+## Service — interface, then implementation
 
 ```java
-package com.kronos.chiron.service;
+package com.kronos.chiron.journalier.service;
+
+public interface EtatJournalierService {
+
+    EtatJournalierDto getForDate(String caller, LocalDate date);
+
+    EtatJournalierDto save(String caller, EtatJournalierDto dto);
+}
+```
+
+```java
+package com.kronos.chiron.journalier.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import static com.kronos.chiron.core.exceptions.ErrorFactory.badRequest;
+import static com.kronos.chiron.core.exceptions.ErrorFactory.notFound;
+
 @Service
 @RequiredArgsConstructor
-public class EtatJournalierService {
+public class EtatJournalierServiceImpl implements EtatJournalierService {
 
     private final EtatJournalierRepository etatJournalierRepository;
-    private final UtilisateurRepository utilisateurRepository;
+    private final AuthenticatedUserService authenticatedUserService;
 
+    @Override
     public EtatJournalierDto getForDate(String caller, LocalDate date) {
-        Utilisateur user = utilisateurRepository.findByUsername(caller)
-                .orElseThrow(() -> new NoSuchElementException("Utilisateur introuvable"));
+        Utilisateur user = authenticatedUserService.getAuthenticatedUser();
 
         return etatJournalierRepository.findByUtilisateurAndDate(user, date)
                 .map(EtatJournalierDto::from)
-                .orElseThrow(() -> new NoSuchElementException("Aucun état pour le " + date));
+                .orElseThrow(() -> notFound("Aucun état pour le " + date));
     }
 
     @Transactional
+    @Override
     public EtatJournalierDto save(String caller, EtatJournalierDto dto) {
         if (dto.sommeil() < 1 || dto.sommeil() > 5) {
-            throw new IllegalArgumentException("Le sommeil doit être noté de 1 à 5");
+            throw badRequest("Le sommeil doit être noté de 1 à 5");
         }
         // …
     }
 }
 ```
 
-`@Transactional` on writes only, and only here.
+`@Transactional` on writes only, and only here. Never a bare exception — `ErrorFactory` carries the
+status. Resolve the caller through `AuthenticatedUserService`, never from a request parameter.
 
 ## Controller
 
 ```java
-package com.kronos.chiron.controller;
+package com.kronos.chiron.journalier.controller;
 
 @RestController
 @RequestMapping("/api/etat-journalier")
+@RequiredArgsConstructor
 public class EtatJournalierController {
 
     private final EtatJournalierService etatJournalierService;
-
-    public EtatJournalierController(EtatJournalierService etatJournalierService) {
-        this.etatJournalierService = etatJournalierService;
-    }
 
     @GetMapping
     public ResponseEntity<EtatJournalierDto> get(Authentication authentication,
@@ -149,9 +162,13 @@ strings.
 
 | Thrown in the service | Status returned |
 |-----------------------|-----------------|
-| `NoSuchElementException` | 404 |
-| `IllegalArgumentException` | 400 |
-| `SecurityException` | 403 |
+| `ErrorFactory.notFound(…)` | 404 |
+| `ErrorFactory.badRequest(…)` | 400 |
+| `ErrorFactory.forbidden(…)` | 403 |
+| `ErrorFactory.conflict(…)` | 409 |
+| `ErrorFactory.unauthorized(…)` | 401 |
+| `ChironTechnicalException` | 500 |
+| `MethodArgumentNotValidException` | 400, fields joined |
 | `AiUnavailableException` | 503 |
 
 Body is always `{"error": "<message>"}`. Anything else becomes an opaque 500.
