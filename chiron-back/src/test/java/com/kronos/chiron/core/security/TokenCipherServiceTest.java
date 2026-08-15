@@ -1,5 +1,7 @@
 package com.kronos.chiron.core.security;
 
+import com.kronos.chiron.core.exceptions.ChironTechnicalException;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -58,7 +60,7 @@ class TokenCipherServiceTest {
         ReflectionTestUtils.setField(svc, "configuredKeyB64",
                 Base64.getEncoder().encodeToString(new byte[16]));
 
-        assertThatThrownBy(svc::init).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(svc::init).isInstanceOf(ChironTechnicalException.class);
     }
 
     @Test

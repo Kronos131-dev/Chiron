@@ -1,14 +1,13 @@
 package com.kronos.chiron.boditrax.controller;
 
 import com.kronos.chiron.boditrax.service.BoditraxImportService;
+import com.kronos.chiron.core.security.AuthenticatedUserService;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
-import com.kronos.chiron.utilisateur.persistence.UtilisateurRepository;
 import com.kronos.chiron.visbody.service.VisbodyImportService;
 import com.kronos.chiron.visbody.service.VisbodyImportService.ImportResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -20,17 +19,16 @@ import java.io.IOException;
 public class BoditraxController {
 
     private final BoditraxImportService importService;
-    private final UtilisateurRepository utilisateurRepo;
+    private final AuthenticatedUserService authenticatedUserService;
 
     @PostMapping("/import")
-    public ResponseEntity<ImportResult> importCsv(@RequestParam("file") MultipartFile file,
-            Authentication auth) throws IOException {
+    public ResponseEntity<ImportResult> importCsv(@RequestParam("file") MultipartFile file)
+            throws IOException {
         if (file.isEmpty()) {
             return ResponseEntity.badRequest()
                     .body(new ImportResult(VisbodyImportService.Outcome.INVALID, "Fichier vide."));
         }
-        Utilisateur user = utilisateurRepo.findByUsername(auth.getName())
-                .orElseThrow(() -> new IllegalStateException("Utilisateur courant introuvable"));
+        Utilisateur user = authenticatedUserService.getAuthenticatedUser();
 
         ImportResult result = importService.importCsv(file.getBytes(), user);
         HttpStatus status = switch (result.outcome()) {

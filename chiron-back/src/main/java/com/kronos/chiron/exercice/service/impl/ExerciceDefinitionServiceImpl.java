@@ -1,5 +1,8 @@
 package com.kronos.chiron.exercice.service.impl;
 
+import static com.kronos.chiron.core.exceptions.ErrorFactory.notFound;
+import static com.kronos.chiron.core.exceptions.ErrorFactory.badRequest;
+
 import com.kronos.chiron.exercice.service.ExerciceDefinitionService;
 
 import com.kronos.chiron.exercice.dto.ExerciceDefinitionDto;
@@ -16,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 
 @Service
 @RequiredArgsConstructor
@@ -46,20 +48,20 @@ public class ExerciceDefinitionServiceImpl implements ExerciceDefinitionService 
     public ExerciceDefinitionDto getById(Long id) {
         return repository.findById(id)
                 .map(this::toDto)
-                .orElseThrow(() -> new NoSuchElementException("Exercice non trouvé : " + id));
+                .orElseThrow(() -> notFound("Exercice non trouvé : " + id));
     }
 
     @Transactional(readOnly = true)
     @Override
     public Resource streamImage(Long id, int index) {
-        if (index != 0 && index != 1) throw new IllegalArgumentException("Index image invalide : " + index);
+        if (index != 0 && index != 1) throw badRequest("Index image invalide : " + index);
 
         if (!repository.existsById(id))
-            throw new NoSuchElementException("Exercice non trouvé : " + id);
+            throw notFound("Exercice non trouvé : " + id);
 
         byte[] data = index == 0 ? repository.findImage0ById(id) : repository.findImage1ById(id);
         if (data == null || data.length == 0)
-            throw new NoSuchElementException("Pas d'image pour l'exercice : " + id + " index " + index);
+            throw notFound("Pas d'image pour l'exercice : " + id + " index " + index);
 
         return new ByteArrayResource(data);
     }

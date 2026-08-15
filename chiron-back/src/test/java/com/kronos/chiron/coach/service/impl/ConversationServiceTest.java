@@ -1,5 +1,9 @@
 package com.kronos.chiron.coach.service.impl;
 
+import org.springframework.web.ErrorResponseException;
+
+import org.springframework.http.HttpStatus;
+
 import org.mockito.Spy;
 
 import java.time.ZoneId;
@@ -21,7 +25,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -93,7 +96,8 @@ class ConversationServiceTest {
         when(conversationRepository.findByIdAndUtilisateur(99L, user)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> conversationService.getOrCreate(user, 99L))
-                .isInstanceOf(NoSuchElementException.class);
+                .isInstanceOfSatisfying(ErrorResponseException.class,
+                        e -> assertThat(e.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND));
     }
 
     @Test
@@ -120,7 +124,8 @@ class ConversationServiceTest {
         when(conversationRepository.findByIdAndUtilisateur(99L, user)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> conversationService.getMessages(user, 99L))
-                .isInstanceOf(NoSuchElementException.class);
+                .isInstanceOfSatisfying(ErrorResponseException.class,
+                        e -> assertThat(e.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND));
     }
 
     @Test
@@ -217,7 +222,8 @@ class ConversationServiceTest {
         when(conversationRepository.findByIdAndUtilisateur(99L, user)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> conversationService.delete(user, 99L))
-                .isInstanceOf(NoSuchElementException.class);
+                .isInstanceOfSatisfying(ErrorResponseException.class,
+                        e -> assertThat(e.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND));
         verify(conversationRepository, never()).delete(any(Conversation.class));
     }
 }

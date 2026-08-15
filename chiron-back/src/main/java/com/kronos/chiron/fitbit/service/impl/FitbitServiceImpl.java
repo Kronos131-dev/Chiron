@@ -1,5 +1,8 @@
 package com.kronos.chiron.fitbit.service.impl;
 
+import static com.kronos.chiron.core.exceptions.ErrorFactory.notFound;
+import com.kronos.chiron.core.exceptions.ChironTechnicalException;
+
 import com.kronos.chiron.fitbit.client.FitbitClient;
 import com.kronos.chiron.fitbit.client.FitbitParser;
 import com.kronos.chiron.fitbit.dto.FitbitDashboardDto;
@@ -57,7 +60,7 @@ public class FitbitServiceImpl implements FitbitService {
     @Override
     public String buildAuthorizationUrl(String chironUsername) {
         Utilisateur user = utilisateurRepository.findByUsername(chironUsername)
-                .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable : " + chironUsername));
+                .orElseThrow(() -> notFound("Utilisateur introuvable : " + chironUsername));
 
         String codeVerifier = generateCodeVerifier();
         String codeChallenge = deriveCodeChallenge(codeVerifier);
@@ -89,7 +92,7 @@ public class FitbitServiceImpl implements FitbitService {
 
         Utilisateur user = utilisateurRepository.findById(pending.chironUserId())
                 .orElseThrow(
-                        () -> new IllegalArgumentException("Utilisateur introuvable id=" + pending.chironUserId()));
+                        () -> notFound("Utilisateur introuvable id=" + pending.chironUserId()));
 
         applyTokens(user, tr);
         user.setFitbitLinkedAt(LocalDateTime.now(clock));
@@ -102,7 +105,7 @@ public class FitbitServiceImpl implements FitbitService {
     @Override
     public FitbitLinkStatus getStatus(String chironUsername) {
         Utilisateur user = utilisateurRepository.findByUsername(chironUsername)
-                .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable : " + chironUsername));
+                .orElseThrow(() -> notFound("Utilisateur introuvable : " + chironUsername));
         return buildStatus(user);
     }
 
@@ -110,7 +113,7 @@ public class FitbitServiceImpl implements FitbitService {
     @Override
     public void unlink(String chironUsername) {
         Utilisateur user = utilisateurRepository.findByUsername(chironUsername)
-                .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable : " + chironUsername));
+                .orElseThrow(() -> notFound("Utilisateur introuvable : " + chironUsername));
         clearLink(user);
         log.info("FITBIT_UNLINKED user={}", chironUsername);
     }
@@ -119,7 +122,7 @@ public class FitbitServiceImpl implements FitbitService {
     @Override
     public String getValidToken(String chironUsername) {
         Utilisateur user = utilisateurRepository.findByUsername(chironUsername)
-                .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable : " + chironUsername));
+                .orElseThrow(() -> notFound("Utilisateur introuvable : " + chironUsername));
 
         if (user.getFitbitRefreshTokenEncrypted() == null && user.getFitbitAccessTokenEncrypted() == null) {
             throw new NotLinkedException();
@@ -255,7 +258,7 @@ public class FitbitServiceImpl implements FitbitService {
             byte[] digest = sha256.digest(verifier.getBytes(StandardCharsets.US_ASCII));
             return Base64.getUrlEncoder().withoutPadding().encodeToString(digest);
         } catch (Exception e) {
-            throw new IllegalStateException("SHA-256 indisponible", e);
+            throw new ChironTechnicalException("SHA-256 indisponible", e);
         }
     }
 

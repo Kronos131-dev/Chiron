@@ -1,5 +1,9 @@
 package com.kronos.chiron.exercice.service.impl;
 
+import org.springframework.web.ErrorResponseException;
+
+import org.springframework.http.HttpStatus;
+
 import com.kronos.chiron.exercice.model.ExerciceDefinition;
 import com.kronos.chiron.exercice.model.MuscleGroup;
 import com.kronos.chiron.exercice.model.NiveauDifficulte;
@@ -15,7 +19,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.Resource;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -127,7 +130,8 @@ class ExerciceDefinitionServiceTest {
         when(repository.findById(999L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.getById(999L))
-                .isInstanceOf(NoSuchElementException.class);
+                .isInstanceOfSatisfying(ErrorResponseException.class,
+                        e -> assertThat(e.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND));
     }
 
     // ── toDto / imageUrl building ─────────────────────────────────────────────
@@ -164,7 +168,8 @@ class ExerciceDefinitionServiceTest {
     @Test
     void streamImage_invalidIndex_throwsIllegalArgument() {
         assertThatThrownBy(() -> service.streamImage(10L, 2))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOfSatisfying(ErrorResponseException.class,
+                        e -> assertThat(e.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST));
         verifyNoInteractions(repository);
     }
 
@@ -173,7 +178,8 @@ class ExerciceDefinitionServiceTest {
         when(repository.existsById(99L)).thenReturn(false);
 
         assertThatThrownBy(() -> service.streamImage(99L, 0))
-                .isInstanceOf(NoSuchElementException.class);
+                .isInstanceOfSatisfying(ErrorResponseException.class,
+                        e -> assertThat(e.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND));
     }
 
     @Test
@@ -182,7 +188,8 @@ class ExerciceDefinitionServiceTest {
         when(repository.findImage0ById(12L)).thenReturn(null);
 
         assertThatThrownBy(() -> service.streamImage(12L, 0))
-                .isInstanceOf(NoSuchElementException.class);
+                .isInstanceOfSatisfying(ErrorResponseException.class,
+                        e -> assertThat(e.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND));
     }
 
     @Test
@@ -191,7 +198,8 @@ class ExerciceDefinitionServiceTest {
         when(repository.findImage1ById(12L)).thenReturn(null);
 
         assertThatThrownBy(() -> service.streamImage(12L, 1))
-                .isInstanceOf(NoSuchElementException.class);
+                .isInstanceOfSatisfying(ErrorResponseException.class,
+                        e -> assertThat(e.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND));
     }
 
     @Test

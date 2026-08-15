@@ -1,5 +1,7 @@
 package com.kronos.chiron.coach.service.impl;
 
+import static com.kronos.chiron.core.exceptions.ErrorFactory.notFound;
+
 import com.kronos.chiron.coach.service.ConversationService;
 
 import java.time.Clock;
@@ -16,7 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 @Service
 @RequiredArgsConstructor
@@ -42,7 +43,7 @@ public class ConversationServiceImpl implements ConversationService {
             return conversationRepository.save(conv);
         }
         return conversationRepository.findByIdAndUtilisateur(conversationId, user)
-                .orElseThrow(() -> new NoSuchElementException("Conversation introuvable"));
+                .orElseThrow(() -> notFound("Conversation introuvable"));
     }
 
     @Transactional(readOnly = true)
@@ -55,7 +56,7 @@ public class ConversationServiceImpl implements ConversationService {
     @Override
     public List<ConversationMessage> getMessages(Utilisateur user, Long conversationId) {
         Conversation conv = conversationRepository.findByIdAndUtilisateur(conversationId, user)
-                .orElseThrow(() -> new NoSuchElementException("Conversation introuvable"));
+                .orElseThrow(() -> notFound("Conversation introuvable"));
         return conversationMessageRepository.findByConversationOrderByCreatedAtAsc(conv);
     }
 
@@ -75,7 +76,7 @@ public class ConversationServiceImpl implements ConversationService {
     @Override
     public void delete(Utilisateur user, Long conversationId) {
         Conversation conv = conversationRepository.findByIdAndUtilisateur(conversationId, user)
-                .orElseThrow(() -> new NoSuchElementException("Conversation introuvable"));
+                .orElseThrow(() -> notFound("Conversation introuvable"));
         conversationRepository.delete(conv);
     }
 

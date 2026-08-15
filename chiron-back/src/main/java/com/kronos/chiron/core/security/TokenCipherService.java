@@ -42,7 +42,7 @@ public class TokenCipherService {
         }
         byte[] keyBytes = Base64.getDecoder().decode(configuredKeyB64);
         if (keyBytes.length != 32) {
-            throw new IllegalStateException("chiron.secret-key doit faire exactement 32 octets (256 bits) base64.");
+            throw new ChironTechnicalException("chiron.secret-key doit faire exactement 32 octets (256 bits) base64.");
         }
         this.secretKey = new SecretKeySpec(keyBytes, ALG);
     }

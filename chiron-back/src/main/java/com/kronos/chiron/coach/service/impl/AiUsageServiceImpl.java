@@ -1,5 +1,7 @@
 package com.kronos.chiron.coach.service.impl;
 
+import static com.kronos.chiron.core.exceptions.ErrorFactory.notFound;
+
 import com.kronos.chiron.coach.service.AiUsageService;
 
 import java.time.Clock;
@@ -13,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.NoSuchElementException;
 
 @Service
 @RequiredArgsConstructor
@@ -33,7 +34,7 @@ public class AiUsageServiceImpl implements AiUsageService {
         }
 
         Utilisateur managed = utilisateurRepository.findById(user.getId())
-                .orElseThrow(() -> new NoSuchElementException("Utilisateur introuvable"));
+                .orElseThrow(() -> notFound("Utilisateur introuvable"));
 
         LocalDate today = LocalDate.now(clock);
         if (!today.equals(managed.getGeminiCallDate())) {

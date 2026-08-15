@@ -1,5 +1,9 @@
 package com.kronos.chiron.utilisateur.service.impl;
 
+import static com.kronos.chiron.core.exceptions.ErrorFactory.notFound;
+import static com.kronos.chiron.core.exceptions.ErrorFactory.badRequest;
+import static com.kronos.chiron.core.exceptions.ErrorFactory.conflict;
+
 import com.kronos.chiron.utilisateur.service.SettingsService;
 
 import java.time.Clock;
@@ -18,7 +22,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.NoSuchElementException;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +46,7 @@ public class SettingsServiceImpl implements SettingsService {
     @Override
     public com.kronos.chiron.utilisateur.dto.TrainingPrefsDto getTrainingPrefs(String username) {
         Utilisateur user = utilisateurRepository.findByUsername(username)
-                .orElseThrow(() -> new NoSuchElementException("Utilisateur introuvable"));
+                .orElseThrow(() -> notFound("Utilisateur introuvable"));
         return new com.kronos.chiron.utilisateur.dto.TrainingPrefsDto(
                 user.isPoidsHaltereParImplement(), user.isPoidsMachineParCote());
     }
@@ -52,7 +55,7 @@ public class SettingsServiceImpl implements SettingsService {
     @Override
     public void updateTrainingPrefs(String username, boolean halteresParImplement, boolean machineParCote) {
         Utilisateur user = utilisateurRepository.findByUsername(username)
-                .orElseThrow(() -> new NoSuchElementException("Utilisateur introuvable"));
+                .orElseThrow(() -> notFound("Utilisateur introuvable"));
         user.setPoidsHaltereParImplement(halteresParImplement);
         user.setPoidsMachineParCote(machineParCote);
         utilisateurRepository.save(user);
@@ -61,7 +64,7 @@ public class SettingsServiceImpl implements SettingsService {
     @Override
     public com.kronos.chiron.utilisateur.dto.AiProviderDto getAiProvider(String username) {
         Utilisateur user = utilisateurRepository.findByUsername(username)
-                .orElseThrow(() -> new NoSuchElementException("Utilisateur introuvable"));
+                .orElseThrow(() -> notFound("Utilisateur introuvable"));
         return new com.kronos.chiron.utilisateur.dto.AiProviderDto(
                 user.getAiProvider(), chironAgentRouter.geminiAvailable());
     }
@@ -70,7 +73,7 @@ public class SettingsServiceImpl implements SettingsService {
     @Override
     public void updateAiProvider(String username, com.kronos.chiron.utilisateur.model.AiProvider provider) {
         Utilisateur user = utilisateurRepository.findByUsername(username)
-                .orElseThrow(() -> new NoSuchElementException("Utilisateur introuvable"));
+                .orElseThrow(() -> notFound("Utilisateur introuvable"));
         user.setAiProvider(provider != null ? provider : com.kronos.chiron.utilisateur.model.AiProvider.MISTRAL);
         utilisateurRepository.save(user);
     }
@@ -79,9 +82,9 @@ public class SettingsServiceImpl implements SettingsService {
     @Override
     public void changePassword(String username, String currentPassword, String newPassword) {
         Utilisateur user = utilisateurRepository.findByUsername(username)
-                .orElseThrow(() -> new NoSuchElementException("Utilisateur introuvable"));
+                .orElseThrow(() -> notFound("Utilisateur introuvable"));
         if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
-            throw new IllegalArgumentException("Mot de passe actuel incorrect");
+            throw badRequest("Mot de passe actuel incorrect");
         }
         user.setPassword(passwordEncoder.encode(newPassword));
         utilisateurRepository.save(user);
@@ -91,9 +94,9 @@ public class SettingsServiceImpl implements SettingsService {
     @Override
     public void changeEmail(String username, String newEmail) {
         Utilisateur user = utilisateurRepository.findByUsername(username)
-                .orElseThrow(() -> new NoSuchElementException("Utilisateur introuvable"));
+                .orElseThrow(() -> notFound("Utilisateur introuvable"));
         if (utilisateurRepository.findByEmail(newEmail).isPresent()) {
-            throw new IllegalArgumentException("Cet email est déjà utilisé");
+            throw conflict("Cet email est déjà utilisé");
         }
         user.setEmail(newEmail);
         utilisateurRepository.save(user);
@@ -103,7 +106,7 @@ public class SettingsServiceImpl implements SettingsService {
     @Override
     public void changeIdentity(String username, String prenom, String nom) {
         Utilisateur user = utilisateurRepository.findByUsername(username)
-                .orElseThrow(() -> new NoSuchElementException("Utilisateur introuvable"));
+                .orElseThrow(() -> notFound("Utilisateur introuvable"));
         user.setPrenom(prenom == null || prenom.isBlank() ? null : prenom.trim());
         user.setNom(nom == null || nom.isBlank() ? null : nom.trim());
         utilisateurRepository.save(user);
@@ -113,11 +116,11 @@ public class SettingsServiceImpl implements SettingsService {
     @Override
     public String changeUsername(String username, String newUsername) {
         Utilisateur user = utilisateurRepository.findByUsername(username)
-                .orElseThrow(() -> new NoSuchElementException("Utilisateur introuvable"));
+                .orElseThrow(() -> notFound("Utilisateur introuvable"));
         utilisateurRepository.findByUsernameIgnoreCase(newUsername)
                 .filter(existing -> !existing.getId().equals(user.getId()))
                 .ifPresent(__ -> {
-                    throw new IllegalArgumentException("Ce pseudo est déjà pris");
+                    throw conflict("Ce pseudo est déjà pris");
                 });
         user.setUsername(newUsername);
         utilisateurRepository.save(user);
@@ -154,12 +157,12 @@ public class SettingsServiceImpl implements SettingsService {
     @Override
     public void resetPassword(String tokenValue, String newPassword) {
         PasswordResetToken token = tokenRepository.findByToken(tokenValue)
-                .orElseThrow(() -> new IllegalArgumentException("Lien de réinitialisation invalide"));
+                .orElseThrow(() -> badRequest("Lien de réinitialisation invalide"));
         if (token.getUsed()) {
-            throw new IllegalArgumentException("Ce lien a déjà été utilisé");
+            throw badRequest("Ce lien a déjà été utilisé");
         }
         if (token.getExpiresAt().isBefore(LocalDateTime.now(clock))) {
-            throw new IllegalArgumentException("Ce lien a expiré");
+            throw badRequest("Ce lien a expiré");
         }
         Utilisateur user = token.getUtilisateur();
         user.setPassword(passwordEncoder.encode(newPassword));

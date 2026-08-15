@@ -1,5 +1,7 @@
 package com.kronos.chiron.performance.service.impl;
 
+import static com.kronos.chiron.core.exceptions.ErrorFactory.badRequest;
+
 import com.kronos.chiron.performance.service.PerformanceService;
 
 import static com.kronos.chiron.core.exceptions.ErrorFactory.notFound;
@@ -59,7 +61,7 @@ public class PerformanceServiceImpl implements PerformanceService {
         ExerciseType type = parseExerciseType(dto.getExerciseType());
 
         if (dto.getNombreReps() < 1 || dto.getNombreReps() > 36) {
-            throw new IllegalArgumentException("Le nombre de répétitions doit être entre 1 et 36.");
+            throw badRequest("Le nombre de répétitions doit être entre 1 et 36.");
         }
 
         Double poidsCorps = user.getPoidsCorps();
@@ -250,7 +252,7 @@ public class PerformanceServiceImpl implements PerformanceService {
         try {
             return ExerciseType.valueOf(name.toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Type d'exercice inconnu : " + name);
+            throw badRequest("Type d'exercice inconnu : " + name);
         }
     }
 

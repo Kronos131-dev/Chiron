@@ -1,5 +1,7 @@
 package com.kronos.chiron.coach.controller;
 
+import static com.kronos.chiron.core.exceptions.ErrorFactory.notFound;
+
 import com.kronos.chiron.coach.agent.ConversationMemoryManager;
 import com.kronos.chiron.coach.dto.ConversationMessageDto;
 import com.kronos.chiron.coach.dto.ConversationSummaryDto;
@@ -13,7 +15,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 
 @RestController
 @RequestMapping("/api/conversations")
@@ -52,6 +53,6 @@ public class ConversationController {
 
     private Utilisateur currentUser(UserDetails userDetails) {
         return utilisateurRepository.findByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new NoSuchElementException("Utilisateur introuvable"));
+                .orElseThrow(() -> notFound("Utilisateur introuvable"));
     }
 }
