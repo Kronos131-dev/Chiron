@@ -3,10 +3,10 @@ package com.kronos.chiron.coach.tools;
 import java.time.Clock;
 
 import com.kronos.chiron.utilisateur.model.Utilisateur;
-import com.kronos.chiron.fitbit.FitbitClient;
-import com.kronos.chiron.fitbit.FitbitParser;
-import com.kronos.chiron.fitbit.FitbitService;
-import com.kronos.chiron.fitbit.FitbitSyncService;
+import com.kronos.chiron.fitbit.client.FitbitClient;
+import com.kronos.chiron.fitbit.client.FitbitParser;
+import com.kronos.chiron.fitbit.service.FitbitService;
+import com.kronos.chiron.fitbit.service.FitbitSyncService;
 import com.kronos.chiron.utilisateur.persistence.UtilisateurRepository;
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agent.tool.ToolMemoryId;

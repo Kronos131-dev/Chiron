@@ -1,4 +1,11 @@
-package com.kronos.chiron.fitbit;
+package com.kronos.chiron.fitbit.service.impl;
+
+import com.kronos.chiron.fitbit.client.FitbitClient;
+import com.kronos.chiron.fitbit.client.FitbitParser;
+import com.kronos.chiron.fitbit.dto.FitbitDashboardDto;
+import com.kronos.chiron.fitbit.dto.FitbitDayPoint;
+import com.kronos.chiron.fitbit.service.FitbitService;
+import com.kronos.chiron.fitbit.service.FitbitSyncService;
 
 import java.time.Clock;
 
@@ -15,7 +22,7 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class FitbitSyncService {
+public class FitbitSyncServiceImpl implements FitbitSyncService {
 
     private final FitbitService fitbitService;
     private final FitbitClient fitbitClient;
@@ -23,6 +30,7 @@ public class FitbitSyncService {
     private final UtilisateurRepository utilisateurRepository;
 
     private final Clock clock;
+    @Override
     public void syncEtatJournalier(String chironUsername, int nbJours) {
         int days = Math.max(1, Math.min(nbJours, 30));
         LocalDate start = LocalDate.now(clock).minusDays(days - 1L);

@@ -1,4 +1,4 @@
-package com.kronos.chiron.fitbit;
+package com.kronos.chiron.fitbit.dto;
 
 import java.time.LocalDateTime;
 

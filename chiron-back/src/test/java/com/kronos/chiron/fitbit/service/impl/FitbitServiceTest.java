@@ -1,4 +1,13 @@
-package com.kronos.chiron.fitbit;
+package com.kronos.chiron.fitbit.service.impl;
+
+import com.kronos.chiron.fitbit.client.FitbitClient;
+import com.kronos.chiron.fitbit.client.FitbitParser;
+import com.kronos.chiron.fitbit.dto.FitbitDashboardDto;
+import com.kronos.chiron.fitbit.dto.FitbitDayPoint;
+import com.kronos.chiron.fitbit.dto.FitbitLinkStatus;
+import com.kronos.chiron.fitbit.service.FitbitAuthSessionStore;
+import com.kronos.chiron.fitbit.service.FitbitService;
+import com.kronos.chiron.fitbit.service.FitbitSyncService;
 
 import org.mockito.Spy;
 
@@ -42,7 +51,7 @@ class FitbitServiceTest {
     private Clock clock = Clock.system(ZoneId.of("Europe/Paris"));
 
     @InjectMocks
-    private FitbitService fitbitService;
+    private FitbitServiceImpl fitbitService;
 
     private Utilisateur user;
 
