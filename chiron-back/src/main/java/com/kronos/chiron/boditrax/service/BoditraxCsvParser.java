@@ -1,4 +1,4 @@
-package com.kronos.chiron.boditrax;
+package com.kronos.chiron.boditrax.service;
 
 import com.kronos.chiron.visbody.dto.VisbodyReport;
 import org.slf4j.Logger;

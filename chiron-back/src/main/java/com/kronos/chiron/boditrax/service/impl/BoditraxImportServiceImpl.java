@@ -1,6 +1,8 @@
-package com.kronos.chiron.boditrax;
+package com.kronos.chiron.boditrax.service.impl;
 
-import com.kronos.chiron.boditrax.BoditraxCsvParser.ParsedBoditrax;
+import com.kronos.chiron.boditrax.service.BoditraxCsvParser;
+import com.kronos.chiron.boditrax.service.BoditraxCsvParser.ParsedBoditrax;
+import com.kronos.chiron.boditrax.service.BoditraxImportService;
 import com.kronos.chiron.utilisateur.model.Sexe;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 import com.kronos.chiron.utilisateur.persistence.UtilisateurRepository;
@@ -19,9 +21,9 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class BoditraxImportService {
+public class BoditraxImportServiceImpl implements BoditraxImportService {
 
-    private static final Logger log = LoggerFactory.getLogger(BoditraxImportService.class);
+    private static final Logger log = LoggerFactory.getLogger(BoditraxImportServiceImpl.class);
     private static final String SOURCE = "BODITRAX_CSV";
 
     private final BoditraxCsvParser parser;
@@ -29,6 +31,7 @@ public class BoditraxImportService {
     private final UtilisateurRepository utilisateurRepo;
 
     @Transactional
+    @Override
     public ImportResult importCsv(byte[] csv, Utilisateur user) {
         ParsedBoditrax data;
         try {
