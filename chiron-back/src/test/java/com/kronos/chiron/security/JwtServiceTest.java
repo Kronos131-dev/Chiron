@@ -1,10 +1,10 @@
 package com.kronos.chiron.security;
 
+import com.kronos.chiron.core.exceptions.ChironTechnicalException;
 import com.kronos.chiron.utilisateur.model.Role;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -23,9 +23,7 @@ class JwtServiceTest {
 
     @BeforeEach
     void setUp() {
-        jwtService = new JwtService();
-        ReflectionTestUtils.setField(jwtService, "secretKey", SECRET);
-        ReflectionTestUtils.setField(jwtService, "jwtExpiration", 86400000L);
+        jwtService = new JwtService(SECRET, 86400000L);
     }
 
     private Utilisateur buildUser(String username) {
@@ -76,9 +74,7 @@ class JwtServiceTest {
 
     @Test
     void isTokenValid_expiredToken_throwsExpiredJwtException() {
-        JwtService shortLivedService = new JwtService();
-        ReflectionTestUtils.setField(shortLivedService, "secretKey", SECRET);
-        ReflectionTestUtils.setField(shortLivedService, "jwtExpiration", -1000L);
+        JwtService shortLivedService = new JwtService(SECRET, -1000L);
 
         Utilisateur user = buildUser("frank");
         String token = shortLivedService.generateToken(user);
@@ -100,5 +96,33 @@ class JwtServiceTest {
         String t1 = jwtService.generateToken(buildUser("user1"));
         String t2 = jwtService.generateToken(buildUser("user2"));
         assertThat(t1).isNotEqualTo(t2);
+    }
+
+    @Test
+    void constructor_nullSecret_refusesToStart() {
+        assertThatThrownBy(() -> new JwtService(null, 86400000L))
+                .isInstanceOf(ChironTechnicalException.class)
+                .hasMessageContaining("JWT_SECRET");
+    }
+
+    @Test
+    void constructor_blankSecret_refusesToStart() {
+        assertThatThrownBy(() -> new JwtService("   ", 86400000L))
+                .isInstanceOf(ChironTechnicalException.class)
+                .hasMessageContaining("JWT_SECRET");
+    }
+
+    @Test
+    void constructor_secretShorterThanHmacMinimum_refusesToStart() {
+        assertThatThrownBy(() -> new JwtService("404E635266556A586E327235", 86400000L))
+                .isInstanceOf(ChironTechnicalException.class)
+                .hasMessageContaining("trop court");
+    }
+
+    @Test
+    void constructor_secretNotBase64_refusesToStart() {
+        assertThatThrownBy(() -> new JwtService("clé secrète avec des espaces et des accents !", 86400000L))
+                .isInstanceOf(ChironTechnicalException.class)
+                .hasMessageContaining("base64");
     }
 }
