@@ -26,7 +26,7 @@ blocks the Chiron deploy, but a broken Chiron deploy blocks Olympus.
 | `build-frontend` | `npm ci` then `npm run build -- --configuration production` | The Angular production build succeeds; produces `dist/chiron-front/browser/` |
 | `test-unit` | `mvn test` | Surefire: everything outside `controller/`, `persistence/` and `migration/` |
 | `test-integration` | `mvn verify -DskipUTs=true` | Failsafe: controllers, repositories, and the Flyway schema validation against a real PostgreSQL |
-| `build-olympus-*`, `test-olympus` | Java 17 build of `Kronos131-dev/olympus` against a `postgres:16-alpine` service | A repository that is **not** in this working tree |
+| `build-olympus-*`, `test-olympus` | Build of `Kronos131-dev/olympus` on the same JDK as Chiron, against a `postgres:16-alpine` service | A repository that is **not** in this working tree |
 | `deploy` | scp + rsync + `docker compose up -d --force-recreate` over SSH | The artefacts reached the server and the containers were recreated |
 | `deploy-olympus` | same shape for Olympus | Olympus reached the server |
 

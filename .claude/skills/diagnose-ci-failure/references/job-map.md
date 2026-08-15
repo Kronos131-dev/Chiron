@@ -21,7 +21,7 @@ build-olympus-frontend ┴─> test-olympus ─────────┴─> d
 | `test-unit` | **this one** | `cd chiron-back && mvn test --no-transfer-progress` |
 | `test-integration` | **this one** | `cd chiron-back && mvn verify -DskipUTs=true --no-transfer-progress` (Docker required) |
 | `deploy` | **this one** | not reproducible locally — it is an SSH deploy |
-| `build-olympus-backend` | `Kronos131-dev/olympus`, Java **17** | not in this working tree |
+| `build-olympus-backend` | `Kronos131-dev/olympus`, same JDK as Chiron | not in this working tree |
 | `build-olympus-frontend` | `Kronos131-dev/olympus` | not in this working tree |
 | `test-olympus` | `Kronos131-dev/olympus`, against a `postgres:16-alpine` service | not in this working tree |
 | `deploy-olympus` | `Kronos131-dev/olympus` | not in this working tree |
