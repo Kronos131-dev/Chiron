@@ -264,6 +264,22 @@ jobs:
     environment: ${{ inputs.target || 'production' }}
 
     steps:
+      # Avant tout contact avec le serveur : un secret manquant arrivait jusqu'au
+      # conteneur sous la forme d'une variable vide, et le backend démarrait avec une
+      # authentification cassée. Échouer ici laisse l'ancien conteneur en place.
+      - name: Vérifier les secrets obligatoires
+        env:
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        run: |
+          if [ -z "$JWT_SECRET" ]; then
+            echo "::error::Le secret GitHub JWT_SECRET est absent ou vide. Créez-le dans Settings → Secrets and variables → Actions (openssl rand -hex 32)."
+            exit 1
+          fi
+          if [ ${#JWT_SECRET} -lt 64 ]; then
+            echo "::error::JWT_SECRET fait ${#JWT_SECRET} caractères ; il en faut au moins 64 (32 octets une fois décodé) pour HMAC-SHA256."
+            exit 1
+          fi
+
       - uses: actions/checkout@v5
 
       - uses: actions/download-artifact@v5
