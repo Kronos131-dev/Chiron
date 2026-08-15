@@ -5,6 +5,11 @@
 Only the lines this edit added are inspected, so the comments already in the codebase never
 fire — conformance arrives file by file as they are touched.
 
+The one exception is a comment marked WHY:, which records a fact the code cannot state — the
+behaviour of an external system, a quirk of a wire format, a failure mode nobody would guess.
+The marker opens a block: the comment lines that follow it, up to the first line of code, are
+covered too, so a three-line rationale is written once rather than marked three times.
+
 Reads a Claude Code hook payload on stdin, exits 2 with a message on stderr to warn.
 """
 
@@ -33,6 +38,8 @@ TYPESCRIPT_PRAGMAS = (
     "NOSONAR",
 )
 
+RATIONALE_MARKER = "WHY:"
+
 TYPESCRIPT_EXTENSIONS = (".ts", ".js")
 
 JAVA_STRING_LITERAL = re.compile(r'"""(?:.|\n)*?"""' + r'|"(?:\\.|[^"\\])*"' + r"|'(?:\\.|[^'\\])*'")
@@ -48,13 +55,18 @@ TYPESCRIPT_SCOPE = os.path.join("chiron-front", "src")
 JAVA_GUIDANCE = (
     "Chiron production code carries no comments. Remove them and make the code say it "
     "instead: extract a named method, or rename the variable so the intent is obvious. "
-    "Comments are only allowed as // Given / // When / // Then in src/test/java."
+    "Comments are only allowed as // Given / // When / // Then in src/test/java. "
+    "If the line records something the code genuinely cannot say — the behaviour of an "
+    "external system, a quirk of a wire format, a failure mode nobody would guess — mark it "
+    "// WHY: and it passes."
 )
 
 TYPESCRIPT_GUIDANCE = (
     "Chiron frontend code carries no comments. Remove them and make the code say it "
     "instead: extract a named function, a computed signal or a child component, or rename "
-    "the variable so the intent is obvious."
+    "the variable so the intent is obvious. If the line records something the code genuinely "
+    "cannot say — a browser quirk, an API contract, a failure mode nobody would guess — mark "
+    "it // WHY: and it passes."
 )
 
 
@@ -74,7 +86,12 @@ def language_rules_for(path):
     return None
 
 
-def lines_added_by_this_edit(repo_root, path):
+def hunks_added_by_this_edit(repo_root, path):
+    """Added lines, grouped by hunk.
+
+    Grouping matters for the WHY: marker: it opens a block that the following comment lines
+    inherit, and two hunks are not contiguous in the file, so a block never spans them.
+    """
     diff = subprocess.run(
         ["git", "-C", repo_root, "diff", "--unified=0", "HEAD", "--", path],
         capture_output=True,
@@ -83,13 +100,14 @@ def lines_added_by_this_edit(repo_root, path):
     if diff.returncode != 0:
         return []
 
-    added = [
-        line[1:]
-        for line in diff.stdout.splitlines()
-        if line.startswith("+") and not line.startswith("+++")
-    ]
-    if added:
-        return added
+    hunks = []
+    for line in diff.stdout.splitlines():
+        if line.startswith("@@"):
+            hunks.append([])
+        elif line.startswith("+") and not line.startswith("+++") and hunks:
+            hunks[-1].append(line[1:])
+    if any(hunks):
+        return hunks
 
     is_tracked = subprocess.run(
         ["git", "-C", repo_root, "ls-files", "--error-unmatch", path],
@@ -99,7 +117,7 @@ def lines_added_by_this_edit(repo_root, path):
     if is_tracked.returncode != 0:
         try:
             with open(path, encoding="utf-8") as handle:
-                return handle.read().splitlines()
+                return [handle.read().splitlines()]
         except OSError:
             return []
     return []
@@ -127,6 +145,21 @@ def is_comment(line, pragmas, string_literal):
     )
 
 
+def unmarked_comments(hunk, pragmas, string_literal):
+    offenders = []
+    inside_rationale = False
+    for line in hunk:
+        if not is_comment(line, pragmas, string_literal):
+            inside_rationale = False
+            continue
+        if RATIONALE_MARKER in line:
+            inside_rationale = True
+            continue
+        if not inside_rationale:
+            offenders.append(line.strip())
+    return offenders
+
+
 def main():
     try:
         payload = json.load(sys.stdin)
@@ -148,11 +181,9 @@ def main():
     if not repo_root:
         return 0
 
-    offenders = [
-        line.strip()
-        for line in lines_added_by_this_edit(repo_root, path)
-        if is_comment(line, pragmas, string_literal)
-    ]
+    offenders = []
+    for hunk in hunks_added_by_this_edit(repo_root, path):
+        offenders += unmarked_comments(hunk, pragmas, string_literal)
     if not offenders:
         return 0
 

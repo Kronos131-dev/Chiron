@@ -97,6 +97,33 @@ feat: add gemini fallback
 Ajoute un repli automatique sur Mistral quand Gemini renvoie un 503.
 EOF"""
 
+NO_COMMENTS_JAVA = os.path.join(
+    REPO, "chiron-back/src/main/java/com/kronos/chiron/__hook_probe__.java")
+
+NO_COMMENTS_TS = os.path.join(REPO, "chiron-front/src/app/__hook_probe__.ts")
+
+NO_COMMENTS_OUT_OF_SCOPE = os.path.join(
+    REPO, "chiron-back/src/test/java/com/kronos/chiron/__hook_probe__.java")
+
+NO_COMMENTS = [
+    (2, "bare line comment", NO_COMMENTS_JAVA, "// remet le compteur à zéro\nint total = 0;\n"),
+    (2, "trailing comment", NO_COMMENTS_JAVA, "int total = 0; // remet à zéro\n"),
+    (2, "javadoc", NO_COMMENTS_JAVA, "/**\n * Additionne les séries.\n */\nint total = 0;\n"),
+    (2, "second block unmarked", NO_COMMENTS_JAVA,
+     "// WHY: Google renvoie 403 quand l'API est désactivée.\nint a = 0;\n// simple paraphrase\nint b = 0;\n"),
+    (0, "marked rationale", NO_COMMENTS_JAVA,
+     "// WHY: Google renvoie 403 quand l'API est désactivée.\nint total = 0;\n"),
+    (0, "marked rationale spanning lines", NO_COMMENTS_JAVA,
+     "// WHY: Boditrax sépare l'heure de AM/PM par une espace fine insécable\n"
+     "// (U+202F) que java \\s ne couvre pas.\nint total = 0;\n"),
+    (0, "pragma", NO_COMMENTS_JAVA, "int total = 0; // NOSONAR\n"),
+    (0, "no comment at all", NO_COMMENTS_JAVA, "int total = 0;\n"),
+    (0, "url in a string", NO_COMMENTS_JAVA, 'String u = "https://chiron-sanctuaire.fr";\n'),
+    (2, "frontend comment", NO_COMMENTS_TS, "// recharge la liste\nconst x = 1;\n"),
+    (0, "frontend marked", NO_COMMENTS_TS, "// WHY: Safari ignore le focus programmatique.\nconst x = 1;\n"),
+    (0, "out of scope", NO_COMMENTS_OUT_OF_SCOPE, "// Given un athlète\nint total = 0;\n"),
+]
+
 MIGRATION = [
     (2, "committed migration", os.path.join(MIGRATIONS, "V0__baseline.sql")),
     (2, "bad name", os.path.join(MIGRATIONS, "44-add-tempo.sql")),
@@ -113,6 +140,16 @@ def drive(hook, payload):
         text=True,
     )
     return result.returncode
+
+
+def drive_no_comments(path, content):
+    """The hook reads the file through `git diff HEAD`, so the probe must exist on disk."""
+    with open(path, "w", encoding="utf-8") as handle:
+        handle.write(content)
+    try:
+        return drive("check-no-comments.py", {"tool_name": "Write", "tool_input": {"file_path": path}})
+    finally:
+        os.remove(path)
 
 
 def report(title, rows):
@@ -146,6 +183,10 @@ def main():
          drive("check-commit-message.py", {"tool_name": "Bash", "tool_input": {"command": HEREDOC_DIRTY}})),
         (0, "heredoc clean",
          drive("check-commit-message.py", {"tool_name": "Bash", "tool_input": {"command": HEREDOC_CLEAN}})),
+    ])
+
+    failures += report("check-no-comments.py", [
+        (e, l, drive_no_comments(p, c)) for e, l, p, c in NO_COMMENTS
     ])
 
     failures += report("check-migration-immutable.py", [

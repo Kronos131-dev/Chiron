@@ -42,6 +42,14 @@ its key added to **both** `i18n/fr.ts` (source of truth) and `i18n/en.ts`.
 **Both** — names carry the meaning. If a block seems to need a comment, extract a named method,
 function or component instead.
 
+**The one exception** — a comment marked `// WHY:` passes the hook. It is for a fact the code
+cannot state: the behaviour of an external system, a quirk of a wire format, a failure mode nobody
+would guess. `// WHY: Google renvoie 403 quand l'API Health est désactivée, jamais sur un token
+expiré` is worth its line; `// incrémente le compteur` is not. The marker opens a block — the
+comment lines that follow it, up to the first line of code, are covered too. If a rename or an
+extracted method would carry the same information, do that instead; the marker is not an escape
+hatch from the rule, it is the narrow case the rule would otherwise destroy.
+
 ## Commits — non-negotiable
 
 The author is **the repository owner, alone**. No `Co-Authored-By` trailer, no "Generated with" line,
