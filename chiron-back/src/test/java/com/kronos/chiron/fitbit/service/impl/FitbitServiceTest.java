@@ -65,7 +65,7 @@ class FitbitServiceTest {
     void getValidToken_returnsStoredTokenWhenStillValid() {
         user.setFitbitAccessTokenEncrypted("enc-access");
         user.setFitbitRefreshTokenEncrypted("enc-refresh");
-        user.setFitbitTokenExpiresAt(LocalDateTime.now().plusHours(2));
+        user.setFitbitTokenExpiresAt(LocalDateTime.now(clock).plusHours(2));
         when(tokenCipher.decrypt("enc-access")).thenReturn("plain-access");
 
         assertThat(fitbitService.getValidToken("athlete")).isEqualTo("plain-access");
@@ -76,7 +76,7 @@ class FitbitServiceTest {
     void getValidToken_refreshesWhenExpired_andPersistsRotatedTokens() {
         user.setFitbitAccessTokenEncrypted("old-access");
         user.setFitbitRefreshTokenEncrypted("enc-old-refresh");
-        user.setFitbitTokenExpiresAt(LocalDateTime.now().minusMinutes(5));
+        user.setFitbitTokenExpiresAt(LocalDateTime.now(clock).minusMinutes(5));
         when(tokenCipher.decrypt("enc-old-refresh")).thenReturn("old-refresh");
         when(tokenCipher.encrypt("new-access")).thenReturn("enc-new-access");
         when(tokenCipher.encrypt("new-refresh")).thenReturn("enc-new-refresh");
@@ -95,7 +95,7 @@ class FitbitServiceTest {
     void getValidToken_clearsLinkWhenRefreshRejected() {
         user.setFitbitAccessTokenEncrypted("old-access");
         user.setFitbitRefreshTokenEncrypted("enc-old-refresh");
-        user.setFitbitTokenExpiresAt(LocalDateTime.now().minusMinutes(5));
+        user.setFitbitTokenExpiresAt(LocalDateTime.now(clock).minusMinutes(5));
         when(tokenCipher.decrypt("enc-old-refresh")).thenReturn("old-refresh");
         when(fitbitClient.refresh("old-refresh"))
                 .thenThrow(new FitbitClient.FitbitUnauthorizedException("refused"));
@@ -135,7 +135,7 @@ class FitbitServiceTest {
     void getDashboard_dataCallForbidden_keepsLinkAndReportsUnavailable() {
         user.setFitbitAccessTokenEncrypted("enc-access");
         user.setFitbitRefreshTokenEncrypted("enc-refresh");
-        user.setFitbitTokenExpiresAt(LocalDateTime.now().plusHours(2));
+        user.setFitbitTokenExpiresAt(LocalDateTime.now(clock).plusHours(2));
         when(tokenCipher.decrypt("enc-access")).thenReturn("plain-access");
         when(fitbitClient.rollUpDailySteps(eq("plain-access"), any(), any()))
                 .thenThrow(new FitbitClient.FitbitUnavailableException("Accès Google Health refusé (403)"));
@@ -154,7 +154,7 @@ class FitbitServiceTest {
     void getDashboard_dataCallUnauthorized_keepsLink() {
         user.setFitbitAccessTokenEncrypted("enc-access");
         user.setFitbitRefreshTokenEncrypted("enc-refresh");
-        user.setFitbitTokenExpiresAt(LocalDateTime.now().plusHours(2));
+        user.setFitbitTokenExpiresAt(LocalDateTime.now(clock).plusHours(2));
         when(tokenCipher.decrypt("enc-access")).thenReturn("plain-access");
         when(fitbitClient.rollUpDailySteps(eq("plain-access"), any(), any()))
                 .thenThrow(new FitbitClient.FitbitUnauthorizedException("Token Google Health rejeté (401)"));

@@ -280,7 +280,7 @@ class SettingsServiceTest {
         verify(tokenRepository).save(captor.capture());
         assertThat(captor.getValue().getUtilisateur()).isSameAs(user);
         assertThat(captor.getValue().getToken()).isNotBlank();
-        assertThat(captor.getValue().getExpiresAt()).isAfter(LocalDateTime.now().plusHours(23));
+        assertThat(captor.getValue().getExpiresAt()).isAfter(LocalDateTime.now(clock).plusHours(23));
     }
 
     @Test
@@ -325,7 +325,7 @@ class SettingsServiceTest {
     void resetPassword_validToken_setsTheNewPasswordAndBurnsTheToken() {
         PasswordResetToken token = PasswordResetToken.builder()
                 .token("tok").utilisateur(user).used(false)
-                .expiresAt(LocalDateTime.now().plusHours(1)).build();
+                .expiresAt(LocalDateTime.now(clock).plusHours(1)).build();
         when(tokenRepository.findByToken("tok")).thenReturn(Optional.of(token));
         when(passwordEncoder.encode("nouveau")).thenReturn("encoded-nouveau");
 
@@ -349,7 +349,7 @@ class SettingsServiceTest {
     void resetPassword_tokenAlreadyUsed_isRejected() {
         PasswordResetToken token = PasswordResetToken.builder()
                 .token("tok").utilisateur(user).used(true)
-                .expiresAt(LocalDateTime.now().plusHours(1)).build();
+                .expiresAt(LocalDateTime.now(clock).plusHours(1)).build();
         when(tokenRepository.findByToken("tok")).thenReturn(Optional.of(token));
 
         assertThatThrownBy(() -> settingsService.resetPassword("tok", "nouveau"))
@@ -362,7 +362,7 @@ class SettingsServiceTest {
     void resetPassword_expiredToken_isRejected() {
         PasswordResetToken token = PasswordResetToken.builder()
                 .token("tok").utilisateur(user).used(false)
-                .expiresAt(LocalDateTime.now().minusMinutes(1)).build();
+                .expiresAt(LocalDateTime.now(clock).minusMinutes(1)).build();
         when(tokenRepository.findByToken("tok")).thenReturn(Optional.of(token));
 
         assertThatThrownBy(() -> settingsService.resetPassword("tok", "nouveau"))

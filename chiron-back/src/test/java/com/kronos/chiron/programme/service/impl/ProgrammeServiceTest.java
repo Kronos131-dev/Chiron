@@ -75,7 +75,7 @@ class ProgrammeServiceTest {
     void sauvegarderProgramme_newProgramme_savesWithOwner() {
         when(utilisateurRepository.findByUsername("owner")).thenReturn(Optional.of(owner));
 
-        SeanceDto dto = new SeanceDto(null, "Leg Day", null, LocalDateTime.now(), null, 1, false, null,
+        SeanceDto dto = new SeanceDto(null, "Leg Day", null, LocalDateTime.now(clock), null, 1, false, null,
                 List.of(new ExerciceDto(null, "Squat", null, null,
                         List.of(new SerieDto(100.0, 5, null, null, null, null, null, null, null)), null, null, null,
                         false)));

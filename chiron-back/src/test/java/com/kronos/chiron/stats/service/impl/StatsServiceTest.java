@@ -116,8 +116,8 @@ class StatsServiceTest {
                 .build();
     }
 
-    private static LocalDate mondayOfCurrentWeek() {
-        return LocalDate.now().with(WeekFields.ISO.dayOfWeek(), 1);
+    private LocalDate mondayOfCurrentWeek() {
+        return LocalDate.now(clock).with(WeekFields.ISO.dayOfWeek(), 1);
     }
 
     @Test
@@ -137,7 +137,7 @@ class StatsServiceTest {
 
     @Test
     void getOverview_sessionOlderThanThirtyDays_countedInTotalButNotInSeances30() {
-        LocalDateTime old = LocalDateTime.now().minusDays(45);
+        LocalDateTime old = LocalDateTime.now(clock).minusDays(45);
         givenSessions(seance(old, old.plusHours(1)));
         givenTonnagePrefs(true, false);
         givenEmptySummary();
@@ -150,7 +150,7 @@ class StatsServiceTest {
 
     @Test
     void getOverview_sessionWithinThirtyDays_countedInSeances30() {
-        LocalDateTime recent = LocalDateTime.now().minusDays(3);
+        LocalDateTime recent = LocalDateTime.now(clock).minusDays(3);
         givenSessions(seance(recent, recent.plusHours(1)));
         givenTonnagePrefs(true, false);
         givenEmptySummary();
@@ -332,7 +332,7 @@ class StatsServiceTest {
 
     @Test
     void getOverview_sessionsWithDuration_averagesThem() {
-        LocalDateTime start = LocalDateTime.now().minusDays(2);
+        LocalDateTime start = LocalDateTime.now(clock).minusDays(2);
         givenSessions(
                 seance(start, start.plusMinutes(60)),
                 seance(start, start.plusMinutes(90)));
@@ -346,7 +346,7 @@ class StatsServiceTest {
 
     @Test
     void getOverview_sessionWithoutEndTime_excludedFromAverageDuration() {
-        LocalDateTime start = LocalDateTime.now().minusDays(2);
+        LocalDateTime start = LocalDateTime.now(clock).minusDays(2);
         givenSessions(
                 seance(start, start.plusMinutes(60)),
                 seance(start, null));
@@ -360,7 +360,7 @@ class StatsServiceTest {
 
     @Test
     void getOverview_endTimeBeforeStartTime_excludedFromAverageDuration() {
-        LocalDateTime start = LocalDateTime.now().minusDays(2);
+        LocalDateTime start = LocalDateTime.now(clock).minusDays(2);
         givenSessions(seance(start, start.minusMinutes(30)));
         givenTonnagePrefs(true, false);
         givenEmptySummary();
@@ -472,7 +472,7 @@ class StatsServiceTest {
 
     @Test
     void getExerciseList_sameExerciseInTwoSessions_isReturnedOnce() {
-        LocalDateTime start = LocalDateTime.now().minusDays(2);
+        LocalDateTime start = LocalDateTime.now(clock).minusDays(2);
         Seance first = seance(start, start.plusHours(1), exercice("Squat", false, null, serie(100, 5)));
         Seance second = seance(start.minusDays(7), start.minusDays(7).plusHours(1),
                 exercice("Squat", false, null, serie(100, 5)));
