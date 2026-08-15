@@ -1,5 +1,7 @@
 package com.kronos.chiron.exercice.service;
 
+import static com.kronos.chiron.core.exceptions.ErrorFactory.badRequest;
+
 import com.kronos.chiron.exercice.model.ExerciceDefinition;
 import com.kronos.chiron.exercice.model.MuscleGroup;
 import com.kronos.chiron.exercice.model.NiveauDifficulte;
@@ -90,7 +92,7 @@ public class ExerciceDataImporter {
     @Transactional
     public int importFromFile(Path jsonFile, Path imageSourceDir) throws IOException {
         JsonNode root = objectMapper.readTree(jsonFile.toFile());
-        if (!root.isArray()) throw new IllegalArgumentException("Le JSON doit être un tableau d'exercices");
+        if (!root.isArray()) throw badRequest("Le JSON doit être un tableau d'exercices");
 
         Path exercicesDir = Paths.get(uploadsDir).resolve("exercices");
         Files.createDirectories(exercicesDir);

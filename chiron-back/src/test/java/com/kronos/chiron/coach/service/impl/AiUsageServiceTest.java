@@ -1,5 +1,9 @@
 package com.kronos.chiron.coach.service.impl;
 
+import org.springframework.web.ErrorResponseException;
+
+import org.springframework.http.HttpStatus;
+
 import com.kronos.chiron.coach.service.AiUsageService;
 
 import org.mockito.Spy;
@@ -19,7 +23,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -125,6 +128,7 @@ class AiUsageServiceTest {
         when(utilisateurRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> aiUsageService.resolveProvider(user))
-                .isInstanceOf(NoSuchElementException.class);
+                .isInstanceOfSatisfying(ErrorResponseException.class,
+                        e -> assertThat(e.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND));
     }
 }

@@ -1,5 +1,9 @@
 package com.kronos.chiron.performance.service.impl;
 
+import org.springframework.web.ErrorResponseException;
+
+import org.springframework.http.HttpStatus;
+
 import com.kronos.chiron.seance.model.ExerciseType;
 
 import com.kronos.chiron.utilisateur.model.Utilisateur;
@@ -170,21 +174,24 @@ class PerformanceServiceTest {
     void addRecord_invalidReps_zero_throwsException() {
         PerformanceRecordDto dto = new PerformanceRecordDto("SQUAT", 100.0, 0);
         assertThatThrownBy(() -> performanceService.addRecord("athlete", dto))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOfSatisfying(ErrorResponseException.class,
+                        e -> assertThat(e.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST));
     }
 
     @Test
     void addRecord_invalidReps_tooHigh_throwsException() {
         PerformanceRecordDto dto = new PerformanceRecordDto("SQUAT", 100.0, 37);
         assertThatThrownBy(() -> performanceService.addRecord("athlete", dto))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOfSatisfying(ErrorResponseException.class,
+                        e -> assertThat(e.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST));
     }
 
     @Test
     void addRecord_unknownExerciseType_throwsException() {
         PerformanceRecordDto dto = new PerformanceRecordDto("UNKNOWN_EX", 100.0, 5);
         assertThatThrownBy(() -> performanceService.addRecord("athlete", dto))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOfSatisfying(ErrorResponseException.class,
+                        e -> assertThat(e.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST))
                 .hasMessageContaining("UNKNOWN_EX");
     }
 
@@ -235,7 +242,8 @@ class PerformanceServiceTest {
     @Test
     void getHistory_invalidExerciseType_throwsException() {
         assertThatThrownBy(() -> performanceService.getHistory("athlete", "INVALID"))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOfSatisfying(ErrorResponseException.class,
+                        e -> assertThat(e.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST));
     }
 
     @Test

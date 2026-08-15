@@ -1,5 +1,9 @@
 package com.kronos.chiron.utilisateur.service.impl;
 
+import org.springframework.web.ErrorResponseException;
+
+import org.springframework.http.HttpStatus;
+
 import org.mockito.Spy;
 
 import java.time.ZoneId;
@@ -28,7 +32,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -100,7 +103,8 @@ class SettingsServiceTest {
         givenUserMissing();
 
         assertThatThrownBy(() -> settingsService.getTrainingPrefs(USERNAME))
-                .isInstanceOf(NoSuchElementException.class);
+                .isInstanceOfSatisfying(ErrorResponseException.class,
+                        e -> assertThat(e.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND));
     }
 
     @Test
@@ -163,7 +167,8 @@ class SettingsServiceTest {
         when(passwordEncoder.matches("faux", "encoded-current")).thenReturn(false);
 
         assertThatThrownBy(() -> settingsService.changePassword(USERNAME, "faux", "nouveau"))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOfSatisfying(ErrorResponseException.class,
+                        e -> assertThat(e.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST));
         verify(utilisateurRepository, never()).save(any());
     }
 
@@ -184,7 +189,8 @@ class SettingsServiceTest {
                 .thenReturn(Optional.of(new Utilisateur()));
 
         assertThatThrownBy(() -> settingsService.changeEmail(USERNAME, "pris@chiron.app"))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOfSatisfying(ErrorResponseException.class,
+                        e -> assertThat(e.getStatusCode()).isEqualTo(HttpStatus.CONFLICT));
         verify(utilisateurRepository, never()).save(any());
     }
 
@@ -236,7 +242,8 @@ class SettingsServiceTest {
         when(utilisateurRepository.findByUsernameIgnoreCase("chiron")).thenReturn(Optional.of(other));
 
         assertThatThrownBy(() -> settingsService.changeUsername(USERNAME, "chiron"))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOfSatisfying(ErrorResponseException.class,
+                        e -> assertThat(e.getStatusCode()).isEqualTo(HttpStatus.CONFLICT));
         verify(utilisateurRepository, never()).save(any());
     }
 
@@ -334,7 +341,8 @@ class SettingsServiceTest {
         when(tokenRepository.findByToken("tok")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> settingsService.resetPassword("tok", "nouveau"))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOfSatisfying(ErrorResponseException.class,
+                        e -> assertThat(e.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST));
     }
 
     @Test
@@ -345,7 +353,8 @@ class SettingsServiceTest {
         when(tokenRepository.findByToken("tok")).thenReturn(Optional.of(token));
 
         assertThatThrownBy(() -> settingsService.resetPassword("tok", "nouveau"))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOfSatisfying(ErrorResponseException.class,
+                        e -> assertThat(e.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST));
         verify(utilisateurRepository, never()).save(any());
     }
 
@@ -357,7 +366,8 @@ class SettingsServiceTest {
         when(tokenRepository.findByToken("tok")).thenReturn(Optional.of(token));
 
         assertThatThrownBy(() -> settingsService.resetPassword("tok", "nouveau"))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOfSatisfying(ErrorResponseException.class,
+                        e -> assertThat(e.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST));
         verify(utilisateurRepository, never()).save(any());
     }
 }

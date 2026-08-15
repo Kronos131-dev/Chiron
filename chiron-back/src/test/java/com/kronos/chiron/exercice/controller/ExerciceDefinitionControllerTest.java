@@ -1,5 +1,7 @@
 package com.kronos.chiron.exercice.controller;
 
+import com.kronos.chiron.core.exceptions.ErrorFactory;
+
 import tools.jackson.databind.json.JsonMapper;
 import com.kronos.chiron.exercice.dto.ExerciceDefinitionDto;
 import com.kronos.chiron.exercice.model.MuscleGroup;
@@ -23,7 +25,6 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -121,7 +122,7 @@ class ExerciceDefinitionControllerTest {
 
     @Test
     void getById_notFound_returns404() throws Exception {
-        when(service.getById(999L)).thenThrow(new NoSuchElementException("not found"));
+        when(service.getById(999L)).thenThrow(ErrorFactory.notFound("not found"));
 
         mockMvc.perform(get("/api/exercices/999"))
                 .andExpect(status().isNotFound());
@@ -141,7 +142,7 @@ class ExerciceDefinitionControllerTest {
 
     @Test
     void streamImage_imageNotFound_returns404() throws Exception {
-        when(service.streamImage(1L, 0)).thenThrow(new NoSuchElementException("no image"));
+        when(service.streamImage(1L, 0)).thenThrow(ErrorFactory.notFound("no image"));
 
         mockMvc.perform(get("/api/exercices/1/image/0"))
                 .andExpect(status().isNotFound());
@@ -149,7 +150,7 @@ class ExerciceDefinitionControllerTest {
 
     @Test
     void streamImage_invalidIndex_returns400() throws Exception {
-        when(service.streamImage(1L, 2)).thenThrow(new IllegalArgumentException("bad index"));
+        when(service.streamImage(1L, 2)).thenThrow(ErrorFactory.badRequest("bad index"));
 
         mockMvc.perform(get("/api/exercices/1/image/2"))
                 .andExpect(status().isBadRequest());

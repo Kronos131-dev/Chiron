@@ -1,5 +1,9 @@
 package com.kronos.chiron.exercice.service;
 
+import org.springframework.web.ErrorResponseException;
+
+import org.springframework.http.HttpStatus;
+
 import com.kronos.chiron.exercice.model.ExerciceDefinition;
 import com.kronos.chiron.exercice.model.MuscleGroup;
 import com.kronos.chiron.exercice.model.NiveauDifficulte;
@@ -126,7 +130,8 @@ class ExerciceDataImporterTest {
         Files.writeString(json, "{\"key\": \"value\"}");
 
         assertThatThrownBy(() -> importer.importFromFile(json, null))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOfSatisfying(ErrorResponseException.class,
+                        e -> assertThat(e.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST));
     }
 
     @Test
