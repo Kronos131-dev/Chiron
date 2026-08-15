@@ -28,7 +28,7 @@ nobody wrote. Everything else the build already catches.
 1. These are the ones a single-file reading always misses:
    - an entity field added ⇒ a `V<n>` migration in the same diff;
    - an i18n key added ⇒ present in **both** `fr.ts` and `en.ts`;
-   - an `ai/*Tools` method added ⇒ named in the `ChironAgent` `@SystemMessage`;
+   - an `coach/tools/*Tools` method added ⇒ named in the `ChironAgent` `@SystemMessage`;
    - a backend DTO field added ⇒ the interface in `chiron-api.ts` updated;
    - a required DTO field added ⇒ every test fixture building it updated;
    - a new endpoint ⇒ a `chiron-api.ts` method, and a `SecurityConfig` entry only if it is public.

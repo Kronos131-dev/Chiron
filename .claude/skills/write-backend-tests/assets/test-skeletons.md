@@ -97,7 +97,7 @@ test.
 
 ## Repository slice
 
-Lives in `repository/`, runs under `mvn verify`, on H2 in PostgreSQL mode. Header copied from
+Lives in `persistence/`, runs under `mvn verify`, on H2 in PostgreSQL mode. Header copied from
 `SeanceRepositoryTest`:
 
 ```java
@@ -145,7 +145,7 @@ Persist the parent before the child, or Hibernate reports `detached entity passe
 
 ## AI tool test
 
-An `ai/*Tools` method is ordinary Java. Assert on the **sentence**, since the model relays it.
+An `coach/tools/*Tools` method is ordinary Java. Assert on the **sentence**, since the model relays it.
 
 ```java
 @ExtendWith(MockitoExtension.class)

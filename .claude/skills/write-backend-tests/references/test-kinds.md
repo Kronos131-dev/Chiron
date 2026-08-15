@@ -4,12 +4,12 @@
 
 | Subject | Package | Annotations | Runner | Command |
 |---------|---------|-------------|--------|---------|
-| Service, AI tool, mapper, enum, helper | `service/`, `ai/`, `mapper/`, `entity/`, `util/`, `security/`, `fitbit/`, `visbody/` | `@ExtendWith(MockitoExtension.class)` | Surefire | `mvn test` |
+| Service, AI tool, mapper, enum, helper | `service/`, `service/impl/`, `coach/tools/`, `mapper/`, `model/`, `client/`, `security/` | `@ExtendWith(MockitoExtension.class)` | Surefire | `mvn test` |
 | Endpoint mapping and payload | `controller/` | `@WebMvcTest(value = X.class, excludeAutoConfiguration = SecurityAutoConfiguration.class)` + `@Import(JacksonAutoConfiguration.class)` | Failsafe | `mvn verify` |
-| Repository query | `repository/` | `@DataJpaTest @ActiveProfiles("test")` | Failsafe | `mvn verify` |
+| Repository query | `persistence/` | `@DataJpaTest @ActiveProfiles("test")` | Failsafe | `mvn verify` |
 | Schema | `migration/` | `@Testcontainers @SpringBootTest @ActiveProfiles("schema-it")` | Failsafe | `mvn verify` |
 
-Existing counts: 6 service, 8 controller, 5 repository, 3 entity, 3 fitbit, 2 util, 1 each in `ai/`,
+Existing counts: 6 service, 8 controller, 5 repository, 3 entity, 3 fitbit, 2 util, 1 each in `coach/`,
 `mapper/`, `security/`, `visbody/`, `migration/`. 32 classes, 225 tests under `mvn test`.
 
 The package is the only routing signal — every class is named `*Test`, and there is no `*IT`

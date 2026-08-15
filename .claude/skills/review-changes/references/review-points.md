@@ -17,7 +17,7 @@ annotation catches — the build already handles the rest.
 | Look for | Why |
 |----------|-----|
 | An i18n key added to `fr.ts` but not `en.ts`, or the reverse | The screen renders the raw key for half the users |
-| An `ai/*Tools` method added without a bracketed mention in the `ChironAgent` `@SystemMessage` | The coach never calls it, and nothing reports an error |
+| An `coach/tools/*Tools` method added without a bracketed mention in the `ChironAgent` `@SystemMessage` | The coach never calls it, and nothing reports an error |
 | A new `@Tool` returning JSON, an entity, or `null` | The model paraphrases it badly to the user |
 | A new environment variable read in `application.yml` but absent from the workflow `printf` block | Works locally, degrades silently in production |
 | A backend DTO field added without updating the `chiron-api.ts` interface | The frontend silently drops it |
@@ -40,7 +40,7 @@ annotation catches — the build already handles the rest.
 | A comment added under `chiron-back/src/main/java` or `chiron-front/src` | The hook blocks it during editing, but a file edited outside the tooling escapes |
 | A bare `RuntimeException` | Only the four mapped exceptions produce a usable response |
 | An entity returned from a controller | Lazy associations and password hashes leak |
-| `@Transactional` on a controller or an `ai/` tool | The boundary lives in services only |
+| `@Transactional` on a controller or a `coach/tools/` tool | The boundary lives in services only |
 | A component injecting `HttpClient` instead of `ChironApi` | The JWT interceptor keys off the facade's URL |
 | A new component with an inline template or a `Component` suffix | Against the established convention |
 | A raw hex colour instead of a `@theme` token | Breaks the visual system |
@@ -54,7 +54,7 @@ annotation catches — the build already handles the rest.
 | A new ownership check with no test of its refusal path | The path with no framework behind it |
 | A new service method with no unit test | |
 | A new endpoint with no `@WebMvcTest` | |
-| A new controller or repository test placed outside `controller/` or `repository/` | It would run under the wrong runner |
+| A new controller or repository test placed outside `controller/` or `persistence/` | It would run under the wrong runner |
 | A DTO gaining a required field without every test fixture updated | One missing field stops the whole frontend suite compiling |
 
 ## Leftovers

@@ -29,7 +29,8 @@ the production stack and is not useful locally.
 
 `spring.config.import: optional:file:.env[.properties]` loads a gitignored `chiron-back/.env`.
 Variables: `JWT_SECRET` and `MISTRAL_API_KEY` (**both mandatory, no default — the application refuses
-to start without them**), `GEMINI_API_KEY` (blank ⇒ the Gemini agent is never built),
+to start without them**; `JwtService` additionally rejects a blank, non-base64 or under-32-byte key,
+so an empty value fails the boot instead of breaking every login at runtime), `GEMINI_API_KEY` (blank ⇒ the Gemini agent is never built),
 `CHIRON_GEMINI_MODEL`, `CHIRON_SECRET_KEY` (base64 AES-256, encrypts stored OAuth tokens),
 `GMAIL_USERNAME` / `GMAIL_APP_PASSWORD`, `FRONTEND_URL`, `UPLOADS_DIR`, `OLYMPUS_*`, `FITBIT_*`,
 `VISBODY_*`. JWT expiration is 30 days. Apply the `manage-env-and-secrets` skill before adding one.
@@ -45,11 +46,22 @@ Standard layout inside a module:
 ```
 <module>/controller/   <module>/dto/    <module>/mapper/
 <module>/model/        <module>/persistence/
-<module>/service/
+<module>/service/      <module>/service/impl/
 ```
 
 Entities **and** their enums live in `model/`. Repositories live in `persistence/` and keep the
 `Repository` suffix (not tima's `Dao`).
+
+A service is an **interface in `service/`** with its implementation in `service/impl/`, suffixed
+`Impl`. The rule is narrow: split what is injected elsewhere or mocked in a test. A collaborator
+with no such need — a parser, an HTTP client, a scheduled poller, a DAO — stays a single concrete
+class (`ExerciceDataImporter`, `FitbitClient`, `VisbodyMailService`, `TokenCipherService`). When a
+service owns nested exception types that callers catch by name, those live on the **interface**, so
+`FitbitService.NotLinkedException` keeps resolving.
+
+Two modules carry an extra package because the layer names do not fit: `client/` for the code that
+speaks to an external API (`fitbit/client/`, `nutrition/client/`), and `configuration/` for a
+module-local Spring configuration (`nutrition/configuration/OlympusDbConfig`).
 
 | Module | Holds |
 |--------|-------|
@@ -63,8 +75,8 @@ Entities **and** their enums live in `model/`. Repositories live in `persistence
 | `performance/` | `PerformanceRecord`, `PerformanceTier`, 1RM and tiers |
 | `agora/` | the social listing |
 | `stats/` | server-side aggregation for the statistics screen |
-| `fitbit/` | OAuth2/PKCE client, sync service, parser |
-| `nutrition/`, `nutrition/olympusdb/` | Olympus integration: HTTP client plus a read-only JDBC pool |
+| `fitbit/` | OAuth2/PKCE client, sync service, parser — `client/` holds `FitbitClient` and `FitbitParser` |
+| `nutrition/` | Olympus integration: `client/OlympusClient`, plus a read-only JDBC pool split across `configuration/` and `persistence/` |
 | `visbody/` | body-composition PDFs from a Gmail mailbox, parsed with PDFBox |
 | `boditrax/` | CSV import |
 | `core/` | `exceptions/` (`ErrorFactory`, `ChironTechnicalException`, `GlobalExceptionHandler`), `security/` (`AuthenticatedUserService`, `AdminRule`, `TokenCipherService`), `configuration/` (`CentralMapperConfig`, `OpenApiConfig`) |
@@ -74,7 +86,7 @@ Entities **and** their enums live in `model/`. Repositories live in `persistence
 
 Authorization is **URL-based**, declared in `security/SecurityConfig.java`. There is **no
 `@PreAuthorize` anywhere** in this codebase — ownership, privacy and coach rules are hand-coded inside
-services and inside the `ai/` tools. A new endpoint whose path is not listed as public requires
+services and inside the `coach/tools/` tools. A new endpoint whose path is not listed as public requires
 authentication and answers 403 until it is.
 
 Public paths: `OPTIONS /**`, `/error`, `/api/auth/**`, `/api/images/**`, `/images/**`,
@@ -114,38 +126,45 @@ that is not the caller's fault (crypto, file I/O), throw `ChironTechnicalExcepti
 | `IllegalArgumentException` | 400 |
 | `SecurityException` | 403 |
 
-There is **no bare `RuntimeException` left in `src/main/java`**; a `grep` for it must return nothing.
+No service or controller throws a bare exception any more: a `grep` for `new RuntimeException`,
+`new IllegalArgumentException`, `new IllegalStateException` or `new NoSuchElementException` over
+`src/main/java` returns nothing. Two things still reach the handler without going through the
+factory, and that is deliberate — `MuscleGroup.valueOf()` and its siblings, which the JDK throws on
+a bad query parameter, and the typed domain exceptions of the external integrations
+(`FitbitService.NotLinkedException`, `OlympusClient.OlympusUnavailableException`,
+`VisbodyParseException`…), which the controllers catch by name to answer in degraded mode rather
+than in error.
 
 ## The AI subsystem
 
 Read `.claude/skills/add-ai-tool/SKILL.md` before changing anything here.
 
-- `ai/ChironAgent` is a single-method LangChain4j interface,
+- `coach/agent/ChironAgent` is a single-method LangChain4j interface,
   `String chat(@MemoryId String memoryId, @UserMessage String userMessage)`, carrying a long French
   `@SystemMessage` split into rule blocks (STYLE, SÉANCE, BIBLIOTHÈQUE, NUTRITION, FITBIT, MÉMOIRE
   LONG-TERME…). Each block names the tools it may use in brackets, e.g. `[startSession]`, `[addSet]`.
   **This prompt is the main lever on coach behaviour.**
-- `config/ChironConfig` builds two `AiServices` proxies of that interface — one on
+- `coach/configuration/ChironConfig` builds two `AiServices` proxies of that interface — one on
   `MistralAiChatModel`, and one on `GoogleAiGeminiChatModel` only when `GEMINI_API_KEY` is non-blank.
   Both receive the *same* eight tool beans and the same `ChatMemoryProvider`.
-- The tool beans are `@Component`s in `ai/`: `WorkoutTools` (41 tools, the writes), `NutritionTools`,
+- The tool beans are `@Component`s in `coach/tools/`: `WorkoutTools` (41 tools, the writes), `NutritionTools`,
   `MemoryTools`, `RecoveryTools`, `AdaptiveTools`, `FitbitTools`, `AppGuideTools`,
   `AnalyseDieteTools`. A tool method is annotated `@Tool("description en français")` and takes the
   caller as `@ToolMemoryId String userId`.
-- `ai/ChironAgentRouter` picks the agent from the user's `AiProvider`, retries twice on transient
+- `coach/agent/ChironAgentRouter` picks the agent from the user's `AiProvider`, retries twice on transient
   errors (503, unavailable, overloaded, timeout, deadline, 429, rate limit), resets memory before each
   retry, falls back to Mistral, and finally throws `AiUnavailableException`.
-- `ai/ConversationMemoryManager` keys memory by **conversation id**, not by user —
+- `coach/agent/ConversationMemoryManager` keys memory by **conversation id**, not by user —
   `MessageWindowChatMemory.withMaxMessages(20)`. Replay from the database reinjects USER and AI text
   only, never tool calls, so that an orphaned tool request cannot break the next call.
-- `service/AiUsageService` caps non-admins at 5 Gemini calls a day and silently downgrades to Mistral
+- `coach/service/AiUsageService` caps non-admins at 5 Gemini calls a day and silently downgrades to Mistral
   past that.
 - `ChatController` prepends the language directive, a `SYSTEM CONTEXT` line and the ten most recent
   `ChironMemoryNote`s to every user message.
 
 ## Database
 
-Migrations in `src/main/resources/db/migration/`, named `V<n>__snake_case.sql`, currently V0 to V43.
+Migrations in `src/main/resources/db/migration/`, named `V<n>__snake_case.sql`, currently V0 to V44.
 `ddl-auto: validate` — an entity field without a migration fails startup. V34 to V36 were deleted
 after having run in production, which is why `spring.flyway.ignore-migration-patterns: "*:missing"` is
 set. **An applied migration is never edited**; a hook blocks it. Apply the `add-flyway-migration`
@@ -161,7 +180,7 @@ A test's phase therefore follows the package you put it in — moving a `@DataJp
 
 | Kind | Location | Annotations | Runs under |
 |------|----------|-------------|------------|
-| Unit | `<module>/service/`, `<module>/model/`, `<module>/mapper/`, `coach/agent/`, `coach/tools/`, `security/`, `core/` | `@ExtendWith(MockitoExtension.class)`, `@Mock`, `@InjectMocks`, AssertJ | `mvn test` |
+| Unit | `<module>/service/`, `<module>/service/impl/`, `<module>/model/`, `<module>/mapper/`, `<module>/client/`, `coach/agent/`, `coach/tools/`, `security/`, `core/` | `@ExtendWith(MockitoExtension.class)`, `@Mock`, `@InjectMocks`, AssertJ | `mvn test` |
 | Controller | `<module>/controller/` | `@WebMvcTest(value = X.class, excludeAutoConfiguration = SecurityAutoConfiguration.class)`, `@Import(JacksonAutoConfiguration.class)`, `@MockitoBean`, MockMvc | `mvn verify` |
 | Repository | `<module>/persistence/` | `@DataJpaTest @ActiveProfiles("test")` on H2 in PostgreSQL mode | `mvn verify` |
 | Migration | `migration/` | `@Testcontainers @SpringBootTest @ActiveProfiles("schema-it")` on real PostgreSQL | `mvn verify` |
@@ -179,8 +198,9 @@ place comments are allowed. Apply the `write-backend-tests` skill.
 - Spotless uses the Eclipse formatter with `chiron-back/eclipse-formatter.xml`, deliberately bound to
   no lifecycle phase — `.claude/hooks/format-java.sh` invokes it one file at a time. Running
   `mvn spotless:apply` with no `-DspotlessFiles` reformats the whole codebase.
-- Line endings are mixed across the repository and there is no `.gitattributes`; the Spotless config
-  sets `PRESERVE` so formatting never rewrites a whole file for that reason alone.
+- Line endings are mixed across the repository; `chiron-back/.gitattributes` pins only `mvnw` and
+  `*.cmd`, and the Spotless config sets `PRESERVE` so formatting never rewrites a whole file for
+  that reason alone.
 - **`username` is still passed as a query parameter on several endpoints** (`JournalController`,
   `ProgrammeController`, `AgoraController`, `ProfileController`) rather than read from the principal —
   an authenticated user can therefore read another's data. `core/security/AuthenticatedUserService`

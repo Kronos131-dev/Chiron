@@ -19,7 +19,7 @@ chat.ts (front)
          → ChironAgent (LangChain4j proxy, Mistral or Gemini)
               @SystemMessage — the whole coach personality and tool routing
               MessageWindowChatMemory(20), keyed by conversation id
-            → ai/*Tools — the only database access the coach has
+            → coach/tools/*Tools — the only database access the coach has
        → ConversationService.recordExchange — persists both messages
 ```
 

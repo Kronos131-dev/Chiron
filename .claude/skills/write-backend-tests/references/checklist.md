@@ -2,7 +2,7 @@
 
 ## Placement
 * [ ] The package mirrors the production package.
-* [ ] The package routes it to the intended runner: `controller/`, `repository/` and `migration/` run
+* [ ] The package routes it to the intended runner: `controller/`, `persistence/` and `migration/` run
       only under `mvn verify`.
 * [ ] The class is named `<Subject>Test`.
 * [ ] Methods are named `method_scenario_expectation`.

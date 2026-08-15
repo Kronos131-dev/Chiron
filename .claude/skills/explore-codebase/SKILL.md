@@ -28,7 +28,7 @@ without answering the question. Enter through a known door and follow the call p
    names the repository; each step is one file read.
 2. Frontend: component → `service/chiron-api.ts` → the backend controller. Every call goes through the
    facade, so it is the single index of the whole API surface.
-3. Coach: `ChironAgent` `@SystemMessage` names the tool in brackets → the `ai/*Tools` component holding
+3. Coach: `ChironAgent` `@SystemMessage` names the tool in brackets → the `coach/tools/*Tools` component holding
    that method → the repository it calls.
 4. Stored value: `entity/` for the field → `db/migration/` for the column → the DTO exposing it.
 
@@ -53,7 +53,7 @@ without answering the question. Enter through a known door and follow the call p
   mix `Seance` and `Exercice` with `Controller` and `Repository`.
 * If a frontend string cannot be found in a template, it is an i18n key — search `i18n/fr.ts` for the
   text and then the key in the templates.
-* If a backend behaviour has no obvious controller, it may belong to the coach. Search the `ai/`
+* If a backend behaviour has no obvious controller, it may belong to the coach. Search the `coach/`
   package for the `@Tool` description instead.
 * If a column exists in the database but nowhere in `entity/`, it is a leftover from a deleted
   migration — V34 to V36 were removed after being applied.

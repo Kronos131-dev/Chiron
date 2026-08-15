@@ -63,7 +63,7 @@ out before reading code.
 
 * If the symptom disappears without an identified cause, it is not fixed. Say so; an intermittent
   failure is usually shared state or ordering.
-* If the cause is in `ai/`, the chat or the coach's answers, switch to `debug-ai-conversation`, which
+* If the cause is in `coach/`, the chat or the coach's answers, switch to `debug-ai-conversation`, which
   owns that path.
 * If a test passes alone and fails in the suite, look for mutable static state or fixture data
   persisted in `@BeforeEach`.

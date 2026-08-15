@@ -1,77 +1,59 @@
 # Where an endpoint goes
 
-## The layered core
+## One shape, every module
 
-`com.kronos.chiron` keeps the general-purpose surface in horizontal layers:
+`com.kronos.chiron` is organised by business domain. There is no horizontal `controller/`,
+`service/`, `repository/`, `entity/` or `dto/` root package — every module carries its own:
 
 ```
-controller/  @RestController, @RequestMapping("/api/…"), returns ResponseEntity<Dto>
-service/     @Service, @RequiredArgsConstructor, @Transactional on writes
-repository/  Spring Data JPA interfaces
-dto/         Java records, plus dto/auth, dto/chat, dto/settings
-entity/      JPA entities and domain enums
-mapper/      SeanceMapper only — hand-written, no MapStruct
+<module>/controller/     @RestController, @RequestMapping("/api/…"), returns ResponseEntity<Dto>
+<module>/dto/            Java records
+<module>/model/          JPA entities and their domain enums
+<module>/persistence/    Spring Data JPA interfaces, Repository suffix
+<module>/service/        the interface, plus the nested exception types callers catch by name
+<module>/service/impl/   @Service, @RequiredArgsConstructor, @Transactional on writes, Impl suffix
+<module>/mapper/         MapStruct, @Mapper(config = CentralMapperConfig.class)
 ```
 
-The 17 controllers: `Agora`, `Authentication`, `Boditrax`, `Chat`, `Conversation`, `EtatJournalier`,
-`ExerciceDefinition`, `Fitbit`, `Journal`, `Nutrition`, `Performance`, `Profile`, `ProfileSetup`,
-`Programme`, `Settings`, `Visbody`, plus `GlobalExceptionHandler`.
+Two extra package names exist where no layer name fits: `client/` for code that speaks to an
+external API (`fitbit/client/FitbitClient`, `nutrition/client/OlympusClient`), and `configuration/`
+for a module-local Spring configuration (`nutrition/configuration/OlympusDbConfig`).
 
-## The vertical slices
+The package name decides the test phase — `controller/` and `persistence/` run under Failsafe,
+everything else under Surefire. Filing a class in the wrong one silently moves its test.
 
-Integrations keep their controller, service, client and DTOs in one package. Prefer this shape for
-anything that talks to a third party.
+## The modules
 
-| Package | Surface |
-|---------|---------|
-| `stats/` | `StatsController`, `StatsService` and its 12 DTOs together |
-| `fitbit/` | OAuth2/PKCE client, sync service, parser, session store, DTOs |
-| `nutrition/`, `nutrition/olympusdb/` | Olympus HTTP client, token service, and a second read-only JDBC pool onto the Olympus database |
-| `visbody/` | PDF parser, mail service, import service, record and repository |
-| `boditrax/` | CSV parser and import service |
+| Module | Surface |
+|--------|---------|
+| `seance/` | the core domain: `Seance`, `Exercice`, `Serie`, `Degressif`, journal, `SeanceMapper` |
+| `programme/` | building, reordering and copying programmes |
+| `exercice/` | the standardised exercise library and its importer |
+| `utilisateur/` | profile, settings, the `Utilisateur` entity and its enums |
+| `auth/` | registration, login, password reset |
+| `coach/` | the AI subsystem: `agent/`, `tools/`, `configuration/`, conversations, memory notes |
+| `journalier/` | daily state and recovery |
+| `performance/` | 1RM records and tiers |
+| `agora/` | the social listing |
+| `stats/` | server-side aggregation for the statistics screen |
+| `fitbit/` | Google Health OAuth2/PKCE, sync service, parser, session store |
+| `nutrition/` | Olympus HTTP client, token service, read-only JDBC pool |
+| `visbody/` | body-composition PDFs parsed from a Gmail mailbox |
+| `boditrax/` | CSV import, sharing Visbody's persistence path |
+| `core/` | `exceptions/`, `security/`, `configuration/` — shared, owned by no domain |
+| `security/` | `SecurityConfig`, `JwtService`, `JwtAuthenticationFilter`, `WebMvcConfig` |
 
 ## Which to choose
 
-Extend an existing controller when the endpoint belongs to a domain the app already owns — a new
+Extend an existing module when the endpoint belongs to a domain the app already owns — a new
 journal filter, a new profile field, another programme operation.
 
-Open a vertical slice when the feature is a self-contained integration with its own vocabulary and
-its own failure modes. The test is whether its DTOs would be meaningless to the rest of the app.
+Open a new module when the feature is self-contained, with its own vocabulary and its own failure
+modes. The test is whether its DTOs would be meaningless to the rest of the app.
 
 ## Controller shape
 
-Existing controllers use explicit constructor injection rather than `@RequiredArgsConstructor` —
-match the file being edited. Methods return `ResponseEntity<Dto>` or `ResponseEntity<List<Dto>>`.
-
-```java
-@RestController
-@RequestMapping("/api/journal")
-public class JournalController {
-
-    private final SeanceRepository seanceRepository;
-    private final SeanceMapper seanceMapper;
-
-    public JournalController(SeanceRepository seanceRepository, SeanceMapper seanceMapper) {
-        this.seanceRepository = seanceRepository;
-        this.seanceMapper = seanceMapper;
-    }
-```
-
-Some controllers call the repository directly for a plain read. That is accepted for a read with no
-business rule; anything with a rule, a write, or more than one repository goes through a service.
-
-## Mapping
-
-There is no MapStruct. Three options, in order of preference:
-
-1. A static factory on the record: `public static SeanceDto from(Seance seance) { … }`.
-2. A method on `SeanceMapper`, if the type is already mapped there.
-3. Inline construction in the service, for a one-off projection.
-
-Do not introduce a mapping framework for one endpoint.
-
-## Naming
-
-Paths are lowercase and French where the domain is French: `/api/journal/historique`,
-`/api/programmes`, `/api/etat-journalier`. Java identifiers follow the same split as the rest of the
-codebase — French domain nouns, English technical scaffolding.
+`@RequiredArgsConstructor` over `private final` fields, never field `@Autowired`. Methods return
+`ResponseEntity<Dto>` or `ResponseEntity<List<Dto>>`, never an entity. No `try`/`catch`: exceptions
+travel to `core/exceptions/GlobalExceptionHandler`. The caller comes from
+`core/security/AuthenticatedUserService`, never from a `username` request parameter.

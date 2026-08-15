@@ -25,11 +25,11 @@ then continue into the backend traversal above.
 ### "Why did the coach answer that?"
 
 ```
-ai/ChironAgent.java              the @SystemMessage — find the block, find [toolName]
-ai/<X>Tools.java                 the method with that name
+coach/agent/ChironAgent.java              the @SystemMessage — find the block, find [toolName]
+coach/tools/<X>Tools.java                 the method with that name
                                  its @Tool description is what the model read
-ai/ChironAgentRouter.java        which provider ran it, retries, fallback
-ai/ConversationMemoryManager.java what history it had
+coach/agent/ChironAgentRouter.java        which provider ran it, retries, fallback
+coach/agent/ConversationMemoryManager.java what history it had
 controller/ChatController.java   what context was prepended to the message
 ```
 
@@ -49,9 +49,9 @@ service/chiron-api.ts              whether the frontend receives it
 | An endpoint's URL | `controller/` — every class carries `@RequestMapping("/api/…")` |
 | Whether a path is public | `security/SecurityConfig.java` |
 | The JWT handling | `security/JwtService.java`, `security/JwtAuthenticationFilter.java` |
-| What the coach can do | `ai/ChironAgent.java`, then the `ai/*Tools` components |
-| The coach's personality and rules | the `@SystemMessage` in `ai/ChironAgent.java` |
-| The provider choice and quota | `ai/ChironAgentRouter.java`, `service/AiUsageService.java` |
+| What the coach can do | `coach/agent/ChironAgent.java`, then the `coach/tools/*Tools` components |
+| The coach's personality and rules | the `@SystemMessage` in `coach/agent/ChironAgent.java` |
+| The provider choice and quota | `coach/agent/ChironAgentRouter.java`, `service/AiUsageService.java` |
 | A statistics computation | `stats/` — controller, service and DTOs together |
 | Fitbit, Olympus, Visbody, Boditrax | their own vertical packages |
 | A column's origin | `grep -rn '<column>' chiron-back/src/main/resources/db/migration/` |
@@ -82,6 +82,6 @@ grep -rn "chironApi\." chiron-front/src/app/components
 ## Scale, so expectations are calibrated
 
 151 Java files in `chiron-back/src/main/java`, 32 test classes, 41 Flyway migrations. 55 TypeScript
-files in `chiron-front/src/app`, 11 specs, 567 i18n keys. `ai/WorkoutTools.java` is the largest file
+files in `chiron-front/src/app`, 11 specs, 567 i18n keys. `coach/tools/WorkoutTools.java` is the largest file
 at about 1050 lines and holds 41 of the 84 tools; `service/chiron-api.ts` is about 730 lines and is
 the whole frontend API surface. Both are worth reading in sections rather than whole.

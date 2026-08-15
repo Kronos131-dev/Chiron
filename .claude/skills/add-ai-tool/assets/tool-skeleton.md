@@ -1,6 +1,6 @@
 # Tool skeletons
 
-Copy the structure. Every block is taken from `chiron-back/src/main/java/com/kronos/chiron/ai/`.
+Copy the structure. Every block is taken from `chiron-back/src/main/java/com/kronos/chiron/coach/`.
 
 ## Component header
 

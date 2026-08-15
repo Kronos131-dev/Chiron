@@ -5,7 +5,7 @@ description: Verifies and diagnoses a chiron-back change before hand-off. Use be
 
 # Verify a backend change
 
-`mvn test` does **not** run the whole suite. Surefire excludes `controller/`, `repository/` and
+`mvn test` does **not** run the whole suite. Surefire excludes `controller/`, `persistence/` and
 `migration/`; those run under Failsafe on `mvn verify`, and need a live Docker daemon. Reporting work
 as verified on `mvn test` alone leaves the controller, repository and schema tests unrun — which is
 precisely where an endpoint or a migration breaks.
@@ -59,7 +59,7 @@ Run everything from `chiron-back/`.
 
 ## Error Handling
 
-* If `mvn test` passes but `mvn verify` fails, the failure is in `controller/`, `repository/` or
+* If `mvn test` passes but `mvn verify` fails, the failure is in `controller/`, `persistence/` or
   `migration/`. A plain `mvn test` runs 18 classes and 225 tests; those three packages are not among
   them.
 * If any test reports `Could not find a valid Docker environment`, start Docker and re-run.
