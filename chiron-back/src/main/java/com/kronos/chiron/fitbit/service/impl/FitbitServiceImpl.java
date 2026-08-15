@@ -1,4 +1,12 @@
-package com.kronos.chiron.fitbit;
+package com.kronos.chiron.fitbit.service.impl;
+
+import com.kronos.chiron.fitbit.client.FitbitClient;
+import com.kronos.chiron.fitbit.client.FitbitParser;
+import com.kronos.chiron.fitbit.dto.FitbitDashboardDto;
+import com.kronos.chiron.fitbit.dto.FitbitDayPoint;
+import com.kronos.chiron.fitbit.dto.FitbitLinkStatus;
+import com.kronos.chiron.fitbit.service.FitbitAuthSessionStore;
+import com.kronos.chiron.fitbit.service.FitbitService;
 
 import java.time.Clock;
 
@@ -25,7 +33,7 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class FitbitService {
+public class FitbitServiceImpl implements FitbitService {
 
     private final UtilisateurRepository utilisateurRepository;
     private final FitbitClient fitbitClient;
@@ -46,6 +54,7 @@ public class FitbitService {
     private static final long REFRESH_SKEW_SECONDS = 60;
 
     @Transactional(readOnly = true)
+    @Override
     public String buildAuthorizationUrl(String chironUsername) {
         Utilisateur user = utilisateurRepository.findByUsername(chironUsername)
                 .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable : " + chironUsername));
@@ -70,6 +79,7 @@ public class FitbitService {
     }
 
     @Transactional
+    @Override
     public FitbitLinkStatus handleCallback(String code, String state) {
         FitbitAuthSessionStore.PendingAuth pending = authSessionStore.consume(state);
         if (pending == null) {
@@ -89,6 +99,7 @@ public class FitbitService {
     }
 
     @Transactional(readOnly = true)
+    @Override
     public FitbitLinkStatus getStatus(String chironUsername) {
         Utilisateur user = utilisateurRepository.findByUsername(chironUsername)
                 .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable : " + chironUsername));
@@ -96,6 +107,7 @@ public class FitbitService {
     }
 
     @Transactional
+    @Override
     public void unlink(String chironUsername) {
         Utilisateur user = utilisateurRepository.findByUsername(chironUsername)
                 .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable : " + chironUsername));
@@ -104,6 +116,7 @@ public class FitbitService {
     }
 
     @Transactional
+    @Override
     public String getValidToken(String chironUsername) {
         Utilisateur user = utilisateurRepository.findByUsername(chironUsername)
                 .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable : " + chironUsername));
@@ -147,6 +160,7 @@ public class FitbitService {
     }
 
     @Transactional
+    @Override
     public FitbitDashboardDto getDashboard(String chironUsername, int days) {
         int n = Math.max(1, Math.min(days, 30));
         String token;
@@ -245,10 +259,4 @@ public class FitbitService {
         }
     }
 
-    public static class NotLinkedException extends RuntimeException {
-    }
-    public static class ExpiredException extends RuntimeException {
-    }
-    public static class InvalidStateException extends RuntimeException {
-    }
 }

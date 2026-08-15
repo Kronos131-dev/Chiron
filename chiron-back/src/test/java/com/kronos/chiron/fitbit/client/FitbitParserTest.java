@@ -1,4 +1,4 @@
-package com.kronos.chiron.fitbit;
+package com.kronos.chiron.fitbit.client;
 
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.JsonNode;

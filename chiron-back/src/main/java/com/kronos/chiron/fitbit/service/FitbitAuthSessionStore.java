@@ -1,4 +1,4 @@
-package com.kronos.chiron.fitbit;
+package com.kronos.chiron.fitbit.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

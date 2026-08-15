@@ -1,4 +1,4 @@
-package com.kronos.chiron.fitbit;
+package com.kronos.chiron.fitbit.client;
 
 import tools.jackson.databind.JsonNode;
 

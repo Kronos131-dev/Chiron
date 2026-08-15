@@ -1,10 +1,10 @@
 package com.kronos.chiron.fitbit.controller;
 
-import com.kronos.chiron.fitbit.FitbitClient;
-import com.kronos.chiron.fitbit.FitbitDashboardDto;
-import com.kronos.chiron.fitbit.FitbitLinkStatus;
-import com.kronos.chiron.fitbit.FitbitService;
-import com.kronos.chiron.fitbit.FitbitSyncService;
+import com.kronos.chiron.fitbit.client.FitbitClient;
+import com.kronos.chiron.fitbit.dto.FitbitDashboardDto;
+import com.kronos.chiron.fitbit.dto.FitbitLinkStatus;
+import com.kronos.chiron.fitbit.service.FitbitService;
+import com.kronos.chiron.fitbit.service.FitbitSyncService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
