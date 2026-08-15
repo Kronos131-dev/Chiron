@@ -1,6 +1,6 @@
 # chiron-back — conventions
 
-Spring Boot 4.0.6 · Java 21 · PostgreSQL 16 with Flyway · Spring Security with stateless JWT ·
+Spring Boot 4.0.6 · Java 25 · PostgreSQL 16 with Flyway · Spring Security with stateless JWT ·
 LangChain4j 1.14.1 over Mistral and Gemini · Lombok · springdoc OpenAPI. Maven, with a wrapper
 (`./mvnw`, script-only). `<finalName>app</finalName>` — the build produces `target/app.jar`.
 

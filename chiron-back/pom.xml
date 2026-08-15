@@ -15,11 +15,12 @@
     <description>Sanctuaire Chiron - Backend API</description>
 
     <properties>
-        <java.version>21</java.version>
+        <java.version>25</java.version>
         <langchain4j.version>1.14.1</langchain4j.version>
         <jjwt.version>0.12.6</jjwt.version>
         <testcontainers.version>1.21.3</testcontainers.version>
         <mapstruct.version>1.6.3</mapstruct.version>
+        <lombok.version>1.18.44</lombok.version>
         <skipUTs>false</skipUTs>
     </properties>
 
@@ -121,7 +122,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.38</version>
+            <version>${lombok.version}</version>
             <optional>true</optional>
         </dependency>
 
@@ -199,7 +200,7 @@
                         <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
-                            <version>1.18.38</version>
+                            <version>${lombok.version}</version>
                         </path>
                         <path>
                             <groupId>org.projectlombok</groupId>
@@ -229,10 +230,25 @@
                     <lineEndings>PRESERVE</lineEndings>
                 </configuration>
             </plugin>
+            <!-- Expose le chemin du jar Mockito comme propriété, pour le passer en -javaagent
+                 ci-dessous. Sans agent déclaré, Mockito s'auto-attache : le JDK l'accepte encore
+                 en 25 mais l'annonce comme condamné (JEP 451). -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>properties</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
+                    <argLine>-javaagent:${org.mockito:mockito-core:jar}</argLine>
                     <!-- Skippable via -DskipUTs=true (used by the IT CI job) -->
                     <skip>${skipUTs}</skip>
                     <!-- Unit tests only: excludes Spring-context tests -->
@@ -261,7 +277,7 @@
                     <environmentVariables>
                         <DOCKER_HOST>unix:///var/run/docker.sock</DOCKER_HOST>
                     </environmentVariables>
-                    <argLine>-Dapi.version=1.44</argLine>
+                    <argLine>-Dapi.version=1.44 -javaagent:${org.mockito:mockito-core:jar}</argLine>
                 </configuration>
                 <executions>
                     <execution>
