@@ -1,4 +1,4 @@
-package com.kronos.chiron.stats;
+package com.kronos.chiron.stats.dto;
 
 public record StatsOverviewDto(
         int seances30,

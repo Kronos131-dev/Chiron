@@ -1,6 +1,19 @@
-package com.kronos.chiron.stats;
+package com.kronos.chiron.stats.service.impl;
 
 import java.time.Clock;
+
+import com.kronos.chiron.stats.dto.BodyCompositionPointDto;
+import com.kronos.chiron.stats.dto.BodyCompositionStatsDto;
+import com.kronos.chiron.stats.dto.BodyweightStatsDto;
+import com.kronos.chiron.stats.dto.ExerciseListItemDto;
+import com.kronos.chiron.stats.dto.ExerciseProgressPointDto;
+import com.kronos.chiron.stats.dto.MuscleStatDto;
+import com.kronos.chiron.stats.dto.MuscleStatsDto;
+import com.kronos.chiron.stats.dto.NutritionPointDto;
+import com.kronos.chiron.stats.dto.NutritionStatsDto;
+import com.kronos.chiron.stats.dto.StatsOverviewDto;
+import com.kronos.chiron.stats.dto.WeeklyVolumePointDto;
+import com.kronos.chiron.stats.service.StatsService;
 
 import com.kronos.chiron.performance.dto.PerformanceSummaryDto;
 import com.kronos.chiron.seance.model.Degressif;
@@ -37,7 +50,7 @@ import java.util.TreeSet;
 
 @Service
 @RequiredArgsConstructor
-public class StatsService {
+public class StatsServiceImpl implements StatsService {
 
     private static final DateTimeFormatter LABEL = DateTimeFormatter.ofPattern("dd/MM");
     private static final WeekFields ISO = WeekFields.ISO;
@@ -51,6 +64,7 @@ public class StatsService {
 
     private final Clock clock;
     @Transactional(readOnly = true)
+    @Override
     public StatsOverviewDto getOverview(String username) {
         List<Seance> sessions = realSessions(username);
         LocalDateTime now = LocalDateTime.now(clock);
@@ -96,6 +110,7 @@ public class StatsService {
     }
 
     @Transactional(readOnly = true)
+    @Override
     public List<WeeklyVolumePointDto> getWeeklyVolume(String username, int weeks) {
         int n = Math.min(Math.max(weeks, 1), 52);
         List<Seance> sessions = realSessions(username);
@@ -132,6 +147,7 @@ public class StatsService {
     }
 
     @Transactional(readOnly = true)
+    @Override
     public MuscleStatsDto getMuscleStats(String username, int days) {
         int n = Math.min(Math.max(days, 1), 365);
         LocalDateTime since = LocalDateTime.now(clock).minusDays(n);
@@ -173,6 +189,7 @@ public class StatsService {
     }
 
     @Transactional(readOnly = true)
+    @Override
     public List<ExerciseListItemDto> getExerciseList(String username) {
         List<Seance> sessions = realSessions(username);
         Map<String, ExerciseAcc> byName = new LinkedHashMap<>();
@@ -199,6 +216,7 @@ public class StatsService {
     }
 
     @Transactional(readOnly = true)
+    @Override
     public List<ExerciseProgressPointDto> getExerciseProgress(String username, String nom) {
         if (nom == null || nom.isBlank()) return List.of();
         String target = nom.trim().toLowerCase();
@@ -232,6 +250,7 @@ public class StatsService {
     }
 
     @Transactional(readOnly = true)
+    @Override
     public NutritionStatsDto getNutrition(String username, int days) {
         int n = Math.min(Math.max(days, 1), 365);
         Optional<Long> userId = resolveOlympusUser(username);
@@ -267,6 +286,7 @@ public class StatsService {
     }
 
     @Transactional(readOnly = true)
+    @Override
     public BodyweightStatsDto getBodyweight(String username, int days) {
         int n = Math.min(Math.max(days, 1), 730);
         Optional<Long> userId = resolveOlympusUser(username);
@@ -278,6 +298,7 @@ public class StatsService {
     }
 
     @Transactional(readOnly = true)
+    @Override
     public BodyCompositionStatsDto getBodyComposition(String username, int days) {
         int n = Math.min(Math.max(days, 1), 1825);
         Optional<Utilisateur> user = utilisateurRepository.findByUsername(username);

@@ -1,5 +1,14 @@
-package com.kronos.chiron.stats;
+package com.kronos.chiron.stats.controller;
 
+import com.kronos.chiron.stats.dto.BodyCompositionStatsDto;
+import com.kronos.chiron.stats.dto.BodyweightStatsDto;
+import com.kronos.chiron.stats.dto.ExerciseListItemDto;
+import com.kronos.chiron.stats.dto.ExerciseProgressPointDto;
+import com.kronos.chiron.stats.dto.MuscleStatsDto;
+import com.kronos.chiron.stats.dto.NutritionStatsDto;
+import com.kronos.chiron.stats.dto.StatsOverviewDto;
+import com.kronos.chiron.stats.dto.WeeklyVolumePointDto;
+import com.kronos.chiron.stats.service.StatsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
