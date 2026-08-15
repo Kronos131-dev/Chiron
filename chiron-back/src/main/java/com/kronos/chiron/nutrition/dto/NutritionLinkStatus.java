@@ -1,4 +1,4 @@
-package com.kronos.chiron.nutrition;
+package com.kronos.chiron.nutrition.dto;
 
 import java.time.LocalDateTime;
 

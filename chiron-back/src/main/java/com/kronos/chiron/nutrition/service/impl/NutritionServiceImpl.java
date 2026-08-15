@@ -1,4 +1,9 @@
-package com.kronos.chiron.nutrition;
+package com.kronos.chiron.nutrition.service.impl;
+
+import com.kronos.chiron.nutrition.client.OlympusClient;
+import com.kronos.chiron.nutrition.dto.NutritionLinkStatus;
+import com.kronos.chiron.nutrition.service.NutritionService;
+import com.kronos.chiron.nutrition.service.OlympusTokenService;
 
 import java.time.Clock;
 
@@ -14,7 +19,7 @@ import java.time.LocalDateTime;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class NutritionService {
+public class NutritionServiceImpl implements NutritionService {
 
     private final UtilisateurRepository utilisateurRepository;
     private final OlympusClient olympusClient;
@@ -22,6 +27,7 @@ public class NutritionService {
 
     private final Clock clock;
     @Transactional
+    @Override
     public NutritionLinkStatus link(String chironUsername, String olympusPseudo, String olympusPassword) {
         Utilisateur user = utilisateurRepository.findByUsername(chironUsername)
                 .orElseThrow(() -> new IllegalArgumentException("Utilisateur Chiron introuvable : " + chironUsername));
@@ -42,6 +48,7 @@ public class NutritionService {
     }
 
     @Transactional(readOnly = true)
+    @Override
     public NutritionLinkStatus getStatus(String chironUsername) {
         Utilisateur user = utilisateurRepository.findByUsername(chironUsername)
                 .orElseThrow(() -> new IllegalArgumentException("Utilisateur Chiron introuvable : " + chironUsername));
@@ -49,6 +56,7 @@ public class NutritionService {
     }
 
     @Transactional
+    @Override
     public void unlink(String chironUsername) {
         Utilisateur user = utilisateurRepository.findByUsername(chironUsername)
                 .orElseThrow(() -> new IllegalArgumentException("Utilisateur Chiron introuvable : " + chironUsername));
@@ -57,6 +65,7 @@ public class NutritionService {
     }
 
     @Transactional(readOnly = true)
+    @Override
     public String getValidToken(String chironUsername) {
         Utilisateur user = utilisateurRepository.findByUsername(chironUsername)
                 .orElseThrow(() -> new IllegalArgumentException("Utilisateur Chiron introuvable : " + chironUsername));
@@ -72,6 +81,7 @@ public class NutritionService {
     }
 
     @Transactional
+    @Override
     public void invalidateLink(String chironUsername) {
         Utilisateur user = utilisateurRepository.findByUsername(chironUsername)
                 .orElseThrow(() -> new IllegalArgumentException("Utilisateur Chiron introuvable : " + chironUsername));
@@ -99,14 +109,4 @@ public class NutritionService {
                 user.getOlympusTokenExpiresAt());
     }
 
-    public static class InvalidCredentialsException extends RuntimeException {
-        public InvalidCredentialsException(String msg) {
-            super(msg);
-        }
-    }
-
-    public static class NotLinkedException extends RuntimeException {
-    }
-    public static class ExpiredException extends RuntimeException {
-    }
 }

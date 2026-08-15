@@ -1,4 +1,4 @@
-package com.kronos.chiron.nutrition.olympusdb;
+package com.kronos.chiron.nutrition.persistence;
 
 import com.kronos.chiron.stats.dto.BodyweightPointDto;
 import com.kronos.chiron.stats.dto.NutritionPointDto;
