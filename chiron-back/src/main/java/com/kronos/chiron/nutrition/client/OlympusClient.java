@@ -1,4 +1,4 @@
-package com.kronos.chiron.nutrition;
+package com.kronos.chiron.nutrition.client;
 
 import tools.jackson.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;

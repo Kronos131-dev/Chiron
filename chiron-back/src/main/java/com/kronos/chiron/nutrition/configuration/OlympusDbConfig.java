@@ -1,4 +1,4 @@
-package com.kronos.chiron.nutrition.olympusdb;
+package com.kronos.chiron.nutrition.configuration;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;

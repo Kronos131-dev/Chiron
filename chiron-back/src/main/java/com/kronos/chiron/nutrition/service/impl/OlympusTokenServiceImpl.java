@@ -1,4 +1,6 @@
-package com.kronos.chiron.nutrition;
+package com.kronos.chiron.nutrition.service.impl;
+
+import com.kronos.chiron.nutrition.service.OlympusTokenService;
 
 import com.kronos.chiron.core.exceptions.ChironTechnicalException;
 
@@ -17,7 +19,7 @@ import java.util.Base64;
 
 @Service
 @Slf4j
-public class OlympusTokenService {
+public class OlympusTokenServiceImpl implements OlympusTokenService {
 
     private static final String ALG = "AES";
     private static final String TRANSFORMATION = "AES/GCM/NoPadding";
@@ -47,6 +49,7 @@ public class OlympusTokenService {
         this.secretKey = new SecretKeySpec(keyBytes, ALG);
     }
 
+    @Override
     public String encrypt(String plaintext) {
         if (plaintext == null) return null;
         try {
@@ -65,6 +68,7 @@ public class OlympusTokenService {
         }
     }
 
+    @Override
     public String decrypt(String ciphertextB64) {
         if (ciphertextB64 == null) return null;
         try {

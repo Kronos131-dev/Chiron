@@ -4,8 +4,8 @@ import java.time.Clock;
 
 import tools.jackson.databind.JsonNode;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
-import com.kronos.chiron.nutrition.NutritionService;
-import com.kronos.chiron.nutrition.OlympusClient;
+import com.kronos.chiron.nutrition.service.NutritionService;
+import com.kronos.chiron.nutrition.client.OlympusClient;
 import com.kronos.chiron.utilisateur.persistence.UtilisateurRepository;
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agent.tool.ToolMemoryId;

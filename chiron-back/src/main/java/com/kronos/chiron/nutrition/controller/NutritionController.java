@@ -1,8 +1,8 @@
 package com.kronos.chiron.nutrition.controller;
 
-import com.kronos.chiron.nutrition.NutritionLinkStatus;
-import com.kronos.chiron.nutrition.NutritionService;
-import com.kronos.chiron.nutrition.OlympusClient;
+import com.kronos.chiron.nutrition.dto.NutritionLinkStatus;
+import com.kronos.chiron.nutrition.service.NutritionService;
+import com.kronos.chiron.nutrition.client.OlympusClient;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
