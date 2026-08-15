@@ -1,6 +1,6 @@
 package com.kronos.chiron.boditrax;
 
-import com.kronos.chiron.visbody.VisbodyReport;
+import com.kronos.chiron.visbody.dto.VisbodyReport;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;

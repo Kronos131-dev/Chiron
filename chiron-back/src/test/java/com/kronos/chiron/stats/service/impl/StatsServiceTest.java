@@ -25,7 +25,7 @@ import com.kronos.chiron.nutrition.olympusdb.OlympusNutritionDao;
 import com.kronos.chiron.seance.persistence.SeanceRepository;
 import com.kronos.chiron.utilisateur.persistence.UtilisateurRepository;
 import com.kronos.chiron.performance.service.PerformanceService;
-import com.kronos.chiron.visbody.BodyCompositionRecordRepository;
+import com.kronos.chiron.visbody.persistence.BodyCompositionRecordRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
