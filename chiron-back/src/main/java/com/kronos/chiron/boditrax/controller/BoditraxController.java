@@ -1,6 +1,6 @@
 package com.kronos.chiron.boditrax.controller;
 
-import com.kronos.chiron.boditrax.BoditraxImportService;
+import com.kronos.chiron.boditrax.service.BoditraxImportService;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 import com.kronos.chiron.utilisateur.persistence.UtilisateurRepository;
 import com.kronos.chiron.visbody.service.VisbodyImportService;
