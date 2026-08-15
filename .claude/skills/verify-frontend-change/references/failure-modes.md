@@ -9,13 +9,14 @@ Measured on `main`, with no local change. Know these before blaming a change.
 | `npx tsc --noEmit -p tsconfig.json` | passes |
 | `npm run build` | succeeds, with a `bundle initial exceeded maximum budget` warning (~1.05 MB against 1 MB) |
 | `npx prettier --check .` | 74 files unformatted |
-| `npm test` | **fails to compile** — `session.spec.ts` and `programme-builder.spec.ts` |
+| `npm test` | 42 tests over 11 files, all green |
 | ESLint | does not exist in this project |
 
-The `npm test` failure is `TS2741: Property 'cardioType' is missing` in the `ExerciceDefinitionDto`
-fixtures those two specs build. `cardioType` was added to the interface in
-`src/app/service/chiron-api.ts` without updating them. Because the Angular builder compiles the whole
-spec graph before running anything, this one error stops the entire suite — no test runs at all.
+The Angular builder compiles the whole spec graph before running anything, so a single spec that
+does not type-check stops the entire suite — no test runs at all, and the output looks nothing like a
+test failure. `TS2741: Property 'cardioType' is missing` did exactly that until the `makeDef`
+factories in `session.spec.ts` and `programme-builder.spec.ts` were brought back in line with
+`ExerciceDefinitionDto`.
 
 ## Type errors
 

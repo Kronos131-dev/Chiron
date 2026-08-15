@@ -8,7 +8,7 @@
 
 ## Honesty about the baseline
 * [ ] Lint was **not** claimed to pass — there is no ESLint in this project.
-* [ ] A `cardioType` compile failure in `session.spec.ts` or `programme-builder.spec.ts` was
+* [ ] `npm test` compiled and ran the whole suite; a compile failure in any spec was
       identified as the pre-existing baseline, not attributed to this change.
 * [ ] The suite was not reported as passing when it did not run.
 * [ ] `npx prettier --check .` over the whole project was not used as a gate.

@@ -40,8 +40,7 @@ Run `git status` and confirm nothing needed by the build is untracked.
 
 ## The frontend test baseline
 
-`npm test` currently fails to compile on `main`, in `session.spec.ts` and `programme-builder.spec.ts`,
-on a missing `cardioType` field. **The workflow does not run the frontend tests at all** — there is no
+`npm test` is green locally (42 tests over 11 files) but nothing enforces that. **The workflow does not run the frontend tests at all** — there is no
 `npm test` step in `build-frontend`, only `npm ci` and the production build. A broken frontend suite
 therefore never turns the pipeline red, and a green pipeline says nothing about it.
 
