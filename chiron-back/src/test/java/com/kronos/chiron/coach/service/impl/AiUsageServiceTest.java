@@ -55,7 +55,7 @@ class AiUsageServiceTest {
 
     @Test
     void resolveProvider_userPrefersMistral_returnsMistralWithoutTouchingQuota() {
-        Utilisateur user = user(AiProvider.MISTRAL, Role.USER, LocalDate.now(), 0);
+        Utilisateur user = user(AiProvider.MISTRAL, Role.USER, LocalDate.now(clock), 0);
 
         assertThat(aiUsageService.resolveProvider(user)).isEqualTo(AiProvider.MISTRAL);
         verify(utilisateurRepository, never()).findById(1L);
@@ -63,7 +63,7 @@ class AiUsageServiceTest {
 
     @Test
     void resolveProvider_admin_returnsGeminiWithoutConsumingQuota() {
-        Utilisateur admin = user(AiProvider.GEMINI, Role.ADMIN, LocalDate.now(), 99);
+        Utilisateur admin = user(AiProvider.GEMINI, Role.ADMIN, LocalDate.now(clock), 99);
 
         assertThat(aiUsageService.resolveProvider(admin)).isEqualTo(AiProvider.GEMINI);
         verify(utilisateurRepository, never()).findById(1L);
@@ -72,7 +72,7 @@ class AiUsageServiceTest {
 
     @Test
     void resolveProvider_underDailyLimit_returnsGeminiAndIncrementsCount() {
-        Utilisateur user = user(AiProvider.GEMINI, Role.USER, LocalDate.now(), 2);
+        Utilisateur user = user(AiProvider.GEMINI, Role.USER, LocalDate.now(clock), 2);
         when(utilisateurRepository.findById(1L)).thenReturn(Optional.of(user));
 
         assertThat(aiUsageService.resolveProvider(user)).isEqualTo(AiProvider.GEMINI);
@@ -82,7 +82,7 @@ class AiUsageServiceTest {
 
     @Test
     void resolveProvider_lastCallOfTheDay_stillReturnsGemini() {
-        Utilisateur user = user(AiProvider.GEMINI, Role.USER, LocalDate.now(),
+        Utilisateur user = user(AiProvider.GEMINI, Role.USER, LocalDate.now(clock),
                 AiUsageService.DAILY_GEMINI_LIMIT - 1);
         when(utilisateurRepository.findById(1L)).thenReturn(Optional.of(user));
 
@@ -92,7 +92,7 @@ class AiUsageServiceTest {
 
     @Test
     void resolveProvider_dailyLimitReached_downgradesToMistralSilently() {
-        Utilisateur user = user(AiProvider.GEMINI, Role.USER, LocalDate.now(),
+        Utilisateur user = user(AiProvider.GEMINI, Role.USER, LocalDate.now(clock),
                 AiUsageService.DAILY_GEMINI_LIMIT);
         when(utilisateurRepository.findById(1L)).thenReturn(Optional.of(user));
 
@@ -103,12 +103,12 @@ class AiUsageServiceTest {
 
     @Test
     void resolveProvider_quotaFromAPreviousDay_isResetBeforeBeingChecked() {
-        Utilisateur user = user(AiProvider.GEMINI, Role.USER, LocalDate.now().minusDays(1),
+        Utilisateur user = user(AiProvider.GEMINI, Role.USER, LocalDate.now(clock).minusDays(1),
                 AiUsageService.DAILY_GEMINI_LIMIT);
         when(utilisateurRepository.findById(1L)).thenReturn(Optional.of(user));
 
         assertThat(aiUsageService.resolveProvider(user)).isEqualTo(AiProvider.GEMINI);
-        assertThat(user.getGeminiCallDate()).isEqualTo(LocalDate.now());
+        assertThat(user.getGeminiCallDate()).isEqualTo(LocalDate.now(clock));
         assertThat(user.getGeminiCallCount()).isEqualTo(1);
     }
 
@@ -118,13 +118,13 @@ class AiUsageServiceTest {
         when(utilisateurRepository.findById(1L)).thenReturn(Optional.of(user));
 
         assertThat(aiUsageService.resolveProvider(user)).isEqualTo(AiProvider.GEMINI);
-        assertThat(user.getGeminiCallDate()).isEqualTo(LocalDate.now());
+        assertThat(user.getGeminiCallDate()).isEqualTo(LocalDate.now(clock));
         assertThat(user.getGeminiCallCount()).isEqualTo(1);
     }
 
     @Test
     void resolveProvider_userNoLongerInDatabase_throwsNoSuchElement() {
-        Utilisateur user = user(AiProvider.GEMINI, Role.USER, LocalDate.now(), 0);
+        Utilisateur user = user(AiProvider.GEMINI, Role.USER, LocalDate.now(clock), 0);
         when(utilisateurRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> aiUsageService.resolveProvider(user))

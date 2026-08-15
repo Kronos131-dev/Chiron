@@ -102,7 +102,7 @@ class WorkoutToolsTest {
     @Test
     void startSession_closesExistingActiveSeance() {
         Seance active = new Seance();
-        active.setStartTime(LocalDateTime.now().minusHours(1));
+        active.setStartTime(LocalDateTime.now(clock).minusHours(1));
         when(seanceRepository.findFirstByUtilisateurIdAndEndTimeIsNullOrderByStartTimeDesc(1L))
                 .thenReturn(Optional.of(active));
 
@@ -276,7 +276,7 @@ class WorkoutToolsTest {
     void getUserHistory_ownHistory_returnsSessions() {
         Seance session = new Seance();
         session.setTitre("Back Day");
-        session.setStartTime(LocalDateTime.now());
+        session.setStartTime(LocalDateTime.now(clock));
         when(seanceRepository.findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc(user.getUsername()))
                 .thenReturn(List.of(session));
 
@@ -327,7 +327,7 @@ class WorkoutToolsTest {
         Exercice exo = new Exercice();
         exo.setNom("Squat");
         exo.setDefinition(new ExerciceDefinition());
-        exo.setStartTime(LocalDateTime.now().minusDays(3));
+        exo.setStartTime(LocalDateTime.now(clock).minusDays(3));
         exo.addSerie(serie);
 
         when(exerciceRepository.findFirstHistoricExercise(1L, "Squat"))
@@ -343,7 +343,7 @@ class WorkoutToolsTest {
         Exercice exo = new Exercice();
         exo.setNom("Bench");
         exo.setDefinition(new ExerciceDefinition());
-        exo.setStartTime(LocalDateTime.now().minusDays(1));
+        exo.setStartTime(LocalDateTime.now(clock).minusDays(1));
 
         when(exerciceRepository.findFirstHistoricExercise(1L, "Bench"))
                 .thenReturn(Optional.of(exo));
@@ -503,7 +503,7 @@ class WorkoutToolsTest {
     void getSessionDetails_sessionWithNoExercises_reportsEmpty() {
         Seance session = new Seance();
         session.setTitre("Rest Day");
-        session.setStartTime(LocalDateTime.now());
+        session.setStartTime(LocalDateTime.now(clock));
 
         when(seanceRepository.findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc(user.getUsername()))
                 .thenReturn(List.of(session));
@@ -522,7 +522,7 @@ class WorkoutToolsTest {
         Exercice exo1 = new Exercice();
         exo1.setNom("Deadlift");
         exo1.setDefinition(def);
-        exo1.setStartTime(LocalDateTime.now().minusDays(7));
+        exo1.setStartTime(LocalDateTime.now(clock).minusDays(7));
         Serie s1 = new Serie();
         s1.setPoids(150.0);
         s1.setNombreReps(5);
@@ -531,7 +531,7 @@ class WorkoutToolsTest {
         Exercice exo2 = new Exercice();
         exo2.setNom("Deadlift");
         exo2.setDefinition(def);
-        exo2.setStartTime(LocalDateTime.now().minusDays(14));
+        exo2.setStartTime(LocalDateTime.now(clock).minusDays(14));
         Serie s2 = new Serie();
         s2.setPoids(140.0);
         s2.setNombreReps(5);
@@ -591,7 +591,7 @@ class WorkoutToolsTest {
         Exercice exo = new Exercice();
         exo.setNom("Pull-up");
         exo.setDefinition(new ExerciceDefinition());
-        exo.setStartTime(LocalDateTime.now());
+        exo.setStartTime(LocalDateTime.now(clock));
 
         when(exerciceRepository.findAllHistoricExercises(1L, "Pull-up")).thenReturn(List.of(exo));
 

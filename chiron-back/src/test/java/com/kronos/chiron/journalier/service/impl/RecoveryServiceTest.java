@@ -221,32 +221,32 @@ class RecoveryServiceTest {
     @Test
     void getRecent_queriesFromTheRequestedNumberOfDays() {
         when(repository.findByUtilisateurAndDateGreaterThanEqualOrderByDateDesc(
-                user, LocalDate.now().minusDays(6))).thenReturn(List.of());
+                user, LocalDate.now(clock).minusDays(6))).thenReturn(List.of());
 
         assertThat(recoveryService.getRecent(user, 7)).isEmpty();
         verify(repository).findByUtilisateurAndDateGreaterThanEqualOrderByDateDesc(
-                user, LocalDate.now().minusDays(6));
+                user, LocalDate.now(clock).minusDays(6));
     }
 
     @Test
     void getRecent_zeroDays_isClampedToOneDay() {
         when(repository.findByUtilisateurAndDateGreaterThanEqualOrderByDateDesc(
-                user, LocalDate.now())).thenReturn(List.of());
+                user, LocalDate.now(clock))).thenReturn(List.of());
 
         recoveryService.getRecent(user, 0);
 
         verify(repository).findByUtilisateurAndDateGreaterThanEqualOrderByDateDesc(
-                user, LocalDate.now());
+                user, LocalDate.now(clock));
     }
 
     @Test
     void getRecent_moreThanNinetyDays_isClampedToNinety() {
         when(repository.findByUtilisateurAndDateGreaterThanEqualOrderByDateDesc(
-                user, LocalDate.now().minusDays(89))).thenReturn(List.of());
+                user, LocalDate.now(clock).minusDays(89))).thenReturn(List.of());
 
         recoveryService.getRecent(user, 365);
 
         verify(repository).findByUtilisateurAndDateGreaterThanEqualOrderByDateDesc(
-                user, LocalDate.now().minusDays(89));
+                user, LocalDate.now(clock).minusDays(89));
     }
 }

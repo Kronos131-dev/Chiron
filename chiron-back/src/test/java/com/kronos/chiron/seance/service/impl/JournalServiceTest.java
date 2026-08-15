@@ -41,7 +41,7 @@ class JournalServiceTest {
 
     @Test
     void getCurrentWeekNumber_matchesFrenchLocale() {
-        int expected = LocalDate.now().get(WeekFields.of(Locale.FRANCE).weekOfWeekBasedYear());
+        int expected = LocalDate.now(clock).get(WeekFields.of(Locale.FRANCE).weekOfWeekBasedYear());
         assertThat(journalService.getCurrentWeekNumber()).isEqualTo(expected);
     }
 
