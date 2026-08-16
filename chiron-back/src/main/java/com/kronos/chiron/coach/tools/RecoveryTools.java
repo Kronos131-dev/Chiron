@@ -26,7 +26,7 @@ public class RecoveryTools {
 
     private final ToolUserResolver toolUserResolver;
     @Tool("Enregistre/met à jour l'état du jour : sommeil (heures), fatigue/courbatures/stress/énergie (1-5 ; 1=au mieux→5=au pire pour fatigue/courbatures/stress, inverse pour energie : 1=vide→5=à fond), notes. Date optionnelle (AAAA-MM-JJ, défaut aujourd'hui). Tous les champs sont optionnels — n'enregistre que ce qui est mentionné.")
-    public String enregistrerEtatJournalier(@ToolMemoryId String userId,
+    public String enregistrerEtatJournalier(@ToolMemoryId String memoryId,
             String date,
             Double sommeilHeures,
             Integer fatigue,
@@ -34,7 +34,7 @@ public class RecoveryTools {
             Integer stress,
             Integer energie,
             String notes) {
-        Utilisateur user = toolUserResolver.load(userId);
+        Utilisateur user = toolUserResolver.load(memoryId);
         LocalDate target;
         if (date == null || date.isBlank()) {
             target = LocalDate.now(clock);
@@ -50,8 +50,8 @@ public class RecoveryTools {
     }
 
     @Tool("Récupère l'état journalier (sommeil, fatigue, courbatures, stress, énergie) sur les N derniers jours (défaut 7, max 90).")
-    public String getEtatRecent(@ToolMemoryId String userId, Integer nbJours) {
-        Utilisateur user = toolUserResolver.load(userId);
+    public String getEtatRecent(@ToolMemoryId String memoryId, Integer nbJours) {
+        Utilisateur user = toolUserResolver.load(memoryId);
         int window = (nbJours != null && nbJours > 0) ? nbJours : 7;
         List<EtatJournalier> etats = recoveryService.getRecent(user, window);
 
@@ -79,8 +79,8 @@ public class RecoveryTools {
     }
 
     @Tool("Recommande un type de séance (lourd / modéré / léger / repos) en croisant l'état du jour et des 3 derniers jours.")
-    public String recommanderTypeSeance(@ToolMemoryId String userId) {
-        Utilisateur user = toolUserResolver.load(userId);
+    public String recommanderTypeSeance(@ToolMemoryId String memoryId) {
+        Utilisateur user = toolUserResolver.load(memoryId);
         List<EtatJournalier> etats = recoveryService.getRecent(user, 3);
 
         if (etats.isEmpty()) {

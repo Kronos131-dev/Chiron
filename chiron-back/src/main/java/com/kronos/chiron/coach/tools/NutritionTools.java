@@ -33,8 +33,8 @@ public class NutritionTools {
 
     private final ToolUserResolver toolUserResolver;
     @Tool("Récupère l'apport nutritionnel de l'utilisateur pour une date donnée (format YYYY-MM-DD ; null ou vide = aujourd'hui). Retourne calories, protéines, glucides, lipides consommés + cibles + delta + activité du jour. Nécessite que l'utilisateur ait lié son compte Olympus.")
-    public String getApportJournalier(@ToolMemoryId String userId, String date) {
-        Utilisateur user = toolUserResolver.load(userId);
+    public String getApportJournalier(@ToolMemoryId String memoryId, String date) {
+        Utilisateur user = toolUserResolver.load(memoryId);
         LocalDate target;
         if (date == null || date.isBlank()) {
             target = LocalDate.now(clock);
@@ -93,7 +93,7 @@ public class NutritionTools {
         } catch (NutritionService.ExpiredException e) {
             return MSG_EXPIRE;
         } catch (OlympusClient.OlympusUnauthorizedException e) {
-            nutritionService.invalidateLink(user.getUsername());
+            log.warn("OLYMPUS_TOKEN_REJECTED user={}", user.getUsername());
             return MSG_EXPIRE;
         } catch (OlympusClient.OlympusUnavailableException e) {
             return MSG_INDISPO;
@@ -101,8 +101,8 @@ public class NutritionTools {
     }
 
     @Tool("Récupère les objectifs nutritionnels de l'utilisateur : type d'objectif (perte / maintien / prise), cibles calories et macros, poids actuel. Nécessite la liaison Olympus.")
-    public String getObjectifsNutritionnels(@ToolMemoryId String userId) {
-        Utilisateur user = toolUserResolver.load(userId);
+    public String getObjectifsNutritionnels(@ToolMemoryId String memoryId) {
+        Utilisateur user = toolUserResolver.load(memoryId);
         try {
             String token = nutritionService.getValidToken(user.getUsername());
             JsonNode profile = olympusClient.getUserProfile(token);
@@ -132,7 +132,7 @@ public class NutritionTools {
         } catch (NutritionService.ExpiredException e) {
             return MSG_EXPIRE;
         } catch (OlympusClient.OlympusUnauthorizedException e) {
-            nutritionService.invalidateLink(user.getUsername());
+            log.warn("OLYMPUS_TOKEN_REJECTED user={}", user.getUsername());
             return MSG_EXPIRE;
         } catch (OlympusClient.OlympusUnavailableException e) {
             return MSG_INDISPO;
@@ -140,8 +140,8 @@ public class NutritionTools {
     }
 
     @Tool("Analyse l'équilibre nutritionnel de l'utilisateur sur les N derniers jours (défaut 7) : moyenne calorique vs cible, répartition moyenne en macros, écart à l'objectif. Détecte les déficits/surplus marqués. Nécessite la liaison Olympus.")
-    public String analyserEquilibreMacros(@ToolMemoryId String userId, Integer nbJours) {
-        Utilisateur user = toolUserResolver.load(userId);
+    public String analyserEquilibreMacros(@ToolMemoryId String memoryId, Integer nbJours) {
+        Utilisateur user = toolUserResolver.load(memoryId);
         int window = (nbJours != null && nbJours > 0) ? nbJours : 7;
 
         try {
@@ -217,7 +217,7 @@ public class NutritionTools {
         } catch (NutritionService.ExpiredException e) {
             return MSG_EXPIRE;
         } catch (OlympusClient.OlympusUnauthorizedException e) {
-            nutritionService.invalidateLink(user.getUsername());
+            log.warn("OLYMPUS_TOKEN_REJECTED user={}", user.getUsername());
             return MSG_EXPIRE;
         } catch (OlympusClient.OlympusUnavailableException e) {
             return MSG_INDISPO;
@@ -225,8 +225,8 @@ public class NutritionTools {
     }
 
     @Tool("Récupère l'évolution du poids de l'utilisateur sur les N derniers jours (défaut 30) : première et dernière mesure, tendance (perte / prise / stable). Nécessite la liaison Olympus et que l'utilisateur se pèse régulièrement dans Olympus.")
-    public String getEvolutionPoids(@ToolMemoryId String userId, Integer nbJours) {
-        Utilisateur user = toolUserResolver.load(userId);
+    public String getEvolutionPoids(@ToolMemoryId String memoryId, Integer nbJours) {
+        Utilisateur user = toolUserResolver.load(memoryId);
         int window = (nbJours != null && nbJours > 0) ? nbJours : 30;
 
         try {
@@ -291,7 +291,7 @@ public class NutritionTools {
         } catch (NutritionService.ExpiredException e) {
             return MSG_EXPIRE;
         } catch (OlympusClient.OlympusUnauthorizedException e) {
-            nutritionService.invalidateLink(user.getUsername());
+            log.warn("OLYMPUS_TOKEN_REJECTED user={}", user.getUsername());
             return MSG_EXPIRE;
         } catch (OlympusClient.OlympusUnavailableException e) {
             return MSG_INDISPO;
@@ -299,8 +299,8 @@ public class NutritionTools {
     }
 
     @Tool("Récupère le planning de repas hebdomadaire de l'utilisateur (repas prévus jour par jour) ainsi que la liste de ses repas pré-enregistrés avec leurs valeurs nutritionnelles. Nécessite la liaison Olympus.")
-    public String getPlanningRepas(@ToolMemoryId String userId) {
-        Utilisateur user = toolUserResolver.load(userId);
+    public String getPlanningRepas(@ToolMemoryId String memoryId) {
+        Utilisateur user = toolUserResolver.load(memoryId);
         try {
             String token = nutritionService.getValidToken(user.getUsername());
             JsonNode plan = olympusClient.getWeeklyPlan(token);
@@ -346,7 +346,7 @@ public class NutritionTools {
         } catch (NutritionService.ExpiredException e) {
             return MSG_EXPIRE;
         } catch (OlympusClient.OlympusUnauthorizedException e) {
-            nutritionService.invalidateLink(user.getUsername());
+            log.warn("OLYMPUS_TOKEN_REJECTED user={}", user.getUsername());
             return MSG_EXPIRE;
         } catch (OlympusClient.OlympusUnavailableException e) {
             return MSG_INDISPO;

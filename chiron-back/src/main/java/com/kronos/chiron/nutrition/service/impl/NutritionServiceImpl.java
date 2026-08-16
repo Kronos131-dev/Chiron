@@ -85,15 +85,6 @@ public class NutritionServiceImpl implements NutritionService {
         }
     }
 
-    @Transactional
-    @Override
-    public void invalidateLink(String chironUsername) {
-        Utilisateur user = utilisateurRepository.findByUsername(chironUsername)
-                .orElseThrow(() -> notFound("Utilisateur Chiron introuvable : " + chironUsername));
-        clearLink(user);
-        log.info("OLYMPUS_EXPIRED user={}", chironUsername);
-    }
-
     private void clearLink(Utilisateur user) {
         user.setOlympusTokenEncrypted(null);
         user.setOlympusTokenExpiresAt(null);

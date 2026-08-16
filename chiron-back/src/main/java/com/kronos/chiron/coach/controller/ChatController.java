@@ -13,6 +13,8 @@ import com.kronos.chiron.utilisateur.persistence.UtilisateurRepository;
 import com.kronos.chiron.coach.service.AiUsageService;
 import com.kronos.chiron.coach.service.ConversationService;
 import com.kronos.chiron.coach.service.MemoryNoteService;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -45,18 +47,9 @@ public class ChatController {
     }
 
     public static class ChatRequest {
-        private String username;
         private String message;
         private Long conversationId;
         private String language;
-
-        public String getUsername() {
-            return username;
-        }
-
-        public void setUsername(String username) {
-            this.username = username;
-        }
 
         public String getMessage() {
             return message;
@@ -91,8 +84,8 @@ public class ChatController {
     }
 
     @PostMapping("/chat")
-    public ChatResponse chat(@RequestBody ChatRequest request) {
-        Utilisateur user = utilisateurRepository.findByUsername(request.getUsername())
+    public ChatResponse chat(@AuthenticationPrincipal UserDetails principal, @RequestBody ChatRequest request) {
+        Utilisateur user = utilisateurRepository.findByUsername(principal.getUsername())
                 .orElseThrow(() -> notFound("User not found"));
 
         Conversation conversation = conversationService.getOrCreate(user, request.getConversationId());
@@ -132,8 +125,8 @@ public class ChatController {
     }
 
     @PostMapping("/end-session")
-    public ChatResponse endSession(@RequestBody ChatRequest request) {
-        Utilisateur user = utilisateurRepository.findByUsername(request.getUsername())
+    public ChatResponse endSession(@AuthenticationPrincipal UserDetails principal, @RequestBody ChatRequest request) {
+        Utilisateur user = utilisateurRepository.findByUsername(principal.getUsername())
                 .orElseThrow(() -> notFound("User not found"));
 
         Conversation conversation = conversationService.getOrCreate(user, request.getConversationId());

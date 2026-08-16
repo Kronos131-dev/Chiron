@@ -113,8 +113,7 @@ public class PerformanceServiceImpl implements PerformanceService {
             log.info("OLYMPUS_WEIGHT_SYNCED user={} poids={}", username, poidsCorps);
         } catch (NutritionService.NotLinkedException | NutritionService.ExpiredException e) {
         } catch (OlympusClient.OlympusUnauthorizedException e) {
-            log.warn("OLYMPUS_WEIGHT_SYNC_REJECTED user={} : token rejeté, liaison invalidée", username);
-            nutritionService.invalidateLink(username);
+            log.warn("OLYMPUS_WEIGHT_SYNC_REJECTED user={} : token rejeté", username);
         } catch (RuntimeException e) {
             log.warn("OLYMPUS_WEIGHT_SYNC_FAILED user={} : {}", username, e.getMessage());
         }

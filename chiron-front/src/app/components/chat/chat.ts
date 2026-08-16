@@ -239,7 +239,7 @@ export class Chat implements OnInit {
    * avant de signaler que le temple est inaccessible.
    */
   private dispatchMessage(message: string, retryOnError: boolean) {
-    this.chironApi.sendMessage(this.currentUsername, message, this.activeConversationId(), this.i18n.lang()).subscribe({
+    this.chironApi.sendMessage(message, this.activeConversationId(), this.i18n.lang()).subscribe({
       next: (res) => {
         this.activeConversationId.set(res.conversationId);
         this.addMessage('ai', res.reply);

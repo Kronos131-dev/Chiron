@@ -23,6 +23,4 @@ public interface NutritionService {
     void unlink(String chironUsername);
 
     String getValidToken(String chironUsername);
-
-    void invalidateLink(String chironUsername);
 }

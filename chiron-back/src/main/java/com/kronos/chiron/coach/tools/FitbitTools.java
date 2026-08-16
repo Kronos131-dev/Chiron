@@ -37,8 +37,8 @@ public class FitbitTools {
 
     private final ToolUserResolver toolUserResolver;
     @Tool("Récupère l'activité physique (nombre de pas) de l'utilisateur pour une date donnée (format YYYY-MM-DD ; null ou vide = aujourd'hui), d'après Fitbit. Nécessite que l'utilisateur ait lié son compte Fitbit.")
-    public String getActiviteJournaliere(@ToolMemoryId String userId, String date) {
-        Utilisateur user = toolUserResolver.load(userId);
+    public String getActiviteJournaliere(@ToolMemoryId String memoryId, String date) {
+        Utilisateur user = toolUserResolver.load(memoryId);
         LocalDate target = parseDateOrToday(date);
         if (target == null) {
             return "Date invalide '" + date + "'. Utilise le format AAAA-MM-JJ ou laisse vide pour aujourd'hui.";
@@ -68,8 +68,8 @@ public class FitbitTools {
     }
 
     @Tool("Récupère le sommeil de l'utilisateur sur les N dernières nuits (défaut 7) d'après Fitbit : heures de sommeil par nuit, moyenne, dernière nuit. Nécessite la liaison Fitbit.")
-    public String getSommeilRecent(@ToolMemoryId String userId, Integer nbJours) {
-        Utilisateur user = toolUserResolver.load(userId);
+    public String getSommeilRecent(@ToolMemoryId String memoryId, Integer nbJours) {
+        Utilisateur user = toolUserResolver.load(memoryId);
         int window = (nbJours != null && nbJours > 0) ? Math.min(nbJours, 30) : 7;
         try {
             String token = fitbitService.getValidToken(user.getUsername());
@@ -118,8 +118,8 @@ public class FitbitTools {
     }
 
     @Tool("Récupère la fréquence cardiaque de repos de l'utilisateur d'après Fitbit, pour une date donnée (format YYYY-MM-DD ; null ou vide = aujourd'hui) ou, à défaut, la mesure la plus récente. Nécessite la liaison Fitbit.")
-    public String getFrequenceCardiaque(@ToolMemoryId String userId, String date) {
-        Utilisateur user = toolUserResolver.load(userId);
+    public String getFrequenceCardiaque(@ToolMemoryId String memoryId, String date) {
+        Utilisateur user = toolUserResolver.load(memoryId);
         LocalDate target = parseDateOrToday(date);
         if (target == null) {
             return "Date invalide '" + date + "'. Utilise le format AAAA-MM-JJ ou laisse vide pour aujourd'hui.";
@@ -158,8 +158,8 @@ public class FitbitTools {
     }
 
     @Tool("Analyse la tendance d'activité de l'utilisateur sur les N derniers jours (défaut 7) d'après Fitbit : pas par jour, moyenne, minimum, maximum, tendance. Nécessite la liaison Fitbit.")
-    public String getTendanceActivite(@ToolMemoryId String userId, Integer nbJours) {
-        Utilisateur user = toolUserResolver.load(userId);
+    public String getTendanceActivite(@ToolMemoryId String memoryId, Integer nbJours) {
+        Utilisateur user = toolUserResolver.load(memoryId);
         int window = (nbJours != null && nbJours > 0) ? Math.min(nbJours, 30) : 7;
         try {
             String token = fitbitService.getValidToken(user.getUsername());

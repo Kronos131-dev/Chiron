@@ -33,8 +33,8 @@ public class AnalyseDieteTools {
 
     private final ToolUserResolver toolUserResolver;
     @Tool("Récupère le profil personnel et sportif : sexe, âge, taille, poids de corps, objectif principal, niveau d'expérience, fréquence visée, blessures. Base pour estimer les besoins caloriques.")
-    public String getProfilSportif(@ToolMemoryId String userId) {
-        Utilisateur u = toolUserResolver.load(userId);
+    public String getProfilSportif(@ToolMemoryId String memoryId) {
+        Utilisateur u = toolUserResolver.load(memoryId);
         StringBuilder res = new StringBuilder("Profil personnel et sportif :\n");
         res.append("- Sexe : ").append(u.getSexe() != null ? u.getSexe() : "non renseigné").append("\n");
         if (u.getDateNaissance() != null) {
@@ -61,8 +61,8 @@ public class AnalyseDieteTools {
     }
 
     @Tool("Récupère la dernière composition corporelle (scan Visbody) : poids, masse grasse, masse musculaire, masse maigre, métabolisme de base (kcal/j), graisse viscérale, âge métabolique, et tendance vs scan précédent. Le métabolisme de base sert de référence pour la dépense énergétique.")
-    public String getCompositionCorporelle(@ToolMemoryId String userId) {
-        Utilisateur u = toolUserResolver.load(userId);
+    public String getCompositionCorporelle(@ToolMemoryId String memoryId) {
+        Utilisateur u = toolUserResolver.load(memoryId);
         List<BodyCompositionRecord> scans = bodyCompositionRepository.findByUtilisateurOrderByMesureLeAsc(u);
         if (scans.isEmpty()) {
             return "Aucun scan de composition corporelle (Visbody) disponible pour cet utilisateur.";
@@ -91,8 +91,8 @@ public class AnalyseDieteTools {
     }
 
     @Tool("Récupère un bilan de la charge d'entraînement récente de l'utilisateur : nombre de séances sur 30 jours, tonnage de la semaine, durée moyenne, série de semaines actives, et groupes musculaires négligés sur la période. Sert à estimer la dépense énergétique liée à l'activité.")
-    public String getChargeEntrainement(@ToolMemoryId String userId, Integer nbJours) {
-        Utilisateur u = toolUserResolver.load(userId);
+    public String getChargeEntrainement(@ToolMemoryId String memoryId, Integer nbJours) {
+        Utilisateur u = toolUserResolver.load(memoryId);
         int window = (nbJours != null && nbJours > 0) ? nbJours : 30;
         StatsOverviewDto overview = statsService.getOverview(u.getUsername());
 

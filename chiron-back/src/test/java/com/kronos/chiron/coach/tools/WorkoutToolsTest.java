@@ -54,6 +54,8 @@ class WorkoutToolsTest {
     private ExerciceDefinitionRepository exerciceDefinitionRepository;
     @Mock
     private ProgrammeService programmeService;
+    @Mock
+    private ToolUserResolver toolUserResolver;
 
     @Spy
     private Clock clock = Clock.system(ZoneId.of("Europe/Paris"));
@@ -63,6 +65,11 @@ class WorkoutToolsTest {
 
     private Utilisateur user;
 
+    /** Id de conversation utilisé comme memoryId dans les tests : volontairement différent
+     * de l'id de l'utilisateur (1L) pour vérifier que WorkoutTools passe bien par
+     * ToolUserResolver plutôt que d'interpréter le memoryId comme un id utilisateur. */
+    private static final String MEMORY_ID = "42";
+
     @BeforeEach
     void setUp() {
         user = Utilisateur.builder()
@@ -71,7 +78,8 @@ class WorkoutToolsTest {
                 .role(Role.USER)
                 .isPublic(true)
                 .build();
-        when(utilisateurRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(toolUserResolver.load(MEMORY_ID)).thenReturn(user);
+        when(toolUserResolver.loadId(MEMORY_ID)).thenReturn(1L);
         when(utilisateurRepository.findByUsername("athlete")).thenReturn(Optional.of(user));
         when(seanceRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
     }
@@ -91,7 +99,7 @@ class WorkoutToolsTest {
         when(seanceRepository.findFirstByUtilisateurIdAndEndTimeIsNullOrderByStartTimeDesc(1L))
                 .thenReturn(Optional.empty());
 
-        String result = workoutTools.startSession("1", "Push Day");
+        String result = workoutTools.startSession(MEMORY_ID, "Push Day");
 
         assertThat(result).contains("Push Day");
         verify(seanceRepository).save(argThat(s -> s.getTitre().equals("Push Day") &&
@@ -106,7 +114,7 @@ class WorkoutToolsTest {
         when(seanceRepository.findFirstByUtilisateurIdAndEndTimeIsNullOrderByStartTimeDesc(1L))
                 .thenReturn(Optional.of(active));
 
-        workoutTools.startSession("1", "New Session");
+        workoutTools.startSession(MEMORY_ID, "New Session");
 
         assertThat(active.getEndTime()).isNotNull();
         verify(seanceRepository, atLeast(1)).save(any());
@@ -122,7 +130,7 @@ class WorkoutToolsTest {
         when(seanceRepository.findFirstByUtilisateurIdAndEndTimeIsNullOrderByStartTimeDesc(1L))
                 .thenReturn(Optional.of(activeSeance));
 
-        String result = workoutTools.startExercise("1", "Bench Press");
+        String result = workoutTools.startExercise(MEMORY_ID, "Bench Press");
 
         assertThat(result).contains("Bench Press");
         assertThat(activeSeance.getExercices()).hasSize(1);
@@ -134,7 +142,7 @@ class WorkoutToolsTest {
         when(seanceRepository.findFirstByUtilisateurIdAndEndTimeIsNullOrderByStartTimeDesc(1L))
                 .thenReturn(Optional.empty());
 
-        String result = workoutTools.startExercise("1", "Squat");
+        String result = workoutTools.startExercise(MEMORY_ID, "Squat");
 
         assertThat(result).containsIgnoringCase("ERREUR");
     }
@@ -151,7 +159,7 @@ class WorkoutToolsTest {
         when(seanceRepository.findFirstByUtilisateurIdAndEndTimeIsNullOrderByStartTimeDesc(1L))
                 .thenReturn(Optional.of(activeSeance));
 
-        String result = workoutTools.addSet("1", 100.0, 5, "good set");
+        String result = workoutTools.addSet(MEMORY_ID, 100.0, 5, "good set");
 
         assertThat(result).contains("5x100");
         assertThat(exercice.getSeries()).hasSize(1);
@@ -164,7 +172,7 @@ class WorkoutToolsTest {
         when(seanceRepository.findFirstByUtilisateurIdAndEndTimeIsNullOrderByStartTimeDesc(1L))
                 .thenReturn(Optional.empty());
 
-        String result = workoutTools.addSet("1", 80.0, 8, null);
+        String result = workoutTools.addSet(MEMORY_ID, 80.0, 8, null);
 
         assertThat(result).containsIgnoringCase("ERREUR");
     }
@@ -175,7 +183,7 @@ class WorkoutToolsTest {
         when(seanceRepository.findFirstByUtilisateurIdAndEndTimeIsNullOrderByStartTimeDesc(1L))
                 .thenReturn(Optional.of(activeSeance));
 
-        String result = workoutTools.addSet("1", 80.0, 8, null);
+        String result = workoutTools.addSet(MEMORY_ID, 80.0, 8, null);
 
         assertThat(result).containsIgnoringCase("ERREUR");
     }
@@ -193,7 +201,7 @@ class WorkoutToolsTest {
         when(seanceRepository.findFirstByUtilisateurIdAndEndTimeIsNullOrderByStartTimeDesc(1L))
                 .thenReturn(Optional.of(activeSeance));
 
-        String result = workoutTools.endSession("1");
+        String result = workoutTools.endSession(MEMORY_ID);
 
         assertThat(result).containsIgnoringCase("terminée");
         assertThat(activeSeance.getEndTime()).isNotNull();
@@ -204,7 +212,7 @@ class WorkoutToolsTest {
         when(seanceRepository.findFirstByUtilisateurIdAndEndTimeIsNullOrderByStartTimeDesc(1L))
                 .thenReturn(Optional.empty());
 
-        String result = workoutTools.endSession("1");
+        String result = workoutTools.endSession(MEMORY_ID);
 
         assertThat(result).isNotBlank();
     }
@@ -219,7 +227,7 @@ class WorkoutToolsTest {
         when(seanceRepository.findFirstByUtilisateurIdAndEndTimeIsNullOrderByStartTimeDesc(1L))
                 .thenReturn(Optional.of(activeSeance));
 
-        workoutTools.endSession("1");
+        workoutTools.endSession(MEMORY_ID);
 
         assertThat(exo.getEndTime()).isNotNull();
     }
@@ -234,7 +242,7 @@ class WorkoutToolsTest {
                 .findByUtilisateurUsernameAndHistoriqueFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername()))
                 .thenReturn(List.of(prog));
 
-        String result = workoutTools.getUserProgrammes("1", null);
+        String result = workoutTools.getUserProgrammes(MEMORY_ID, null);
 
         assertThat(result).contains("My Programme");
     }
@@ -245,7 +253,7 @@ class WorkoutToolsTest {
                 .findByUtilisateurUsernameAndHistoriqueFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername()))
                 .thenReturn(List.of());
 
-        String result = workoutTools.getUserProgrammes("1", null);
+        String result = workoutTools.getUserProgrammes(MEMORY_ID, null);
 
         assertThat(result).containsIgnoringCase("aucun");
     }
@@ -256,7 +264,7 @@ class WorkoutToolsTest {
                 .id(2L).username("priv").isPublic(false).role(Role.USER).build();
         when(utilisateurRepository.findByUsername("priv")).thenReturn(Optional.of(privateUser));
 
-        String result = workoutTools.getUserProgrammes("1", "priv");
+        String result = workoutTools.getUserProgrammes(MEMORY_ID, "priv");
 
         assertThat(result).containsIgnoringCase("privé");
     }
@@ -265,7 +273,7 @@ class WorkoutToolsTest {
     void getUserProgrammes_unknownTarget_returnsNotFoundMessage() {
         when(utilisateurRepository.findByUsername("ghost")).thenReturn(Optional.empty());
 
-        String result = workoutTools.getUserProgrammes("1", "ghost");
+        String result = workoutTools.getUserProgrammes(MEMORY_ID, "ghost");
 
         assertThat(result).containsIgnoringCase("introuvable");
     }
@@ -280,7 +288,7 @@ class WorkoutToolsTest {
         when(seanceRepository.findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc(user.getUsername()))
                 .thenReturn(List.of(session));
 
-        String result = workoutTools.getUserHistory("1", null);
+        String result = workoutTools.getUserHistory(MEMORY_ID, null);
 
         assertThat(result).contains("Back Day");
     }
@@ -290,7 +298,7 @@ class WorkoutToolsTest {
         when(seanceRepository.findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc(user.getUsername()))
                 .thenReturn(List.of());
 
-        String result = workoutTools.getUserHistory("1", null);
+        String result = workoutTools.getUserHistory(MEMORY_ID, null);
 
         assertThat(result).containsIgnoringCase("aucune");
     }
@@ -301,7 +309,7 @@ class WorkoutToolsTest {
                 .id(3L).username("priv2").isPublic(false).role(Role.USER).build();
         when(utilisateurRepository.findByUsername("priv2")).thenReturn(Optional.of(priv));
 
-        String result = workoutTools.getUserHistory("1", "priv2");
+        String result = workoutTools.getUserHistory(MEMORY_ID, "priv2");
 
         assertThat(result).containsIgnoringCase("privé");
     }
@@ -313,7 +321,7 @@ class WorkoutToolsTest {
         when(exerciceRepository.findFirstHistoricExercise(1L, "Squat"))
                 .thenReturn(Optional.empty());
 
-        String result = workoutTools.getLastExercisePerformance("1", "Squat");
+        String result = workoutTools.getLastExercisePerformance(MEMORY_ID, "Squat");
 
         assertThat(result).containsIgnoringCase("jamais");
     }
@@ -333,7 +341,7 @@ class WorkoutToolsTest {
         when(exerciceRepository.findFirstHistoricExercise(1L, "Squat"))
                 .thenReturn(Optional.of(exo));
 
-        String result = workoutTools.getLastExercisePerformance("1", "Squat");
+        String result = workoutTools.getLastExercisePerformance(MEMORY_ID, "Squat");
 
         assertThat(result).contains("3").contains("120");
     }
@@ -348,7 +356,7 @@ class WorkoutToolsTest {
         when(exerciceRepository.findFirstHistoricExercise(1L, "Bench"))
                 .thenReturn(Optional.of(exo));
 
-        String result = workoutTools.getLastExercisePerformance("1", "Bench");
+        String result = workoutTools.getLastExercisePerformance(MEMORY_ID, "Bench");
 
         assertThat(result).containsIgnoringCase("aucune");
     }
@@ -357,7 +365,7 @@ class WorkoutToolsTest {
 
     @Test
     void searchAllProfiles_nonAdmin_returnsAccessDenied() {
-        String result = workoutTools.searchAllProfiles("1", "alice");
+        String result = workoutTools.searchAllProfiles(MEMORY_ID, "alice");
         assertThat(result).containsIgnoringCase("refusé");
     }
 
@@ -365,11 +373,11 @@ class WorkoutToolsTest {
     void searchAllProfiles_admin_returnsResults() {
         Utilisateur admin = Utilisateur.builder()
                 .id(10L).username("admin").role(Role.ADMIN).build();
-        when(utilisateurRepository.findById(10L)).thenReturn(Optional.of(admin));
+        when(toolUserResolver.load("99")).thenReturn(admin);
         when(utilisateurRepository.findByUsernameContainingIgnoreCase("ali")).thenReturn(
                 List.of(Utilisateur.builder().id(2L).username("alice").role(Role.USER).isPublic(true).build()));
 
-        String result = workoutTools.searchAllProfiles("10", "ali");
+        String result = workoutTools.searchAllProfiles("99", "ali");
 
         assertThat(result).contains("alice");
     }
@@ -378,7 +386,7 @@ class WorkoutToolsTest {
 
     @Test
     void createProgramModel_savesTemplate() {
-        String result = workoutTools.createProgramModel("1", "My Template");
+        String result = workoutTools.createProgramModel(MEMORY_ID, "My Template");
 
         assertThat(result).containsIgnoringCase("My Template");
         verify(seanceRepository).save(argThat(s -> s.getTitre().equals("My Template") && !s.isHistorique()));
@@ -391,7 +399,7 @@ class WorkoutToolsTest {
         when(seanceRepository.findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc(user.getUsername()))
                 .thenReturn(List.of());
 
-        String result = workoutTools.getWorkoutSummaryByDate("1", "2025-01-01");
+        String result = workoutTools.getWorkoutSummaryByDate(MEMORY_ID, "2025-01-01");
 
         assertThat(result).containsIgnoringCase("aucune");
     }
@@ -412,7 +420,7 @@ class WorkoutToolsTest {
         when(seanceRepository.findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc(user.getUsername()))
                 .thenReturn(List.of(session));
 
-        String result = workoutTools.getWorkoutSummaryByDate("1", "2025-01-15");
+        String result = workoutTools.getWorkoutSummaryByDate(MEMORY_ID, "2025-01-15");
 
         assertThat(result).contains("Back Workout").contains("Pull-up");
     }
@@ -435,7 +443,7 @@ class WorkoutToolsTest {
                 .findByUtilisateurUsernameAndHistoriqueFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername()))
                 .thenReturn(List.of(prog));
 
-        String result = workoutTools.getProgrammeDetails("1", "Push");
+        String result = workoutTools.getProgrammeDetails(MEMORY_ID, "Push");
 
         assertThat(result).contains("Push Day").contains("Bench Press").contains("5 reps @ 100.0kg");
     }
@@ -446,7 +454,7 @@ class WorkoutToolsTest {
                 .findByUtilisateurUsernameAndHistoriqueFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername()))
                 .thenReturn(List.of());
 
-        String result = workoutTools.getProgrammeDetails("1", "Unknown");
+        String result = workoutTools.getProgrammeDetails(MEMORY_ID, "Unknown");
 
         assertThat(result).containsIgnoringCase("aucun");
     }
@@ -460,7 +468,7 @@ class WorkoutToolsTest {
                 .findByUtilisateurUsernameAndHistoriqueFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername()))
                 .thenReturn(List.of(prog));
 
-        String result = workoutTools.getProgrammeDetails("1", "Empty");
+        String result = workoutTools.getProgrammeDetails(MEMORY_ID, "Empty");
 
         assertThat(result).contains("Empty Programme").containsIgnoringCase("aucun");
     }
@@ -484,7 +492,7 @@ class WorkoutToolsTest {
         when(seanceRepository.findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc(user.getUsername()))
                 .thenReturn(List.of(session));
 
-        String result = workoutTools.getSessionDetails("1", "Leg");
+        String result = workoutTools.getSessionDetails(MEMORY_ID, "Leg");
 
         assertThat(result).contains("Leg Day").contains("Squat").contains("3 reps @ 120.0kg").contains("bon set");
     }
@@ -494,7 +502,7 @@ class WorkoutToolsTest {
         when(seanceRepository.findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc(user.getUsername()))
                 .thenReturn(List.of());
 
-        String result = workoutTools.getSessionDetails("1", "Ghost Session");
+        String result = workoutTools.getSessionDetails(MEMORY_ID, "Ghost Session");
 
         assertThat(result).containsIgnoringCase("aucune");
     }
@@ -508,7 +516,7 @@ class WorkoutToolsTest {
         when(seanceRepository.findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc(user.getUsername()))
                 .thenReturn(List.of(session));
 
-        String result = workoutTools.getSessionDetails("1", "Rest");
+        String result = workoutTools.getSessionDetails(MEMORY_ID, "Rest");
 
         assertThat(result).contains("Rest Day").containsIgnoringCase("aucun");
     }
@@ -539,7 +547,7 @@ class WorkoutToolsTest {
 
         when(exerciceRepository.findAllHistoricExercises(1L, "Deadlift")).thenReturn(List.of(exo1, exo2));
 
-        String result = workoutTools.getFullExerciseHistory("1", "Deadlift");
+        String result = workoutTools.getFullExerciseHistory(MEMORY_ID, "Deadlift");
 
         assertThat(result).contains("Deadlift").contains("150.0kg").contains("140.0kg").contains("2 séance(s)");
     }
@@ -548,7 +556,7 @@ class WorkoutToolsTest {
     void getFullExerciseHistory_noHistory_returnsNotFound() {
         when(exerciceRepository.findAllHistoricExercises(1L, "OHP")).thenReturn(List.of());
 
-        String result = workoutTools.getFullExerciseHistory("1", "OHP");
+        String result = workoutTools.getFullExerciseHistory(MEMORY_ID, "OHP");
 
         assertThat(result).containsIgnoringCase("jamais");
     }
@@ -572,7 +580,7 @@ class WorkoutToolsTest {
 
         when(exerciceRepository.findAllHistoricExercises(1L, "Bench Press")).thenReturn(List.of(exo));
 
-        String result = workoutTools.getPersonalRecord("1", "Bench Press");
+        String result = workoutTools.getPersonalRecord(MEMORY_ID, "Bench Press");
 
         assertThat(result).contains("Bench Press").contains("1RM").contains("kg");
     }
@@ -581,7 +589,7 @@ class WorkoutToolsTest {
     void getPersonalRecord_noHistory_returnsNotFound() {
         when(exerciceRepository.findAllHistoricExercises(1L, "Row")).thenReturn(List.of());
 
-        String result = workoutTools.getPersonalRecord("1", "Row");
+        String result = workoutTools.getPersonalRecord(MEMORY_ID, "Row");
 
         assertThat(result).containsIgnoringCase("jamais");
     }
@@ -595,7 +603,7 @@ class WorkoutToolsTest {
 
         when(exerciceRepository.findAllHistoricExercises(1L, "Pull-up")).thenReturn(List.of(exo));
 
-        String result = workoutTools.getPersonalRecord("1", "Pull-up");
+        String result = workoutTools.getPersonalRecord(MEMORY_ID, "Pull-up");
 
         assertThat(result).containsIgnoringCase("aucune");
     }

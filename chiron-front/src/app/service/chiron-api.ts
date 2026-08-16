@@ -90,14 +90,12 @@ export class ChironApi {
   /**
    * Sends a user message to the AI coach via the chat endpoint.
    *
-   * @param username       The username of the sender.
    * @param message        The content of the message.
    * @param conversationId The conversation to append to, or null to start a new one.
    * @return An Observable emitting the AI's reply and its conversation id.
    */
-  sendMessage(username: string, message: string, conversationId: number | null, language: string) {
+  sendMessage(message: string, conversationId: number | null, language: string) {
     return this.http.post<ChatResponse>(`${this.apiUrl}/chat`, {
-      username,
       message,
       conversationId,
       language
@@ -107,13 +105,11 @@ export class ChironApi {
   /**
    * Triggers the termination of the current workout session via the AI backend.
    *
-   * @param username       The username ending their session.
    * @param conversationId The conversation to append to, or null.
    * @return An Observable emitting the backend's confirmation response.
    */
-  endSession(username: string, conversationId: number | null, language: string) {
+  endSession(conversationId: number | null, language: string) {
     return this.http.post<ChatResponse>(`${this.apiUrl}/end-session`, {
-      username,
       conversationId,
       language
     });

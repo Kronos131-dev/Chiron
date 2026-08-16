@@ -2,8 +2,6 @@ package com.kronos.chiron.coach.tools;
 
 import java.time.Clock;
 
-import static com.kronos.chiron.core.exceptions.ErrorFactory.notFound;
-
 import com.kronos.chiron.exercice.dto.ExerciceDefinitionDto;
 import com.kronos.chiron.seance.model.Exercice;
 import com.kronos.chiron.exercice.model.ExerciceDefinition;
@@ -12,7 +10,6 @@ import com.kronos.chiron.utilisateur.model.Utilisateur;
 import com.kronos.chiron.seance.model.Serie;
 import com.kronos.chiron.seance.persistence.ExerciceRepository;
 import com.kronos.chiron.seance.persistence.SeanceRepository;
-import com.kronos.chiron.utilisateur.persistence.UtilisateurRepository;
 import com.kronos.chiron.exercice.service.ExerciceDefinitionService;
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agent.tool.ToolMemoryId;
@@ -37,18 +34,18 @@ public class AdaptiveTools {
     private static final int ROTATION_WEEKS_THRESHOLD = 8;
     private static final int PERIODISATION_SESSIONS_WINDOW = 6;
 
-    private final UtilisateurRepository utilisateurRepository;
     private final ExerciceRepository exerciceRepository;
     private final SeanceRepository seanceRepository;
     private final ExerciceDefinitionService exerciceDefinitionService;
+    private final ToolUserResolver toolUserResolver;
 
     private final Clock clock;
     @Tool("Propose la prochaine progression sur un exercice d'après la dernière séance (cohérence des charges, drop-off, comparaison N-1). Renvoie une reco chiffrée (+2.5 kg, maintien, baisse, +1 rep…).")
-    public String getProgressionSuggeree(@ToolMemoryId String userId, String nomExercice) {
+    public String getProgressionSuggeree(@ToolMemoryId String memoryId, String nomExercice) {
         if (nomExercice == null || nomExercice.isBlank()) {
             return "Nom d'exercice manquant.";
         }
-        Long uid = Long.parseLong(userId);
+        Long uid = toolUserResolver.loadId(memoryId);
 
         List<Exercice> historique = exerciceRepository.findAllHistoricExercises(uid, nomExercice);
         if (historique.isEmpty()) {
@@ -122,11 +119,11 @@ public class AdaptiveTools {
     }
 
     @Tool("Analyse la périodisation sur un exercice : 1RM estimé (Epley) des 6 dernières séances, moyenne des 3 récentes vs 3 anciennes. Diagnostique progression, plateau (< 2 %) ou régression (deload conseillé).")
-    public String analyserPeriodisation(@ToolMemoryId String userId, String nomExercice) {
+    public String analyserPeriodisation(@ToolMemoryId String memoryId, String nomExercice) {
         if (nomExercice == null || nomExercice.isBlank()) {
             return "Nom d'exercice manquant.";
         }
-        Long uid = Long.parseLong(userId);
+        Long uid = toolUserResolver.loadId(memoryId);
 
         List<Exercice> historique = exerciceRepository.findAllHistoricExercises(uid, nomExercice);
         List<Exercice> std = historique.stream().filter(e -> e.getDefinition() != null).collect(Collectors.toList());
@@ -176,9 +173,8 @@ public class AdaptiveTools {
     }
 
     @Tool("Identifie les exercices pratiqués de longue date (> 8 semaines) et propose 1-2 alternatives par exercice, même muscle et équipement compatible. nomProgramme optionnel pour cibler un programme (sinon tous).")
-    public String proposerRotation(@ToolMemoryId String userId, String nomProgramme) {
-        Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
-                .orElseThrow(() -> notFound("Utilisateur introuvable"));
+    public String proposerRotation(@ToolMemoryId String memoryId, String nomProgramme) {
+        Utilisateur user = toolUserResolver.load(memoryId);
 
         List<Seance> programmes = seanceRepository
                 .findByUtilisateurUsernameAndHistoriqueFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername());

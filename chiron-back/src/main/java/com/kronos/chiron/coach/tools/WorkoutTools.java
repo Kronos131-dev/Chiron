@@ -2,8 +2,6 @@ package com.kronos.chiron.coach.tools;
 
 import java.time.Clock;
 
-import static com.kronos.chiron.core.exceptions.ErrorFactory.notFound;
-
 import com.kronos.chiron.exercice.dto.ExerciceDefinitionDto;
 import com.kronos.chiron.seance.dto.ExerciceDto;
 import com.kronos.chiron.seance.dto.SeanceDto;
@@ -58,6 +56,7 @@ public class WorkoutTools {
     private final ExerciceDefinitionRepository exerciceDefinitionRepository;
     private final ProgrammeService programmeService;
     private final PerformanceService performanceService;
+    private final ToolUserResolver toolUserResolver;
 
     private final Clock clock;
     @Tool("Retourne la date et l'heure actuelles et le jour de la semaine.")
@@ -68,9 +67,8 @@ public class WorkoutTools {
     }
 
     @Tool("Récupère la liste des modèles de programmes d'entraînement (presets) de l'utilisateur ou d'un autre utilisateur spécifié.")
-    public String getUserProgrammes(@ToolMemoryId String userId, String targetUsername) {
-        Utilisateur requestUser = utilisateurRepository.findById(Long.parseLong(userId))
-                .orElseThrow(() -> notFound("Utilisateur requérant introuvable"));
+    public String getUserProgrammes(@ToolMemoryId String memoryId, String targetUsername) {
+        Utilisateur requestUser = toolUserResolver.load(memoryId);
 
         String searchUsername = (targetUsername != null && !targetUsername.isBlank())
                 ? targetUsername
@@ -114,9 +112,8 @@ public class WorkoutTools {
     }
 
     @Tool("Récupère l'historique complet ou récent des séances réellement effectuées par l'utilisateur ou un autre utilisateur spécifié.")
-    public String getUserHistory(@ToolMemoryId String userId, String targetUsername) {
-        Utilisateur requestUser = utilisateurRepository.findById(Long.parseLong(userId))
-                .orElseThrow(() -> notFound("Utilisateur requérant introuvable"));
+    public String getUserHistory(@ToolMemoryId String memoryId, String targetUsername) {
+        Utilisateur requestUser = toolUserResolver.load(memoryId);
 
         String searchUsername = (targetUsername != null && !targetUsername.isBlank())
                 ? targetUsername
@@ -164,9 +161,8 @@ public class WorkoutTools {
     }
 
     @Tool("Démarre une nouvelle séance d'entraînement dans l'historique de l'utilisateur.")
-    public String startSession(@ToolMemoryId String userId, String titre) {
-        Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
-                .orElseThrow(() -> notFound("Utilisateur introuvable"));
+    public String startSession(@ToolMemoryId String memoryId, String titre) {
+        Utilisateur user = toolUserResolver.load(memoryId);
 
         seanceRepository.findFirstByUtilisateurIdAndEndTimeIsNullOrderByStartTimeDesc(user.getId())
                 .ifPresent(s -> {
@@ -191,9 +187,8 @@ public class WorkoutTools {
     }
 
     @Tool("Crée un NOUVEAU modèle de programme d'entraînement (preset) VIDE.")
-    public String createProgramModel(@ToolMemoryId String userId, String titre) {
-        Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
-                .orElseThrow(() -> notFound("Utilisateur introuvable"));
+    public String createProgramModel(@ToolMemoryId String memoryId, String titre) {
+        Utilisateur user = toolUserResolver.load(memoryId);
 
         Seance seance = Seance.builder()
                 .titre(titre)
@@ -211,8 +206,8 @@ public class WorkoutTools {
     }
 
     @Tool("Démarre un nouvel exercice dans la séance en cours.")
-    public String startExercise(@ToolMemoryId String userId, String nomExercice) {
-        Seance activeSeance = getActiveSeance(userId);
+    public String startExercise(@ToolMemoryId String memoryId, String nomExercice) {
+        Seance activeSeance = getActiveSeance(memoryId);
 
         if (activeSeance == null) {
             return "ERREUR SYSTEME : Impossible d'ajouter l'exercice. L'utilisateur doit d'abord démarrer une séance. Appelle l'outil [startSession] en premier !";
@@ -249,8 +244,8 @@ public class WorkoutTools {
     }
 
     @Tool("Enregistre une série (poids, répétitions, commentaire) pour l'exercice en cours.")
-    public String addSet(@ToolMemoryId String userId, double poids, int reps, String commentaire) {
-        Seance activeSeance = getActiveSeance(userId);
+    public String addSet(@ToolMemoryId String memoryId, double poids, int reps, String commentaire) {
+        Seance activeSeance = getActiveSeance(memoryId);
 
         if (activeSeance == null) {
             return "ERREUR SYSTEME : Aucune séance n'existe. Tu dois appeler [startSession] puis [startExercise] d'abord !";
@@ -276,8 +271,8 @@ public class WorkoutTools {
     }
 
     @Tool("Termine la séance d'entraînement en cours.")
-    public String endSession(@ToolMemoryId String userId) {
-        Seance activeSeance = getActiveSeance(userId);
+    public String endSession(@ToolMemoryId String memoryId) {
+        Seance activeSeance = getActiveSeance(memoryId);
 
         if (activeSeance == null) {
             return "L'utilisateur a demandé à terminer, mais il n'y a aucune séance en cours.";
@@ -297,9 +292,9 @@ public class WorkoutTools {
     }
 
     @Tool("Récupère les performances de la DERNIÈRE FOIS que l'utilisateur a fait un exercice spécifique.")
-    public String getLastExercisePerformance(@ToolMemoryId String userId, String nomExercice) {
+    public String getLastExercisePerformance(@ToolMemoryId String memoryId, String nomExercice) {
         Optional<Exercice> lastExoOpt = exerciceRepository
-                .findFirstHistoricExercise(Long.parseLong(userId), nomExercice);
+                .findFirstHistoricExercise(toolUserResolver.loadId(memoryId), nomExercice);
 
         if (lastExoOpt.isEmpty()) {
             return "Information pour l'IA : L'utilisateur n'a jamais fait l'exercice '" + nomExercice
@@ -336,9 +331,8 @@ public class WorkoutTools {
     }
 
     @Tool("Recherche les profils utilisateurs existants (utile pour un admin qui cherche quelqu'un).")
-    public String searchAllProfiles(@ToolMemoryId String userId, String query) {
-        Utilisateur requestUser = utilisateurRepository.findById(Long.parseLong(userId))
-                .orElseThrow(() -> notFound("Utilisateur requérant introuvable"));
+    public String searchAllProfiles(@ToolMemoryId String memoryId, String query) {
+        Utilisateur requestUser = toolUserResolver.load(memoryId);
 
         if (requestUser.getRole() != Role.ADMIN) {
             return "Accès refusé. Seul un administrateur peut effectuer cette recherche globale.";
@@ -358,9 +352,8 @@ public class WorkoutTools {
     }
 
     @Tool("Récupère un résumé détaillé des séances de sport effectuées à une date précise (format attendu YYYY-MM-DD).")
-    public String getWorkoutSummaryByDate(@ToolMemoryId String userId, String dateStr) {
-        Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
-                .orElseThrow(() -> notFound("Utilisateur introuvable"));
+    public String getWorkoutSummaryByDate(@ToolMemoryId String memoryId, String dateStr) {
+        Utilisateur user = toolUserResolver.load(memoryId);
 
         List<Seance> historique = seanceRepository
                 .findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc(user.getUsername());
@@ -393,9 +386,8 @@ public class WorkoutTools {
     }
 
     @Tool("Récupère le contenu détaillé d'un programme (exercices, séries, poids, répétitions) à partir de son nom.")
-    public String getProgrammeDetails(@ToolMemoryId String userId, String programmeName) {
-        Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
-                .orElseThrow(() -> notFound("Utilisateur introuvable"));
+    public String getProgrammeDetails(@ToolMemoryId String memoryId, String programmeName) {
+        Utilisateur user = toolUserResolver.load(memoryId);
 
         List<Seance> programmes = seanceRepository
                 .findByUtilisateurUsernameAndHistoriqueFalseOrderByDisplayOrderAscStartTimeDesc(user.getUsername());
@@ -434,9 +426,8 @@ public class WorkoutTools {
     }
 
     @Tool("Récupère les détails complets d'une ou plusieurs séances historiques à partir de leur titre (exercices, séries, poids, commentaires).")
-    public String getSessionDetails(@ToolMemoryId String userId, String sessionTitle) {
-        Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
-                .orElseThrow(() -> notFound("Utilisateur introuvable"));
+    public String getSessionDetails(@ToolMemoryId String memoryId, String sessionTitle) {
+        Utilisateur user = toolUserResolver.load(memoryId);
 
         List<Seance> historique = seanceRepository
                 .findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc(user.getUsername());
@@ -483,8 +474,9 @@ public class WorkoutTools {
     }
 
     @Tool("Récupère l'historique COMPLET de toutes les fois où l'utilisateur a effectué un exercice donné, avec les détails de chaque série.")
-    public String getFullExerciseHistory(@ToolMemoryId String userId, String nomExercice) {
-        List<Exercice> exercises = exerciceRepository.findAllHistoricExercises(Long.parseLong(userId), nomExercice);
+    public String getFullExerciseHistory(@ToolMemoryId String memoryId, String nomExercice) {
+        List<Exercice> exercises = exerciceRepository.findAllHistoricExercises(toolUserResolver.loadId(memoryId),
+                nomExercice);
 
         if (exercises.isEmpty()) {
             return "L'utilisateur n'a jamais fait l'exercice '" + nomExercice + "' dans son historique.";
@@ -519,8 +511,9 @@ public class WorkoutTools {
     }
 
     @Tool("Trouve le record personnel d'un exercice : meilleure série réalisée et 1RM estimé (formule d'Epley).")
-    public String getPersonalRecord(@ToolMemoryId String userId, String nomExercice) {
-        List<Exercice> exercises = exerciceRepository.findAllHistoricExercises(Long.parseLong(userId), nomExercice);
+    public String getPersonalRecord(@ToolMemoryId String memoryId, String nomExercice) {
+        List<Exercice> exercises = exerciceRepository.findAllHistoricExercises(toolUserResolver.loadId(memoryId),
+                nomExercice);
 
         if (exercises.isEmpty()) {
             return "L'utilisateur n'a jamais fait l'exercice '" + nomExercice + "' dans son historique.";
@@ -646,9 +639,8 @@ public class WorkoutTools {
             "Chaque nom d'exercice doit correspondre à un exercice de la bibliothèque standardisée — appelle [rechercherExercices] avant "
             +
             "pour récupérer les noms exacts. À utiliser quand l'utilisateur demande de créer / générer / construire un programme.")
-    public String creerProgramme(@ToolMemoryId String userId, String titre, List<ProgrammeExerciceSpec> exercices) {
-        Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
-                .orElseThrow(() -> notFound("Utilisateur introuvable"));
+    public String creerProgramme(@ToolMemoryId String memoryId, String titre, List<ProgrammeExerciceSpec> exercices) {
+        Utilisateur user = toolUserResolver.load(memoryId);
 
         if (titre == null || titre.isBlank()) {
             return "Le titre du programme est obligatoire.";
@@ -704,9 +696,8 @@ public class WorkoutTools {
     }
 
     @Tool("Analyse la couverture musculaire des derniers jours : par groupe musculaire, nombre de séances et de séries au total, et muscles négligés.")
-    public String analyserCouvertureMusculaire(@ToolMemoryId String userId, Integer nbJours) {
-        Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
-                .orElseThrow(() -> notFound("Utilisateur introuvable"));
+    public String analyserCouvertureMusculaire(@ToolMemoryId String memoryId, Integer nbJours) {
+        Utilisateur user = toolUserResolver.load(memoryId);
 
         int window = (nbJours != null && nbJours > 0) ? nbJours : 7;
         LocalDateTime cutoff = LocalDateTime.now(clock).minusDays(window);
@@ -769,9 +760,8 @@ public class WorkoutTools {
     }
 
     @Tool("Retourne la date du dernier entraînement par groupe musculaire, du plus ancien au plus récent.")
-    public String getDernierEntrainementParMuscle(@ToolMemoryId String userId) {
-        Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
-                .orElseThrow(() -> notFound("Utilisateur introuvable"));
+    public String getDernierEntrainementParMuscle(@ToolMemoryId String memoryId) {
+        Utilisateur user = toolUserResolver.load(memoryId);
 
         List<Seance> historique = seanceRepository
                 .findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc(user.getUsername());
@@ -821,9 +811,8 @@ public class WorkoutTools {
     }
 
     @Tool("Récupère le palier de performance (Éphèbe → Olympien) : palier global et par exercice de référence (squat, développé couché, soulevé de terre, tractions...).")
-    public String getPerformanceTier(@ToolMemoryId String userId) {
-        Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
-                .orElseThrow(() -> notFound("Utilisateur introuvable"));
+    public String getPerformanceTier(@ToolMemoryId String memoryId) {
+        Utilisateur user = toolUserResolver.load(memoryId);
 
         PerformanceSummaryDto summary = performanceService.getSummary(user.getUsername());
 
@@ -855,9 +844,8 @@ public class WorkoutTools {
     }
 
     @Tool("Récupère le profil sportif complet : âge, sexe, taille, poids, niveau d'expérience, objectif principal, fréquence visée, matériel disponible, blessures, préférences.")
-    public String getUserProfileComplet(@ToolMemoryId String userId) {
-        Utilisateur user = utilisateurRepository.findById(Long.parseLong(userId))
-                .orElseThrow(() -> notFound("Utilisateur introuvable"));
+    public String getUserProfileComplet(@ToolMemoryId String memoryId) {
+        Utilisateur user = toolUserResolver.load(memoryId);
 
         if (user.getIsOnboarded() == null || !user.getIsOnboarded()) {
             return "Le profil sportif de l'utilisateur n'est pas encore renseigné. Encourage-le à compléter son profil pour des conseils plus pertinents.";
@@ -905,8 +893,9 @@ public class WorkoutTools {
         return d.name().toLowerCase();
     }
 
-    private Seance getActiveSeance(String userId) {
-        return seanceRepository.findFirstByUtilisateurIdAndEndTimeIsNullOrderByStartTimeDesc(Long.parseLong(userId))
+    private Seance getActiveSeance(String memoryId) {
+        return seanceRepository
+                .findFirstByUtilisateurIdAndEndTimeIsNullOrderByStartTimeDesc(toolUserResolver.loadId(memoryId))
                 .orElse(null);
     }
 
