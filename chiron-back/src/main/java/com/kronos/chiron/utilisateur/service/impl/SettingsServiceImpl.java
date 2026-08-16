@@ -11,6 +11,8 @@ import java.time.Clock;
 import com.kronos.chiron.auth.service.EmailService;
 
 import com.kronos.chiron.auth.model.PasswordResetToken;
+import com.kronos.chiron.utilisateur.dto.AiProviderDto;
+import com.kronos.chiron.utilisateur.model.AiProvider;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 import com.kronos.chiron.auth.persistence.PasswordResetTokenRepository;
 import com.kronos.chiron.utilisateur.persistence.UtilisateurRepository;
@@ -62,19 +64,19 @@ public class SettingsServiceImpl implements SettingsService {
     }
 
     @Override
-    public com.kronos.chiron.utilisateur.dto.AiProviderDto getAiProvider(String username) {
+    public AiProviderDto getAiProvider(String username) {
         Utilisateur user = utilisateurRepository.findByUsername(username)
                 .orElseThrow(() -> notFound("Utilisateur introuvable"));
-        return new com.kronos.chiron.utilisateur.dto.AiProviderDto(
+        return new AiProviderDto(
                 user.getAiProvider(), chironAgentRouter.geminiAvailable());
     }
 
     @Transactional
     @Override
-    public void updateAiProvider(String username, com.kronos.chiron.utilisateur.model.AiProvider provider) {
+    public void updateAiProvider(String username, AiProvider provider) {
         Utilisateur user = utilisateurRepository.findByUsername(username)
                 .orElseThrow(() -> notFound("Utilisateur introuvable"));
-        user.setAiProvider(provider != null ? provider : com.kronos.chiron.utilisateur.model.AiProvider.MISTRAL);
+        user.setAiProvider(provider != null ? provider : AiProvider.MISTRAL);
         utilisateurRepository.save(user);
     }
 
