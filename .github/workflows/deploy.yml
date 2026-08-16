@@ -376,7 +376,7 @@ jobs:
 
             echo "▶ Mise à jour du .env..."
             ENV_FILE=$CHIRON_DIR/.env
-            grep -v '^GMAIL_\|^FRONTEND_URL=\|^FITBIT_\|^OLYMPUS_DB_\|^VISBODY_MAILBOX_ENABLED=' "$ENV_FILE" > /tmp/.env.tmp 2>/dev/null || true
+            grep -v '^JWT_SECRET=\|^GMAIL_\|^FRONTEND_URL=\|^FITBIT_\|^OLYMPUS_DB_\|^VISBODY_MAILBOX_ENABLED=' "$ENV_FILE" > /tmp/.env.tmp 2>/dev/null || true
             cat /tmp/chiron.secrets >> /tmp/.env.tmp
             mv /tmp/.env.tmp "$ENV_FILE"
 
