@@ -32,6 +32,25 @@ public class ChironAgentRouter {
 
     public String chatWithFallback(AiProvider provider, String memoryId, String message) {
         ChironAgent agent = forProvider(provider);
+
+        try {
+            return chatWithRetries(agent, provider, memoryId, message);
+        } catch (RuntimeException primaryFailure) {
+            // WHY: repli sur Mistral seulement si l'agent en échec n'était pas déjà Mistral.
+            if (agent == mistral) {
+                throw unavailable(provider, primaryFailure);
+            }
+            log.warn("Agent {} en échec, repli sur Mistral", provider, primaryFailure);
+            memoryManager.reset(memoryId);
+            try {
+                return chatWithRetries(mistral, AiProvider.MISTRAL, memoryId, message);
+            } catch (RuntimeException fallbackFailure) {
+                throw unavailable(provider, fallbackFailure);
+            }
+        }
+    }
+
+    private String chatWithRetries(ChironAgent agent, AiProvider provider, String memoryId, String message) {
         RuntimeException last = null;
 
         for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
@@ -50,18 +69,14 @@ public class ChironAgentRouter {
             }
         }
 
-        // WHY: repli sur Mistral seulement si l'agent en échec n'était pas déjà Mistral.
-        if (agent != mistral) {
-            log.warn("Agent {} en échec, repli sur Mistral", provider, last);
-            memoryManager.reset(memoryId);
-            try {
-                return mistral.chat(memoryId, message);
-            } catch (RuntimeException e) {
-                last = e;
-            }
-        }
+        throw last;
+    }
 
-        throw new AiUnavailableException("Le coach IA est temporairement indisponible.", last);
+    private AiUnavailableException unavailable(AiProvider provider, RuntimeException cause) {
+        log.error("Aucun agent n'a répondu : fournisseur demandé {}, jusqu'à {} tentatives par agent,"
+                + " repli Mistral {}", provider, MAX_ATTEMPTS,
+                provider == AiProvider.MISTRAL || gemini == null ? "sans objet" : "épuisé", cause);
+        return new AiUnavailableException("Le coach IA est temporairement indisponible.", cause);
     }
 
     private boolean isTransient(Throwable e) {
