@@ -9,7 +9,7 @@ it** — this file holds only what applies everywhere.
 
 | Folder | Stack | Conventions |
 |--------|-------|-------------|
-| `chiron-back/` | Spring Boot 4.0.6 · Java 21 · PostgreSQL 16 / Flyway · LangChain4j (Mistral + Gemini) | `.claude/conventions/chiron-back.md` |
+| `chiron-back/` | Spring Boot 4.0.6 · Java 25 · PostgreSQL 16 / Flyway · LangChain4j (Mistral + Gemini) | `.claude/conventions/chiron-back.md` |
 | `chiron-front/` | Angular 21 standalone · Signals · Tailwind 4 · Vitest · Capacitor (Android) | `.claude/conventions/chiron-front.md` |
 
 Deployment artefacts live at the root: `docker-compose.yml`, `nginx.conf`,
@@ -145,9 +145,7 @@ a red pipeline may point at a repository this working tree does not contain.
 - An applied migration is never edited. `spring.flyway.ignore-migration-patterns: "*:missing"` exists
   because V34–V36 were deleted after having run in production.
 - Spotless uses the Eclipse formatter, not google-java-format: the latter reaches into javac
-  internals and breaks on any JDK newer than the one it was built against. CI compiles on 21.
-- `README.md` is stale — it claims Angular 17, Java 17 and Mistral only. Trust `pom.xml` and
-  `package.json`.
+  internals and breaks on any JDK newer than the one it was built against. CI compiles on 25.
 - `application.yml` currently ships `DEBUG` logging for Spring Security, left over from a 403
   investigation.
 - `JWT_SECRET` has no default. It is mandatory in every environment, including a local

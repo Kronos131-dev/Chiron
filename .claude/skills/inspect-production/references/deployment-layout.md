@@ -9,7 +9,7 @@ derived from `.github/workflows/deploy.yml`, `docker-compose.yml` and `nginx.con
 |-----------|--------|-------|
 | `chiron_backend` | Spring Boot on port 9090 | Runs `/app/app.jar`, mounted from the host |
 | `chiron_frontend` | nginx serving the Angular build | Mounts the browser bundle read-only |
-| `olympus-api` | the neighbouring Olympus app | Runs `/app/olympus.jar`, Java 17 |
+| `olympus-api` | the neighbouring Olympus app | Runs `/app/olympus.jar`, Java 25 |
 | `olympus-pwa` | the Olympus front, port 8082 under `/olympus` | |
 | `olympus-db` | PostgreSQL for Olympus | |
 

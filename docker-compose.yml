@@ -15,7 +15,7 @@ services:
 
   # 2. LE BACKEND
   backend:
-    image: eclipse-temurin:21-jre-alpine
+    image: eclipse-temurin:25-jre-alpine
     container_name: chiron_backend
     restart: always
     env_file:
