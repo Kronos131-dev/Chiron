@@ -147,6 +147,31 @@ class ChironAgentRouterTest {
     }
 
     @Test
+    void chatWithFallback_fallbackHitsATransientError_isRetriedLikeThePrimaryAgent() {
+        when(gemini.chat(MEMORY_ID, MESSAGE)).thenThrow(new RuntimeException("400 bad request"));
+        when(mistral.chat(MEMORY_ID, MESSAGE))
+                .thenThrow(transientError("429 rate limit"))
+                .thenReturn("repli au second essai");
+
+        String reply = routerWithGemini().chatWithFallback(AiProvider.GEMINI, MEMORY_ID, MESSAGE);
+
+        assertThat(reply).isEqualTo("repli au second essai");
+        verify(mistral, times(2)).chat(MEMORY_ID, MESSAGE);
+    }
+
+    @Test
+    void chatWithFallback_fallbackHitsADefinitiveError_isNotRetried() {
+        when(gemini.chat(MEMORY_ID, MESSAGE)).thenThrow(new RuntimeException("400 bad request"));
+        when(mistral.chat(MEMORY_ID, MESSAGE)).thenThrow(new RuntimeException("clé invalide"));
+
+        assertThatThrownBy(() -> routerWithGemini()
+                .chatWithFallback(AiProvider.GEMINI, MEMORY_ID, MESSAGE))
+                .isInstanceOf(AiUnavailableException.class);
+
+        verify(mistral, times(1)).chat(MEMORY_ID, MESSAGE);
+    }
+
+    @Test
     void chatWithFallback_geminiRequestedButNotConfigured_goesStraightToMistral() {
         when(mistral.chat(MEMORY_ID, MESSAGE)).thenReturn("mistral");
 
