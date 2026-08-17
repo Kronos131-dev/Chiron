@@ -17,14 +17,26 @@ class FitbitParserTest {
     void stepsByDate_parsesDailyRollUp() {
         JsonNode node = json.readTree("""
                 {"rollupDataPoints":[
-                  {"civilStartTime":{"year":2026,"month":5,"day":20},"steps":{"count":"8500"}},
-                  {"civilStartTime":{"year":2026,"month":5,"day":21},"steps":{"count":"10200"}}
+                  {"civilStartTime":{"date":{"year":2026,"month":5,"day":20}},"steps":{"countSum":"8500"}},
+                  {"civilStartTime":{"date":{"year":2026,"month":5,"day":21}},"steps":{"countSum":"10200"}}
                 ]}""");
 
         Map<LocalDate, Integer> steps = FitbitParser.stepsByDate(node);
 
         assertThat(steps.get(LocalDate.of(2026, 5, 20))).isEqualTo(8500);
         assertThat(steps.get(LocalDate.of(2026, 5, 21))).isEqualTo(10200);
+    }
+
+    @Test
+    void stepsByDate_toleratesFlatDateWithoutCivilTimeWrapper() {
+        JsonNode node = json.readTree("""
+                {"rollupDataPoints":[
+                  {"civilStartTime":{"year":2026,"month":5,"day":20},"steps":{"count":"8500"}}
+                ]}""");
+
+        Map<LocalDate, Integer> steps = FitbitParser.stepsByDate(node);
+
+        assertThat(steps.get(LocalDate.of(2026, 5, 20))).isEqualTo(8500);
     }
 
     @Test
@@ -39,6 +51,19 @@ class FitbitParserTest {
 
         assertThat(hours.get(LocalDate.of(2026, 5, 20))).isEqualTo(8.0);
         assertThat(hours.get(LocalDate.of(2026, 5, 21))).isEqualTo(7.5);
+    }
+
+    @Test
+    void sleepHoursByDate_parsesNestedCivilEndTime() {
+        JsonNode node = json.readTree(
+                """
+                        {"dataPoints":[
+                          {"sleep":{"interval":{"civilEndTime":{"date":{"year":2026,"month":5,"day":20}}},"summary":{"minutesAsleep":480}}}
+                        ]}""");
+
+        Map<LocalDate, Double> hours = FitbitParser.sleepHoursByDate(node);
+
+        assertThat(hours.get(LocalDate.of(2026, 5, 20))).isEqualTo(8.0);
     }
 
     @Test

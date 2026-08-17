@@ -63,8 +63,8 @@ class SettingsControllerTest {
         // Given le corps exact qu'envoie chiron-api.ts : le seul champ « provider »
         // When / Then il doit être accepté, sans exiger de champ calculé côté serveur
         mockMvc.perform(put("/api/settings/ai-provider").with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"provider\":\"MISTRAL\"}"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"provider\":\"MISTRAL\"}"))
                 .andExpect(status().isOk());
 
         verify(settingsService).updateAiProvider("athlete", AiProvider.MISTRAL);
@@ -74,8 +74,8 @@ class SettingsControllerTest {
     @WithMockUser(username = "athlete")
     void updateAiProvider_switchingToGemini_isAccepted() throws Exception {
         mockMvc.perform(put("/api/settings/ai-provider").with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"provider\":\"GEMINI\"}"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"provider\":\"GEMINI\"}"))
                 .andExpect(status().isOk());
 
         verify(settingsService).updateAiProvider("athlete", AiProvider.GEMINI);

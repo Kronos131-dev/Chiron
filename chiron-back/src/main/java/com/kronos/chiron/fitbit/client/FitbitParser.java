@@ -20,7 +20,7 @@ public final class FitbitParser {
             LocalDate date = googleDate(pt.get("civilStartTime"));
             if (date == null) continue;
             JsonNode steps = pt.get("steps");
-            Long count = longField(steps, "count", "stepsSum", "steps_sum", "sum", "value");
+            Long count = longField(steps, "countSum", "count", "stepsSum", "steps_sum", "sum", "value");
             if (count == null) count = firstLong(steps);
             if (count != null) {
                 result.put(date, count.intValue());
@@ -69,13 +69,15 @@ public final class FitbitParser {
     }
 
     static LocalDate googleDate(JsonNode dateNode) {
-        if (dateNode == null || !dateNode.hasNonNull("year")
-                || !dateNode.hasNonNull("month") || !dateNode.hasNonNull("day")) {
+        if (dateNode == null) return null;
+        // WHY: un CivilDateTime (civilStartTime/civilEndTime) porte year/month/day sous une
+        // clé "date" ; un google.type.Date nu (dailyRestingHeartRate.date) les porte à plat.
+        JsonNode flat = dateNode.hasNonNull("date") ? dateNode.get("date") : dateNode;
+        if (!flat.hasNonNull("year") || !flat.hasNonNull("month") || !flat.hasNonNull("day")) {
             return null;
         }
         try {
-            return LocalDate.of(dateNode.get("year").asInt(),
-                    dateNode.get("month").asInt(), dateNode.get("day").asInt());
+            return LocalDate.of(flat.get("year").asInt(), flat.get("month").asInt(), flat.get("day").asInt());
         } catch (RuntimeException e) {
             return null;
         }
@@ -107,7 +109,7 @@ public final class FitbitParser {
     }
 
     private static LocalDate parseDatePrefix(JsonNode node) {
-        if (node == null) return null;
+        if (node == null || !node.isTextual()) return null;
         String s = node.asText();
         if (s == null || s.length() < 10) return null;
         try {
