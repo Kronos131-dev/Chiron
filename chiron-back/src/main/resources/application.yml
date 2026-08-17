@@ -126,3 +126,4 @@ logging:
   level:
     org.springframework.security: DEBUG
     com.kronos.chiron.security: DEBUG
+    com.kronos.chiron.fitbit: DEBUG

@@ -27,6 +27,7 @@ public class FitbitClient {
     private final String clientSecret;
 
     public FitbitClient(
+            RestClient.Builder restClientBuilder,
             @Value("${fitbit.api-base-url}") String apiBaseUrl,
             @Value("${fitbit.token-url}") String tokenUrl,
             @Value("${fitbit.redirect-uri}") String redirectUri,
@@ -36,7 +37,7 @@ public class FitbitClient {
         this.redirectUri = redirectUri;
         this.clientId = clientId;
         this.clientSecret = clientSecret;
-        this.restClient = RestClient.builder().baseUrl(apiBaseUrl).build();
+        this.restClient = restClientBuilder.baseUrl(apiBaseUrl).build();
         log.info("FitbitClient configuré (Google Health API, apiBaseUrl={})", apiBaseUrl);
     }
 
@@ -94,38 +95,51 @@ public class FitbitClient {
         }
     }
 
-    public JsonNode rollUpDailySteps(String accessToken, LocalDate start, LocalDate end) {
+    public JsonNode rollUpDailySteps(String accessToken, LocalDate start, LocalDate endInclusive) {
+        // WHY: range est un CivilTimeInterval (start/end = CivilDateTime = {date:{year,month,day}}),
+        // pas une paire de google.type.Date à plat, et end est exclusif : on décale d'un jour ici
+        // pour que les appelants continuent de raisonner en bornes inclusives.
         Map<String, Object> requestBody = Map.of(
                 "range", Map.of(
-                        "start", googleDate(start),
-                        "end", googleDate(end)),
+                        "start", civilDateTime(start),
+                        "end", civilDateTime(endInclusive.plusDays(1))),
                 "windowSizeDays", 1);
         return doPost(accessToken, "/v4/users/me/dataTypes/steps/dataPoints:dailyRollUp", requestBody);
     }
 
     public JsonNode listSleep(String accessToken, LocalDate from) {
-        // WHY: syntaxe du filtre civil_start_time jamais confrontée à un compte réel.
         return doGet(accessToken, "/v4/users/me/dataTypes/sleep/dataPoints",
-                "sleep.interval.civil_start_time >= \"" + from + "\"");
+                "sleep.interval.civil_end_time >= \"" + from + "\"");
     }
 
     public JsonNode listRestingHeartRate(String accessToken, LocalDate from) {
-        // WHY: champ de date 'dailyRestingHeartRate.date' jamais confronté à un compte réel.
-        return doGet(accessToken, "/v4/users/me/dataTypes/dailyRestingHeartRate/dataPoints",
-                "dailyRestingHeartRate.date >= \"" + from + "\"");
+        // WHY: le dataType s'appelle 'daily-resting-heart-rate' dans le path (kebab-case) et
+        // 'daily_resting_heart_rate' dans le filtre (snake_case) ; 'dailyRestingHeartRate'
+        // n'existe sous aucune forme dans l'API Google Health.
+        return doGet(accessToken, "/v4/users/me/dataTypes/daily-resting-heart-rate/dataPoints",
+                "daily_resting_heart_rate.date >= \"" + from + "\"");
     }
 
-    private static Map<String, Integer> googleDate(LocalDate d) {
-        return Map.of("year", d.getYear(), "month", d.getMonthValue(), "day", d.getDayOfMonth());
+    private static Map<String, Object> civilDateTime(LocalDate d) {
+        return Map.of("date", Map.of("year", d.getYear(), "month", d.getMonthValue(), "day", d.getDayOfMonth()));
+    }
+
+    private static final int DEBUG_LOG_MAX_LENGTH = 2000;
+
+    private static String abbreviate(JsonNode response) {
+        String json = String.valueOf(response);
+        return json.length() > DEBUG_LOG_MAX_LENGTH ? json.substring(0, DEBUG_LOG_MAX_LENGTH) + "…" : json;
     }
 
     private JsonNode doGet(String accessToken, String path, String filter) {
         try {
-            return restClient.get()
+            JsonNode response = restClient.get()
                     .uri(uriBuilder -> uriBuilder.path(path).queryParam("filter", filter).build())
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
                     .retrieve()
                     .body(JsonNode.class);
+            log.debug("Google Health GET {} → {}", path, abbreviate(response));
+            return response;
         } catch (HttpClientErrorException e) {
             throw mapHttpError("GET " + path, e);
         } catch (ResourceAccessException e) {
@@ -136,13 +150,15 @@ public class FitbitClient {
 
     private JsonNode doPost(String accessToken, String path, Object body) {
         try {
-            return restClient.post()
+            JsonNode response = restClient.post()
                     .uri(path)
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(body)
                     .retrieve()
                     .body(JsonNode.class);
+            log.debug("Google Health POST {} → {}", path, abbreviate(response));
+            return response;
         } catch (HttpClientErrorException e) {
             throw mapHttpError("POST " + path, e);
         } catch (ResourceAccessException e) {
