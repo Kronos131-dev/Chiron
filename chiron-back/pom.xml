@@ -41,6 +41,12 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
+        <!-- Boot 4 sort RestClientAutoConfiguration de starter-web : sans ce module, aucun bean
+             RestClient.Builder n'existe et FitbitClient ne peut plus être instancié. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-restclient</artifactId>
+        </dependency>
         <!-- Expose /actuator/health — utilisé par le health check du pipeline de déploiement. -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
