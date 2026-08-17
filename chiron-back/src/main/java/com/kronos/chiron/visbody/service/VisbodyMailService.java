@@ -1,7 +1,5 @@
 package com.kronos.chiron.visbody.service;
 
-import com.kronos.chiron.visbody.service.VisbodyImportService.ImportResult;
-
 import jakarta.mail.*;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeUtility;
