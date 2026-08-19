@@ -94,6 +94,14 @@ export class HeaderComponent implements OnInit {
     });
   }
 
+  openGlaux() {
+    this.showSettings.set(false);
+    const token = this.authService.getToken();
+    window.location.href = token
+      ? `${environment.glauxUrl}#ctk=${encodeURIComponent(token)}`
+      : environment.glauxUrl;
+  }
+
   logout() {
     this.authService.logout();
   }

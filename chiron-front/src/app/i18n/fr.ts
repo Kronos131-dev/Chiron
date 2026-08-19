@@ -25,6 +25,7 @@ export const fr: Record<string, string> = {
   'header.fitbit': 'Données Fitbit',
   'header.statistics': 'Statistiques',
   'header.olympus': 'Olympus',
+  'header.glaux': 'γλαῦξ',
   'header.settings': 'Paramètres',
   'header.logout': 'Déconnexion',
 
