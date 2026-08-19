@@ -138,16 +138,56 @@ public final class GoogleHealthParser {
         JsonNode points = listResponse.get("dataPoints");
         if (points == null || !points.isArray()) return result;
         for (JsonNode pt : points) {
-            JsonNode vo2 = pt.get("dailyVo2Max");
+            JsonNode vo2 = charteUtile(pt, "dailyVo2Max");
             if (vo2 == null) continue;
             LocalDate date = dataPointDate(pt, vo2);
             if (date == null) continue;
             Double value = doubleField(vo2, "vo2Max", "value");
+            if (value == null) value = premierNombrePlausible(vo2);
             JsonNode niveauNode = vo2.get("cardioFitnessLevel");
-            String niveau = niveauNode != null && niveauNode.isTextual() ? niveauNode.asText() : null;
+            String niveau = niveauNode != null && niveauNode.isTextual()
+                    ? niveauNode.asText()
+                    : premierTexte(vo2);
+            if (value == null && niveau == null) continue;
             result.put(date, new Vo2MaxJour(date, value, niveau));
         }
         return result;
+    }
+
+    // WHY: le nom du noeud qui porte la valeur est deduit du slug de l'API et n'a jamais
+    // ete confronte a un compte reel. Quand il ne correspond pas, on retombe sur le seul
+    // objet du point de donnee qui porte une date : c'est structurellement la charge utile.
+    private static JsonNode charteUtile(JsonNode dataPoint, String champAttendu) {
+        JsonNode attendu = dataPoint.get(champAttendu);
+        if (attendu != null && attendu.isObject()) return attendu;
+        for (Map.Entry<String, JsonNode> champ : dataPoint.properties()) {
+            JsonNode valeur = champ.getValue();
+            if (valeur.isObject() && (valeur.has("date") || valeur.has("civilDate"))) return valeur;
+        }
+        return null;
+    }
+
+    // WHY: borne physiologique du VO2max humain. Sans elle un repli generique pourrait
+    // retenir n'importe quel nombre du JSON — un identifiant, un compte d'echantillons.
+    private static final double VO2MAX_MIN = 10.0;
+    private static final double VO2MAX_MAX = 100.0;
+
+    private static Double premierNombrePlausible(JsonNode noeud) {
+        for (Map.Entry<String, JsonNode> champ : noeud.properties()) {
+            JsonNode valeur = champ.getValue();
+            if (!valeur.isNumber()) continue;
+            double d = valeur.asDouble();
+            if (d >= VO2MAX_MIN && d <= VO2MAX_MAX) return d;
+        }
+        return null;
+    }
+
+    private static String premierTexte(JsonNode noeud) {
+        for (Map.Entry<String, JsonNode> champ : noeud.properties()) {
+            JsonNode valeur = champ.getValue();
+            if (valeur.isTextual() && !valeur.asText().isBlank()) return valeur.asText();
+        }
+        return null;
     }
 
     public static Map<LocalDate, Double> dailyDoubleByDate(JsonNode listResponse, String parentField,
