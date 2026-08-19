@@ -343,7 +343,12 @@ public final class GoogleHealthParser {
             String externalId = metadata != null && metadata.hasNonNull("externalId")
                     ? metadata.get("externalId").asText()
                     : null;
-            boolean sieste = metadata != null && metadata.path("nap").asBoolean(false);
+            // WHY: les métadonnées de Google ne portent aucun champ « nap » — la capture d'un
+            // compte réel ne contient que stagesStatus, processed et mainSleep. Une session
+            // secondaire se reconnaît donc à mainSleep absent ou faux, et non à un drapeau
+            // de sieste qui n'existe pas et laissait passer toutes les siestes.
+            boolean sieste = metadata != null
+                    && (metadata.path("nap").asBoolean(false) || !metadata.path("mainSleep").asBoolean(true));
             boolean stadesDisponibles = metadata != null
                     && "SUCCEEDED".equals(metadata.path("stagesStatus").asText(null));
 
