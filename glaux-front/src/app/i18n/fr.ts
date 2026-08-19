@@ -28,6 +28,10 @@ export const fr: Record<string, string> = {
   'today.activeMinutes': 'Minutes actives',
   'today.restingHr': 'FC repos',
   'today.sleepScore': 'Score de sommeil',
+  'today.readiness': 'Préparation',
+  'today.readinessHigh': "Prêt à t'entraîner",
+  'today.readinessModerate': 'Récupération en cours',
+  'today.readinessLow': 'Repos conseillé',
   'today.cardioLoad': 'Charge cardio (7j)',
   'today.notLinked': 'Aucun compte Google Health lié',
   'today.notLinkedDesc':

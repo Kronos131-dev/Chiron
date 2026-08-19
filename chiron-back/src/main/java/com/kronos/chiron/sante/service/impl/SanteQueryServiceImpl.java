@@ -15,6 +15,7 @@ import com.kronos.chiron.sante.persistence.SanteFrequenceCardiaqueRepository;
 import com.kronos.chiron.sante.persistence.SanteJourRepository;
 import com.kronos.chiron.sante.persistence.SanteSommeilRepository;
 import com.kronos.chiron.sante.persistence.SanteSyncStateRepository;
+import com.kronos.chiron.sante.service.PreparationService;
 import com.kronos.chiron.sante.service.SanteQueryService;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +44,7 @@ public class SanteQueryServiceImpl implements SanteQueryService {
     private final SanteSommeilRepository santeSommeilRepository;
     private final SanteFrequenceCardiaqueRepository santeFrequenceCardiaqueRepository;
     private final SanteSyncStateRepository santeSyncStateRepository;
+    private final PreparationService preparationService;
 
     private final Clock clock;
 
@@ -59,13 +61,15 @@ public class SanteQueryServiceImpl implements SanteQueryService {
                 .map(SanteSommeil::getScore)
                 .orElse(null);
         Double chargeHebdo = sommeChargeCardio(utilisateur, today.minusDays(6), today);
+        Integer preparation = preparationService.calculer(utilisateur, today);
 
         if (jour == null) {
             return new SanteResumeDto(true, false, today, null, null, null, null, null, null, scoreSommeil,
-                    chargeHebdo);
+                    chargeHebdo, preparation);
         }
         return new SanteResumeDto(true, false, today, jour.getPas(), jour.getDistanceM(), jour.getCaloriesTotales(),
-                jour.getCaloriesActives(), jour.getMinutesZoneActive(), jour.getFcRepos(), scoreSommeil, chargeHebdo);
+                jour.getCaloriesActives(), jour.getMinutesZoneActive(), jour.getFcRepos(), scoreSommeil, chargeHebdo,
+                preparation);
     }
 
     @Override

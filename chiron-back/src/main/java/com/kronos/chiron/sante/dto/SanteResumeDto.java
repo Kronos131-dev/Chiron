@@ -13,13 +13,14 @@ public record SanteResumeDto(
         Integer minutesZoneActive,
         Integer fcRepos,
         Integer scoreSommeil,
-        Double chargeCardioHebdo) {
+        Double chargeCardioHebdo,
+        Integer scorePreparation) {
 
     public static SanteResumeDto notLinked() {
-        return new SanteResumeDto(false, false, null, null, null, null, null, null, null, null, null);
+        return new SanteResumeDto(false, false, null, null, null, null, null, null, null, null, null, null);
     }
 
     public static SanteResumeDto reconnectNeeded() {
-        return new SanteResumeDto(true, true, null, null, null, null, null, null, null, null, null);
+        return new SanteResumeDto(true, true, null, null, null, null, null, null, null, null, null, null);
     }
 }

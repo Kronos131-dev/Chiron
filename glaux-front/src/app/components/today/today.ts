@@ -58,6 +58,21 @@ export class Today implements OnInit {
     });
   }
 
+  // WHY: les trois seuils sont ceux de Google Health — 1-29 faible, 30-64 modérée,
+  // 65-100 élevée — pour que la lecture reste comparable d'une application à l'autre.
+  libellePreparation(score: number): string {
+    if (score >= 65) return 'today.readinessHigh';
+    if (score >= 30) return 'today.readinessModerate';
+    return 'today.readinessLow';
+  }
+
+  couleurPreparation(score: number | null): string {
+    if (score == null) return 'text-white';
+    if (score >= 65) return 'text-emerald-400';
+    if (score >= 30) return 'text-sky-400';
+    return 'text-orange-400';
+  }
+
   km(m: number | null): string {
     return m == null ? '—' : (m / 1000).toFixed(2);
   }

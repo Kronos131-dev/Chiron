@@ -103,6 +103,21 @@
             </p>
             <p class="text-3xl font-black text-secondary">{{ r.scoreSommeil ?? '—' }}</p>
           </div>
+          <div class="bg-slate-900/40 border border-white/5 rounded-xl p-5">
+            <p
+              class="text-[10px] font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-1"
+            >
+              {{ 'today.readiness' | t }}
+            </p>
+            <p class="text-3xl font-black" [class]="couleurPreparation(r.scorePreparation)">
+              {{ r.scorePreparation ?? '—' }}
+            </p>
+            @if (r.scorePreparation != null) {
+              <p class="text-[10px] text-on-surface-variant mt-1">
+                {{ libellePreparation(r.scorePreparation) | t }}
+              </p>
+            }
+          </div>
           <div
             class="bg-slate-900/40 border border-white/5 rounded-xl p-5 col-span-2 md:col-span-3"
           >

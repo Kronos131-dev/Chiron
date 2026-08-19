@@ -9,6 +9,7 @@ import com.kronos.chiron.sante.persistence.SanteFrequenceCardiaqueRepository;
 import com.kronos.chiron.sante.persistence.SanteJourRepository;
 import com.kronos.chiron.sante.persistence.SanteSommeilRepository;
 import com.kronos.chiron.sante.persistence.SanteSyncStateRepository;
+import com.kronos.chiron.sante.service.PreparationService;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -46,6 +47,8 @@ class SanteQueryServiceImplTest {
     private SanteFrequenceCardiaqueRepository santeFrequenceCardiaqueRepository;
     @Mock
     private SanteSyncStateRepository santeSyncStateRepository;
+    @Mock
+    private PreparationService preparationService;
 
     @Spy
     private Clock clock = Clock.fixed(Instant.parse("2026-08-17T10:00:00Z"), ZoneId.of("Europe/Paris"));

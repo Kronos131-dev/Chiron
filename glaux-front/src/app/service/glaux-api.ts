@@ -15,6 +15,7 @@ export interface SanteResumeDto {
   fcRepos: number | null;
   scoreSommeil: number | null;
   chargeCardioHebdo: number | null;
+  scorePreparation: number | null;
 }
 
 export interface SanteJourDto {

@@ -57,7 +57,7 @@ class SanteControllerTest {
     void resume_returnsResumeDto() throws Exception {
         when(authenticatedUserService.getAuthenticatedUser()).thenReturn(user);
         when(santeQueryService.getResume(user)).thenReturn(
-                new SanteResumeDto(true, false, LocalDate.of(2026, 8, 17), 8500, 6.2, 2100, 450, 32, 58, 82, 310.0));
+                new SanteResumeDto(true, false, LocalDate.of(2026, 8, 17), 8500, 6.2, 2100, 450, 32, 58, 82, 310.0, 74));
 
         mockMvc.perform(get("/api/sante/resume"))
                 .andExpect(status().isOk())
