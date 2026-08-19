@@ -12,7 +12,7 @@ import { environment } from '../../../../environments/environment';
   templateUrl: './header.html',
 })
 export class HeaderComponent {
-  @Input() title: string = 'γλαῦξ';
+  @Input() title: string = 'Noctua';
 
   showMenu = signal(false);
   readonly chironUrl = environment.chironUrl;

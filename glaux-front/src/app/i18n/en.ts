@@ -5,7 +5,7 @@ export const en: Record<string, string> = {
   'common.close': 'Close',
   'common.noData': 'No data yet.',
 
-  'login.title': 'γλαῦξ',
+  'login.title': 'Noctua',
   'login.subtitle': "Chiron's eye on your health",
   'login.username': 'Username',
   'login.password': 'Password',
