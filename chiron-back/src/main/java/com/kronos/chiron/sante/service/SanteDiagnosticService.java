@@ -7,7 +7,7 @@ public interface SanteDiagnosticService {
 
     JsonNode capturerBrut(String chironUsername, GoogleHealthDataType type, int jours);
 
-    JsonNode sonderSlug(String chironUsername, String slug, int jours);
+    JsonNode sonderSlug(String chironUsername, String slug, int jours, boolean avecFiltre);
 
     JsonNode listerTypesDisponibles(String chironUsername);
 }

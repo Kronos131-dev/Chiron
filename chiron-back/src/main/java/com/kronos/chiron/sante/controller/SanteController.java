@@ -84,9 +84,10 @@ public class SanteController {
 
     @GetMapping("/diagnostic/slug")
     public ResponseEntity<JsonNode> diagnosticSlug(@RequestParam String slug,
-            @RequestParam(defaultValue = "3") int jours) {
+            @RequestParam(defaultValue = "3") int jours,
+            @RequestParam(defaultValue = "true") boolean filtre) {
         Utilisateur user = authenticatedUserService.getAuthenticatedUser();
-        return ResponseEntity.ok(santeDiagnosticService.sonderSlug(user.getUsername(), slug, jours));
+        return ResponseEntity.ok(santeDiagnosticService.sonderSlug(user.getUsername(), slug, jours, filtre));
     }
 
     @GetMapping("/sync")

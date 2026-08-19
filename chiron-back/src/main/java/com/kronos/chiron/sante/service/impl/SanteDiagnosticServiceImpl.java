@@ -47,14 +47,14 @@ public class SanteDiagnosticServiceImpl implements SanteDiagnosticService {
     }
 
     @Override
-    public JsonNode sonderSlug(String chironUsername, String slug, int jours) {
+    public JsonNode sonderSlug(String chironUsername, String slug, int jours, boolean avecFiltre) {
         if (slug == null || !SLUG_VALIDE.matcher(slug).matches()) {
             throw badRequest("Slug invalide : attendu des minuscules, des chiffres et des tirets.");
         }
         String token = jetonOuErreur(chironUsername);
         int n = Math.max(1, Math.min(jours, JOURS_MAX));
         LocalDate depuis = LocalDate.now(clock).minusDays(n - 1L);
-        return sansPropager(slug, () -> fitbitClient.listDataPointsBrut(token, slug, depuis, null));
+        return sansPropager(slug, () -> fitbitClient.listDataPointsBrut(token, slug, depuis, null, avecFiltre));
     }
 
     @Override

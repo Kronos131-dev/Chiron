@@ -133,10 +133,13 @@ public class FitbitClient {
         return doGet(accessToken, "/v4/users/me/dataTypes", null, null);
     }
 
-    public JsonNode listDataPointsBrut(String accessToken, String slug, LocalDate from, String pageToken) {
-        String champFiltre = slug.replace('-', '_') + ".date";
-        return doGet(accessToken, "/v4/users/me/dataTypes/" + slug + "/dataPoints",
-                champFiltre + " >= \"" + from + "\"", pageToken);
+    public JsonNode listDataPointsBrut(String accessToken, String slug, LocalDate from, String pageToken,
+            boolean avecFiltre) {
+        // WHY: le filtre est fabriqué par convention et n'a jamais été vérifié pour un slug
+        // inconnu. Pouvoir l'omettre sépare les deux causes d'un 400 : un champ de filtre
+        // mal nommé répond alors normalement, un type inexistant échoue dans les deux cas.
+        String filtre = avecFiltre ? slug.replace('-', '_') + ".date >= \"" + from + "\"" : null;
+        return doGet(accessToken, "/v4/users/me/dataTypes/" + slug + "/dataPoints", filtre, pageToken);
     }
 
     public JsonNode dailyRollUp(String accessToken, GoogleHealthDataType type, LocalDate start,
