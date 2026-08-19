@@ -1,6 +1,7 @@
 package com.kronos.chiron.sante.controller;
 
 import com.kronos.chiron.core.security.AuthenticatedUserService;
+import com.kronos.chiron.fitbit.client.GoogleHealthDataType;
 import com.kronos.chiron.sante.dto.SanteAptitudeDto;
 import com.kronos.chiron.sante.dto.SanteCardioHebdoDto;
 import com.kronos.chiron.sante.dto.SanteFcJourDto;
@@ -9,6 +10,7 @@ import com.kronos.chiron.sante.dto.SanteJourDto;
 import com.kronos.chiron.sante.dto.SanteResumeDto;
 import com.kronos.chiron.sante.dto.SanteSommeilDto;
 import com.kronos.chiron.sante.dto.SanteSyncEtatDto;
+import com.kronos.chiron.sante.service.SanteDiagnosticService;
 import com.kronos.chiron.sante.service.SanteQueryService;
 import com.kronos.chiron.sante.service.SanteSyncService;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
@@ -16,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import tools.jackson.databind.JsonNode;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -27,6 +30,7 @@ public class SanteController {
 
     private final SanteQueryService santeQueryService;
     private final SanteSyncService santeSyncService;
+    private final SanteDiagnosticService santeDiagnosticService;
     private final AuthenticatedUserService authenticatedUserService;
 
     @GetMapping("/resume")
@@ -70,6 +74,13 @@ public class SanteController {
     public ResponseEntity<List<SanteAptitudeDto>> aptitude(@RequestParam(defaultValue = "180") int jours) {
         Utilisateur user = authenticatedUserService.getAuthenticatedUser();
         return ResponseEntity.ok(santeQueryService.getAptitude(user, jours));
+    }
+
+    @GetMapping("/diagnostic")
+    public ResponseEntity<JsonNode> diagnostic(@RequestParam GoogleHealthDataType type,
+            @RequestParam(defaultValue = "3") int jours) {
+        Utilisateur user = authenticatedUserService.getAuthenticatedUser();
+        return ResponseEntity.ok(santeDiagnosticService.capturerBrut(user.getUsername(), type, jours));
     }
 
     @GetMapping("/sync")

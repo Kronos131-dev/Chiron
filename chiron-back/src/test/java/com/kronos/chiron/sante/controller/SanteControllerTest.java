@@ -5,6 +5,7 @@ import com.kronos.chiron.sante.dto.SanteFcPointDto;
 import com.kronos.chiron.sante.dto.SanteJourDto;
 import com.kronos.chiron.sante.dto.SanteResumeDto;
 import com.kronos.chiron.sante.dto.SanteSyncEtatDto;
+import com.kronos.chiron.sante.service.SanteDiagnosticService;
 import com.kronos.chiron.sante.service.SanteQueryService;
 import com.kronos.chiron.sante.service.SanteSyncService;
 import com.kronos.chiron.security.JwtService;
@@ -41,6 +42,8 @@ class SanteControllerTest {
     private SanteQueryService santeQueryService;
     @MockitoBean
     private SanteSyncService santeSyncService;
+    @MockitoBean
+    private SanteDiagnosticService santeDiagnosticService;
     @MockitoBean
     private AuthenticatedUserService authenticatedUserService;
     @MockitoBean
