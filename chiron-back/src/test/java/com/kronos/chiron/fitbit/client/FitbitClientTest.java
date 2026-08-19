@@ -11,6 +11,7 @@ import org.springframework.web.client.RestClient;
 
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -109,5 +110,59 @@ class FitbitClientTest {
         assertThatThrownBy(
                 () -> fitbitClient.rollUpDailySteps("token", LocalDate.of(2026, 8, 5), LocalDate.of(2026, 8, 5)))
                 .isInstanceOf(FitbitClient.FitbitUnauthorizedException.class);
+    }
+
+    @Test
+    void dailyRollUp_distance_hitsCorrectPathAndBody() {
+        mockServer.expect(requestTo(BASE_URL + "/v4/users/me/dataTypes/distance/dataPoints:dailyRollUp"))
+                .andExpect(method(HttpMethod.POST))
+                .andExpect(jsonPath("$.range.start.date.day").value(5))
+                .andExpect(jsonPath("$.range.end.date.day").value(7))
+                .andExpect(jsonPath("$.windowSizeDays").value(1))
+                .andRespond(withSuccess("{\"rollupDataPoints\":[]}", MediaType.APPLICATION_JSON));
+
+        fitbitClient.dailyRollUp("token", GoogleHealthDataType.DISTANCE, LocalDate.of(2026, 8, 5),
+                LocalDate.of(2026, 8, 6));
+
+        mockServer.verify();
+    }
+
+    @Test
+    void listDataPoints_dailyVo2Max_filtersOnDate() {
+        mockServer.expect(requestPath("/v4/users/me/dataTypes/daily-vo2-max/dataPoints"))
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(filterQueryParam("daily_vo2_max.date >= \"2026-08-05\""))
+                .andRespond(withSuccess("{\"dataPoints\":[]}", MediaType.APPLICATION_JSON));
+
+        fitbitClient.listDataPoints("token", GoogleHealthDataType.DAILY_VO2_MAX, LocalDate.of(2026, 8, 5), null);
+
+        mockServer.verify();
+    }
+
+    @Test
+    void listDataPoints_withPageToken_addsPageTokenQueryParam() {
+        mockServer.expect(requestPath("/v4/users/me/dataTypes/sleep/dataPoints"))
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(request -> assertThat(request.getURI().getQuery()).contains("pageToken=abc123"))
+                .andRespond(withSuccess("{\"dataPoints\":[]}", MediaType.APPLICATION_JSON));
+
+        fitbitClient.listDataPoints("token", GoogleHealthDataType.SLEEP, LocalDate.of(2026, 8, 5), "abc123");
+
+        mockServer.verify();
+    }
+
+    @Test
+    void rollUp_heartRate_sendsPhysicalTimeRangeAndWindowSizeAsDurationString() {
+        mockServer.expect(requestTo(BASE_URL + "/v4/users/me/dataTypes/heart-rate/dataPoints:rollUp"))
+                .andExpect(method(HttpMethod.POST))
+                .andExpect(jsonPath("$.range.startTime").value("2026-08-05T00:00:00Z"))
+                .andExpect(jsonPath("$.range.endTime").value("2026-08-06T00:00:00Z"))
+                .andExpect(jsonPath("$.windowSize").value("300s"))
+                .andRespond(withSuccess("{\"rollupDataPoints\":[]}", MediaType.APPLICATION_JSON));
+
+        fitbitClient.rollUp("token", GoogleHealthDataType.HEART_RATE, Instant.parse("2026-08-05T00:00:00Z"),
+                Instant.parse("2026-08-06T00:00:00Z"), 300);
+
+        mockServer.verify();
     }
 }

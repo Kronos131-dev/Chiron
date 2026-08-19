@@ -5,6 +5,7 @@ import com.kronos.chiron.fitbit.dto.FitbitDashboardDto;
 import com.kronos.chiron.fitbit.dto.FitbitLinkStatus;
 import com.kronos.chiron.fitbit.service.FitbitAuthSessionStore;
 import com.kronos.chiron.fitbit.service.FitbitService;
+import com.kronos.chiron.sante.service.SanteSyncService;
 
 import org.mockito.Spy;
 
@@ -18,6 +19,7 @@ import com.kronos.chiron.core.security.TokenCipherService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.beans.factory.ObjectProvider;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -43,6 +45,10 @@ class FitbitServiceTest {
     private TokenCipherService tokenCipher;
     @Mock
     private FitbitAuthSessionStore authSessionStore;
+    @Mock
+    private ObjectProvider<SanteSyncService> santeSyncServiceProvider;
+    @Mock
+    private SanteSyncService santeSyncService;
 
     @Spy
     private Clock clock = Clock.system(ZoneId.of("Europe/Paris"));
@@ -56,6 +62,7 @@ class FitbitServiceTest {
     void setUp() {
         user = Utilisateur.builder().id(1L).username("athlete").build();
         when(utilisateurRepository.findByUsername("athlete")).thenReturn(Optional.of(user));
+        when(santeSyncServiceProvider.getIfAvailable()).thenReturn(santeSyncService);
     }
 
     @Test
@@ -115,6 +122,33 @@ class FitbitServiceTest {
 
         assertThatThrownBy(() -> fitbitService.handleCallback("code", "bad-state"))
                 .isInstanceOf(FitbitService.InvalidStateException.class);
+    }
+
+    @Test
+    void handleCallback_success_triggersSanteBackfill() {
+        when(authSessionStore.consume("good-state"))
+                .thenReturn(new FitbitAuthSessionStore.PendingAuth(1L, "verifier", java.time.Instant.now()));
+        when(utilisateurRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(fitbitClient.exchangeCode("code", "verifier"))
+                .thenReturn(new FitbitClient.TokenResponse("access", "refresh", 28800L, "activity", null));
+        when(tokenCipher.encrypt(anyString())).thenReturn("enc");
+
+        fitbitService.handleCallback("code", "good-state");
+
+        verify(santeSyncService).ensureBackfillAsync("athlete");
+    }
+
+    @Test
+    void handleCallback_noSanteSyncServiceAvailable_doesNotThrow() {
+        when(authSessionStore.consume("good-state"))
+                .thenReturn(new FitbitAuthSessionStore.PendingAuth(1L, "verifier", java.time.Instant.now()));
+        when(utilisateurRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(fitbitClient.exchangeCode("code", "verifier"))
+                .thenReturn(new FitbitClient.TokenResponse("access", "refresh", 28800L, "activity", null));
+        when(tokenCipher.encrypt(anyString())).thenReturn("enc");
+        when(santeSyncServiceProvider.getIfAvailable()).thenReturn(null);
+
+        assertThatCode(() -> fitbitService.handleCallback("code", "good-state")).doesNotThrowAnyException();
     }
 
     @Test

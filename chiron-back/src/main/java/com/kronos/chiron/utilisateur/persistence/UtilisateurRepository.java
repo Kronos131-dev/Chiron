@@ -21,4 +21,6 @@ public interface UtilisateurRepository extends JpaRepository<Utilisateur, Long> 
     List<Utilisateur> findByNomIgnoreCaseOrPrenomIgnoreCase(String nom, String prenom);
 
     List<Utilisateur> findByPrenomIgnoreCaseAndNomIgnoreCase(String prenom, String nom);
+
+    List<Utilisateur> findByFitbitRefreshTokenEncryptedIsNotNull();
 }

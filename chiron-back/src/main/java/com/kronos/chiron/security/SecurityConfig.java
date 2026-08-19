@@ -30,11 +30,13 @@ public class SecurityConfig {
 
         configuration.setAllowedOrigins(List.of(
                 "http://localhost:4200",
+                "http://localhost:4300",
                 "http://localhost:9090",
                 "http://46.224.227.209",
                 "https://chiron-sanctuaire.fr",
                 "https://www.chiron-sanctuaire.fr",
                 "https://olympus.chiron-sanctuaire.fr",
+                "https://glaux.chiron-sanctuaire.fr",
                 "https://localhost",
                 "http://localhost",
                 "capacitor://localhost"));

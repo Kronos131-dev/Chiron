@@ -10,6 +10,7 @@ import com.kronos.chiron.fitbit.dto.FitbitDayPoint;
 import com.kronos.chiron.fitbit.dto.FitbitLinkStatus;
 import com.kronos.chiron.fitbit.service.FitbitAuthSessionStore;
 import com.kronos.chiron.fitbit.service.FitbitService;
+import com.kronos.chiron.sante.service.SanteSyncService;
 
 import java.time.Clock;
 
@@ -18,6 +19,7 @@ import com.kronos.chiron.utilisateur.persistence.UtilisateurRepository;
 import com.kronos.chiron.core.security.TokenCipherService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,6 +44,7 @@ public class FitbitServiceImpl implements FitbitService {
     private final FitbitClient fitbitClient;
     private final TokenCipherService tokenCipher;
     private final FitbitAuthSessionStore authSessionStore;
+    private final ObjectProvider<SanteSyncService> santeSyncServiceProvider;
 
     private final Clock clock;
     @Value("${fitbit.authorize-url}")
@@ -100,6 +103,10 @@ public class FitbitServiceImpl implements FitbitService {
         user.setFitbitLinkedAt(LocalDateTime.now(clock));
         utilisateurRepository.save(user);
         log.info("FITBIT_LINKED user={} fitbitUserId={}", user.getUsername(), tr.fitbitUserId());
+        SanteSyncService santeSyncService = santeSyncServiceProvider.getIfAvailable();
+        if (santeSyncService != null) {
+            santeSyncService.ensureBackfillAsync(user.getUsername());
+        }
         return buildStatus(user);
     }
 

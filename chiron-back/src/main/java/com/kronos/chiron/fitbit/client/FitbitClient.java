@@ -13,6 +13,7 @@ import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 import tools.jackson.databind.JsonNode;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Map;
 
@@ -120,6 +121,34 @@ public class FitbitClient {
                 "daily_resting_heart_rate.date >= \"" + from + "\"");
     }
 
+    public JsonNode listDataPoints(String accessToken, GoogleHealthDataType type, LocalDate from, String pageToken) {
+        return doGet(accessToken, type.dataPointsPath(), type.filterFrom(from), pageToken);
+    }
+
+    public JsonNode dailyRollUp(String accessToken, GoogleHealthDataType type, LocalDate start,
+            LocalDate endInclusive) {
+        Map<String, Object> requestBody = Map.of(
+                "range", Map.of(
+                        "start", civilDateTime(start),
+                        "end", civilDateTime(endInclusive.plusDays(1))),
+                "windowSizeDays", 1);
+        return doPost(accessToken, type.dataPointsPath() + ":dailyRollUp", requestBody);
+    }
+
+    // WHY: windowSize n'a jamais été confronté à un compte réel. Suivi ici la convention
+    // JSON habituelle de google.protobuf.Duration ("300s"), cohérente avec le reste de
+    // l'API (CivilDateTime, Timestamp RFC3339) mais non documentée explicitement pour ce
+    // champ précis — à confirmer avant de s'appuyer dessus en production.
+    public JsonNode rollUp(String accessToken, GoogleHealthDataType type, Instant startUtc, Instant endUtc,
+            int windowSizeSeconds) {
+        Map<String, Object> requestBody = Map.of(
+                "range", Map.of(
+                        "startTime", startUtc.toString(),
+                        "endTime", endUtc.toString()),
+                "windowSize", windowSizeSeconds + "s");
+        return doPost(accessToken, type.dataPointsPath() + ":rollUp", requestBody);
+    }
+
     private static Map<String, Object> civilDateTime(LocalDate d) {
         return Map.of("date", Map.of("year", d.getYear(), "month", d.getMonthValue(), "day", d.getDayOfMonth()));
     }
@@ -132,9 +161,19 @@ public class FitbitClient {
     }
 
     private JsonNode doGet(String accessToken, String path, String filter) {
+        return doGet(accessToken, path, filter, null);
+    }
+
+    private JsonNode doGet(String accessToken, String path, String filter, String pageToken) {
         try {
             JsonNode response = restClient.get()
-                    .uri(uriBuilder -> uriBuilder.path(path).queryParam("filter", filter).build())
+                    .uri(uriBuilder -> {
+                        uriBuilder.path(path).queryParam("filter", filter);
+                        if (pageToken != null && !pageToken.isBlank()) {
+                            uriBuilder.queryParam("pageToken", pageToken);
+                        }
+                        return uriBuilder.build();
+                    })
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
                     .retrieve()
                     .body(JsonNode.class);
