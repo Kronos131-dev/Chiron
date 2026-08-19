@@ -12,11 +12,9 @@
 * [ ] Whether a new environment variable is needed, and that it requires three entries.
 * [ ] Whether `SecurityConfig` or the `ChironAgent` prompt changes.
 
-## Branch
-* [ ] The working tree was clean before branching.
-* [ ] `git fetch` was run so the branch starts from current `main`.
-* [ ] The branch is `feat/`, `fix/` or `tech/` with a kebab-case slug.
-* [ ] Work is not happening directly on `main`.
+## Tree
+* [ ] The working tree was clean before starting.
+* [ ] `git fetch` was run so the work starts from current `main`.
 
 ## Routing
 * [ ] The convention file for the affected side was read.

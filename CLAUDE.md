@@ -50,6 +50,9 @@ comment lines that follow it, up to the first line of code, are covered too. If 
 extracted method would carry the same information, do that instead; the marker is not an escape
 hatch from the rule, it is the narrow case the rule would otherwise destroy.
 
+The hook covers `chiron-back/src/main/java` and the whole of `chiron-front/src` — templates and
+stylesheets included, where the marker reads `<!-- WHY: … -->` and `/* WHY: … */`.
+
 ## Commits — non-negotiable
 
 The author is **the repository owner, alone**. No `Co-Authored-By` trailer, no "Generated with" line,
@@ -70,8 +73,9 @@ A push to `main` runs `.github/workflows/deploy.yml`, which builds, tests, and d
 the separate `Kronos131-dev/olympus` repository** onto `46.224.227.209` over SSH. There is no staging
 environment.
 
-- Announce what is about to ship before pushing to `main`, and wait for the go-ahead. Feature branches
-  push freely. The procedure is the `push-and-watch-pipeline` skill.
+- **Work happens directly on `main`.** There is no ticket tracker, no review step, and no feature
+  branches — commit on `main` and push. The procedure is the `push-and-watch-pipeline` skill.
+- Announce what is about to ship before pushing to `main`, and wait for the go-ahead.
 - The production server may be **read** — `docker ps`, `docker logs`, `journalctl`, `df`, health
   probes. It is never mutated: no `docker rm`, no `compose up`, no `scp` of an artefact. Deploying is
   the pipeline's job.
@@ -128,6 +132,11 @@ it.
 `/mcp`. Tool schemas are deferred — find them with `ToolSearch` before calling. It is the primary
 path for anything involving workflow runs, jobs and logs, because **`gh` is not installed on this
 machine**. When the server is unauthenticated, say so and stop rather than guessing.
+
+The URL ends in `/x/all` on purpose. The bare `https://api.githubcopilot.com/mcp/` serves only
+`context, repos, issues, pull_requests, users` — **no Actions toolset at all**, so a red pipeline
+becomes undiagnosable with no error to explain why. Reads pass the guard through their leading
+verb; every write, and anything that starts, replays or cancels a run, stays blocked.
 
 The repository is `Kronos131-dev/Chiron`. Its deploy workflow also builds `Kronos131-dev/olympus`, so
 a red pipeline may point at a repository this working tree does not contain.

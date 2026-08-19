@@ -1,23 +1,22 @@
 ---
 name: push-and-watch-pipeline
-description: Pushes Chiron work to GitHub and follows the resulting Actions run to its conclusion. Use when asked to ship, to push, to deploy, to send it to production, or to check whether the deploy went through. Covers the mandatory announcement before any push to main, since main deploys straight to the production server, then resolving the run through the GitHub MCP server, polling it, and reading the sha256 jar check and the actuator health probe the workflow performs. Do not use for diagnosing an already-red run (see diagnose-ci-failure), for reading the live server (see inspect-production), or for writing the commit itself (see commit-changes).
+description: Pushes Chiron work to GitHub and follows the resulting Actions run to its conclusion. Use when asked to ship, to push, to deploy, to send it to production, or to check whether the deploy went through. Covers the mandatory announcement before any push, since every push lands on main and deploys straight to the production server, then resolving the run through the GitHub MCP server, polling it, and reading the sha256 jar check and the actuator health probe the workflow performs. Do not use for diagnosing an already-red run (see diagnose-ci-failure), for reading the live server (see inspect-production), or for writing the commit itself (see commit-changes).
 ---
 
 # Ship it and follow the deploy
 
-Chiron has no staging environment. A push to `main` runs `.github/workflows/deploy.yml`, which builds,
-tests and deploys **both Chiron and the separate `Kronos131-dev/olympus` repository** onto
-`46.224.227.209` over SSH. Announce before pushing to `main` and wait for a go-ahead. Pushing a
-feature branch is free.
+Chiron has no staging environment and no feature branches — every push lands on `main` and runs
+`.github/workflows/deploy.yml`, which builds, tests and deploys **both Chiron and the separate
+`Kronos131-dev/olympus` repository** onto `46.224.227.209` over SSH. Announce before pushing and wait
+for a go-ahead, every time.
 
 `gh` is not installed on this machine. Everything below goes through the GitHub MCP server.
 
 ## Procedures
 
-**Step 1: Establish where the push is going**
+**Step 1: Establish what is about to leave**
 1. Run `git status -sb` and `git log --oneline @{u}..HEAD` to list the commits about to leave.
-2. If the branch is not `main`, skip to Step 3 — a feature branch push triggers no deploy.
-3. If nothing is ahead of the upstream, report that and stop.
+2. If nothing is ahead of the upstream, report that and stop.
 
 **Step 2: Announce what is about to reach production, then wait**
 1. Present, in one short block: the commit subjects about to ship, any new file under

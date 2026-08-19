@@ -1,16 +1,13 @@
 ---
 name: start-feature
-description: Opens work on a new Chiron feature, fix or refactor. Use when a piece of work is described and coding has not begun, when a branch is needed, or when the scope and the affected side of the monorepo must be settled before writing code. Fixes the scope, creates a feat, fix or tech branch from main, locates the code, and routes to the implementation skill that owns the task. Chiron uses GitHub flow with no ticket tracker, and a merge to main deploys straight to production. Do not use once branches exist and coding has begun, for finished work (see review-changes), or for shipping (see push-and-watch-pipeline).
+description: Opens work on a new Chiron feature, fix or refactor. Use when a piece of work is described and coding has not begun, or when the scope and the affected side of the monorepo must be settled before writing code. Fixes the scope, locates the code, and routes to the implementation skill that owns the task. Chiron uses trunk-based development with no ticket tracker and no feature branches — all work happens directly on main, which deploys straight to production. Do not use once coding has begun, for finished work (see review-changes), or for shipping (see push-and-watch-pipeline).
 ---
 
 # Open work on a change
 
-There is no ticket tracker and no staging environment. The scope is whatever the user said, and
-`main` is production — so the two things worth doing before writing code are agreeing what "done"
-means and getting off `main`.
-
-Recent history shows work committed directly to `main` and branch names alternating between `feat/`
-and `feature/`. Use `feat/`, `fix/` or `tech/`, and branch.
+There is no ticket tracker, no staging environment, and no feature branches — work happens directly
+on `main`. The scope is whatever the user said, and `main` is production, so the one thing worth
+doing before writing code is agreeing what "done" means.
 
 ## Procedures
 
@@ -31,12 +28,11 @@ and `feature/`. Use `feat/`, `fix/` or `tech/`, and branch.
    production with consequences no test covers.
 4. Naming these now avoids discovering them at push time.
 
-**Step 3: Branch**
-1. Confirm the tree is clean with `git status`, and that `main` is current with `git fetch`.
-2. Create the branch: `git checkout -b feat/<slug>`, `fix/<slug>` or `tech/<slug>`, with a short
-   kebab-case slug — `feat/tempo-par-serie`, `fix/gemini-fallback`.
-3. Work on the branch. Committing to `main` is possible but puts the change one push from production
-   with no review step.
+**Step 3: Confirm the tree is ready**
+1. Run `git status` and `git fetch` so the work starts from current `main` with nothing uncommitted
+   left behind by a prior task.
+2. If the tree is dirty with unrelated work, deal with it first — the guard blocks `git stash` and the
+   destructive verbs, so uncommitted work must be committed or handed back to the user.
 
 **Step 4: Locate the code**
 1. Apply the `explore-codebase` skill rather than grepping the whole repository.
@@ -70,15 +66,13 @@ order.
 
 ## Error Handling
 
-* If the working tree is dirty when branching, deal with it first — the guard blocks `git stash` and
-  the destructive verbs, so the uncommitted work must be committed or handed back to the user.
 * If the scope covers both sides, do the backend first and finish it. A frontend built against an
   imagined DTO gets rewritten.
-* If the scope grows while working, stop and say so. A change that outgrows its branch name is two
-  changes.
-* If the task is a one-line fix, this skill is overhead — branch and route directly.
+* If the scope grows while working, stop and say so. A change that outgrows its stated scope is two
+  changes — commit what is done and restate scope for the rest.
+* If the task is a one-line fix, this skill is overhead — locate the code and route directly.
 * If the change turns out to need a schema change discovered mid-implementation, apply
   `add-flyway-migration` immediately: the application will not start without it, so it is not
   deferrable.
-* If `main` has moved since branching, `git fetch` and rebase. Never force-push the result; the guard
-  blocks it and the deploy builds from what is on the remote.
+* If `main` has moved since `git fetch`, pull before committing. Never force-push; the guard blocks it
+  and the deploy builds from what is on the remote.

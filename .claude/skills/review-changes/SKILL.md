@@ -16,7 +16,7 @@ nobody wrote. Everything else the build already catches.
 
 **Step 1: Get the diff**
 1. Run `git status --porcelain` and `git diff` for unstaged work, `git diff --cached` for staged.
-2. For work already on a branch, `git diff main...HEAD`.
+2. For work already committed on `main` but not yet pushed, `git diff @{u}..HEAD`.
 3. Read it in full. A diff too large to read is a sign the change should have been several.
 
 **Step 2: Walk the checklist against the diff**
