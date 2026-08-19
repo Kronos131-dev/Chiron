@@ -219,7 +219,7 @@ class SanteSyncServiceImplTest {
         // Given
         List<SanteSyncState> etats = java.util.Arrays.stream(GoogleHealthDataType.values())
                 .map(type -> SanteSyncState.builder().utilisateur(user).typeDonnee(type.name())
-                        .backfillTermine(type != GoogleHealthDataType.DAILY_VO2_MAX).build())
+                        .backfillTermine(type != GoogleHealthDataType.SLEEP).build())
                 .toList();
         when(santeSyncStateRepository.findByUtilisateur(user)).thenReturn(etats);
         when(fitbitService.getValidToken("athlete")).thenReturn("token");

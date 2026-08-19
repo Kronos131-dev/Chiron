@@ -17,7 +17,6 @@ export const fr: Record<string, string> = {
   'nav.today': "Aujourd'hui",
   'nav.coeur': 'Cœur',
   'nav.sommeil': 'Sommeil',
-  'nav.aptitude': 'Aptitude',
   'nav.activite': 'Activité',
 
   'today.title': "Aujourd'hui",
@@ -64,11 +63,6 @@ export const fr: Record<string, string> = {
   'sommeil.nights': 'Nuits récentes',
   'sommeil.approx':
     "Score reconstruit par Chiron, jamais identique au chiffre de l'app Google Health.",
-
-  'aptitude.title': 'Aptitude',
-  'aptitude.vo2max': 'VO2 max',
-  'aptitude.level': "Niveau d'aptitude",
-  'aptitude.evolution': 'Évolution',
 
   'activite.title': 'Activité',
   'activite.steps': 'Pas',

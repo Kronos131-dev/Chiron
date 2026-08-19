@@ -17,9 +17,6 @@ public record SanteJourDto(
         Double fcMoyenne,
         Integer fcMax,
         Double vfcMs,
-        Double vo2Max,
-        String niveauAptitude,
         Double chargeCardio,
-        Double spo2Pct,
         Double frequenceRespiratoire) {
 }

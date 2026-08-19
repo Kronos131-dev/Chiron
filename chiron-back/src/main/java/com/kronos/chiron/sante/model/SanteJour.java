@@ -71,17 +71,8 @@ public class SanteJour {
     @Column(name = "vfc_sommeil_profond_ms")
     private Double vfcSommeilProfondMs;
 
-    @Column(name = "vo2_max")
-    private Double vo2Max;
-
-    @Column(name = "niveau_aptitude")
-    private String niveauAptitude;
-
     @Column(name = "charge_cardio")
     private Double chargeCardio;
-
-    @Column(name = "spo2_pct")
-    private Double spo2Pct;
 
     @Column(name = "frequence_respiratoire")
     private Double frequenceRespiratoire;

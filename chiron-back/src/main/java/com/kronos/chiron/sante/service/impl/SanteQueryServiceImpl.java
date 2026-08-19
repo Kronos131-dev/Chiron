@@ -2,7 +2,6 @@ package com.kronos.chiron.sante.service.impl;
 
 import com.kronos.chiron.fitbit.dto.FitbitLinkStatus;
 import com.kronos.chiron.fitbit.service.FitbitService;
-import com.kronos.chiron.sante.dto.SanteAptitudeDto;
 import com.kronos.chiron.sante.dto.SanteCardioHebdoDto;
 import com.kronos.chiron.sante.dto.SanteFcJourDto;
 import com.kronos.chiron.sante.dto.SanteFcPointDto;
@@ -126,16 +125,6 @@ public class SanteQueryServiceImpl implements SanteQueryService {
         return result;
     }
 
-    @Override
-    public List<SanteAptitudeDto> getAptitude(Utilisateur utilisateur, int jours) {
-        LocalDate[] plage = plageDepuisAujourdhui(jours);
-        return santeJourRepository
-                .findByUtilisateurAndDateBetweenOrderByDateAsc(utilisateur, plage[0], plage[1]).stream()
-                .filter(j -> j.getVo2Max() != null || j.getNiveauAptitude() != null)
-                .map(j -> new SanteAptitudeDto(j.getDate(), j.getVo2Max(), j.getNiveauAptitude()))
-                .toList();
-    }
-
     private LocalDate[] plageDepuisAujourdhui(int jours) {
         int n = Math.max(1, Math.min(jours, MAX_JOURS));
         LocalDate to = LocalDate.now(clock);
@@ -154,8 +143,8 @@ public class SanteQueryServiceImpl implements SanteQueryService {
         return new SanteJourDto(j.getDate(), j.getPas(), j.getDistanceM(), j.getCaloriesTotales(),
                 j.getCaloriesActives(), j.getMinutesZoneActive(), j.getMinutesZoneBruleuse(),
                 j.getMinutesZoneCardio(), j.getMinutesZonePic(), j.getFcRepos(), j.getFcMin(), j.getFcMoyenne(),
-                j.getFcMax(), j.getVfcMs(), j.getVo2Max(), j.getNiveauAptitude(), j.getChargeCardio(),
-                j.getSpo2Pct(), j.getFrequenceRespiratoire());
+                j.getFcMax(), j.getVfcMs(), j.getChargeCardio(),
+                j.getFrequenceRespiratoire());
     }
 
     private SanteSommeilDto versDto(SanteSommeil s) {

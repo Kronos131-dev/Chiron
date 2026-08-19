@@ -154,79 +154,16 @@ class GoogleHealthParserTest {
     }
 
     @Test
-    void vo2MaxByDate_unexpectedNodeName_stillReadsThePayload() {
-        // Given : le nom du noeud est deduit du slug de l'API et n'a jamais ete verifie ;
-        // seul l'objet portant une date est structurellement la charge utile.
-        JsonNode node = json.readTree("""
-                {"dataPoints":[
-                  {"vo2MaxSummary":{"date":{"year":2026,"month":8,"day":10},"estimate":51.4,"level":"EXCELLENT"}}
-                ]}""");
-
-        // When
-        Map<LocalDate, GoogleHealthParser.Vo2MaxJour> result = GoogleHealthParser.vo2MaxByDate(node);
-
-        // Then
-        GoogleHealthParser.Vo2MaxJour vo2 = result.get(LocalDate.of(2026, 8, 10));
-        assertThat(vo2.vo2Max()).isEqualTo(51.4);
-        assertThat(vo2.niveauAptitude()).isEqualTo("EXCELLENT");
-    }
-
-    @Test
-    void vo2MaxByDate_levelWithoutNumericValue_isKept() {
-        // Given
-        JsonNode node = json.readTree("""
-                {"dataPoints":[
-                  {"dailyVo2Max":{"date":{"year":2026,"month":8,"day":10},"cardioFitnessLevel":"GOOD"}}
-                ]}""");
-
-        // When
-        Map<LocalDate, GoogleHealthParser.Vo2MaxJour> result = GoogleHealthParser.vo2MaxByDate(node);
-
-        // Then
-        assertThat(result.get(LocalDate.of(2026, 8, 10)).vo2Max()).isNull();
-        assertThat(result.get(LocalDate.of(2026, 8, 10)).niveauAptitude()).isEqualTo("GOOD");
-    }
-
-    @Test
-    void vo2MaxByDate_implausibleNumber_isNotMistakenForAVo2Max() {
-        // Given : un compte d'echantillons ne doit jamais passer pour un VO2max.
-        JsonNode node = json.readTree("""
-                {"dataPoints":[
-                  {"dailyVo2Max":{"date":{"year":2026,"month":8,"day":10},"sampleCount":4820}}
-                ]}""");
-
-        // When
-        Map<LocalDate, GoogleHealthParser.Vo2MaxJour> result = GoogleHealthParser.vo2MaxByDate(node);
-
-        // Then
-        assertThat(result).isEmpty();
-    }
-
-    @Test
-    void vo2MaxByDate_readsValueAndCardioFitnessLevel() {
-        JsonNode node = json.readTree("""
-                {"dataPoints":[
-                  {"dailyVo2Max":{"date":{"year":2026,"month":8,"day":10},"vo2Max":48.2,"cardioFitnessLevel":"GOOD"}}
-                ]}""");
-
-        Map<LocalDate, GoogleHealthParser.Vo2MaxJour> result = GoogleHealthParser.vo2MaxByDate(node);
-
-        GoogleHealthParser.Vo2MaxJour vo2 = result.get(LocalDate.of(2026, 8, 10));
-        assertThat(vo2.vo2Max()).isEqualTo(48.2);
-        assertThat(vo2.niveauAptitude()).isEqualTo("GOOD");
-    }
-
-    @Test
     void dailyDoubleByDate_readsNamedCandidateField() {
         JsonNode node = json.readTree("""
                 {"dataPoints":[
-                  {"dailyOxygenSaturation":{"date":{"year":2026,"month":8,"day":10},"percentage":96.5}}
+                  {"dailyRespiratoryRate":{"date":{"year":2026,"month":8,"day":10},"breathsPerMinute":14.2}}
                 ]}""");
 
-        Map<LocalDate, Double> result = GoogleHealthParser.dailyDoubleByDate(node, "dailyOxygenSaturation",
-                "percentage", "value");
+        Map<LocalDate, Double> result = GoogleHealthParser.dailyDoubleByDate(node, "dailyRespiratoryRate",
+                "breathsPerMinute", "value");
 
-        assertThat(result.get(LocalDate.of(2026, 8, 10))).isEqualTo(96.5);
+        assertThat(result.get(LocalDate.of(2026, 8, 10))).isEqualTo(14.2);
     }
 
     @Test

@@ -159,19 +159,12 @@ public class SanteSyncServiceImpl implements SanteSyncService {
             syncListeSimple(user, token, GoogleHealthDataType.DAILY_RESTING_HEART_RATE, from, to,
                     (jour, v) -> jour.setFcRepos(v.intValue()));
         }
-        if (types.contains(GoogleHealthDataType.DAILY_OXYGEN_SATURATION)) {
-            syncListeSimple(user, token, GoogleHealthDataType.DAILY_OXYGEN_SATURATION, from, to,
-                    SanteJour::setSpo2Pct);
-        }
         if (types.contains(GoogleHealthDataType.DAILY_RESPIRATORY_RATE)) {
             syncListeSimple(user, token, GoogleHealthDataType.DAILY_RESPIRATORY_RATE, from, to,
                     SanteJour::setFrequenceRespiratoire);
         }
         if (types.contains(GoogleHealthDataType.DAILY_HEART_RATE_VARIABILITY)) {
             syncHrv(user, token, from, to);
-        }
-        if (types.contains(GoogleHealthDataType.DAILY_VO2_MAX)) {
-            syncVo2Max(user, token, from, to);
         }
         if (types.contains(GoogleHealthDataType.SLEEP)) {
             syncSleep(user, token, from, to);
@@ -318,31 +311,6 @@ public class SanteSyncServiceImpl implements SanteSyncService {
                     SanteJour jour = jourDe(user, e.getKey());
                     jour.setVfcMs(e.getValue().vfcMs());
                     jour.setVfcSommeilProfondMs(e.getValue().vfcSommeilProfondMs());
-                    santeJourRepository.save(jour);
-                }
-                pageToken = GoogleHealthParser.nextPageToken(reponse);
-                pages++;
-            } while (pageToken != null && pages < MAX_PAGES);
-            marquerSucces(user, type, to, points);
-        } catch (RuntimeException e) {
-            marquerEchec(user, type, e);
-        }
-    }
-
-    private void syncVo2Max(Utilisateur user, String token, LocalDate from, LocalDate to) {
-        GoogleHealthDataType type = GoogleHealthDataType.DAILY_VO2_MAX;
-        try {
-            int points = 0;
-            String pageToken = null;
-            int pages = 0;
-            do {
-                JsonNode reponse = fitbitClient.listDataPoints(token, type, from, pageToken);
-                Map<LocalDate, GoogleHealthParser.Vo2MaxJour> parDate = GoogleHealthParser.vo2MaxByDate(reponse);
-                points += parDate.size();
-                for (Map.Entry<LocalDate, GoogleHealthParser.Vo2MaxJour> e : parDate.entrySet()) {
-                    SanteJour jour = jourDe(user, e.getKey());
-                    jour.setVo2Max(e.getValue().vo2Max());
-                    jour.setNiveauAptitude(e.getValue().niveauAptitude());
                     santeJourRepository.save(jour);
                 }
                 pageToken = GoogleHealthParser.nextPageToken(reponse);

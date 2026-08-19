@@ -83,7 +83,7 @@ class SanteControllerTest {
         when(authenticatedUserService.getAuthenticatedUser()).thenReturn(user);
         when(santeQueryService.getJours(user, 90)).thenReturn(
                 List.of(new SanteJourDto(LocalDate.of(2026, 8, 17), 9000, null, null, null, null, null, null, null,
-                        null, null, null, null, null, null, null, null, null, null)));
+                        null, null, null, null, null, null, null)));
 
         mockMvc.perform(get("/api/sante/jours").param("jours", "90"))
                 .andExpect(status().isOk())

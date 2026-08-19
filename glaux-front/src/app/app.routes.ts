@@ -19,11 +19,6 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
-    path: 'aptitude',
-    loadComponent: () => import('./components/aptitude/aptitude').then((m) => m.Aptitude),
-    canActivate: [authGuard],
-  },
-  {
     path: 'activite',
     loadComponent: () => import('./components/activite/activite').then((m) => m.Activite),
     canActivate: [authGuard],

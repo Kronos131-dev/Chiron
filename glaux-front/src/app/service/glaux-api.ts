@@ -32,10 +32,7 @@ export interface SanteJourDto {
   fcMoyenne: number | null;
   fcMax: number | null;
   vfcMs: number | null;
-  vo2Max: number | null;
-  niveauAptitude: string | null;
   chargeCardio: number | null;
-  spo2Pct: number | null;
   frequenceRespiratoire: number | null;
 }
 
@@ -84,12 +81,6 @@ export interface SanteCardioHebdoDto {
   minutesZoneActive: number | null;
 }
 
-export interface SanteAptitudeDto {
-  date: string;
-  vo2Max: number | null;
-  niveauAptitude: string | null;
-}
-
 export interface SanteSyncEtatDto {
   typeDonnee: string;
   derniereDateSynchronisee: string | null;
@@ -128,10 +119,6 @@ export class GlauxApi {
 
   getCardioHebdo(semaines = 12): Observable<SanteCardioHebdoDto[]> {
     return this.http.get<SanteCardioHebdoDto[]>(`${this.apiUrl}/cardio-hebdo?semaines=${semaines}`);
-  }
-
-  getAptitude(jours = 180): Observable<SanteAptitudeDto[]> {
-    return this.http.get<SanteAptitudeDto[]>(`${this.apiUrl}/aptitude?jours=${jours}`);
   }
 
   getSyncEtat(): Observable<SanteSyncEtatDto[]> {

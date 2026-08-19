@@ -2,7 +2,6 @@ package com.kronos.chiron.sante.controller;
 
 import com.kronos.chiron.core.security.AuthenticatedUserService;
 import com.kronos.chiron.fitbit.client.GoogleHealthDataType;
-import com.kronos.chiron.sante.dto.SanteAptitudeDto;
 import com.kronos.chiron.sante.dto.SanteCardioHebdoDto;
 import com.kronos.chiron.sante.dto.SanteFcJourDto;
 import com.kronos.chiron.sante.dto.SanteFcPointDto;
@@ -68,12 +67,6 @@ public class SanteController {
     public ResponseEntity<List<SanteCardioHebdoDto>> cardioHebdo(@RequestParam(defaultValue = "12") int semaines) {
         Utilisateur user = authenticatedUserService.getAuthenticatedUser();
         return ResponseEntity.ok(santeQueryService.getCardioHebdo(user, semaines));
-    }
-
-    @GetMapping("/aptitude")
-    public ResponseEntity<List<SanteAptitudeDto>> aptitude(@RequestParam(defaultValue = "180") int jours) {
-        Utilisateur user = authenticatedUserService.getAuthenticatedUser();
-        return ResponseEntity.ok(santeQueryService.getAptitude(user, jours));
     }
 
     @GetMapping("/diagnostic")

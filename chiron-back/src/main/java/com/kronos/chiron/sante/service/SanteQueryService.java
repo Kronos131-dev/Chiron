@@ -1,6 +1,5 @@
 package com.kronos.chiron.sante.service;
 
-import com.kronos.chiron.sante.dto.SanteAptitudeDto;
 import com.kronos.chiron.sante.dto.SanteCardioHebdoDto;
 import com.kronos.chiron.sante.dto.SanteFcJourDto;
 import com.kronos.chiron.sante.dto.SanteFcPointDto;
@@ -27,7 +26,6 @@ public interface SanteQueryService {
 
     List<SanteCardioHebdoDto> getCardioHebdo(Utilisateur utilisateur, int semaines);
 
-    List<SanteAptitudeDto> getAptitude(Utilisateur utilisateur, int jours);
 
     List<SanteSyncEtatDto> getSyncEtat(Utilisateur utilisateur);
 }
