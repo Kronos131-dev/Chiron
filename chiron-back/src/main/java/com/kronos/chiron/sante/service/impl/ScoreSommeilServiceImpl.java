@@ -99,10 +99,12 @@ public class ScoreSommeilServiceImpl implements ScoreSommeilService {
 
     private Double sousScorePartEveil(SanteSommeil session) {
         Integer eveille = session.getMinutesEveille();
-        if (eveille == null) return null;
-        int total = eveille + session.getMinutesEndormi();
+        Integer agite = session.getMinutesAgite();
+        if (eveille == null && agite == null) return null;
+        int perturbe = nz(eveille) + nz(agite);
+        int total = perturbe + session.getMinutesEndormi();
         if (total <= 0) return null;
-        double pct = eveille / (double) total;
+        double pct = perturbe / (double) total;
         return clamp(POIDS_PART_EVEIL * (1 - pct / PLAGE_PCT_AGITATION), 0, POIDS_PART_EVEIL);
     }
 

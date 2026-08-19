@@ -204,6 +204,66 @@ class GoogleHealthParserTest {
     }
 
     @Test
+    void sleepSessions_noRestlessStage_derivesAgitationFromTheUnaccountedTime() {
+        // Given : 480 min au lit, dont 442 expliquées par les stades, l'éveil et
+        // l'endormissement. Google ne publie pas de stade RESTLESS, mais son application
+        // affiche bien les 18 minutes qui restent.
+        JsonNode node = json.readTree("""
+                {"dataPoints":[
+                  {"sleep":{
+                    "interval":{"startTime":"2026-08-18T21:00:00Z","endTime":"2026-08-19T05:00:00Z"},
+                    "metadata":{"stagesStatus":"SUCCEEDED"},
+                    "summary":{
+                      "minutesAsleep":442,
+                      "minutesAwake":15,
+                      "minutesToFallAsleep":5,
+                      "stagesSummary":[
+                        {"type":"DEEP","minutes":100},
+                        {"type":"LIGHT","minutes":250},
+                        {"type":"REM","minutes":92},
+                        {"type":"AWAKE","minutes":15,"count":6}
+                      ]
+                    }
+                  }}
+                ]}""");
+
+        // When
+        List<GoogleHealthParser.SommeilBrut> sessions = GoogleHealthParser.sleepSessions(node);
+
+        // Then
+        assertThat(sessions.get(0).minutesAgite()).isEqualTo(18);
+        assertThat(sessions.get(0).nbReveils()).isEqualTo(6);
+    }
+
+    @Test
+    void sleepSessions_stagesAccountForEveryMinute_leavesAgitationAtZero() {
+        // Given
+        JsonNode node = json.readTree("""
+                {"dataPoints":[
+                  {"sleep":{
+                    "interval":{"startTime":"2026-08-18T22:00:00Z","endTime":"2026-08-19T04:00:00Z"},
+                    "metadata":{"stagesStatus":"SUCCEEDED"},
+                    "summary":{
+                      "minutesAsleep":350,
+                      "minutesAwake":10,
+                      "stagesSummary":[
+                        {"type":"DEEP","minutes":80},
+                        {"type":"LIGHT","minutes":200},
+                        {"type":"REM","minutes":70},
+                        {"type":"AWAKE","minutes":10}
+                      ]
+                    }
+                  }}
+                ]}""");
+
+        // When
+        List<GoogleHealthParser.SommeilBrut> sessions = GoogleHealthParser.sleepSessions(node);
+
+        // Then
+        assertThat(sessions.get(0).minutesAgite()).isZero();
+    }
+
+    @Test
     void sleepSessions_readsStagesMetadataAndSummary() {
         JsonNode node = json.readTree("""
                 {"dataPoints":[

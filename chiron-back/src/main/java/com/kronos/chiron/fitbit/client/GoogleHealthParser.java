@@ -2,6 +2,7 @@ package com.kronos.chiron.fitbit.client;
 
 import tools.jackson.databind.JsonNode;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -207,6 +208,27 @@ public final class GoogleHealthParser {
         return result;
     }
 
+    // WHY: le modèle de stades de Google Health ne connaît que AWAKE, LIGHT, DEEP et REM ;
+    // il n'expose aucun stade RESTLESS, propre au Fitbit classique. L'agitation que
+    // l'application affiche est le temps passé au lit que les stades n'expliquent pas —
+    // ni sommeil, ni éveil déclaré, ni endormissement, ni traîne au réveil. On le
+    // reconstitue donc par différence plutôt que de le laisser nul.
+    private static Integer agitationResiduelle(Instant debut, Instant fin, Map<String, Integer> parStade,
+            Integer minutesEveille, Integer minutesAvant, Integer minutesApres) {
+        if (debut == null || fin == null || parStade.isEmpty()) return null;
+        long minutesAuLit = Duration.between(debut, fin).toMinutes();
+        if (minutesAuLit <= 0) return null;
+
+        long expliquees = nz(parStade.get("DEEP")) + nz(parStade.get("LIGHT")) + nz(parStade.get("REM"))
+                + nz(minutesEveille) + nz(minutesAvant) + nz(minutesApres);
+        long residu = minutesAuLit - expliquees;
+        return residu > 0 ? (int) residu : 0;
+    }
+
+    private static long nz(Integer valeur) {
+        return valeur != null ? valeur : 0L;
+    }
+
     public record SommeilBrut(String externalId, Instant debut, Instant fin, LocalDate date, boolean sieste,
             boolean stadesDisponibles, Integer minutesEndormi, Integer minutesEveille,
             Integer minutesAvantEndormissement, Integer minutesApresReveil, Integer minutesProfond,
@@ -259,10 +281,17 @@ public final class GoogleHealthParser {
                 }
             }
 
+            Integer minutesEveille = minutesEveilleSummary != null
+                    ? minutesEveilleSummary
+                    : parStade.get("AWAKE");
+            Integer minutesAgite = parStade.containsKey("RESTLESS")
+                    ? parStade.get("RESTLESS")
+                    : agitationResiduelle(debut, fin, parStade, minutesEveille, minutesAvant, minutesApres);
+
             result.add(new SommeilBrut(externalId, debut, fin, date, sieste, stadesDisponibles,
-                    minutesEndormi, minutesEveilleSummary != null ? minutesEveilleSummary : parStade.get("AWAKE"),
+                    minutesEndormi, minutesEveille,
                     minutesAvant, minutesApres, parStade.get("DEEP"), parStade.get("LIGHT"), parStade.get("REM"),
-                    parStade.get("RESTLESS"), nbReveils));
+                    minutesAgite, nbReveils));
         }
         return result;
     }
