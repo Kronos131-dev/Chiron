@@ -20,6 +20,8 @@ import static com.kronos.chiron.core.exceptions.ErrorFactory.badRequest;
 public class SanteDiagnosticServiceImpl implements SanteDiagnosticService {
 
     private static final int JOURS_MAX = 30;
+    private static final java.util.regex.Pattern SLUG_VALIDE = java.util.regex.Pattern
+            .compile("[a-z0-9]+(-[a-z0-9]+)*");
     private static final int FENETRE_FC_SECONDES = 300;
 
     private final FitbitService fitbitService;
@@ -39,6 +41,17 @@ public class SanteDiagnosticServiceImpl implements SanteDiagnosticService {
             case ROLLUP -> fitbitClient.rollUp(token, type, debutDe(depuis), debutDe(depuis.plusDays(1)),
                     FENETRE_FC_SECONDES);
         };
+    }
+
+    @Override
+    public JsonNode sonderSlug(String chironUsername, String slug, int jours) {
+        if (slug == null || !SLUG_VALIDE.matcher(slug).matches()) {
+            throw badRequest("Slug invalide : attendu des minuscules, des chiffres et des tirets.");
+        }
+        String token = jetonOuErreur(chironUsername);
+        int n = Math.max(1, Math.min(jours, JOURS_MAX));
+        LocalDate depuis = LocalDate.now(clock).minusDays(n - 1L);
+        return fitbitClient.listDataPointsBrut(token, slug, depuis, null);
     }
 
     private String jetonOuErreur(String chironUsername) {

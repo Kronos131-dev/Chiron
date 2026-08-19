@@ -125,6 +125,16 @@ public class FitbitClient {
         return doGet(accessToken, type.dataPointsPath(), type.filterFrom(from), pageToken);
     }
 
+    // WHY: sert à sonder un type de donnée que l'enum ne connaît pas encore. Les slugs de
+    // l'API ne sont documentés nulle part et se découvrent en essayant ; sans ce chemin
+    // brut, chaque hypothèse de nom coûterait un déploiement. Le filtre suit la convention
+    // constante de l'API : le slug en snake_case suivi de « .date ».
+    public JsonNode listDataPointsBrut(String accessToken, String slug, LocalDate from, String pageToken) {
+        String champFiltre = slug.replace('-', '_') + ".date";
+        return doGet(accessToken, "/v4/users/me/dataTypes/" + slug + "/dataPoints",
+                champFiltre + " >= \"" + from + "\"", pageToken);
+    }
+
     public JsonNode dailyRollUp(String accessToken, GoogleHealthDataType type, LocalDate start,
             LocalDate endInclusive) {
         Map<String, Object> requestBody = Map.of(

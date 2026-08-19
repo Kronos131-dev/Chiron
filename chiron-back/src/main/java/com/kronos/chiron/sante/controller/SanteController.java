@@ -83,6 +83,13 @@ public class SanteController {
         return ResponseEntity.ok(santeDiagnosticService.capturerBrut(user.getUsername(), type, jours));
     }
 
+    @GetMapping("/diagnostic/slug")
+    public ResponseEntity<JsonNode> diagnosticSlug(@RequestParam String slug,
+            @RequestParam(defaultValue = "3") int jours) {
+        Utilisateur user = authenticatedUserService.getAuthenticatedUser();
+        return ResponseEntity.ok(santeDiagnosticService.sonderSlug(user.getUsername(), slug, jours));
+    }
+
     @GetMapping("/sync")
     public ResponseEntity<List<SanteSyncEtatDto>> syncEtat() {
         Utilisateur user = authenticatedUserService.getAuthenticatedUser();
