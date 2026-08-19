@@ -51,21 +51,20 @@ public final class GoogleHealthParser {
                 for (JsonNode pt : points) {
                     LocalDate date = FitbitParser.googleDate(pt.get("civilStartTime"));
                     if (date == null) continue;
-                    JsonNode value = pt.get("timeInHeartRateZone");
-                    if (value == null) continue;
-                    Iterable<JsonNode> entries = value.isArray() ? value : List.of(value);
-                    for (JsonNode entry : entries) {
+                    for (JsonNode entry : zonesDe(pt.get("timeInHeartRateZone"))) {
                         JsonNode zoneNode = entry.get("heartRateZone");
                         if (zoneNode == null) zoneNode = entry.get("zoneType");
                         String zone = zoneNode != null ? zoneNode.asText(null) : null;
-                        Long seconds = FitbitParser.longField(entry, "durationSum", "duration", "seconds");
+                        Long seconds = dureeEnSecondes(entry);
                         if (zone == null || seconds == null) continue;
                         int minutes = (int) Math.round(seconds / 60.0);
                         int[] bucket = acc.computeIfAbsent(date, d -> new int[3]);
                         String z = zone.toUpperCase(java.util.Locale.ROOT);
                         if (z.contains("PEAK")) bucket[2] += minutes;
-                        else if (z.contains("CARDIO")) bucket[1] += minutes;
-                        else if (z.contains("FAT_BURN") || z.contains("FATBURN")) bucket[0] += minutes;
+                        else if (z.contains("VIGOROUS") || z.contains("CARDIO")) bucket[1] += minutes;
+                        else if (z.contains("MODERATE") || z.contains("FAT_BURN") || z.contains("FATBURN")) {
+                            bucket[0] += minutes;
+                        }
                     }
                 }
             }
@@ -73,6 +72,36 @@ public final class GoogleHealthParser {
         Map<LocalDate, ZoneMinutes> result = new HashMap<>();
         acc.forEach((d, b) -> result.put(d, new ZoneMinutes(b[0], b[1], b[2])));
         return result;
+    }
+
+    // WHY: Google emballe les zones dans un objet timeInHeartRateZone qui contient à son
+    // tour un tableau timeInHeartRateZones. Ce niveau intermédiaire était ignoré : l'objet
+    // enveloppe était pris pour une entrée de zone, ne portait aucun heartRateZone, et
+    // chaque journée ressortait donc sans la moindre minute.
+    private static Iterable<JsonNode> zonesDe(JsonNode valeur) {
+        if (valeur == null) return List.of();
+        if (valeur.isArray()) return valeur;
+        JsonNode imbrique = valeur.get("timeInHeartRateZones");
+        if (imbrique != null && imbrique.isArray()) return imbrique;
+        return List.of(valeur);
+    }
+
+    // WHY: la durée arrive au format Duration de protobuf, « 47520s ». longField tente un
+    // Long.parseLong qui lève sur le suffixe et renvoie null, ce qui suffisait à vider
+    // toutes les zones même une fois l'imbrication franchie.
+    private static Long dureeEnSecondes(JsonNode entree) {
+        for (String nom : new String[]{"durationSum", "duration", "seconds"}) {
+            JsonNode champ = entree.get(nom);
+            if (champ == null || champ.isNull() || champ.isObject() || champ.isArray()) continue;
+            if (champ.isNumber()) return champ.asLong();
+            String texte = champ.asText().trim();
+            if (texte.endsWith("s")) texte = texte.substring(0, texte.length() - 1);
+            try {
+                return (long) Double.parseDouble(texte);
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        return null;
     }
 
     public record FcBucket(Instant debut, Integer min, Double moyenne, Integer max, Integer nbEchantillons) {

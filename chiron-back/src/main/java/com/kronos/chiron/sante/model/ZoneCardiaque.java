@@ -19,8 +19,8 @@ public enum ZoneCardiaque {
         if (raw == null) return HORS_ZONE;
         String s = raw.toUpperCase(Locale.ROOT);
         if (s.contains("PEAK")) return PIC;
-        if (s.contains("CARDIO")) return CARDIO;
-        if (s.contains("FAT_BURN") || s.contains("FATBURN")) return BRULE_GRAISSE;
+        if (s.contains("VIGOROUS") || s.contains("CARDIO")) return CARDIO;
+        if (s.contains("MODERATE") || s.contains("FAT_BURN") || s.contains("FATBURN")) return BRULE_GRAISSE;
         return HORS_ZONE;
     }
 }

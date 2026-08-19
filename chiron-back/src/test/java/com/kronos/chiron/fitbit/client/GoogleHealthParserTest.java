@@ -128,6 +128,32 @@ class GoogleHealthParserTest {
     }
 
     @Test
+    void zoneMinutesByDate_realGooglePayload_readsEveryZone() {
+        // Given : capture réelle d'un compte Google Health. Les zones sont imbriquées dans
+        // timeInHeartRateZones, les durées sont au format Duration protobuf, et les noms
+        // sont LIGHT/MODERATE/VIGOROUS/PEAK et non FAT_BURN/CARDIO.
+        JsonNode node = json.readTree("""
+                {"rollupDataPoints":[
+                  {"civilStartTime":{"date":{"year":2026,"month":8,"day":19},"time":{}},
+                   "timeInHeartRateZone":{"timeInHeartRateZones":[
+                     {"heartRateZone":"LIGHT","duration":"47520s"},
+                     {"heartRateZone":"MODERATE","duration":"2580s"},
+                     {"heartRateZone":"VIGOROUS","duration":"2220s"},
+                     {"heartRateZone":"PEAK","duration":"60s"}
+                   ]}}
+                ]}""");
+
+        // When
+        Map<LocalDate, GoogleHealthParser.ZoneMinutes> result = GoogleHealthParser.zoneMinutesByDate(node);
+
+        // Then
+        GoogleHealthParser.ZoneMinutes zones = result.get(LocalDate.of(2026, 8, 19));
+        assertThat(zones.bruleuse()).isEqualTo(43);
+        assertThat(zones.cardio()).isEqualTo(37);
+        assertThat(zones.pic()).isEqualTo(1);
+    }
+
+    @Test
     void vo2MaxByDate_unexpectedNodeName_stillReadsThePayload() {
         // Given : le nom du noeud est deduit du slug de l'API et n'a jamais ete verifie ;
         // seul l'objet portant une date est structurellement la charge utile.
