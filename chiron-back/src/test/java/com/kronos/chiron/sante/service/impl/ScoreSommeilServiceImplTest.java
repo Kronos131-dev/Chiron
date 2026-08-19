@@ -56,14 +56,14 @@ class ScoreSommeilServiceImplTest {
     @Test
     void recalculerPlage_perfectNight_scoresMaximumOnEveryComponent() {
         SanteSommeil session = baseSession()
-                .stadesDisponibles(true).minutesProfond(100).minutesParadoxal(92)
+                .stadesDisponibles(true).minutesProfond(110).minutesParadoxal(130)
                 .minutesEveille(0).minutesAgite(0).nbReveils(0)
                 .fcSommeilMoyenne(55.0)
                 .build();
         when(santeSommeilRepository.findByUtilisateurAndDateBetweenOrderByDebutAsc(user, from, to))
                 .thenReturn(List.of(session));
 
-        SanteJour jourCourant = SanteJour.builder().utilisateur(user).date(date).fcRepos(65).vfcMs(40.0).build();
+        SanteJour jourCourant = SanteJour.builder().utilisateur(user).date(date).fcRepos(65).vfcMs(60.0).build();
         when(santeJourRepository.findByUtilisateurAndDate(user, date)).thenReturn(Optional.of(jourCourant));
         when(santeJourRepository.findByUtilisateurAndDateBetweenOrderByDateAsc(user, date.minusDays(30), date))
                 .thenReturn(List.of(
@@ -163,8 +163,8 @@ class ScoreSommeilServiceImplTest {
 
         scoreSommeilService.recalculerPlage(user, from, to);
 
-        assertThat(session.getScoreRestauration()).isEqualTo(15);
-        assertThat(session.getScore()).isEqualTo(65);
+        assertThat(session.getScoreRestauration()).isEqualTo(11);
+        assertThat(session.getScore()).isEqualTo(61);
     }
 
     @Test
@@ -172,13 +172,13 @@ class ScoreSommeilServiceImplTest {
         SanteSommeil session = baseSession().stadesDisponibles(false).fcSommeilMoyenne(55.0).build();
         when(santeSommeilRepository.findByUtilisateurAndDateBetweenOrderByDebutAsc(user, from, to))
                 .thenReturn(List.of(session));
-        SanteJour jourCourant = SanteJour.builder().utilisateur(user).date(date).fcRepos(65).vfcMs(40.0).build();
+        SanteJour jourCourant = SanteJour.builder().utilisateur(user).date(date).fcRepos(65).vfcMs(60.0).build();
         when(santeJourRepository.findByUtilisateurAndDate(user, date)).thenReturn(Optional.of(jourCourant));
         when(santeJourRepository.findByUtilisateurAndDateBetweenOrderByDateAsc(user, date.minusDays(30), date))
                 .thenReturn(List.of(SanteJour.builder().vfcMs(40.0).build()));
 
         scoreSommeilService.recalculerPlage(user, from, to);
 
-        assertThat(session.getScoreRestauration()).isEqualTo(19);
+        assertThat(session.getScoreRestauration()).isEqualTo(16);
     }
 }

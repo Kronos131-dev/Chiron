@@ -18,16 +18,18 @@ import java.util.Objects;
 public class ScoreSommeilServiceImpl implements ScoreSommeilService {
 
     private static final int OBJECTIF_MINUTES = 480;
-    private static final double CIBLE_PCT_PROFOND_PARADOXAL = 0.40;
-    private static final double CIBLE_RATIO_FC_SOMMEIL = 1.15;
-    private static final double PLAGE_RATIO_FC_SOMMEIL = 0.30;
+    private static final double CIBLE_PCT_PROFOND_PARADOXAL = 0.50;
+    private static final double CIBLE_RATIO_FC_SOMMEIL = 1.10;
+    private static final double PLAGE_RATIO_FC_SOMMEIL = 0.25;
     private static final double PLAGE_PCT_AGITATION = 0.15;
     private static final double POIDS_PART_EVEIL = 5.0;
     private static final double POIDS_FRAGMENTATION = 3.0;
     private static final double REVEILS_PAR_HEURE_MAX = 3.0;
     private static final int HISTORIQUE_VFC_JOURS = 30;
     private static final int HISTORIQUE_VFC_MIN_POINTS = 5;
-    private static final double CREDIT_NEUTRE = 0.6;
+    private static final double CREDIT_NEUTRE = 0.45;
+    private static final double VFC_RAPPORT_PLANCHER = 0.75;
+    private static final double VFC_RAPPORT_PLAGE = 0.50;
 
     private final SanteSommeilRepository santeSommeilRepository;
     private final SanteJourRepository santeJourRepository;
@@ -50,9 +52,13 @@ public class ScoreSommeilServiceImpl implements ScoreSommeilService {
         }
     }
 
+    // WHY: barème linéaire, 6h43 valait encore 42 points sur 50 — 84 % du maximum pour une
+    // nuit d'une heure et quart trop courte. Le carré rapproche la pénalité de ce que
+    // Google applique : à durée pleine il donne 82-83 au total, ce qui ne laisse que
+    // 32 points aux deux autres composantes.
     private Integer scoreDuree(SanteSommeil session) {
         double ratio = Math.min(1.0, session.getMinutesEndormi() / (double) OBJECTIF_MINUTES);
-        return (int) Math.round(ratio * 50);
+        return (int) Math.round(ratio * ratio * 50);
     }
 
     private Integer scoreComposition(SanteSommeil session) {
@@ -135,7 +141,12 @@ public class ScoreSommeilServiceImpl implements ScoreSommeilService {
 
         double mediane = mediane(historique);
         if (mediane <= 0) return 8 * CREDIT_NEUTRE;
-        return clamp(8 * (vfcJour / mediane), 0, 8);
+        // WHY: le rapport brut donnait les 8 points dès que la VFC atteignait sa propre
+        // médiane — donc une nuit parfaitement banale décrochait la note maximale. La
+        // médiane vaut désormais la moitié des points, et il faut la dépasser d'un quart
+        // pour saturer.
+        double rapport = vfcJour / mediane;
+        return clamp(8 * (rapport - VFC_RAPPORT_PLANCHER) / VFC_RAPPORT_PLAGE, 0, 8);
     }
 
     private double mediane(List<Double> valeursTriees) {
