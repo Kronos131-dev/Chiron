@@ -3,6 +3,7 @@ package com.kronos.chiron.sante.service.impl;
 import com.kronos.chiron.fitbit.client.FitbitClient;
 import com.kronos.chiron.fitbit.client.GoogleHealthDataType;
 import com.kronos.chiron.fitbit.service.FitbitService;
+import com.kronos.chiron.sante.model.SanteJour;
 import com.kronos.chiron.sante.model.SanteSyncState;
 import com.kronos.chiron.sante.model.StatutSync;
 import com.kronos.chiron.sante.persistence.SanteFrequenceCardiaqueRepository;
@@ -25,6 +26,7 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
 import java.time.Clock;
+import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
@@ -116,6 +118,29 @@ class SanteSyncServiceImplTest {
         assertThat(captor.getAllValues()).allSatisfy(e -> assertThat(e.getDernierStatut()).isEqualTo(StatutSync.OK));
         verify(chargeCardioService).recalculerPlage(eq(user), any(), any());
         verify(scoreSommeilService).recalculerPlage(eq(user), any(), any());
+    }
+
+    @Test
+    void syncRecent_distanceInMillimetres_isStoredInMetres() {
+        // Given
+        LocalDate jour = LocalDate.now(clock);
+        String charge = """
+                {"rollupDataPoints":[{"civilStartTime":{"date":{"year":%d,"month":%d,"day":%d}},\
+                "distance":{"metersSum":"6175600"}}]}""".formatted(jour.getYear(), jour.getMonthValue(),
+                jour.getDayOfMonth());
+        when(fitbitService.getValidToken("athlete")).thenReturn("token");
+        when(fitbitClient.dailyRollUp(eq("token"), eq(GoogleHealthDataType.DISTANCE), any(), any()))
+                .thenReturn(new tools.jackson.databind.json.JsonMapper().readTree(charge));
+        when(santeJourRepository.findByUtilisateurAndDate(eq(user), any())).thenReturn(Optional.empty());
+
+        // When
+        santeSyncService.syncRecent("athlete", 1);
+
+        // Then
+        ArgumentCaptor<SanteJour> captor = ArgumentCaptor.forClass(SanteJour.class);
+        verify(santeJourRepository, org.mockito.Mockito.atLeastOnce()).save(captor.capture());
+        assertThat(captor.getAllValues()).anySatisfy(
+                j -> assertThat(j.getDistanceM()).isEqualTo(6175.6));
     }
 
     @Test

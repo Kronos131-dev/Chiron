@@ -49,6 +49,7 @@ public class SanteSyncServiceImpl implements SanteSyncService {
     private static final int TRANCHE_JOURS = 14;
     private static final int MAX_PAGES = 50;
     private static final int FENETRE_FC_SECONDES = 300;
+    private static final double MILLIMETRES_PAR_METRE = 1000.0;
     private static final String[] CANDIDATS_ROLLUP = {"sum", "value", "kcalSum", "metersSum", "minutesSum",
             "countSum", "count"};
     private static final String[] CANDIDATS_LIST = {"beatsPerMinute", "percentage", "breathsPerMinute", "bpm",
@@ -130,7 +131,11 @@ public class SanteSyncServiceImpl implements SanteSyncService {
                     (jour, v) -> jour.setPas(v.intValue()));
         }
         if (types.contains(GoogleHealthDataType.DISTANCE)) {
-            syncDailyRollup(user, token, GoogleHealthDataType.DISTANCE, from, to, SanteJour::setDistanceM);
+            // WHY: Google Health renvoie la distance en millimètres, jamais en mètres malgré
+            // le nom du champ metersSum. Constaté sur un compte réel : 6 175 600 pour 8 623
+            // pas, soit 716 par pas — une foulée en millimètres, absurde en mètres.
+            syncDailyRollup(user, token, GoogleHealthDataType.DISTANCE, from, to,
+                    (jour, v) -> jour.setDistanceM(v / MILLIMETRES_PAR_METRE));
         }
         if (types.contains(GoogleHealthDataType.TOTAL_CALORIES)) {
             syncDailyRollup(user, token, GoogleHealthDataType.TOTAL_CALORIES, from, to,
