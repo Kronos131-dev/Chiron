@@ -129,6 +129,10 @@ public class FitbitClient {
     // l'API ne sont documentés nulle part et se découvrent en essayant ; sans ce chemin
     // brut, chaque hypothèse de nom coûterait un déploiement. Le filtre suit la convention
     // constante de l'API : le slug en snake_case suivi de « .date ».
+    public JsonNode listerTypesDeDonnees(String accessToken) {
+        return doGet(accessToken, "/v4/users/me/dataTypes", null, null);
+    }
+
     public JsonNode listDataPointsBrut(String accessToken, String slug, LocalDate from, String pageToken) {
         String champFiltre = slug.replace('-', '_') + ".date";
         return doGet(accessToken, "/v4/users/me/dataTypes/" + slug + "/dataPoints",

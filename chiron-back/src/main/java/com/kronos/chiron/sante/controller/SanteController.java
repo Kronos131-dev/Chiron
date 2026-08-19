@@ -83,6 +83,12 @@ public class SanteController {
         return ResponseEntity.ok(santeDiagnosticService.capturerBrut(user.getUsername(), type, jours));
     }
 
+    @GetMapping("/diagnostic/types")
+    public ResponseEntity<JsonNode> diagnosticTypes() {
+        Utilisateur user = authenticatedUserService.getAuthenticatedUser();
+        return ResponseEntity.ok(santeDiagnosticService.listerTypesDisponibles(user.getUsername()));
+    }
+
     @GetMapping("/diagnostic/slug")
     public ResponseEntity<JsonNode> diagnosticSlug(@RequestParam String slug,
             @RequestParam(defaultValue = "3") int jours) {
