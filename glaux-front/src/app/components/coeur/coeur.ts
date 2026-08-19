@@ -81,14 +81,20 @@ export class Coeur implements OnInit {
     return c.length ? c[c.length - 1] : null;
   });
 
+  private readonly LABELS_24H = Array.from({ length: (24 * 60) / 5 }, (_, i) => {
+    const h = Math.floor((i * 5) / 60);
+    const m = (i * 5) % 60;
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+  });
+
   fcChart = computed<ChartData<'line'>>(() => {
-    const pts = this.fcPoints();
-    const labels = pts.map((p) => p.horodatage.slice(11, 16));
+    const parLabel = new Map(this.fcPoints().map((p) => [p.horodatage.slice(11, 16), p]));
+    const labels = this.LABELS_24H;
     return {
       labels,
       datasets: [
         {
-          data: pts.map((p) => p.fcMin),
+          data: labels.map((l) => parLabel.get(l)?.fcMin ?? null),
           label: 'min',
           borderColor: 'transparent',
           backgroundColor: 'transparent',
@@ -96,7 +102,7 @@ export class Coeur implements OnInit {
           fill: false,
         },
         {
-          data: pts.map((p) => p.fcMax),
+          data: labels.map((l) => parLabel.get(l)?.fcMax ?? null),
           label: 'max',
           borderColor: 'transparent',
           backgroundColor: this.hexA(this.COL.cyan, 0.15),
@@ -104,7 +110,7 @@ export class Coeur implements OnInit {
           fill: '-1',
         },
         {
-          data: pts.map((p) => p.fcMoyenne),
+          data: labels.map((l) => parLabel.get(l)?.fcMoyenne ?? null),
           label: this.i18n.t('coeur.heartRateToday'),
           borderColor: this.COL.cyan,
           backgroundColor: 'transparent',
