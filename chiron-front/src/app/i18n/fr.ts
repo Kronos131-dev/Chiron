@@ -47,7 +47,8 @@ export const fr: Record<string, string> = {
   'settings.language.fr': 'Français',
   'settings.language.en': 'English',
   'settings.language.updated': 'Langue mise à jour.',
-  'settings.ai.notConfigured': "Gemini n'est pas configuré côté serveur — le coach reste sur Mistral.",
+  'settings.ai.notConfigured':
+    "Gemini n'est pas configuré côté serveur — le coach reste sur Mistral.",
   'settings.ai.updated': "Fournisseur d'IA mis à jour : {{provider}}.",
   'settings.ai.error': "Erreur lors du changement de fournisseur d'IA.",
   'settings.tonnage.saved': 'Préférences de tonnage enregistrées.',
@@ -81,11 +82,14 @@ export const fr: Record<string, string> = {
   'settings.profile.edit': 'Modifier mon profil sportif',
   'settings.olympus.title': 'Compte Olympus',
   'settings.olympus.linked': 'Lié',
-  'settings.olympus.linkedDesc': 'Chiron peut maintenant analyser ton apport nutritionnel pour affiner ses conseils.',
+  'settings.olympus.linkedDesc':
+    'Chiron peut maintenant analyser ton apport nutritionnel pour affiner ses conseils.',
   'settings.olympus.unlink': 'Délier',
   'settings.olympus.expired': 'Liaison expirée',
-  'settings.olympus.expiredDesc': 'Reconnecte ton compte Olympus pour réactiver le coaching nutrition.',
-  'settings.olympus.connectDesc': 'Connecte ton compte Olympus pour que Chiron puisse devenir ton nutritionniste.',
+  'settings.olympus.expiredDesc':
+    'Reconnecte ton compte Olympus pour réactiver le coaching nutrition.',
+  'settings.olympus.connectDesc':
+    'Connecte ton compte Olympus pour que Chiron puisse devenir ton nutritionniste.',
   'settings.olympus.usernamePh': 'Pseudo Olympus',
   'settings.olympus.passwordPh': 'Mot de passe',
   'settings.olympus.linking': 'Liaison…',
@@ -93,13 +97,17 @@ export const fr: Record<string, string> = {
   'settings.fitbit.title': 'Compte Fitbit',
   'settings.fitbit.connected': 'Connecté',
   'settings.fitbit.synced': 'Données santé synchronisées',
-  'settings.fitbit.connectedDesc': 'Chiron exploite ton activité, ton sommeil et ta fréquence cardiaque pour affiner ses conseils.',
+  'settings.fitbit.connectedDesc':
+    'Chiron exploite ton activité, ton sommeil et ta fréquence cardiaque pour affiner ses conseils.',
   'settings.fitbit.dashboard': 'Voir mon tableau de bord',
   'settings.fitbit.disconnect': 'Déconnecter',
   'settings.fitbit.expired': 'Connexion expirée',
-  'settings.fitbit.expiredDesc': 'Reconnecte ton compte Fitbit pour réactiver la synchronisation santé.',
-  'settings.fitbit.connectDesc': 'Connecte ton compte Fitbit pour que Chiron suive ton activité, ton sommeil et ta récupération.',
-  'settings.fitbit.waiting': "Autorise l'accès dans la fenêtre Fitbit, puis reviens ici — la connexion se détecte automatiquement.",
+  'settings.fitbit.expiredDesc':
+    'Reconnecte ton compte Fitbit pour réactiver la synchronisation santé.',
+  'settings.fitbit.connectDesc':
+    'Connecte ton compte Fitbit pour que Chiron suive ton activité, ton sommeil et ta récupération.',
+  'settings.fitbit.waiting':
+    "Autorise l'accès dans la fenêtre Fitbit, puis reviens ici — la connexion se détecte automatiquement.",
   'settings.fitbit.waitingBtn': 'En attente de Fitbit…',
   'settings.fitbit.connectBtn': 'Connecter mon compte Fitbit',
   'settings.password.title': 'Changer le mot de passe',
@@ -114,29 +122,36 @@ export const fr: Record<string, string> = {
   'settings.username.newPh': 'Nouveau pseudo',
   'settings.identity.title': 'Prénom et nom',
   'settings.identity.none': 'Non renseignés',
-  'settings.identity.hint': 'Utilisés pour associer automatiquement les rapports de scan Visbody à ton compte.',
+  'settings.identity.hint':
+    'Utilisés pour associer automatiquement les rapports de scan Visbody à ton compte.',
   'settings.identity.firstNamePh': 'Prénom',
   'settings.identity.lastNamePh': 'Nom',
   'settings.ai.title': 'Coach IA',
   'settings.ai.subtitle': 'Fournisseur du modèle ({{provider}})',
-  'settings.ai.desc': 'Choisis le modèle qui répond dans le chat du coach. Gemini doit être configuré côté serveur ; sinon le coach reste sur Mistral.',
-  'settings.ai.geminiUnavailable': "Gemini n'est pas configuré côté serveur (clé manquante) : le coach reste sur Mistral.",
+  'settings.ai.desc':
+    'Choisis le modèle qui répond dans le chat du coach. Gemini doit être configuré côté serveur ; sinon le coach reste sur Mistral.',
+  'settings.ai.geminiUnavailable':
+    "Gemini n'est pas configuré côté serveur (clé manquante) : le coach reste sur Mistral.",
   'settings.tonnage.title': 'Calcul du tonnage',
   'settings.tonnage.subtitle': 'Conventions de saisie du poids',
-  'settings.tonnage.desc': "Par défaut : barre, machine et lest comptés au poids total ; haltères au poids d'une seule haltère. Les exercices marqués « unilatéral » comptent toujours ×2. Ajuste ci-dessous selon ta façon de saisir.",
+  'settings.tonnage.desc':
+    "Par défaut : barre, machine et lest comptés au poids total ; haltères au poids d'une seule haltère. Les exercices marqués « unilatéral » comptent toujours ×2. Ajuste ci-dessous selon ta façon de saisir.",
   'settings.tonnage.dumbbell': "Aux haltères, je saisis le poids d'une seule haltère",
   'settings.tonnage.machine': "Aux machines, je saisis le poids d'un seul côté",
   'settings.tonnage.countsX2': 'Compte ×2 dans le tonnage',
   'settings.delete.title': 'Supprimer le compte',
-  'settings.delete.warning': 'Cette action est irréversible. Toutes tes séances, programmes et données seront supprimés.',
+  'settings.delete.warning':
+    'Cette action est irréversible. Toutes tes séances, programmes et données seront supprimés.',
   'settings.delete.confirmPre': 'Tape ton pseudo',
   'settings.delete.confirmPost': 'pour confirmer.',
   'settings.delete.confirmBtn': 'Supprimer définitivement',
   'settings.visbody.title': 'Composition corporelle (Visbody)',
-  'settings.visbody.desc': "Importe un rapport de scan Visbody (PDF). Tu peux aussi l'envoyer par email : les rapports reçus sont importés automatiquement.",
+  'settings.visbody.desc':
+    "Importe un rapport de scan Visbody (PDF). Tu peux aussi l'envoyer par email : les rapports reçus sont importés automatiquement.",
   'settings.visbody.importBtn': 'Importer un PDF Visbody',
   'settings.boditrax.title': 'Composition corporelle (Boditrax)',
-  'settings.boditrax.desc': "Importe l'export CSV de ton compte Boditrax : tes scans apparaissent dans la page Composition, au même titre que les rapports Visbody.",
+  'settings.boditrax.desc':
+    "Importe l'export CSV de ton compte Boditrax : tes scans apparaissent dans la page Composition, au même titre que les rapports Visbody.",
   'settings.boditrax.importBtn': 'Importer un CSV Boditrax',
 
   // ── Chat / Coach ──
@@ -174,7 +189,8 @@ export const fr: Record<string, string> = {
   'login.emailRequired': "L'email est requis pour s'inscrire.",
   'login.passwordMismatch': 'Les mots de passe ne correspondent pas.',
   'login.badCreds': 'Identifiants incorrects ou serveur injoignable.',
-  'login.registerError': "Erreur lors de la création du compte (nom d'utilisateur peut-être déjà pris).",
+  'login.registerError':
+    "Erreur lors de la création du compte (nom d'utilisateur peut-être déjà pris).",
 
   // ── Réinitialisation du mot de passe ──
   'reset.invalidLink': 'Lien de réinitialisation invalide ou manquant.',
@@ -280,7 +296,8 @@ export const fr: Record<string, string> = {
   'exCard.move': 'Déplacer',
   'exCard.exerciseName': "Nom de l'exercice",
   'exCard.searchPlaceholder': 'Rechercher un exercice...',
-  'exCard.unilateralTitle': 'Exercice réalisé un membre à la fois (reps par bras/jambe) — compte ×2 dans le tonnage',
+  'exCard.unilateralTitle':
+    'Exercice réalisé un membre à la fois (reps par bras/jambe) — compte ×2 dans le tonnage',
   'exCard.unilateral': 'Unilatéral',
   'exCard.viewSheet': "Voir la fiche de l'exercice",
   'exCard.groupTitle': "Grouper avec l'exercice suivant",
@@ -395,8 +412,10 @@ export const fr: Record<string, string> = {
   'programme.abandon': 'Abandonner la séance',
   'programme.totalSeries': 'Séries<br>Totales',
   'programme.add': 'Ajouter un Programme',
-  'programme.confirmSwitch': 'Une séance est déjà en cours sur un autre programme. La progression non enregistrée sera perdue. Continuer ?',
-  'programme.confirmAbandon': 'Abandonner la séance en cours ? La progression non enregistrée sera perdue.',
+  'programme.confirmSwitch':
+    'Une séance est déjà en cours sur un autre programme. La progression non enregistrée sera perdue. Continuer ?',
+  'programme.confirmAbandon':
+    'Abandonner la séance en cours ? La progression non enregistrée sera perdue.',
   'programme.confirmDelete': 'Es-tu sûr de vouloir supprimer ce programme ?',
   'programme.deleteError': 'Impossible de supprimer cette routine.',
 
@@ -464,7 +483,8 @@ export const fr: Record<string, string> = {
   'profile.coachRevokeError': 'Erreur lors de la révocation des droits de coach.',
   'profile.coachGranted': '{{user}} est maintenant autorisé à modifier tes programmes !',
   'profile.coachGrantError': "Erreur lors de l'attribution des droits de coach.",
-  'profile.confirmDelete': 'Es-tu sûr de vouloir supprimer le compte de {{user}} ? Cette action est irréversible.',
+  'profile.confirmDelete':
+    'Es-tu sûr de vouloir supprimer le compte de {{user}} ? Cette action est irréversible.',
   'profile.deleteSuccess': 'Compte supprimé avec succès.',
   'profile.deleteError': 'Erreur lors de la suppression du compte.',
 
@@ -531,7 +551,8 @@ export const fr: Record<string, string> = {
   'stats.noData': 'Aucune donnée disponible.',
   'stats.noRecord': 'Aucun record',
   'stats.e1rmProgress': 'Progression 1RM estimé',
-  'stats.notEnoughRecords': 'Pas assez de records pour tracer une courbe (ajoute tes maxes depuis le Trésor).',
+  'stats.notEnoughRecords':
+    'Pas assez de records pour tracer une courbe (ajoute tes maxes depuis le Trésor).',
   'stats.noForceData': 'Aucune donnée de force.',
   'stats.searchExercise': 'Rechercher un exercice…',
   'stats.noExerciseFound': 'Aucun exercice trouvé.',
@@ -548,9 +569,11 @@ export const fr: Record<string, string> = {
   'stats.linkOlympusWeight': "Lie ton compte Olympus pour voir l'évolution de ton poids.",
   'stats.notEnoughWeightData': 'Pas assez de mesures de poids sur la période.',
   'stats.visbodyHint1': 'Envoie le PDF de ton scan Visbody à',
-  'stats.visbodyHint2': ': il est importé automatiquement et apparaît ici. Renseigne ton prénom/nom dans les réglages pour que le rapport soit associé à ton compte.',
+  'stats.visbodyHint2':
+    ': il est importé automatiquement et apparaît ici. Renseigne ton prénom/nom dans les réglages pour que le rapport soit associé à ton compte.',
   'stats.noComposition': 'Aucun scan de composition corporelle sur la période.',
-  'stats.noCompositionHint': 'Envoie le PDF de ton scan Visbody par email pour le voir apparaître ici.',
+  'stats.noCompositionHint':
+    'Envoie le PDF de ton scan Visbody par email pour le voir apparaître ici.',
   'stats.bodyDiagram': 'Schéma corporel',
   'stats.muscle': 'Muscle',
   'stats.fat': 'Graisse',
@@ -565,10 +588,12 @@ export const fr: Record<string, string> = {
   'stats.legR': 'JAMBE D',
   'stats.lastScan': 'Dernier scan',
   'stats.score': 'Note',
-  'stats.gaugeHint1': 'Pour chaque indicateur : ta valeur (▼) située sur une échelle faible / moyenne / élevée.',
+  'stats.gaugeHint1':
+    'Pour chaque indicateur : ta valeur (▼) située sur une échelle faible / moyenne / élevée.',
   'stats.gaugeHint2': "Touche l'icône",
   'stats.gaugeHint3': 'pour le détail.',
-  'stats.profileHint': 'Renseigne ta taille, ton sexe et ta date de naissance dans les réglages pour des zones de référence personnalisées.',
+  'stats.profileHint':
+    'Renseigne ta taille, ton sexe et ta date de naissance dans les réglages pour des zones de référence personnalisées.',
   'stats.weightMuscleFat': 'Poids, muscle & graisse (kg)',
   'stats.skeletalLeanProtein': 'Muscle squelettique, masse maigre & protéines (kg)',
   'stats.fatBmiVisceral': 'Taux de graisse, IMC & viscérale',
@@ -585,9 +610,11 @@ export const fr: Record<string, string> = {
   'stats.macrosPerDay': 'Macros par jour',
   'stats.avgMacroSplit': 'Répartition moyenne des macros',
   'stats.sleep': 'Sommeil',
-  'stats.notEnoughSleep': 'Pas assez de données de sommeil. Renseigne ton état du jour depuis le chat.',
+  'stats.notEnoughSleep':
+    'Pas assez de données de sommeil. Renseigne ton état du jour depuis le chat.',
   'stats.wellbeing': 'Forme (énergie, fatigue, stress, courbatures)',
-  'stats.notEnoughWellbeing': 'Pas assez de données. Note ton état quotidien pour suivre ta forme ici.',
+  'stats.notEnoughWellbeing':
+    'Pas assez de données. Note ton état quotidien pour suivre ta forme ici.',
   // Chart dataset labels
   'stats.chart.e1rm': '1RM estimé (kg)',
   'stats.chart.maxLoad': 'Charge max (kg)',

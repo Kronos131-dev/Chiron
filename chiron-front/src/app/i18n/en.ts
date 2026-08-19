@@ -46,7 +46,8 @@ export const en: Record<string, string> = {
   'settings.language.fr': 'Français',
   'settings.language.en': 'English',
   'settings.language.updated': 'Language updated.',
-  'settings.ai.notConfigured': 'Gemini is not configured on the server — the coach stays on Mistral.',
+  'settings.ai.notConfigured':
+    'Gemini is not configured on the server — the coach stays on Mistral.',
   'settings.ai.updated': 'AI provider updated: {{provider}}.',
   'settings.ai.error': 'Error while switching AI provider.',
   'settings.tonnage.saved': 'Tonnage preferences saved.',
@@ -80,11 +81,14 @@ export const en: Record<string, string> = {
   'settings.profile.edit': 'Edit my athletic profile',
   'settings.olympus.title': 'Olympus Account',
   'settings.olympus.linked': 'Linked',
-  'settings.olympus.linkedDesc': 'Chiron can now analyse your nutrition intake to refine its advice.',
+  'settings.olympus.linkedDesc':
+    'Chiron can now analyse your nutrition intake to refine its advice.',
   'settings.olympus.unlink': 'Unlink',
   'settings.olympus.expired': 'Link expired',
-  'settings.olympus.expiredDesc': 'Reconnect your Olympus account to reactivate nutrition coaching.',
-  'settings.olympus.connectDesc': 'Connect your Olympus account so Chiron can become your nutritionist.',
+  'settings.olympus.expiredDesc':
+    'Reconnect your Olympus account to reactivate nutrition coaching.',
+  'settings.olympus.connectDesc':
+    'Connect your Olympus account so Chiron can become your nutritionist.',
   'settings.olympus.usernamePh': 'Olympus username',
   'settings.olympus.passwordPh': 'Password',
   'settings.olympus.linking': 'Linking…',
@@ -92,13 +96,16 @@ export const en: Record<string, string> = {
   'settings.fitbit.title': 'Fitbit Account',
   'settings.fitbit.connected': 'Connected',
   'settings.fitbit.synced': 'Health data synced',
-  'settings.fitbit.connectedDesc': 'Chiron uses your activity, sleep and heart rate to refine its advice.',
+  'settings.fitbit.connectedDesc':
+    'Chiron uses your activity, sleep and heart rate to refine its advice.',
   'settings.fitbit.dashboard': 'View my dashboard',
   'settings.fitbit.disconnect': 'Disconnect',
   'settings.fitbit.expired': 'Connection expired',
   'settings.fitbit.expiredDesc': 'Reconnect your Fitbit account to reactivate health syncing.',
-  'settings.fitbit.connectDesc': 'Connect your Fitbit account so Chiron can track your activity, sleep and recovery.',
-  'settings.fitbit.waiting': 'Authorise access in the Fitbit window, then come back here — the connection is detected automatically.',
+  'settings.fitbit.connectDesc':
+    'Connect your Fitbit account so Chiron can track your activity, sleep and recovery.',
+  'settings.fitbit.waiting':
+    'Authorise access in the Fitbit window, then come back here — the connection is detected automatically.',
   'settings.fitbit.waitingBtn': 'Waiting for Fitbit…',
   'settings.fitbit.connectBtn': 'Connect my Fitbit account',
   'settings.password.title': 'Change password',
@@ -118,24 +125,30 @@ export const en: Record<string, string> = {
   'settings.identity.lastNamePh': 'Last name',
   'settings.ai.title': 'AI Coach',
   'settings.ai.subtitle': 'Model provider ({{provider}})',
-  'settings.ai.desc': 'Choose the model that answers in the coach chat. Gemini must be configured on the server; otherwise the coach stays on Mistral.',
-  'settings.ai.geminiUnavailable': 'Gemini is not configured on the server (missing key): the coach stays on Mistral.',
+  'settings.ai.desc':
+    'Choose the model that answers in the coach chat. Gemini must be configured on the server; otherwise the coach stays on Mistral.',
+  'settings.ai.geminiUnavailable':
+    'Gemini is not configured on the server (missing key): the coach stays on Mistral.',
   'settings.tonnage.title': 'Tonnage calculation',
   'settings.tonnage.subtitle': 'Weight entry conventions',
-  'settings.tonnage.desc': 'By default: barbell, machine and added weight counted at full load; dumbbells at the weight of a single dumbbell. Exercises marked "unilateral" always count ×2. Adjust below to match how you log.',
+  'settings.tonnage.desc':
+    'By default: barbell, machine and added weight counted at full load; dumbbells at the weight of a single dumbbell. Exercises marked "unilateral" always count ×2. Adjust below to match how you log.',
   'settings.tonnage.dumbbell': 'With dumbbells, I enter the weight of a single dumbbell',
   'settings.tonnage.machine': 'On machines, I enter the weight of a single side',
   'settings.tonnage.countsX2': 'Counts ×2 in tonnage',
   'settings.delete.title': 'Delete account',
-  'settings.delete.warning': 'This action is irreversible. All your sessions, programs and data will be deleted.',
+  'settings.delete.warning':
+    'This action is irreversible. All your sessions, programs and data will be deleted.',
   'settings.delete.confirmPre': 'Type your username',
   'settings.delete.confirmPost': 'to confirm.',
   'settings.delete.confirmBtn': 'Delete permanently',
   'settings.visbody.title': 'Body composition (Visbody)',
-  'settings.visbody.desc': 'Import a Visbody scan report (PDF). You can also send it by email: received reports are imported automatically.',
+  'settings.visbody.desc':
+    'Import a Visbody scan report (PDF). You can also send it by email: received reports are imported automatically.',
   'settings.visbody.importBtn': 'Import a Visbody PDF',
   'settings.boditrax.title': 'Body composition (Boditrax)',
-  'settings.boditrax.desc': 'Import the CSV export from your Boditrax account: your scans appear in the Composition page, just like Visbody reports.',
+  'settings.boditrax.desc':
+    'Import the CSV export from your Boditrax account: your scans appear in the Composition page, just like Visbody reports.',
   'settings.boditrax.importBtn': 'Import a Boditrax CSV',
 
   // ── Chat / Coach ──
@@ -166,7 +179,7 @@ export const en: Record<string, string> = {
   'login.confirmPassword': 'Confirm password',
   'login.signIn': 'Sign in',
   'login.forge': 'Forge my account',
-  'login.switchToRegister': "No account yet? Sign up",
+  'login.switchToRegister': 'No account yet? Sign up',
   'login.switchToLogin': 'Already have an account? Sign in',
   'login.forgotLink': 'Forgot password?',
   'login.forgotSent': 'If an account is linked to this email, a link has been sent.',
@@ -279,7 +292,8 @@ export const en: Record<string, string> = {
   'exCard.move': 'Move',
   'exCard.exerciseName': 'Exercise name',
   'exCard.searchPlaceholder': 'Search for an exercise...',
-  'exCard.unilateralTitle': 'Exercise done one limb at a time (reps per arm/leg) — counts ×2 in tonnage',
+  'exCard.unilateralTitle':
+    'Exercise done one limb at a time (reps per arm/leg) — counts ×2 in tonnage',
   'exCard.unilateral': 'Unilateral',
   'exCard.viewSheet': 'View exercise sheet',
   'exCard.groupTitle': 'Group with the next exercise',
@@ -394,7 +408,8 @@ export const en: Record<string, string> = {
   'programme.abandon': 'Abandon session',
   'programme.totalSeries': 'Total<br>Sets',
   'programme.add': 'Add a Programme',
-  'programme.confirmSwitch': 'A session is already in progress on another programme. Unsaved progress will be lost. Continue?',
+  'programme.confirmSwitch':
+    'A session is already in progress on another programme. Unsaved progress will be lost. Continue?',
   'programme.confirmAbandon': 'Abandon the current session? Unsaved progress will be lost.',
   'programme.confirmDelete': 'Are you sure you want to delete this programme?',
   'programme.deleteError': 'Unable to delete this routine.',
@@ -463,7 +478,8 @@ export const en: Record<string, string> = {
   'profile.coachRevokeError': 'Error while revoking coach rights.',
   'profile.coachGranted': '{{user}} is now allowed to edit your programmes!',
   'profile.coachGrantError': 'Error while granting coach rights.',
-  'profile.confirmDelete': "Are you sure you want to delete {{user}}'s account? This action is irreversible.",
+  'profile.confirmDelete':
+    "Are you sure you want to delete {{user}}'s account? This action is irreversible.",
   'profile.deleteSuccess': 'Account deleted successfully.',
   'profile.deleteError': 'Error while deleting the account.',
 
@@ -530,7 +546,8 @@ export const en: Record<string, string> = {
   'stats.noData': 'No data available.',
   'stats.noRecord': 'No record',
   'stats.e1rmProgress': 'Estimated 1RM progression',
-  'stats.notEnoughRecords': 'Not enough records to plot a curve (add your maxes from the Treasure).',
+  'stats.notEnoughRecords':
+    'Not enough records to plot a curve (add your maxes from the Treasure).',
   'stats.noForceData': 'No strength data.',
   'stats.searchExercise': 'Search for an exercise…',
   'stats.noExerciseFound': 'No exercise found.',
@@ -547,7 +564,8 @@ export const en: Record<string, string> = {
   'stats.linkOlympusWeight': 'Link your Olympus account to see your weight evolution.',
   'stats.notEnoughWeightData': 'Not enough weight measurements for this period.',
   'stats.visbodyHint1': 'Send the PDF of your Visbody scan to',
-  'stats.visbodyHint2': ': it is imported automatically and appears here. Fill in your first/last name in the settings so the report is linked to your account.',
+  'stats.visbodyHint2':
+    ': it is imported automatically and appears here. Fill in your first/last name in the settings so the report is linked to your account.',
   'stats.noComposition': 'No body composition scan for this period.',
   'stats.noCompositionHint': 'Send the PDF of your Visbody scan by email to see it appear here.',
   'stats.bodyDiagram': 'Body diagram',
@@ -567,7 +585,8 @@ export const en: Record<string, string> = {
   'stats.gaugeHint1': 'For each indicator: your value (▼) on a low / medium / high scale.',
   'stats.gaugeHint2': 'Tap the icon',
   'stats.gaugeHint3': 'for details.',
-  'stats.profileHint': 'Fill in your height, sex and date of birth in the settings for personalized reference ranges.',
+  'stats.profileHint':
+    'Fill in your height, sex and date of birth in the settings for personalized reference ranges.',
   'stats.weightMuscleFat': 'Weight, muscle & fat (kg)',
   'stats.skeletalLeanProtein': 'Skeletal muscle, lean mass & protein (kg)',
   'stats.fatBmiVisceral': 'Fat percentage, BMI & visceral',
