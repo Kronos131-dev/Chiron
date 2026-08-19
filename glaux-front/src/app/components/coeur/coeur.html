@@ -1,0 +1,74 @@
+<app-header [title]="'coeur.title' | t"></app-header>
+
+<main class="min-h-screen pt-24 pb-32 heroic-texture px-4 md:px-8">
+  <div class="max-w-4xl mx-auto">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="font-headline text-2xl font-black text-on-surface uppercase tracking-tight">
+        {{ 'coeur.heartRateToday' | t }}
+      </h2>
+      <input
+        type="date"
+        [ngModel]="selectedDate()"
+        (ngModelChange)="onDateChange($event)"
+        class="bg-slate-900/60 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-on-surface"
+      />
+    </div>
+
+    <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4 mb-6">
+      @if (loadingFc()) {
+        <div class="h-56 flex items-center justify-center">
+          <span
+            class="w-8 h-8 border-4 border-secondary/20 border-t-secondary rounded-full animate-spin"
+          ></span>
+        </div>
+      } @else if (fcPoints().length === 0) {
+        <p class="text-center text-on-surface-variant py-16">{{ 'coeur.noData' | t }}</p>
+      } @else {
+        <div class="h-56">
+          <canvas baseChart [data]="fcChart()" [options]="lineOptions" type="line"></canvas>
+        </div>
+      }
+    </div>
+
+    <div class="grid grid-cols-2 gap-4 mb-6">
+      <div class="bg-slate-900/40 border border-white/5 rounded-xl p-5">
+        <p class="text-[10px] font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-1">
+          {{ 'coeur.restingHr' | t }}
+        </p>
+        <p class="text-3xl font-black text-white">
+          {{ latestFcRepos() ?? '—' }} <span class="text-base text-on-surface-variant">bpm</span>
+        </p>
+      </div>
+      <div class="bg-slate-900/40 border border-white/5 rounded-xl p-5">
+        <p class="text-[10px] font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-1">
+          {{ 'coeur.hrv' | t }}
+        </p>
+        <p class="text-3xl font-black text-white">
+          {{ latestVfc() != null ? (latestVfc() | number: '1.0-0') : '—' }}
+          <span class="text-base text-on-surface-variant">ms</span>
+        </p>
+      </div>
+    </div>
+
+    <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4">
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="text-sm font-bold uppercase tracking-widest text-on-surface-variant">
+          {{ 'coeur.weeklyCardio' | t }}
+        </h3>
+        @if (latestCardioHebdo(); as c) {
+          @if (c.cibleBasse != null && c.cibleHaute != null) {
+            <span class="text-xs text-on-surface-variant"
+              >{{ 'coeur.target' | t }} {{ c.cibleBasse | number: '1.0-0' }}–{{
+                c.cibleHaute | number: '1.0-0'
+              }}</span
+            >
+          }
+        }
+      </div>
+      <div class="h-48">
+        <canvas baseChart [data]="cardioHebdoChart()" [options]="barOptions" type="bar"></canvas>
+      </div>
+      <p class="text-[11px] text-on-surface-variant/70 mt-3">{{ 'coeur.approx' | t }}</p>
+    </div>
+  </div>
+</main>

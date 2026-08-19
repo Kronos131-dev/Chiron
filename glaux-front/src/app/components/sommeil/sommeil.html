@@ -1,0 +1,72 @@
+<app-header [title]="'sommeil.title' | t"></app-header>
+
+<main class="min-h-screen pt-24 pb-32 heroic-texture px-4 md:px-8">
+  <div class="max-w-4xl mx-auto">
+    <div class="grid grid-cols-2 gap-4 mb-6">
+      <div class="bg-slate-900/40 border border-white/5 rounded-xl p-5">
+        <p class="text-[10px] font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-1">
+          {{ 'sommeil.score' | t }}
+        </p>
+        <p class="text-3xl font-black text-secondary">{{ avgScore() ?? '—' }}</p>
+      </div>
+      <div class="bg-slate-900/40 border border-white/5 rounded-xl p-5">
+        <p class="text-[10px] font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-1">
+          {{ 'sommeil.duration' | t }}
+        </p>
+        <p class="text-3xl font-black text-white">{{ duree(avgDuration()) }}</p>
+      </div>
+    </div>
+
+    <h3 class="text-sm font-bold uppercase tracking-widest text-on-surface-variant mb-3">
+      {{ 'sommeil.nights' | t }}
+    </h3>
+
+    @if (loading()) {
+      <div class="flex justify-center mt-16">
+        <span
+          class="w-12 h-12 border-4 border-secondary/20 border-t-secondary rounded-full animate-spin"
+        ></span>
+      </div>
+    } @else if (nights().length === 0) {
+      <p class="text-center text-on-surface-variant mt-10">{{ 'common.noData' | t }}</p>
+    } @else {
+      <div class="space-y-3">
+        @for (n of nights(); track n.debut) {
+          <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-sm font-bold text-on-surface">{{ dateLabel(n.date) }}</span>
+              <span class="text-sm font-black text-secondary"
+                >{{ n.score ?? '—' }}
+                <span class="text-on-surface-variant font-normal text-xs"
+                  >· {{ duree(n.minutesEndormi) }}</span
+                ></span
+              >
+            </div>
+            @if (n.stadesDisponibles) {
+              <div class="flex h-3 rounded-full overflow-hidden">
+                @for (c of composition(n); track c.key) {
+                  <div
+                    [style.width.%]="(c.minutes / totalMinutes(n)) * 100"
+                    [style.background-color]="c.color"
+                  ></div>
+                }
+              </div>
+              <div class="flex flex-wrap gap-x-3 gap-y-1 mt-2">
+                @for (c of composition(n); track c.key) {
+                  <span class="text-[10px] text-on-surface-variant flex items-center gap-1">
+                    <span class="w-2 h-2 rounded-full" [style.background-color]="c.color"></span>
+                    {{ c.key | t }} {{ c.minutes }}min
+                  </span>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+
+    <p class="text-[11px] text-on-surface-variant/70 mt-6 text-center">
+      {{ 'sommeil.approx' | t }}
+    </p>
+  </div>
+</main>

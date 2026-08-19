@@ -1,0 +1,55 @@
+<main class="min-h-screen flex items-center justify-center heroic-texture px-6">
+  <div class="w-full max-w-sm">
+    <div class="text-center mb-8">
+      <div class="text-5xl mb-2">🦉</div>
+      <h1 class="font-headline text-4xl font-black text-on-surface tracking-tight">
+        {{ 'login.title' | t }}
+      </h1>
+      <p class="text-on-surface-variant font-body mt-2">{{ 'login.subtitle' | t }}</p>
+    </div>
+
+    <form
+      (ngSubmit)="submit()"
+      class="bg-slate-900/40 border border-white/5 rounded-2xl p-6 space-y-4"
+    >
+      <div>
+        <label
+          class="text-[10px] font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-1 block"
+          >{{ 'login.username' | t }}</label
+        >
+        <input
+          type="text"
+          name="username"
+          [ngModel]="username()"
+          (ngModelChange)="username.set($event)"
+          class="w-full bg-slate-950/60 border border-white/10 rounded-lg px-4 py-2.5 text-on-surface focus:outline-none focus:border-secondary/50"
+        />
+      </div>
+      <div>
+        <label
+          class="text-[10px] font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-1 block"
+          >{{ 'login.password' | t }}</label
+        >
+        <input
+          type="password"
+          name="password"
+          [ngModel]="password()"
+          (ngModelChange)="password.set($event)"
+          class="w-full bg-slate-950/60 border border-white/10 rounded-lg px-4 py-2.5 text-on-surface focus:outline-none focus:border-secondary/50"
+        />
+      </div>
+
+      @if (error()) {
+        <p class="text-red-400 text-sm">{{ 'login.error' | t }}</p>
+      }
+
+      <button
+        type="submit"
+        [disabled]="loading()"
+        class="w-full bg-secondary text-slate-950 font-bold uppercase tracking-widest text-sm py-3 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+      >
+        {{ 'login.submit' | t }}
+      </button>
+    </form>
+  </div>
+</main>

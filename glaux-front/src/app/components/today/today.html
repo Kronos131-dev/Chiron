@@ -1,0 +1,113 @@
+<app-header [title]="'today.title' | t"></app-header>
+
+<main class="min-h-screen pt-24 pb-32 heroic-texture px-4 md:px-8">
+  <div class="max-w-4xl mx-auto">
+    <div class="text-center mb-6">
+      <h2
+        class="font-headline text-3xl md:text-4xl font-black text-on-surface uppercase tracking-tight"
+      >
+        {{ 'today.title' | t }}
+      </h2>
+      <p class="text-on-surface-variant font-body mt-2">{{ 'today.subtitle' | t }}</p>
+    </div>
+
+    @if (loading()) {
+      <div class="flex justify-center mt-16">
+        <span
+          class="w-12 h-12 border-4 border-secondary/20 border-t-secondary rounded-full animate-spin"
+        ></span>
+      </div>
+    } @else if (resume(); as r) {
+      @if (!r.linked) {
+        <div class="bg-slate-900/40 border border-white/5 rounded-2xl p-8 text-center">
+          <p class="text-4xl mb-3">🦉</p>
+          <p class="text-on-surface font-bold">{{ 'today.notLinked' | t }}</p>
+          <p class="text-on-surface-variant text-sm mt-2">{{ 'today.notLinkedDesc' | t }}</p>
+        </div>
+      } @else if (r.needsReconnect) {
+        <div class="bg-amber-950/20 border border-amber-500/20 rounded-2xl p-8 text-center">
+          <p class="text-4xl mb-3">⚠️</p>
+          <p class="text-on-surface font-bold">{{ 'today.reconnectNeeded' | t }}</p>
+          <p class="text-on-surface-variant text-sm mt-2">{{ 'today.reconnectDesc' | t }}</p>
+        </div>
+      } @else {
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+          <div class="bg-slate-900/40 border border-white/5 rounded-xl p-5">
+            <p
+              class="text-[10px] font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-1"
+            >
+              {{ 'today.steps' | t }}
+            </p>
+            <p class="text-3xl font-black text-white">{{ r.pas ?? '—' }}</p>
+          </div>
+          <div class="bg-slate-900/40 border border-white/5 rounded-xl p-5">
+            <p
+              class="text-[10px] font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-1"
+            >
+              {{ 'today.distance' | t }}
+            </p>
+            <p class="text-3xl font-black text-white">
+              {{ km(r.distanceM) }} <span class="text-base text-on-surface-variant">km</span>
+            </p>
+          </div>
+          <div class="bg-slate-900/40 border border-white/5 rounded-xl p-5">
+            <p
+              class="text-[10px] font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-1"
+            >
+              {{ 'today.calories' | t }}
+            </p>
+            <p class="text-3xl font-black text-white">{{ r.caloriesTotales ?? '—' }}</p>
+          </div>
+          <div class="bg-slate-900/40 border border-white/5 rounded-xl p-5">
+            <p
+              class="text-[10px] font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-1"
+            >
+              {{ 'today.activeMinutes' | t }}
+            </p>
+            <p class="text-3xl font-black text-white">{{ r.minutesZoneActive ?? '—' }}</p>
+          </div>
+          <div class="bg-slate-900/40 border border-white/5 rounded-xl p-5">
+            <p
+              class="text-[10px] font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-1"
+            >
+              {{ 'today.restingHr' | t }}
+            </p>
+            <p class="text-3xl font-black text-white">
+              {{ r.fcRepos ?? '—' }} <span class="text-base text-on-surface-variant">bpm</span>
+            </p>
+          </div>
+          <div class="bg-slate-900/40 border border-white/5 rounded-xl p-5">
+            <p
+              class="text-[10px] font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-1"
+            >
+              {{ 'today.sleepScore' | t }}
+            </p>
+            <p class="text-3xl font-black text-secondary">{{ r.scoreSommeil ?? '—' }}</p>
+          </div>
+          <div
+            class="bg-slate-900/40 border border-white/5 rounded-xl p-5 col-span-2 md:col-span-3"
+          >
+            <p
+              class="text-[10px] font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-1"
+            >
+              {{ 'today.cardioLoad' | t }}
+            </p>
+            <p class="text-3xl font-black text-white">
+              {{ r.chargeCardioHebdo != null ? (r.chargeCardioHebdo | number: '1.0-0') : '—' }}
+            </p>
+          </div>
+        </div>
+      }
+
+      <div class="flex justify-center">
+        <button
+          (click)="sync()"
+          [disabled]="syncing()"
+          class="px-5 py-2.5 rounded-lg border border-secondary/30 text-secondary text-xs font-bold uppercase tracking-widest hover:bg-secondary/10 transition-colors disabled:opacity-50"
+        >
+          {{ syncing() ? ('today.syncing' | t) : ('today.syncNow' | t) }}
+        </button>
+      </div>
+    }
+  </div>
+</main>

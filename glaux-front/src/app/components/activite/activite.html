@@ -1,0 +1,58 @@
+<app-header [title]="'activite.title' | t"></app-header>
+
+<main class="min-h-screen pt-24 pb-32 heroic-texture px-4 md:px-8">
+  <div class="max-w-4xl mx-auto">
+    <div class="flex justify-center gap-2 mb-6">
+      @for (p of periodes; track p.value) {
+        <button
+          (click)="changePeriode(p.value)"
+          [class]="
+            periode() === p.value
+              ? 'bg-secondary/20 border-secondary/50 text-secondary'
+              : 'bg-slate-900/40 border-white/5 text-on-surface-variant hover:text-on-surface'
+          "
+          class="px-3 py-1.5 rounded-lg border text-xs font-bold tracking-widest uppercase transition-colors"
+        >
+          {{ p.label | t }}
+        </button>
+      }
+    </div>
+
+    @if (loading()) {
+      <div class="flex justify-center mt-16">
+        <span
+          class="w-12 h-12 border-4 border-secondary/20 border-t-secondary rounded-full animate-spin"
+        ></span>
+      </div>
+    } @else if (jours().length === 0) {
+      <p class="text-center text-on-surface-variant mt-10">{{ 'common.noData' | t }}</p>
+    } @else {
+      <div class="space-y-4">
+        <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4">
+          <h3 class="text-sm font-bold uppercase tracking-widest text-on-surface-variant mb-2">
+            {{ 'activite.steps' | t }}
+          </h3>
+          <div class="h-48">
+            <canvas baseChart [data]="stepsChart()" [options]="barOptions" type="bar"></canvas>
+          </div>
+        </div>
+        <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4">
+          <h3 class="text-sm font-bold uppercase tracking-widest text-on-surface-variant mb-2">
+            {{ 'activite.distance' | t }}
+          </h3>
+          <div class="h-48">
+            <canvas baseChart [data]="distanceChart()" [options]="lineOptions" type="line"></canvas>
+          </div>
+        </div>
+        <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4">
+          <h3 class="text-sm font-bold uppercase tracking-widest text-on-surface-variant mb-2">
+            {{ 'activite.calories' | t }}
+          </h3>
+          <div class="h-48">
+            <canvas baseChart [data]="caloriesChart()" [options]="barOptions" type="bar"></canvas>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</main>
