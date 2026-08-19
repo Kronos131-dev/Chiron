@@ -62,7 +62,8 @@ class SanteQueryServiceImplTest {
         today = LocalDate.now(clock);
         when(santeJourRepository.findByUtilisateurAndDateBetweenOrderByDateAsc(eq(user), any(), any()))
                 .thenReturn(List.of());
-        when(santeSommeilRepository.findFirstByUtilisateurAndDateOrderByFinDesc(user, today))
+        when(santeSommeilRepository
+                .findFirstByUtilisateurAndDateAndSiesteFalseOrderByMinutesEndormiDesc(user, today))
                 .thenReturn(Optional.empty());
     }
 

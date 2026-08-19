@@ -34,6 +34,7 @@ public class ScoreSommeilServiceImpl implements ScoreSommeilService {
         List<SanteSommeil> sessions = santeSommeilRepository
                 .findByUtilisateurAndDateBetweenOrderByDebutAsc(utilisateur, from, to);
         for (SanteSommeil session : sessions) {
+            if (session.isSieste()) continue;
             if (session.getMinutesEndormi() == null || session.getMinutesEndormi() <= 0) continue;
             Integer scoreDuree = scoreDuree(session);
             Integer scoreComposition = scoreComposition(session);

@@ -17,4 +17,7 @@ public interface SanteSommeilRepository extends JpaRepository<SanteSommeil, Long
             LocalDate to);
 
     Optional<SanteSommeil> findFirstByUtilisateurAndDateOrderByFinDesc(Utilisateur utilisateur, LocalDate date);
+
+    Optional<SanteSommeil> findFirstByUtilisateurAndDateAndSiesteFalseOrderByMinutesEndormiDesc(
+            Utilisateur utilisateur, LocalDate date);
 }

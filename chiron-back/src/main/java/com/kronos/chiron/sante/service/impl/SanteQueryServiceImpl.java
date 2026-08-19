@@ -55,7 +55,8 @@ public class SanteQueryServiceImpl implements SanteQueryService {
 
         LocalDate today = LocalDate.now(clock);
         SanteJour jour = santeJourRepository.findByUtilisateurAndDate(utilisateur, today).orElse(null);
-        Integer scoreSommeil = santeSommeilRepository.findFirstByUtilisateurAndDateOrderByFinDesc(utilisateur, today)
+        Integer scoreSommeil = santeSommeilRepository
+                .findFirstByUtilisateurAndDateAndSiesteFalseOrderByMinutesEndormiDesc(utilisateur, today)
                 .map(SanteSommeil::getScore)
                 .orElse(null);
         Double chargeHebdo = sommeChargeCardio(utilisateur, today.minusDays(6), today);

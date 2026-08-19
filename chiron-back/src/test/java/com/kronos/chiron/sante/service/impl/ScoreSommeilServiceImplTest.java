@@ -82,6 +82,22 @@ class ScoreSommeilServiceImplTest {
     }
 
     @Test
+    void recalculerPlage_siesteSession_isNotScored() {
+        // Given
+        SanteSommeil sieste = baseSession().sieste(true).stadesDisponibles(true)
+                .minutesProfond(100).minutesParadoxal(92).build();
+        when(santeSommeilRepository.findByUtilisateurAndDateBetweenOrderByDebutAsc(user, from, to))
+                .thenReturn(List.of(sieste));
+
+        // When
+        scoreSommeilService.recalculerPlage(user, from, to);
+
+        // Then
+        assertThat(sieste.getScore()).isNull();
+        assertThat(sieste.getScoreDuree()).isNull();
+    }
+
+    @Test
     void recalculerPlage_stagesUnavailable_leavesCompositionNull() {
         SanteSommeil session = baseSession().stadesDisponibles(false).build();
         when(santeSommeilRepository.findByUtilisateurAndDateBetweenOrderByDebutAsc(user, from, to))
