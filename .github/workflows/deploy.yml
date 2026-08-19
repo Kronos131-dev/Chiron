@@ -89,6 +89,33 @@ jobs:
           path: chiron-front/dist/chiron-front/browser/
           retention-days: 1
 
+  # ── 2b. Build glaux (sous-application santé) ─────────────────────────────────
+  build-glaux:
+    name: Build γλαῦξ
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: glaux-front/package-lock.json
+
+      - name: Install dependencies
+        working-directory: glaux-front
+        run: npm ci
+
+      - name: Build production
+        working-directory: glaux-front
+        run: npm run build -- --configuration production
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: glaux-dist
+          path: glaux-front/dist/glaux-front/browser/
+          retention-days: 1
+
   # ── 3a. Unit tests ───────────────────────────────────────────────────────────
   test-unit:
     name: Unit Tests
@@ -260,7 +287,7 @@ jobs:
   deploy:
     name: Deploy → ${{ inputs.target }}
     runs-on: ubuntu-latest
-    needs: [test-unit, test-integration]
+    needs: [test-unit, test-integration, build-glaux]
     environment: ${{ inputs.target || 'production' }}
 
     steps:
@@ -292,6 +319,11 @@ jobs:
           name: frontend-dist
           path: artifacts/frontend/
 
+      - uses: actions/download-artifact@v5
+        with:
+          name: glaux-dist
+          path: artifacts/glaux/
+
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
@@ -312,6 +344,13 @@ jobs:
             artifacts/frontend/ \
             ${{ secrets.SSH_USER }}@${{ env.SERVER_HOST }}:/tmp/chiron-frontend/
 
+      - name: Upload glaux
+        run: |
+          rsync -az --delete \
+            -e "ssh -i ~/.ssh/deploy_key" \
+            artifacts/glaux/ \
+            ${{ secrets.SSH_USER }}@${{ env.SERVER_HOST }}:/tmp/glaux-frontend/
+
       - name: Upload docker-compose.yml
         run: |
           scp -i ~/.ssh/deploy_key \
@@ -323,6 +362,12 @@ jobs:
           scp -i ~/.ssh/deploy_key \
             nginx.conf \
             ${{ secrets.SSH_USER }}@${{ env.SERVER_HOST }}:/tmp/chiron-nginx.conf
+
+      - name: Upload glaux-nginx.conf
+        run: |
+          scp -i ~/.ssh/deploy_key \
+            glaux-nginx.conf \
+            ${{ secrets.SSH_USER }}@${{ env.SERVER_HOST }}:/tmp/glaux-nginx.conf
 
       - name: Upload secrets
         run: |
@@ -368,11 +413,18 @@ jobs:
             mkdir -p $CHIRON_DIR/dist/chiron-front/browser
             rsync -a --delete /tmp/chiron-frontend/ $CHIRON_DIR/dist/chiron-front/browser/
 
+            echo "▶ Mise à jour de γλαῦξ..."
+            mkdir -p $CHIRON_DIR/dist/glaux-front/browser
+            rsync -a --delete /tmp/glaux-frontend/ $CHIRON_DIR/dist/glaux-front/browser/
+
             echo "▶ Mise à jour du docker-compose.yml..."
             cp /tmp/chiron-docker-compose.yml $CHIRON_DIR/docker-compose.yml
 
             echo "▶ Mise à jour du nginx.conf (route /olympus -> olympus-pwa)..."
             cp /tmp/chiron-nginx.conf $CHIRON_DIR/nginx.conf
+
+            echo "▶ Mise à jour du glaux-nginx.conf..."
+            cp /tmp/glaux-nginx.conf $CHIRON_DIR/glaux-nginx.conf
 
             echo "▶ Mise à jour du .env..."
             ENV_FILE=$CHIRON_DIR/.env
@@ -384,9 +436,9 @@ jobs:
             docker network inspect chiron-olympus >/dev/null 2>&1 \
               || docker network create chiron-olympus
 
-            echo "▶ Recréation des conteneurs backend + frontend..."
+            echo "▶ Recréation des conteneurs backend + frontend + glaux..."
             cd $CHIRON_DIR
-            if ! $COMPOSE up -d --force-recreate backend frontend; then
+            if ! $COMPOSE up -d --force-recreate backend frontend glaux; then
               echo "✗ ÉCHEC : '$COMPOSE up' n'a pas pu démarrer les conteneurs."
               docker ps -a
               echo "--- qui occupe le port 9090 ---"
@@ -413,9 +465,17 @@ jobs:
             fi
             echo "✓ Conteneur backend aligné sur le JAR déployé."
 
+            echo "▶ Vérification : le conteneur γλαῦξ tourne..."
+            if [ "$(docker inspect -f '{{.State.Running}}' chiron_glaux 2>/dev/null)" != "true" ]; then
+              echo "✗ ÉCHEC : le conteneur chiron_glaux n'est pas démarré."
+              docker logs --tail 30 chiron_glaux 2>&1 || true
+              exit 1
+            fi
+            echo "✓ Conteneur γλαῦξ démarré."
+
             echo "▶ Nettoyage..."
-            rm -f /tmp/chiron-app.jar /tmp/chiron.secrets /tmp/.env.tmp /tmp/chiron-docker-compose.yml /tmp/chiron-nginx.conf
-            rm -rf /tmp/chiron-frontend/
+            rm -f /tmp/chiron-app.jar /tmp/chiron.secrets /tmp/.env.tmp /tmp/chiron-docker-compose.yml /tmp/chiron-nginx.conf /tmp/glaux-nginx.conf
+            rm -rf /tmp/chiron-frontend/ /tmp/glaux-frontend/
 
             echo "✓ Déploiement terminé"
           ENDSSH
@@ -449,6 +509,8 @@ jobs:
             docker ps -a || true
             echo "=== docker logs chiron_backend (200 dernières lignes) ==="
             docker logs --tail 200 chiron_backend 2>&1 || true
+            echo "=== docker logs chiron_glaux (60 dernières lignes) ==="
+            docker logs --tail 60 chiron_glaux 2>&1 || true
           ENDSSH
 
   # ── 5. Deploy Olympus SSH (modèle « artefacts montés », après Chiron) ─────────

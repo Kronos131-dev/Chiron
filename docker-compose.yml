@@ -67,7 +67,20 @@ services:
       - default
       - chiron-olympus
 
-  # 4. NGINX PROXY MANAGER (Le "videur" qui gère le HTTPS)
+  # 4. LE FRONTEND SANTÉ γλαῦξ
+  glaux:
+    image: nginx:alpine
+    container_name: chiron_glaux
+    restart: always
+    volumes:
+      - ./dist/glaux-front/browser:/usr/share/nginx/html
+      - ./glaux-nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - backend
+    networks:
+      - default
+
+  # 5. NGINX PROXY MANAGER (Le "videur" qui gère le HTTPS)
   npm:
     image: 'jc21/nginx-proxy-manager:latest'
     container_name: chiron_npm
@@ -81,6 +94,7 @@ services:
       - ./npm/letsencrypt:/etc/letsencrypt
     depends_on:
       - frontend
+      - glaux
 
 volumes:
   chiron_pg_data:
