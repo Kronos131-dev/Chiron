@@ -57,7 +57,7 @@ class ScoreSommeilServiceImplTest {
     void recalculerPlage_perfectNight_scoresMaximumOnEveryComponent() {
         SanteSommeil session = baseSession()
                 .stadesDisponibles(true).minutesProfond(100).minutesParadoxal(92)
-                .minutesEveille(0).minutesAgite(0)
+                .minutesEveille(0).minutesAgite(0).nbReveils(0)
                 .fcSommeilMoyenne(55.0)
                 .build();
         when(santeSommeilRepository.findByUtilisateurAndDateBetweenOrderByDebutAsc(user, from, to))
@@ -79,6 +79,28 @@ class ScoreSommeilServiceImplTest {
         assertThat(session.getScoreComposition()).isEqualTo(25);
         assertThat(session.getScoreRestauration()).isEqualTo(25);
         assertThat(session.getScore()).isEqualTo(100);
+    }
+
+    @Test
+    void recalculerPlage_noRestlessStageFromGoogle_doesNotAwardFullAgitation() {
+        // Given : Google ne publie pas de stade agité, et la nuit compte 45 min d'éveil
+        // pour 6 réveils — l'ancien calcul, en lisant minutesAgite nul comme zéro, aurait
+        // crédité une nuit parfaitement calme.
+        SanteSommeil session = baseSession().stadesDisponibles(true)
+                .minutesProfond(100).minutesParadoxal(92)
+                .minutesEveille(45).minutesAgite(null).nbReveils(6)
+                .fcSommeilMoyenne(55.0)
+                .build();
+        when(santeSommeilRepository.findByUtilisateurAndDateBetweenOrderByDebutAsc(user, from, to))
+                .thenReturn(List.of(session));
+        when(santeJourRepository.findByUtilisateurAndDate(user, date)).thenReturn(Optional.empty());
+
+        // When
+        scoreSommeilService.recalculerPlage(user, from, to);
+
+        // Then
+        assertThat(session.getScoreRestauration()).isLessThan(25);
+        assertThat(session.getScore()).isLessThan(100);
     }
 
     @Test

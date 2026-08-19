@@ -22,6 +22,9 @@ public class ScoreSommeilServiceImpl implements ScoreSommeilService {
     private static final double CIBLE_RATIO_FC_SOMMEIL = 1.15;
     private static final double PLAGE_RATIO_FC_SOMMEIL = 0.30;
     private static final double PLAGE_PCT_AGITATION = 0.15;
+    private static final double POIDS_PART_EVEIL = 5.0;
+    private static final double POIDS_FRAGMENTATION = 3.0;
+    private static final double REVEILS_PAR_HEURE_MAX = 3.0;
     private static final int HISTORIQUE_VFC_JOURS = 30;
     private static final int HISTORIQUE_VFC_MIN_POINTS = 5;
     private static final double CREDIT_NEUTRE = 0.6;
@@ -79,14 +82,37 @@ public class ScoreSommeilServiceImpl implements ScoreSommeilService {
         return clamp(9 * (CIBLE_RATIO_FC_SOMMEIL - ratio) / PLAGE_RATIO_FC_SOMMEIL, 0, 9);
     }
 
+    // WHY: Google Health ne publie pas de stade « agité ». Son modèle ne connaît que
+    // AWAKE, LIGHT, DEEP et REM — minutesAgite vient d'un stade RESTLESS propre au Fitbit
+    // classique, et reste donc toujours nul. Le compter comme zéro minute d'agitation
+    // revenait à créditer une nuit parfaitement calme et donnait les 8 points d'office.
+    // L'agitation se déduit ici des deux signaux que Google fournit vraiment : la part de
+    // temps passée éveillé, et le nombre de réveils lu dans le count du stade AWAKE.
     private double sousScoreAgitation(SanteSommeil session) {
+        Double partEveil = sousScorePartEveil(session);
+        Double fragmentation = sousScoreFragmentation(session);
+        if (partEveil == null && fragmentation == null) return 8 * CREDIT_NEUTRE;
+        double eveil = partEveil != null ? partEveil : POIDS_PART_EVEIL * CREDIT_NEUTRE;
+        double reveils = fragmentation != null ? fragmentation : POIDS_FRAGMENTATION * CREDIT_NEUTRE;
+        return eveil + reveils;
+    }
+
+    private Double sousScorePartEveil(SanteSommeil session) {
         Integer eveille = session.getMinutesEveille();
-        Integer agite = session.getMinutesAgite();
-        if (eveille == null && agite == null) return 8 * CREDIT_NEUTRE;
-        int total = nz(eveille) + nz(agite) + session.getMinutesEndormi();
-        if (total <= 0) return 8 * CREDIT_NEUTRE;
-        double pct = (nz(eveille) + nz(agite)) / (double) total;
-        return clamp(8 * (1 - pct / PLAGE_PCT_AGITATION), 0, 8);
+        if (eveille == null) return null;
+        int total = eveille + session.getMinutesEndormi();
+        if (total <= 0) return null;
+        double pct = eveille / (double) total;
+        return clamp(POIDS_PART_EVEIL * (1 - pct / PLAGE_PCT_AGITATION), 0, POIDS_PART_EVEIL);
+    }
+
+    private Double sousScoreFragmentation(SanteSommeil session) {
+        Integer reveils = session.getNbReveils();
+        if (reveils == null) return null;
+        double heures = session.getMinutesEndormi() / 60.0;
+        if (heures <= 0) return null;
+        double parHeure = reveils / heures;
+        return clamp(POIDS_FRAGMENTATION * (1 - parHeure / REVEILS_PAR_HEURE_MAX), 0, POIDS_FRAGMENTATION);
     }
 
     private double sousScoreVfc(Utilisateur utilisateur, SanteSommeil session) {
