@@ -185,12 +185,14 @@ public class SanteSyncServiceImpl implements SanteSyncService {
     private void syncDailyRollup(Utilisateur user, String token, GoogleHealthDataType type, LocalDate from,
             LocalDate to, BiConsumer<SanteJour, Double> appliquer) {
         try {
+            int points = 0;
             LocalDate curseur = from;
             while (!curseur.isAfter(to)) {
                 LocalDate fin = borneTranche(curseur, to);
                 JsonNode reponse = fitbitClient.dailyRollUp(token, type, curseur, fin);
                 Map<LocalDate, Double> parDate = GoogleHealthParser.dailyRollupByDate(reponse, type.camelCaseField(),
                         CANDIDATS_ROLLUP);
+                points += parDate.size();
                 for (Map.Entry<LocalDate, Double> e : parDate.entrySet()) {
                     SanteJour jour = jourDe(user, e.getKey());
                     appliquer.accept(jour, e.getValue());
@@ -198,7 +200,7 @@ public class SanteSyncServiceImpl implements SanteSyncService {
                 }
                 curseur = fin.plusDays(1);
             }
-            marquerSucces(user, type, to);
+            marquerSucces(user, type, to, points);
         } catch (RuntimeException e) {
             marquerEchec(user, type, e);
         }
@@ -207,11 +209,13 @@ public class SanteSyncServiceImpl implements SanteSyncService {
     private void syncZonesCardiaques(Utilisateur user, String token, LocalDate from, LocalDate to) {
         GoogleHealthDataType type = GoogleHealthDataType.TIME_IN_HEART_RATE_ZONE;
         try {
+            int points = 0;
             LocalDate curseur = from;
             while (!curseur.isAfter(to)) {
                 LocalDate fin = borneTranche(curseur, to);
                 JsonNode reponse = fitbitClient.dailyRollUp(token, type, curseur, fin);
                 Map<LocalDate, GoogleHealthParser.ZoneMinutes> parDate = GoogleHealthParser.zoneMinutesByDate(reponse);
+                points += parDate.size();
                 for (Map.Entry<LocalDate, GoogleHealthParser.ZoneMinutes> e : parDate.entrySet()) {
                     SanteJour jour = jourDe(user, e.getKey());
                     jour.setMinutesZoneBruleuse(e.getValue().bruleuse());
@@ -221,7 +225,7 @@ public class SanteSyncServiceImpl implements SanteSyncService {
                 }
                 curseur = fin.plusDays(1);
             }
-            marquerSucces(user, type, to);
+            marquerSucces(user, type, to, points);
         } catch (RuntimeException e) {
             marquerEchec(user, type, e);
         }
@@ -231,12 +235,14 @@ public class SanteSyncServiceImpl implements SanteSyncService {
         GoogleHealthDataType type = GoogleHealthDataType.HEART_RATE;
         ZoneId zone = clock.getZone();
         try {
+            int points = 0;
             LocalDate jour = from;
             while (!jour.isAfter(to)) {
                 Instant debutJour = jour.atStartOfDay(zone).toInstant();
                 Instant finJour = jour.plusDays(1).atStartOfDay(zone).toInstant();
                 JsonNode reponse = fitbitClient.rollUp(token, type, debutJour, finJour, FENETRE_FC_SECONDES);
                 List<GoogleHealthParser.FcBucket> buckets = GoogleHealthParser.heartRateBuckets(reponse);
+                points += buckets.size();
                 for (GoogleHealthParser.FcBucket b : buckets) {
                     LocalDateTime horodatage = LocalDateTime.ofInstant(b.debut(), zone);
                     SanteFrequenceCardiaque fc = santeFrequenceCardiaqueRepository
@@ -252,7 +258,7 @@ public class SanteSyncServiceImpl implements SanteSyncService {
                 majFcJournalieres(user, jour, buckets);
                 jour = jour.plusDays(1);
             }
-            marquerSucces(user, type, to);
+            marquerSucces(user, type, to, points);
         } catch (RuntimeException e) {
             marquerEchec(user, type, e);
         }
@@ -276,12 +282,14 @@ public class SanteSyncServiceImpl implements SanteSyncService {
     private void syncListeSimple(Utilisateur user, String token, GoogleHealthDataType type, LocalDate from,
             LocalDate to, BiConsumer<SanteJour, Double> appliquer) {
         try {
+            int points = 0;
             String pageToken = null;
             int pages = 0;
             do {
                 JsonNode reponse = fitbitClient.listDataPoints(token, type, from, pageToken);
                 Map<LocalDate, Double> parDate = GoogleHealthParser.dailyDoubleByDate(reponse, type.camelCaseField(),
                         CANDIDATS_LIST);
+                points += parDate.size();
                 for (Map.Entry<LocalDate, Double> e : parDate.entrySet()) {
                     SanteJour jour = jourDe(user, e.getKey());
                     appliquer.accept(jour, e.getValue());
@@ -290,7 +298,7 @@ public class SanteSyncServiceImpl implements SanteSyncService {
                 pageToken = GoogleHealthParser.nextPageToken(reponse);
                 pages++;
             } while (pageToken != null && pages < MAX_PAGES);
-            marquerSucces(user, type, to);
+            marquerSucces(user, type, to, points);
         } catch (RuntimeException e) {
             marquerEchec(user, type, e);
         }
@@ -299,11 +307,13 @@ public class SanteSyncServiceImpl implements SanteSyncService {
     private void syncHrv(Utilisateur user, String token, LocalDate from, LocalDate to) {
         GoogleHealthDataType type = GoogleHealthDataType.DAILY_HEART_RATE_VARIABILITY;
         try {
+            int points = 0;
             String pageToken = null;
             int pages = 0;
             do {
                 JsonNode reponse = fitbitClient.listDataPoints(token, type, from, pageToken);
                 Map<LocalDate, GoogleHealthParser.VfcJour> parDate = GoogleHealthParser.hrvByDate(reponse);
+                points += parDate.size();
                 for (Map.Entry<LocalDate, GoogleHealthParser.VfcJour> e : parDate.entrySet()) {
                     SanteJour jour = jourDe(user, e.getKey());
                     jour.setVfcMs(e.getValue().vfcMs());
@@ -313,7 +323,7 @@ public class SanteSyncServiceImpl implements SanteSyncService {
                 pageToken = GoogleHealthParser.nextPageToken(reponse);
                 pages++;
             } while (pageToken != null && pages < MAX_PAGES);
-            marquerSucces(user, type, to);
+            marquerSucces(user, type, to, points);
         } catch (RuntimeException e) {
             marquerEchec(user, type, e);
         }
@@ -322,11 +332,13 @@ public class SanteSyncServiceImpl implements SanteSyncService {
     private void syncVo2Max(Utilisateur user, String token, LocalDate from, LocalDate to) {
         GoogleHealthDataType type = GoogleHealthDataType.DAILY_VO2_MAX;
         try {
+            int points = 0;
             String pageToken = null;
             int pages = 0;
             do {
                 JsonNode reponse = fitbitClient.listDataPoints(token, type, from, pageToken);
                 Map<LocalDate, GoogleHealthParser.Vo2MaxJour> parDate = GoogleHealthParser.vo2MaxByDate(reponse);
+                points += parDate.size();
                 for (Map.Entry<LocalDate, GoogleHealthParser.Vo2MaxJour> e : parDate.entrySet()) {
                     SanteJour jour = jourDe(user, e.getKey());
                     jour.setVo2Max(e.getValue().vo2Max());
@@ -336,7 +348,7 @@ public class SanteSyncServiceImpl implements SanteSyncService {
                 pageToken = GoogleHealthParser.nextPageToken(reponse);
                 pages++;
             } while (pageToken != null && pages < MAX_PAGES);
-            marquerSucces(user, type, to);
+            marquerSucces(user, type, to, points);
         } catch (RuntimeException e) {
             marquerEchec(user, type, e);
         }
@@ -346,11 +358,13 @@ public class SanteSyncServiceImpl implements SanteSyncService {
         GoogleHealthDataType type = GoogleHealthDataType.SLEEP;
         ZoneId zone = clock.getZone();
         try {
+            int points = 0;
             String pageToken = null;
             int pages = 0;
             do {
                 JsonNode reponse = fitbitClient.listDataPoints(token, type, from, pageToken);
                 List<GoogleHealthParser.SommeilBrut> sessions = GoogleHealthParser.sleepSessions(reponse);
+                points += sessions.size();
                 for (GoogleHealthParser.SommeilBrut brut : sessions) {
                     if (brut.debut() == null) continue;
                     LocalDateTime debut = LocalDateTime.ofInstant(brut.debut(), zone);
@@ -376,7 +390,7 @@ public class SanteSyncServiceImpl implements SanteSyncService {
                 pageToken = GoogleHealthParser.nextPageToken(reponse);
                 pages++;
             } while (pageToken != null && pages < MAX_PAGES);
-            marquerSucces(user, type, to);
+            marquerSucces(user, type, to, points);
         } catch (RuntimeException e) {
             marquerEchec(user, type, e);
         }
@@ -409,13 +423,22 @@ public class SanteSyncServiceImpl implements SanteSyncService {
         return fin.isAfter(to) ? to : fin;
     }
 
-    private void marquerSucces(Utilisateur user, GoogleHealthDataType type, LocalDate jusqua) {
+    // WHY: un appel qui réussit sans rien ramener passait pour un succès. C'est ce qui a
+    // masqué pendant des semaines les zones cardiaques, le VO2max et l'agitation du
+    // sommeil : le HTTP répondait 200, le parseur ne reconnaissait aucun champ, et l'état
+    // restait OK pendant que les écrans affichaient des tirets. Le nombre de points écrits
+    // est donc enregistré, et zéro devient un statut à part entière.
+    private void marquerSucces(Utilisateur user, GoogleHealthDataType type, LocalDate jusqua, int points) {
         SanteSyncState etat = etatDe(user, type);
         etat.setDerniereDateSynchronisee(jusqua);
         etat.setDerniereExecution(LocalDateTime.now(clock));
-        etat.setDernierStatut(StatutSync.OK);
-        etat.setDernierMessage(null);
+        etat.setDernierStatut(points > 0 ? StatutSync.OK : StatutSync.VIDE);
+        etat.setDernierMessage(points + " point(s)");
         santeSyncStateRepository.save(etat);
+        if (points == 0) {
+            log.warn("SANTE_SYNC_VIDE user={} type={} : appel réussi, aucune donnée exploitable",
+                    user.getUsername(), type);
+        }
     }
 
     private void marquerEchec(Utilisateur user, GoogleHealthDataType type, RuntimeException e) {

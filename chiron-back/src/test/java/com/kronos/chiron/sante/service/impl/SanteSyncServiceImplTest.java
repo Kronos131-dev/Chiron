@@ -108,14 +108,15 @@ class SanteSyncServiceImplTest {
     }
 
     @Test
-    void syncRecent_emptyResponses_marksEveryDataTypeAsSuccessful() {
+    void syncRecent_emptyResponses_marksEveryDataTypeAsEmpty() {
         when(fitbitService.getValidToken("athlete")).thenReturn("token");
 
         santeSyncService.syncRecent("athlete", 1);
 
         ArgumentCaptor<SanteSyncState> captor = ArgumentCaptor.forClass(SanteSyncState.class);
         verify(santeSyncStateRepository, times(GoogleHealthDataType.values().length)).save(captor.capture());
-        assertThat(captor.getAllValues()).allSatisfy(e -> assertThat(e.getDernierStatut()).isEqualTo(StatutSync.OK));
+        assertThat(captor.getAllValues())
+                .allSatisfy(e -> assertThat(e.getDernierStatut()).isEqualTo(StatutSync.VIDE));
         verify(chargeCardioService).recalculerPlage(eq(user), any(), any());
         verify(scoreSommeilService).recalculerPlage(eq(user), any(), any());
     }
@@ -144,6 +145,28 @@ class SanteSyncServiceImplTest {
     }
 
     @Test
+    void syncRecent_callSucceedsButParsesNothing_isNotReportedAsSuccess() {
+        // Given : le HTTP répond 200 mais aucun champ n'est reconnu — le mode d'échec qui a
+        // masqué les zones cardiaques et le VO2max pendant des semaines.
+        when(fitbitService.getValidToken("athlete")).thenReturn("token");
+        when(fitbitClient.dailyRollUp(eq("token"), eq(GoogleHealthDataType.DISTANCE), any(), any()))
+                .thenReturn(new tools.jackson.databind.json.JsonMapper().readTree("{\"rollupDataPoints\":[]}"));
+
+        // When
+        santeSyncService.syncRecent("athlete", 1);
+
+        // Then
+        ArgumentCaptor<SanteSyncState> captor = ArgumentCaptor.forClass(SanteSyncState.class);
+        verify(santeSyncStateRepository, times(GoogleHealthDataType.values().length)).save(captor.capture());
+        assertThat(captor.getAllValues())
+                .filteredOn(e -> e.getTypeDonnee().equals(GoogleHealthDataType.DISTANCE.name()))
+                .allSatisfy(e -> {
+                    assertThat(e.getDernierStatut()).isEqualTo(StatutSync.VIDE);
+                    assertThat(e.getDernierMessage()).isEqualTo("0 point(s)");
+                });
+    }
+
+    @Test
     void syncRecent_stepsCallFails_othersStillSucceed() {
         when(fitbitService.getValidToken("athlete")).thenReturn("token");
         when(fitbitClient.dailyRollUp(eq("token"), eq(GoogleHealthDataType.STEPS), any(), any()))
@@ -157,7 +180,7 @@ class SanteSyncServiceImplTest {
         assertThat(saved).filteredOn(e -> e.getTypeDonnee().equals(GoogleHealthDataType.STEPS.name()))
                 .allSatisfy(e -> assertThat(e.getDernierStatut()).isEqualTo(StatutSync.INDISPONIBLE));
         assertThat(saved).filteredOn(e -> e.getTypeDonnee().equals(GoogleHealthDataType.DISTANCE.name()))
-                .allSatisfy(e -> assertThat(e.getDernierStatut()).isEqualTo(StatutSync.OK));
+                .allSatisfy(e -> assertThat(e.getDernierStatut()).isEqualTo(StatutSync.VIDE));
     }
 
     @Test

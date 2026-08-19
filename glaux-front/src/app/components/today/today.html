@@ -21,6 +21,9 @@
             <li class="text-on-surface-variant text-xs">
               <span class="font-mono text-amber-200/80">{{ etat.typeDonnee }}</span>
               — {{ etat.statut }}
+              @if (etat.message) {
+                <span class="text-on-surface-variant/70">· {{ etat.message }}</span>
+              }
             </li>
           }
         </ul>
