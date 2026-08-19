@@ -34,12 +34,14 @@ export class Coeur implements OnInit {
   selectedDate = signal(new Date().toISOString().slice(0, 10));
   fcPoints = signal<SanteFcPointDto[]>([]);
   jours = signal<SanteJourDto[]>([]);
+  joursCardio = signal<SanteJourDto[]>([]);
   cardioHebdo = signal<SanteCardioHebdoDto[]>([]);
   loadingFc = signal(true);
 
   ngOnInit(): void {
     this.loadFc();
     this.api.getJours(14).subscribe({ next: (d) => this.jours.set(d), error: () => {} });
+    this.api.getJours(84).subscribe({ next: (d) => this.joursCardio.set(d), error: () => {} });
     this.api
       .getCardioHebdo(12)
       .subscribe({ next: (d) => this.cardioHebdo.set(d), error: () => {} });
@@ -114,13 +116,57 @@ export class Coeur implements OnInit {
     };
   });
 
+  private readonly SEMAINES_DISPONIBLES = 12;
+
+  semaineOffset = signal(0);
+
+  private joursDeLaSemaine = computed<SanteJourDto[]>(() => {
+    const parDate = new Map(this.joursCardio().map((j) => [j.date, j]));
+    return this.datesDeLaSemaine().map(
+      (iso) => parDate.get(iso) ?? ({ date: iso, chargeCardio: null } as SanteJourDto),
+    );
+  });
+
+  private datesDeLaSemaine = computed<string[]>(() => {
+    const lundi = this.lundiDeLaSemaine(this.semaineOffset());
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(lundi);
+      d.setDate(lundi.getDate() + i);
+      return this.enIso(d);
+    });
+  });
+
+  chargeDeLaSemaine = computed<number | null>(() => {
+    const charges = this.joursDeLaSemaine()
+      .map((j) => j.chargeCardio)
+      .filter((c): c is number => c != null);
+    return charges.length ? charges.reduce((a, b) => a + b, 0) : null;
+  });
+
+  libelleSemaine = computed<string>(() => {
+    const dates = this.datesDeLaSemaine();
+    return `${this.dateLabel(dates[0])} – ${this.dateLabel(dates[6])}`;
+  });
+
+  estSemaineCourante = computed<boolean>(() => this.semaineOffset() === 0);
+
+  peutReculer = computed<boolean>(() => this.semaineOffset() < this.SEMAINES_DISPONIBLES - 1);
+
+  semainePrecedente(): void {
+    if (this.peutReculer()) this.semaineOffset.set(this.semaineOffset() + 1);
+  }
+
+  semaineSuivante(): void {
+    if (!this.estSemaineCourante()) this.semaineOffset.set(this.semaineOffset() - 1);
+  }
+
   cardioHebdoChart = computed<ChartData<'bar'>>(() => {
-    const c = this.cardioHebdo();
+    const jours = this.joursDeLaSemaine();
     return {
-      labels: c.map((p) => this.dateLabel(p.semaineDebut)),
+      labels: jours.map((j) => this.initialeJour(j.date)),
       datasets: [
         {
-          data: c.map((p) => p.chargeCardio ?? 0),
+          data: jours.map((j) => j.chargeCardio ?? 0),
           label: this.i18n.t('coeur.weeklyCardio'),
           backgroundColor: this.hexA(this.COL.teal, 0.55),
           borderRadius: 4,
@@ -128,6 +174,26 @@ export class Coeur implements OnInit {
       ],
     };
   });
+
+  private lundiDeLaSemaine(offset: number): Date {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    const depuisLundi = (d.getDay() + 6) % 7;
+    d.setDate(d.getDate() - depuisLundi - 7 * offset);
+    return d;
+  }
+
+  private enIso(d: Date): string {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
+      d.getDate(),
+    ).padStart(2, '0')}`;
+  }
+
+  private initialeJour(iso: string): string {
+    return new Date(iso + 'T12:00:00').toLocaleDateString(this.i18n.lang() === 'en' ? 'en' : 'fr', {
+      weekday: 'narrow',
+    });
+  }
 
   lineOptions: ChartConfiguration<'line'>['options'] = {
     responsive: true,

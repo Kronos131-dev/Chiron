@@ -45,6 +45,9 @@ export const fr: Record<string, string> = {
   'coeur.hrv': 'Variabilité (VFC)',
   'coeur.weeklyCardio': 'Charge cardio hebdomadaire',
   'coeur.target': 'Cible',
+  'coeur.previousWeek': 'Semaine précédente',
+  'coeur.nextWeek': 'Semaine suivante',
+  'coeur.thisWeek': 'cette semaine',
   'coeur.noData': 'Aucune donnée cardiaque pour cette date.',
   'coeur.approx': "Approximation Chiron, jamais identique au chiffre de l'app Google Health.",
 

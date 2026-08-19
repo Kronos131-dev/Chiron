@@ -51,10 +51,28 @@
     </div>
 
     <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4">
-      <div class="flex items-center justify-between mb-2">
-        <h3 class="text-sm font-bold uppercase tracking-widest text-on-surface-variant">
-          {{ 'coeur.weeklyCardio' | t }}
-        </h3>
+      <div class="flex items-center justify-between mb-1">
+        <div class="flex items-center gap-1">
+          <button
+            (click)="semainePrecedente()"
+            [disabled]="!peutReculer()"
+            [attr.aria-label]="'coeur.previousWeek' | t"
+            class="material-symbols-outlined text-xl leading-none transition-colors cursor-pointer disabled:opacity-25 disabled:cursor-default hover:text-secondary"
+          >
+            chevron_left
+          </button>
+          <button
+            (click)="semaineSuivante()"
+            [disabled]="estSemaineCourante()"
+            [attr.aria-label]="'coeur.nextWeek' | t"
+            class="material-symbols-outlined text-xl leading-none transition-colors cursor-pointer disabled:opacity-25 disabled:cursor-default hover:text-secondary"
+          >
+            chevron_right
+          </button>
+          <h3 class="text-sm font-bold uppercase tracking-widest text-on-surface-variant ml-1">
+            {{ 'coeur.weeklyCardio' | t }}
+          </h3>
+        </div>
         @if (latestCardioHebdo(); as c) {
           @if (c.cibleBasse != null && c.cibleHaute != null) {
             <span class="text-xs text-on-surface-variant"
@@ -65,6 +83,19 @@
           }
         }
       </div>
+
+      <div class="flex items-baseline gap-3 mb-3">
+        <p class="text-4xl font-black text-white">
+          {{ chargeDeLaSemaine() != null ? (chargeDeLaSemaine() | number: '1.0-0') : '—' }}
+        </p>
+        <p class="text-xs text-on-surface-variant">
+          {{ libelleSemaine() }}
+          @if (estSemaineCourante()) {
+            <span class="text-secondary">· {{ 'coeur.thisWeek' | t }}</span>
+          }
+        </p>
+      </div>
+
       <div class="h-48">
         <canvas baseChart [data]="cardioHebdoChart()" [options]="barOptions" type="bar"></canvas>
       </div>
