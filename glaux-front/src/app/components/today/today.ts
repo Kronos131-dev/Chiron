@@ -2,7 +2,7 @@ import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HeaderComponent } from '../shared/header/header';
 import { TranslatePipe } from '../../service/translate.pipe';
-import { GlauxApi, SanteResumeDto } from '../../service/glaux-api';
+import { GlauxApi, SanteResumeDto, SanteSyncEtatDto } from '../../service/glaux-api';
 
 @Component({
   selector: 'app-today',
@@ -17,9 +17,11 @@ export class Today implements OnInit {
   resume = signal<SanteResumeDto | null>(null);
   loading = signal(true);
   syncing = signal(false);
+  syncEnEchec = signal<SanteSyncEtatDto[]>([]);
 
   ngOnInit(): void {
     this.load();
+    this.chargerEtatSync();
   }
 
   private load(): void {
@@ -33,10 +35,22 @@ export class Today implements OnInit {
     });
   }
 
+  private chargerEtatSync(): void {
+    this.api.getSyncEtat().subscribe({
+      next: (etats) => this.retenirEchecs(etats),
+      error: () => this.syncEnEchec.set([]),
+    });
+  }
+
+  private retenirEchecs(etats: SanteSyncEtatDto[]): void {
+    this.syncEnEchec.set(etats.filter((e) => e.statut !== 'OK'));
+  }
+
   sync(): void {
     this.syncing.set(true);
     this.api.forcerSync().subscribe({
-      next: () => {
+      next: (etats) => {
+        this.retenirEchecs(etats);
         this.syncing.set(false);
         this.load();
       },

@@ -22,6 +22,7 @@ export const en: Record<string, string> = {
 
   'today.title': 'Today',
   'today.subtitle': "Today's summary",
+  'today.syncPartial': 'Some data did not come through from Google Health',
   'today.steps': 'Steps',
   'today.distance': 'Distance',
   'today.calories': 'Calories',

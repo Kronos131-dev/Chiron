@@ -11,6 +11,22 @@
       <p class="text-on-surface-variant font-body mt-2">{{ 'today.subtitle' | t }}</p>
     </div>
 
+    @if (syncEnEchec().length > 0) {
+      <div class="bg-amber-950/20 border border-amber-500/20 rounded-xl p-4 mb-6">
+        <p class="text-amber-300 font-bold text-sm">
+          {{ 'today.syncPartial' | t }}
+        </p>
+        <ul class="mt-2 space-y-1">
+          @for (etat of syncEnEchec(); track etat.typeDonnee) {
+            <li class="text-on-surface-variant text-xs">
+              <span class="font-mono text-amber-200/80">{{ etat.typeDonnee }}</span>
+              — {{ etat.statut }}
+            </li>
+          }
+        </ul>
+      </div>
+    }
+
     @if (loading()) {
       <div class="flex justify-center mt-16">
         <span
