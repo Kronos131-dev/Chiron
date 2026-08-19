@@ -31,10 +31,14 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -68,13 +72,37 @@ public class SanteSyncServiceImpl implements SanteSyncService {
     public void ensureBackfillAsync(String chironUsername) {
         Utilisateur user = utilisateurRepository.findByUsername(chironUsername).orElse(null);
         if (user == null) return;
-        if (!santeSyncStateRepository.findByUtilisateur(user).isEmpty()) return;
+        Set<GoogleHealthDataType> aRattraper = typesSansBackfill(user);
+        if (aRattraper.isEmpty()) return;
 
         LocalDate today = LocalDate.now(clock);
         LocalDate from = today.minusDays(BACKFILL_JOURS - 1L);
-        log.info("SANTE_BACKFILL_DEMARRE user={} depuis={}", chironUsername, from);
-        doSync(user, chironUsername, from, today);
+        log.info("SANTE_BACKFILL_DEMARRE user={} depuis={} types={}", chironUsername, from, aRattraper.size());
+        doSync(user, chironUsername, from, today, aRattraper);
+        marquerBackfillTermine(user, aRattraper);
         log.info("SANTE_BACKFILL_TERMINE user={}", chironUsername);
+    }
+
+    private Set<GoogleHealthDataType> typesSansBackfill(Utilisateur user) {
+        Map<String, SanteSyncState> parType = santeSyncStateRepository.findByUtilisateur(user).stream()
+                .collect(Collectors.toMap(SanteSyncState::getTypeDonnee, Function.identity(), (a, b) -> a));
+        Set<GoogleHealthDataType> resultat = EnumSet.noneOf(GoogleHealthDataType.class);
+        for (GoogleHealthDataType type : GoogleHealthDataType.values()) {
+            SanteSyncState etat = parType.get(type.name());
+            if (etat == null || !etat.isBackfillTermine()) resultat.add(type);
+        }
+        return resultat;
+    }
+
+    private void marquerBackfillTermine(Utilisateur user, Set<GoogleHealthDataType> types) {
+        for (GoogleHealthDataType type : types) {
+            santeSyncStateRepository.findByUtilisateurAndTypeDonnee(user, type.name())
+                    .filter(etat -> etat.getDernierStatut() == StatutSync.OK)
+                    .ifPresent(etat -> {
+                        etat.setBackfillTermine(true);
+                        santeSyncStateRepository.save(etat);
+                    });
+        }
     }
 
     @Transactional
@@ -84,10 +112,12 @@ public class SanteSyncServiceImpl implements SanteSyncService {
         if (user == null) return;
         int n = Math.max(1, Math.min(jours, BACKFILL_JOURS));
         LocalDate today = LocalDate.now(clock);
-        doSync(user, chironUsername, today.minusDays(n - 1L), today);
+        doSync(user, chironUsername, today.minusDays(n - 1L), today,
+                EnumSet.allOf(GoogleHealthDataType.class));
     }
 
-    private void doSync(Utilisateur user, String chironUsername, LocalDate from, LocalDate to) {
+    private void doSync(Utilisateur user, String chironUsername, LocalDate from, LocalDate to,
+            Set<GoogleHealthDataType> types) {
         String token;
         try {
             token = fitbitService.getValidToken(chironUsername);
@@ -95,26 +125,53 @@ public class SanteSyncServiceImpl implements SanteSyncService {
             return;
         }
 
-        syncDailyRollup(user, token, GoogleHealthDataType.STEPS, from, to,
-                (jour, v) -> jour.setPas(v.intValue()));
-        syncDailyRollup(user, token, GoogleHealthDataType.DISTANCE, from, to, SanteJour::setDistanceM);
-        syncDailyRollup(user, token, GoogleHealthDataType.TOTAL_CALORIES, from, to,
-                (jour, v) -> jour.setCaloriesTotales(v.intValue()));
-        syncDailyRollup(user, token, GoogleHealthDataType.ACTIVE_ENERGY_BURNED, from, to,
-                (jour, v) -> jour.setCaloriesActives(v.intValue()));
-        syncDailyRollup(user, token, GoogleHealthDataType.ACTIVE_ZONE_MINUTES, from, to,
-                (jour, v) -> jour.setMinutesZoneActive(v.intValue()));
-        syncZonesCardiaques(user, token, from, to);
-        syncHeartRate(user, token, from, to);
-        syncListeSimple(user, token, GoogleHealthDataType.DAILY_RESTING_HEART_RATE, from, to,
-                (jour, v) -> jour.setFcRepos(v.intValue()));
-        syncListeSimple(user, token, GoogleHealthDataType.DAILY_OXYGEN_SATURATION, from, to, SanteJour::setSpo2Pct);
-        syncListeSimple(user, token, GoogleHealthDataType.DAILY_RESPIRATORY_RATE, from, to,
-                SanteJour::setFrequenceRespiratoire);
-        syncHrv(user, token, from, to);
-        syncVo2Max(user, token, from, to);
-        syncSleep(user, token, from, to);
-        completerFcSommeil(user, from, to);
+        if (types.contains(GoogleHealthDataType.STEPS)) {
+            syncDailyRollup(user, token, GoogleHealthDataType.STEPS, from, to,
+                    (jour, v) -> jour.setPas(v.intValue()));
+        }
+        if (types.contains(GoogleHealthDataType.DISTANCE)) {
+            syncDailyRollup(user, token, GoogleHealthDataType.DISTANCE, from, to, SanteJour::setDistanceM);
+        }
+        if (types.contains(GoogleHealthDataType.TOTAL_CALORIES)) {
+            syncDailyRollup(user, token, GoogleHealthDataType.TOTAL_CALORIES, from, to,
+                    (jour, v) -> jour.setCaloriesTotales(v.intValue()));
+        }
+        if (types.contains(GoogleHealthDataType.ACTIVE_ENERGY_BURNED)) {
+            syncDailyRollup(user, token, GoogleHealthDataType.ACTIVE_ENERGY_BURNED, from, to,
+                    (jour, v) -> jour.setCaloriesActives(v.intValue()));
+        }
+        if (types.contains(GoogleHealthDataType.ACTIVE_ZONE_MINUTES)) {
+            syncDailyRollup(user, token, GoogleHealthDataType.ACTIVE_ZONE_MINUTES, from, to,
+                    (jour, v) -> jour.setMinutesZoneActive(v.intValue()));
+        }
+        if (types.contains(GoogleHealthDataType.TIME_IN_HEART_RATE_ZONE)) {
+            syncZonesCardiaques(user, token, from, to);
+        }
+        if (types.contains(GoogleHealthDataType.HEART_RATE)) {
+            syncHeartRate(user, token, from, to);
+        }
+        if (types.contains(GoogleHealthDataType.DAILY_RESTING_HEART_RATE)) {
+            syncListeSimple(user, token, GoogleHealthDataType.DAILY_RESTING_HEART_RATE, from, to,
+                    (jour, v) -> jour.setFcRepos(v.intValue()));
+        }
+        if (types.contains(GoogleHealthDataType.DAILY_OXYGEN_SATURATION)) {
+            syncListeSimple(user, token, GoogleHealthDataType.DAILY_OXYGEN_SATURATION, from, to,
+                    SanteJour::setSpo2Pct);
+        }
+        if (types.contains(GoogleHealthDataType.DAILY_RESPIRATORY_RATE)) {
+            syncListeSimple(user, token, GoogleHealthDataType.DAILY_RESPIRATORY_RATE, from, to,
+                    SanteJour::setFrequenceRespiratoire);
+        }
+        if (types.contains(GoogleHealthDataType.DAILY_HEART_RATE_VARIABILITY)) {
+            syncHrv(user, token, from, to);
+        }
+        if (types.contains(GoogleHealthDataType.DAILY_VO2_MAX)) {
+            syncVo2Max(user, token, from, to);
+        }
+        if (types.contains(GoogleHealthDataType.SLEEP)) {
+            syncSleep(user, token, from, to);
+            completerFcSommeil(user, from, to);
+        }
 
         chargeCardioService.recalculerPlage(user, from, to);
         scoreSommeilService.recalculerPlage(user, from, to);

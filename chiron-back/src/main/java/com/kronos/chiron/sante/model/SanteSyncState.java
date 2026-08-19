@@ -41,4 +41,8 @@ public class SanteSyncState {
 
     @Column(name = "dernier_message", length = 500)
     private String dernierMessage;
+
+    @Builder.Default
+    @Column(name = "backfill_termine", nullable = false)
+    private boolean backfillTermine = false;
 }

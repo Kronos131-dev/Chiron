@@ -151,13 +151,36 @@ class SanteSyncServiceImplTest {
     }
 
     @Test
-    void ensureBackfillAsync_syncStateAlreadyExists_doesNotResync() {
-        when(santeSyncStateRepository.findByUtilisateur(user))
-                .thenReturn(List.of(SanteSyncState.builder().utilisateur(user).typeDonnee("STEPS").build()));
+    void ensureBackfillAsync_everyTypeAlreadyBackfilled_doesNotResync() {
+        // Given
+        when(santeSyncStateRepository.findByUtilisateur(user)).thenReturn(
+                java.util.Arrays.stream(GoogleHealthDataType.values())
+                        .map(type -> SanteSyncState.builder().utilisateur(user).typeDonnee(type.name())
+                                .backfillTermine(true).build())
+                        .toList());
 
+        // When
         santeSyncService.ensureBackfillAsync("athlete");
 
+        // Then
         verifyNoInteractions(fitbitService);
+    }
+
+    @Test
+    void ensureBackfillAsync_oneTypeStillMissingItsBackfill_resyncs() {
+        // Given
+        List<SanteSyncState> etats = java.util.Arrays.stream(GoogleHealthDataType.values())
+                .map(type -> SanteSyncState.builder().utilisateur(user).typeDonnee(type.name())
+                        .backfillTermine(type != GoogleHealthDataType.DAILY_VO2_MAX).build())
+                .toList();
+        when(santeSyncStateRepository.findByUtilisateur(user)).thenReturn(etats);
+        when(fitbitService.getValidToken("athlete")).thenReturn("token");
+
+        // When
+        santeSyncService.ensureBackfillAsync("athlete");
+
+        // Then
+        verify(fitbitService).getValidToken("athlete");
     }
 
     @Test
