@@ -168,6 +168,13 @@ public class FitbitClient {
     }
 
     private static final int DEBUG_LOG_MAX_LENGTH = 2000;
+    private static final int ERREUR_MAX_LENGTH = 400;
+
+    private static String tronquer(String corps) {
+        if (corps == null || corps.isBlank()) return "(corps vide)";
+        String plat = corps.replaceAll("\\s+", " ").trim();
+        return plat.length() > ERREUR_MAX_LENGTH ? plat.substring(0, ERREUR_MAX_LENGTH) + "…" : plat;
+    }
 
     private static String abbreviate(JsonNode response) {
         String json = String.valueOf(response);
@@ -237,8 +244,13 @@ public class FitbitClient {
         if (status.value() == 429) {
             return new FitbitUnavailableException("Quota Google Health dépassé, réessaie plus tard.");
         }
-        log.warn("Google Health {} a renvoyé {} : {}", call, status, e.getResponseBodyAsString());
-        return new FitbitUnavailableException("Google Health a renvoyé " + status);
+        // WHY: le corps du refus porte l'explication — champ de filtre inconnu, type de
+        // donnée inexistant — et il n'était visible que dans les journaux du serveur. Le
+        // remonter dans le message rend le diagnostic lisible depuis le navigateur, et
+        // renseigne aussi dernierMessage quand la synchro échoue.
+        String corps = e.getResponseBodyAsString();
+        log.warn("Google Health {} a renvoyé {} : {}", call, status, corps);
+        return new FitbitUnavailableException("Google Health a renvoyé " + status + " : " + tronquer(corps));
     }
 
     public record TokenResponse(String accessToken, String refreshToken, long expiresInSeconds,
