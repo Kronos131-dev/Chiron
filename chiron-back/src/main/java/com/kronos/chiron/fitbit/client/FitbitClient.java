@@ -122,7 +122,8 @@ public class FitbitClient {
     }
 
     public JsonNode listDataPoints(String accessToken, GoogleHealthDataType type, LocalDate from, String pageToken) {
-        return doGet(accessToken, type.dataPointsPath(), type.filterFrom(from), pageToken);
+        String filtre = type.hasFiltre() ? type.filterFrom(from) : null;
+        return doGet(accessToken, type.dataPointsPath(), filtre, pageToken);
     }
 
     // WHY: sert à sonder un type de donnée que l'enum ne connaît pas encore. Les slugs de

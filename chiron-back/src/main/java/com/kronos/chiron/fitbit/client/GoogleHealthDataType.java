@@ -9,25 +9,30 @@ public enum GoogleHealthDataType {
                     Operation.LIST,
                     "daily_heart_rate_variability.date"), DAILY_RESPIRATORY_RATE("daily-respiratory-rate",
                             Operation.LIST, "daily_respiratory_rate.date"), SLEEP("sleep",
-                                    Operation.LIST, "sleep.interval.civil_end_time"), EXERCISE(
-                                            "exercise", Operation.LIST,
-                                            "exercise.interval.civil_end_time"), STEPS("steps",
-                                                    Operation.DAILY_ROLLUP, null), DISTANCE("distance",
-                                                            Operation.DAILY_ROLLUP, null), TOTAL_CALORIES(
-                                                                    "total-calories", Operation.DAILY_ROLLUP,
-                                                                    null), ACTIVE_ENERGY_BURNED(
-                                                                            "active-energy-burned",
-                                                                            Operation.DAILY_ROLLUP,
-                                                                            null), ACTIVE_ZONE_MINUTES(
-                                                                                    "active-zone-minutes",
-                                                                                    Operation.DAILY_ROLLUP,
-                                                                                    null), TIME_IN_HEART_RATE_ZONE(
-                                                                                            "time-in-heart-rate-zone",
-                                                                                            Operation.DAILY_ROLLUP,
-                                                                                            null), HEART_RATE(
-                                                                                                    "heart-rate",
-                                                                                                    Operation.ROLLUP,
-                                                                                                    null);
+                                    Operation.LIST, "sleep.interval.civil_end_time"),
+    // WHY: par analogie avec sleep.interval.civil_end_time, un filtre
+    // exercise.interval.civil_end_time avait été déduit sans jamais être vérifié — Google
+    // le rejette en production avec INVALID_DATA_POINT_FILTER_DATA_TYPE_MEMBER (400). Aucun
+    // filtre n'existe donc pour ce type tant que le bon nom de champ n'est pas confirmé ;
+    // la fenêtre from/to demandée par l'appelant n'est alors plus appliquée côté Google, la
+    // pagination (MAX_PAGES) et l'upsert idempotent de sante_activite absorbent le surplus.
+    EXERCISE("exercise", Operation.LIST, null), STEPS("steps",
+            Operation.DAILY_ROLLUP, null), DISTANCE("distance",
+                    Operation.DAILY_ROLLUP, null), TOTAL_CALORIES(
+                            "total-calories", Operation.DAILY_ROLLUP,
+                            null), ACTIVE_ENERGY_BURNED(
+                                    "active-energy-burned",
+                                    Operation.DAILY_ROLLUP,
+                                    null), ACTIVE_ZONE_MINUTES(
+                                            "active-zone-minutes",
+                                            Operation.DAILY_ROLLUP,
+                                            null), TIME_IN_HEART_RATE_ZONE(
+                                                    "time-in-heart-rate-zone",
+                                                    Operation.DAILY_ROLLUP,
+                                                    null), HEART_RATE(
+                                                            "heart-rate",
+                                                            Operation.ROLLUP,
+                                                            null);
 
     public enum Operation {
         LIST, DAILY_ROLLUP, ROLLUP
@@ -58,6 +63,10 @@ public enum GoogleHealthDataType {
             sb.append(Character.toUpperCase(parts[i].charAt(0))).append(parts[i].substring(1));
         }
         return sb.toString();
+    }
+
+    public boolean hasFiltre() {
+        return filterField != null;
     }
 
     public String filterFrom(LocalDate from) {

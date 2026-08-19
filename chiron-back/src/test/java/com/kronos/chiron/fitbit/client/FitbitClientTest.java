@@ -128,6 +128,18 @@ class FitbitClientTest {
     }
 
     @Test
+    void listDataPoints_typeWithoutFiltre_sendsNoFilterQueryParam() {
+        mockServer.expect(requestPath("/v4/users/me/dataTypes/exercise/dataPoints"))
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(request -> assertThat(request.getURI().getQuery()).doesNotContain("filter="))
+                .andRespond(withSuccess("{\"dataPoints\":[]}", MediaType.APPLICATION_JSON));
+
+        fitbitClient.listDataPoints("token", GoogleHealthDataType.EXERCISE, LocalDate.of(2026, 8, 5), null);
+
+        mockServer.verify();
+    }
+
+    @Test
     void listDataPoints_withPageToken_addsPageTokenQueryParam() {
         mockServer.expect(requestPath("/v4/users/me/dataTypes/sleep/dataPoints"))
                 .andExpect(method(HttpMethod.GET))
