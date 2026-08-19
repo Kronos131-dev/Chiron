@@ -230,6 +230,60 @@ class GoogleHealthParserTest {
     }
 
     @Test
+    void sleepSessions_realNight_agitationIsTheSumOfShortAwakenings() {
+        // Given : capture réelle de la nuit du 19/08. Google affiche 21 min d'éveil et
+        // 18 min d'agitation ; les quinze micro-réveils totalisent 1110 s, soit 18 min.
+        JsonNode node = json.readTree("""
+                {"dataPoints":[
+                  {"sleep":{
+                    "interval":{"startTime":"2026-08-18T21:11:00Z","endTime":"2026-08-19T05:47:00Z"},
+                    "type":"STAGES",
+                    "metadata":{"stagesStatus":"SUCCEEDED","mainSleep":true},
+                    "summary":{
+                      "minutesInSleepPeriod":"516","minutesAsleep":"494","minutesAwake":"22",
+                      "minutesToFallAsleep":"0","minutesAfterWakeUp":"0",
+                      "stagesSummary":[
+                        {"type":"AWAKE","minutes":"21","count":"3"},
+                        {"type":"LIGHT","minutes":"290","count":"14"},
+                        {"type":"DEEP","minutes":"91","count":"5"},
+                        {"type":"REM","minutes":"113","count":"7"}
+                      ]
+                    },
+                    "shortAwakenings":[
+                      {"startTime":"2026-08-18T23:00:30Z","endTime":"2026-08-18T23:01:00Z"},
+                      {"startTime":"2026-08-18T23:48:30Z","endTime":"2026-08-18T23:50:30Z"},
+                      {"startTime":"2026-08-19T00:17:30Z","endTime":"2026-08-19T00:18:00Z"},
+                      {"startTime":"2026-08-19T00:34:30Z","endTime":"2026-08-19T00:35:00Z"},
+                      {"startTime":"2026-08-19T00:43:00Z","endTime":"2026-08-19T00:43:30Z"},
+                      {"startTime":"2026-08-19T01:15:00Z","endTime":"2026-08-19T01:17:30Z"},
+                      {"startTime":"2026-08-19T01:21:00Z","endTime":"2026-08-19T01:21:30Z"},
+                      {"startTime":"2026-08-19T01:48:30Z","endTime":"2026-08-19T01:52:30Z"},
+                      {"startTime":"2026-08-19T02:50:00Z","endTime":"2026-08-19T02:50:30Z"},
+                      {"startTime":"2026-08-19T03:11:30Z","endTime":"2026-08-19T03:13:00Z"},
+                      {"startTime":"2026-08-19T03:16:30Z","endTime":"2026-08-19T03:17:00Z"},
+                      {"startTime":"2026-08-19T03:19:00Z","endTime":"2026-08-19T03:20:30Z"},
+                      {"startTime":"2026-08-19T03:30:00Z","endTime":"2026-08-19T03:32:00Z"},
+                      {"startTime":"2026-08-19T05:23:30Z","endTime":"2026-08-19T05:24:00Z"},
+                      {"startTime":"2026-08-19T05:42:30Z","endTime":"2026-08-19T05:43:30Z"}
+                    ]
+                  }}
+                ]}""");
+
+        // When
+        List<GoogleHealthParser.SommeilBrut> sessions = GoogleHealthParser.sleepSessions(node);
+
+        // Then
+        GoogleHealthParser.SommeilBrut nuit = sessions.get(0);
+        assertThat(nuit.minutesAgite()).isEqualTo(18);
+        assertThat(nuit.minutesEveille()).isEqualTo(21);
+        assertThat(nuit.minutesEndormi()).isEqualTo(494);
+        assertThat(nuit.minutesProfond()).isEqualTo(91);
+        assertThat(nuit.minutesLeger()).isEqualTo(290);
+        assertThat(nuit.minutesParadoxal()).isEqualTo(113);
+        assertThat(nuit.nbReveils()).isEqualTo(3);
+    }
+
+    @Test
     void sleepSessions_agitationIsAStageUnderAnotherName_isCounted() {
         // Given : nuit réelle du 19/08. Google affiche 21 min d'éveil ET 18 min
         // d'agitation, donc deux stades distincts — le second n'étant pas nommé RESTLESS,

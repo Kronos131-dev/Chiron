@@ -243,6 +243,25 @@ public final class GoogleHealthParser {
     // l'application affiche est le temps passé au lit que les stades n'expliquent pas —
     // ni sommeil, ni éveil déclaré, ni endormissement, ni traîne au réveil. On le
     // reconstitue donc par différence plutôt que de le laisser nul.
+    // WHY: Google ne publie aucun stade « agité ». Ce que son application affiche sous ce
+    // nom est la somme du tableau shortAwakenings, listé à côté des stades : les
+    // micro-réveils, trop brefs pour devenir un stade AWAKE. Sur la nuit du 19/08 les
+    // quinze entrées totalisent 1110 secondes, soit les 18 minutes annoncées — la division
+    // entière reproduit leur troncature.
+    private static Integer agitationDesReveilsCourts(JsonNode sleep) {
+        JsonNode reveils = sleep.get("shortAwakenings");
+        if (reveils == null || !reveils.isArray()) return null;
+        long secondes = 0;
+        for (JsonNode reveil : reveils) {
+            Instant debut = instantField(reveil, "startTime");
+            Instant fin = instantField(reveil, "endTime");
+            if (debut == null || fin == null) continue;
+            long duree = Duration.between(debut, fin).getSeconds();
+            if (duree > 0) secondes += duree;
+        }
+        return (int) (secondes / 60);
+    }
+
     private static final Set<String> STADES_RECONNUS = Set.of("DEEP", "LIGHT", "REM", "AWAKE");
 
     // WHY: chaque stade est arrondi à la minute, si bien que leur somme dépasse
@@ -352,10 +371,14 @@ public final class GoogleHealthParser {
                 }
             }
 
-            Integer minutesEveille = minutesEveilleSummary != null
-                    ? minutesEveilleSummary
-                    : parStade.get("AWAKE");
-            Integer minutesAgite = agitationDesStadesNonReconnus(debut, fin, parStade);
+            // WHY: minutesAwake du résumé compte une minute de plus que le stade AWAKE — 22
+            // contre 21 sur la nuit du 19/08 — et c'est la valeur du stade que l'application
+            // de Google affiche. On la préfère pour rester comparable chiffre pour chiffre.
+            Integer minutesEveille = parStade.containsKey("AWAKE")
+                    ? parStade.get("AWAKE")
+                    : minutesEveilleSummary;
+            Integer minutesAgite = agitationDesReveilsCourts(sleep);
+            if (minutesAgite == null) minutesAgite = agitationDesStadesNonReconnus(debut, fin, parStade);
             if (minutesAgite == null) {
                 minutesAgite = agitationResiduelle(debut, fin, parStade, minutesEveille, minutesAvant,
                         minutesApres);
