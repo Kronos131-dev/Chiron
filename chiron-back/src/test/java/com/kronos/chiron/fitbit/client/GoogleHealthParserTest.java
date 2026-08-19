@@ -230,6 +230,68 @@ class GoogleHealthParserTest {
     }
 
     @Test
+    void sleepSessions_agitationIsAStageUnderAnotherName_isCounted() {
+        // Given : nuit réelle du 19/08. Google affiche 21 min d'éveil ET 18 min
+        // d'agitation, donc deux stades distincts — le second n'étant pas nommé RESTLESS,
+        // il était purement ignoré et l'écran affichait « Agité 0 min ».
+        JsonNode node = json.readTree("""
+                {"dataPoints":[
+                  {"sleep":{
+                    "interval":{"startTime":"2026-08-18T21:30:00Z","endTime":"2026-08-19T06:22:00Z"},
+                    "metadata":{"stagesStatus":"SUCCEEDED"},
+                    "summary":{
+                      "minutesAsleep":494,
+                      "minutesAwake":21,
+                      "stagesSummary":[
+                        {"type":"DEEP","minutes":91},
+                        {"type":"LIGHT","minutes":290},
+                        {"type":"REM","minutes":113},
+                        {"type":"AWAKE","minutes":21,"count":5},
+                        {"type":"MOVING","minutes":18}
+                      ]
+                    }
+                  }}
+                ]}""");
+
+        // When
+        List<GoogleHealthParser.SommeilBrut> sessions = GoogleHealthParser.sleepSessions(node);
+
+        // Then
+        assertThat(sessions.get(0).minutesAgite()).isEqualTo(18);
+        assertThat(sessions.get(0).minutesEveille()).isEqualTo(21);
+    }
+
+    @Test
+    void sleepSessions_unknownStageIsAnAggregate_fallsBackToTheResidue() {
+        // Given : un « ASLEEP » qui recompte le sommeil ferait dépasser le temps au lit.
+        JsonNode node = json.readTree("""
+                {"dataPoints":[
+                  {"sleep":{
+                    "interval":{"startTime":"2026-08-18T22:00:00Z","endTime":"2026-08-19T06:00:00Z"},
+                    "metadata":{"stagesStatus":"SUCCEEDED"},
+                    "summary":{
+                      "minutesAsleep":442,
+                      "minutesAwake":15,
+                      "minutesToFallAsleep":5,
+                      "stagesSummary":[
+                        {"type":"DEEP","minutes":100},
+                        {"type":"LIGHT","minutes":250},
+                        {"type":"REM","minutes":92},
+                        {"type":"AWAKE","minutes":15},
+                        {"type":"ASLEEP","minutes":442}
+                      ]
+                    }
+                  }}
+                ]}""");
+
+        // When
+        List<GoogleHealthParser.SommeilBrut> sessions = GoogleHealthParser.sleepSessions(node);
+
+        // Then
+        assertThat(sessions.get(0).minutesAgite()).isEqualTo(18);
+    }
+
+    @Test
     void sleepSessions_noRestlessStage_derivesAgitationFromTheUnaccountedTime() {
         // Given : 480 min au lit, dont 442 expliquées par les stades, l'éveil et
         // l'endormissement. Google ne publie pas de stade RESTLESS, mais son application

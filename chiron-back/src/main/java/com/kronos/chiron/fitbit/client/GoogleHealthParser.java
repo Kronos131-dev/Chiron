@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public final class GoogleHealthParser {
 
@@ -242,6 +243,47 @@ public final class GoogleHealthParser {
     // l'application affiche est le temps passé au lit que les stades n'expliquent pas —
     // ni sommeil, ni éveil déclaré, ni endormissement, ni traîne au réveil. On le
     // reconstitue donc par différence plutôt que de le laisser nul.
+    private static final Set<String> STADES_RECONNUS = Set.of("DEEP", "LIGHT", "REM", "AWAKE");
+
+    // WHY: chaque stade est arrondi à la minute, si bien que leur somme dépasse
+    // couramment l'intervalle de quelques minutes — une nuit réelle donnait 533 pour 532.
+    // Une entrée agrégée, elle, recompte tout le sommeil et fait presque doubler le total :
+    // la marge d'un quart sépare les deux cas sans ambiguïté.
+    private static final double TOLERANCE_SOMME_STADES = 1.25;
+
+    // WHY: Google publie l'éveil et l'agitation comme deux stades distincts — 21 min et
+    // 18 min sur une même nuit — mais le nom du second n'est pas RESTLESS et n'a jamais
+    // pu être observé. Plutôt que de le deviner, on somme tout stade qui n'est ni sommeil
+    // ni éveil : quel que soit son nom, c'est l'agitation.
+    //
+    // Le total des stades ne doit pas dépasser le temps passé au lit : au-delà, l'entrée
+    // inconnue n'est pas un stade mais un agrégat (un « ASLEEP » qui recompte le sommeil,
+    // par exemple), et la somme serait absurde. On rend alors la main au calcul par
+    // différence.
+    private static Integer agitationDesStadesNonReconnus(Instant debut, Instant fin,
+            Map<String, Integer> parStade) {
+        int total = 0;
+        int somme = 0;
+        boolean trouve = false;
+        for (Map.Entry<String, Integer> stade : parStade.entrySet()) {
+            int minutes = nzInt(stade.getValue());
+            somme += minutes;
+            if (STADES_RECONNUS.contains(stade.getKey().toUpperCase(java.util.Locale.ROOT))) continue;
+            total += minutes;
+            trouve = true;
+        }
+        if (!trouve) return null;
+        if (debut != null && fin != null) {
+            long minutesAuLit = Duration.between(debut, fin).toMinutes();
+            if (somme > minutesAuLit * TOLERANCE_SOMME_STADES) return null;
+        }
+        return total;
+    }
+
+    private static int nzInt(Integer valeur) {
+        return valeur != null ? valeur : 0;
+    }
+
     private static Integer agitationResiduelle(Instant debut, Instant fin, Map<String, Integer> parStade,
             Integer minutesEveille, Integer minutesAvant, Integer minutesApres) {
         if (debut == null || fin == null || parStade.isEmpty()) return null;
@@ -313,9 +355,11 @@ public final class GoogleHealthParser {
             Integer minutesEveille = minutesEveilleSummary != null
                     ? minutesEveilleSummary
                     : parStade.get("AWAKE");
-            Integer minutesAgite = parStade.containsKey("RESTLESS")
-                    ? parStade.get("RESTLESS")
-                    : agitationResiduelle(debut, fin, parStade, minutesEveille, minutesAvant, minutesApres);
+            Integer minutesAgite = agitationDesStadesNonReconnus(debut, fin, parStade);
+            if (minutesAgite == null) {
+                minutesAgite = agitationResiduelle(debut, fin, parStade, minutesEveille, minutesAvant,
+                        minutesApres);
+            }
 
             result.add(new SommeilBrut(externalId, debut, fin, date, sieste, stadesDisponibles,
                     minutesEndormi, minutesEveille,
