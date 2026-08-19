@@ -2,6 +2,7 @@ package com.kronos.chiron.sante.service.impl;
 
 import com.kronos.chiron.fitbit.dto.FitbitLinkStatus;
 import com.kronos.chiron.fitbit.service.FitbitService;
+import com.kronos.chiron.sante.dto.SanteAptitudeDto;
 import com.kronos.chiron.sante.dto.SanteCardioHebdoDto;
 import com.kronos.chiron.sante.dto.SanteResumeDto;
 import com.kronos.chiron.sante.model.SanteJour;
@@ -65,6 +66,36 @@ class SanteQueryServiceImplTest {
         when(santeSommeilRepository
                 .findFirstByUtilisateurAndDateAndSiesteFalseOrderByMinutesEndormiDesc(user, today))
                 .thenReturn(Optional.empty());
+    }
+
+    @Test
+    void getAptitude_niveauPresentButVo2MaxNull_keepsTheDay() {
+        // Given
+        SanteJour jour = SanteJour.builder().utilisateur(user).date(today).niveauAptitude("GOOD").build();
+        when(santeJourRepository.findByUtilisateurAndDateBetweenOrderByDateAsc(eq(user), any(), any()))
+                .thenReturn(List.of(jour));
+
+        // When
+        List<SanteAptitudeDto> points = santeQueryService.getAptitude(user, 180);
+
+        // Then
+        assertThat(points).hasSize(1);
+        assertThat(points.getFirst().vo2Max()).isNull();
+        assertThat(points.getFirst().niveauAptitude()).isEqualTo("GOOD");
+    }
+
+    @Test
+    void getAptitude_neitherVo2MaxNorNiveau_dropsTheDay() {
+        // Given
+        SanteJour jour = SanteJour.builder().utilisateur(user).date(today).build();
+        when(santeJourRepository.findByUtilisateurAndDateBetweenOrderByDateAsc(eq(user), any(), any()))
+                .thenReturn(List.of(jour));
+
+        // When
+        List<SanteAptitudeDto> points = santeQueryService.getAptitude(user, 180);
+
+        // Then
+        assertThat(points).isEmpty();
     }
 
     @Test

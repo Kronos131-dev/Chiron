@@ -15,14 +15,14 @@
             {{ 'aptitude.vo2max' | t }}
           </p>
           <p class="text-3xl font-black text-white">
-            {{ latest()?.vo2Max != null ? (latest()!.vo2Max | number: '1.0-1') : '—' }}
+            {{ dernierVo2Max() != null ? (dernierVo2Max() | number: '1.0-1') : '—' }}
           </p>
         </div>
         <div class="bg-slate-900/40 border border-white/5 rounded-xl p-5">
           <p class="text-[10px] font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-1">
             {{ 'aptitude.level' | t }}
           </p>
-          <p class="text-2xl font-black text-secondary">{{ latest()?.niveauAptitude ?? '—' }}</p>
+          <p class="text-2xl font-black text-secondary">{{ dernierNiveau() ?? '—' }}</p>
         </div>
       </div>
 

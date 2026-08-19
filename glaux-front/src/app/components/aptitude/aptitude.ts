@@ -33,10 +33,14 @@ export class Aptitude implements OnInit {
     });
   }
 
-  latest = computed<SanteAptitudeDto | null>(() => {
-    const p = this.points().filter((x) => x.vo2Max != null);
-    return p.length ? p[p.length - 1] : null;
-  });
+  dernierVo2Max = computed<number | null>(() => this.dernier((x) => x.vo2Max));
+
+  dernierNiveau = computed<string | null>(() => this.dernier((x) => x.niveauAptitude));
+
+  private dernier<T>(extraire: (point: SanteAptitudeDto) => T | null | undefined): T | null {
+    const renseignes = this.points().filter((x) => extraire(x) != null);
+    return renseignes.length ? (extraire(renseignes[renseignes.length - 1]) as T) : null;
+  }
 
   chart = computed<ChartData<'line'>>(() => {
     const p = this.points();

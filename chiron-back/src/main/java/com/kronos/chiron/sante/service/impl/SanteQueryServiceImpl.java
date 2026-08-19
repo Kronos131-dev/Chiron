@@ -131,7 +131,7 @@ public class SanteQueryServiceImpl implements SanteQueryService {
         LocalDate[] plage = plageDepuisAujourdhui(jours);
         return santeJourRepository
                 .findByUtilisateurAndDateBetweenOrderByDateAsc(utilisateur, plage[0], plage[1]).stream()
-                .filter(j -> j.getVo2Max() != null)
+                .filter(j -> j.getVo2Max() != null || j.getNiveauAptitude() != null)
                 .map(j -> new SanteAptitudeDto(j.getDate(), j.getVo2Max(), j.getNiveauAptitude()))
                 .toList();
     }
