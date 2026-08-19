@@ -32,7 +32,6 @@ export const en: Record<string, string> = {
   'today.readinessHigh': 'Ready to train',
   'today.readinessModerate': 'Still recovering',
   'today.readinessLow': 'Rest advised',
-  'today.cardioLoad': 'Cardio load (7d)',
   'today.notLinked': 'No Google Health account linked',
   'today.notLinkedDesc': 'Link your account from Chiron settings to see your data here.',
   'today.reconnectNeeded': 'Reconnection needed',
