@@ -42,4 +42,22 @@ describe('ChironApi', () => {
       req.flush(null);
     });
   });
+
+  describe('getActivites', () => {
+    it('defaults to 400 days with no source filter', () => {
+      service.getActivites().subscribe();
+
+      const req = httpMock.expectOne(`${environment.apiUrl}/sante/activites?jours=400`);
+      expect(req.request.method).toBe('GET');
+      req.flush([]);
+    });
+
+    it('forwards an explicit days count and source filter', () => {
+      service.getActivites(30, 'CHIRON_MUSCU').subscribe();
+
+      const req = httpMock.expectOne(`${environment.apiUrl}/sante/activites?jours=30&source=CHIRON_MUSCU`);
+      expect(req.request.method).toBe('GET');
+      req.flush([]);
+    });
+  });
 });

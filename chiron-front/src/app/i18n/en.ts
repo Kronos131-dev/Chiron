@@ -286,6 +286,16 @@ export const en: Record<string, string> = {
   'journal.deleteError': 'Unable to delete this entry.',
   'journal.updated': 'Session updated.',
   'journal.updateError': 'Error while updating.',
+  'journal.activite.title': 'Watch data',
+  'journal.activite.syncing': 'Syncing…',
+  'journal.activite.avgHr': 'Avg heart rate',
+  'journal.activite.calories': 'Calories',
+  'journal.activite.cardioLoad': 'Cardio load',
+  'journal.activite.activeMinutes': 'Active minutes',
+  'journal.activite.zoneLow': 'Low',
+  'journal.activite.zoneModerate': 'Moderate',
+  'journal.activite.zoneIntense': 'Intense',
+  'journal.activite.zoneMax': 'Maximum',
 
   // ── Exercise card (shared) ──
   'exCard.dragTitle': 'Drag to reorder this exercise',

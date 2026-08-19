@@ -3,9 +3,14 @@ package com.kronos.chiron.sante.service.impl;
 import com.kronos.chiron.fitbit.client.FitbitClient;
 import com.kronos.chiron.fitbit.client.GoogleHealthDataType;
 import com.kronos.chiron.fitbit.service.FitbitService;
+import com.kronos.chiron.sante.model.SanteActivite;
 import com.kronos.chiron.sante.model.SanteJour;
 import com.kronos.chiron.sante.model.SanteSyncState;
+import com.kronos.chiron.sante.model.SourceActivite;
+import com.kronos.chiron.sante.model.StatutEnrichissement;
 import com.kronos.chiron.sante.model.StatutSync;
+import com.kronos.chiron.sante.model.TypeActivite;
+import com.kronos.chiron.sante.persistence.SanteActiviteRepository;
 import com.kronos.chiron.sante.persistence.SanteFrequenceCardiaqueRepository;
 import com.kronos.chiron.sante.persistence.SanteJourRepository;
 import com.kronos.chiron.sante.persistence.SanteSommeilRepository;
@@ -57,6 +62,8 @@ class SanteSyncServiceImplTest {
     private SanteFrequenceCardiaqueRepository santeFrequenceCardiaqueRepository;
     @Mock
     private SanteSyncStateRepository santeSyncStateRepository;
+    @Mock
+    private SanteActiviteRepository santeActiviteRepository;
     @Mock
     private ScoreSommeilService scoreSommeilService;
     @Mock
@@ -240,5 +247,73 @@ class SanteSyncServiceImplTest {
 
         verify(fitbitService).getValidToken("athlete");
         verify(chargeCardioService).recalculerPlage(eq(user), any(), any());
+    }
+
+    private static final String EXERCICE_MUSCU_JSON = """
+            {"dataPoints":[
+              {"name":"users/x/dataTypes/exercise/dataPoints/1",
+               "exercise":{
+                 "interval":{"startTime":"2026-08-17T18:00:00Z","endTime":"2026-08-17T19:15:00Z"},
+                 "exerciseType":"WEIGHT_MACHINES",
+                 "metricsSummary":{
+                   "caloriesKcal":406,
+                   "averageHeartRateBeatsPerMinute":"124",
+                   "activeZoneMinutes":"73",
+                   "heartRateZoneDurations":{"lightTime":"840s","moderateTime":"2760s","vigorousTime":"900s","peakTime":"0s"}
+                 }
+               }}
+            ]}""";
+
+    @Test
+    void syncRecent_exerciseWithNoOverlappingChironSeance_createsGoogleDetecteActivite() {
+        when(fitbitService.getValidToken("athlete")).thenReturn("token");
+        when(fitbitClient.listDataPoints(eq("token"), eq(GoogleHealthDataType.EXERCISE), any(), any()))
+                .thenReturn(new tools.jackson.databind.json.JsonMapper().readTree(EXERCICE_MUSCU_JSON));
+        when(santeActiviteRepository.findFirstByUtilisateurAndSourceAndStartTimeLessThanAndEndTimeGreaterThan(
+                eq(user), eq(SourceActivite.CHIRON_MUSCU), any(), any())).thenReturn(Optional.empty());
+        when(santeActiviteRepository.findByUtilisateurAndStartTimeAndSource(eq(user), any(),
+                eq(SourceActivite.GOOGLE_DETECTE))).thenReturn(Optional.empty());
+
+        santeSyncService.syncRecent("athlete", 1);
+
+        ArgumentCaptor<SanteActivite> captor = ArgumentCaptor.forClass(SanteActivite.class);
+        verify(santeActiviteRepository).save(captor.capture());
+        SanteActivite saved = captor.getValue();
+        assertThat(saved.getSource()).isEqualTo(SourceActivite.GOOGLE_DETECTE);
+        assertThat(saved.getTypeActivite()).isEqualTo(TypeActivite.MUSCULATION);
+        assertThat(saved.getCalories()).isEqualTo(406);
+        assertThat(saved.getFcMoyenne()).isEqualTo(124.0);
+        assertThat(saved.getMinutesZoneBasse()).isEqualTo(14);
+        assertThat(saved.getMinutesZoneBruleuse()).isEqualTo(46);
+        assertThat(saved.getMinutesZoneCardio()).isEqualTo(15);
+        assertThat(saved.getMinutesZonePic()).isEqualTo(0);
+        assertThat(saved.getStatutEnrichissement()).isEqualTo(StatutEnrichissement.COMPLET);
+    }
+
+    @Test
+    void syncRecent_exerciseOverlappingChironSeance_enrichesTheExistingRowInstead() {
+        SanteActivite chironRow = SanteActivite.builder().id(9L).utilisateur(user)
+                .source(SourceActivite.CHIRON_MUSCU).typeActivite(TypeActivite.MUSCULATION)
+                .startTime(java.time.LocalDateTime.of(2026, 8, 17, 18, 0))
+                .endTime(java.time.LocalDateTime.of(2026, 8, 17, 19, 15))
+                .statutEnrichissement(StatutEnrichissement.EN_ATTENTE).build();
+        when(fitbitService.getValidToken("athlete")).thenReturn("token");
+        when(fitbitClient.listDataPoints(eq("token"), eq(GoogleHealthDataType.EXERCISE), any(), any()))
+                .thenReturn(new tools.jackson.databind.json.JsonMapper().readTree(EXERCICE_MUSCU_JSON));
+        when(santeActiviteRepository.findFirstByUtilisateurAndSourceAndStartTimeLessThanAndEndTimeGreaterThan(
+                eq(user), eq(SourceActivite.CHIRON_MUSCU), any(), any())).thenReturn(Optional.of(chironRow));
+
+        santeSyncService.syncRecent("athlete", 1);
+
+        ArgumentCaptor<SanteActivite> captor = ArgumentCaptor.forClass(SanteActivite.class);
+        verify(santeActiviteRepository).save(captor.capture());
+        SanteActivite saved = captor.getValue();
+        assertThat(saved.getId()).isEqualTo(9L);
+        assertThat(saved.getSource()).isEqualTo(SourceActivite.CHIRON_MUSCU);
+        assertThat(saved.getCalories()).isEqualTo(406);
+        assertThat(saved.getStatutEnrichissement()).isEqualTo(StatutEnrichissement.COMPLET);
+        assertThat(saved.getProchaineTentativeAt()).isNull();
+        verify(santeActiviteRepository, org.mockito.Mockito.never())
+                .findByUtilisateurAndStartTimeAndSource(any(), any(), any());
     }
 }

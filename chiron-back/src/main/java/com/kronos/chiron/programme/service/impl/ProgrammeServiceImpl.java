@@ -8,6 +8,7 @@ import static com.kronos.chiron.core.exceptions.ErrorFactory.forbidden;
 import static com.kronos.chiron.core.exceptions.ErrorFactory.notFound;
 
 import com.kronos.chiron.seance.service.CardioCalorieService;
+import com.kronos.chiron.sante.service.ActiviteEnrichissementService;
 
 import com.kronos.chiron.seance.dto.ExerciceDto;
 import com.kronos.chiron.seance.dto.SeanceDto;
@@ -46,6 +47,7 @@ public class ProgrammeServiceImpl implements ProgrammeService {
     private final UtilisateurRepository utilisateurRepository;
     private final ExerciceDefinitionRepository exerciceDefinitionRepository;
     private final CardioCalorieService cardioCalorieService;
+    private final ActiviteEnrichissementService activiteEnrichissementService;
 
     private final Clock clock;
     @Transactional
@@ -171,6 +173,10 @@ public class ProgrammeServiceImpl implements ProgrammeService {
         }
 
         Seance saved = seanceRepository.save(seance);
+
+        if (!isUpdate && Boolean.TRUE.equals(seanceDto.historique()) && saved.getEndTime() != null) {
+            activiteEnrichissementService.planifierEnrichissement(saved);
+        }
 
         if (seanceDto.exercices() != null) {
             Set<Long> usedDefinitionIds = seanceDto.exercices().stream()

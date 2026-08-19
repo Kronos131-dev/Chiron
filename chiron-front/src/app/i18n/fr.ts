@@ -290,6 +290,16 @@ export const fr: Record<string, string> = {
   'journal.deleteError': 'Impossible de supprimer cette entrée.',
   'journal.updated': 'Séance mise à jour.',
   'journal.updateError': 'Erreur lors de la mise à jour.',
+  'journal.activite.title': 'Données montre',
+  'journal.activite.syncing': 'Synchronisation…',
+  'journal.activite.avgHr': 'FC moyenne',
+  'journal.activite.calories': 'Calories',
+  'journal.activite.cardioLoad': 'Charge cardiaque',
+  'journal.activite.activeMinutes': 'Minutes actives',
+  'journal.activite.zoneLow': 'Basse',
+  'journal.activite.zoneModerate': 'Modérée',
+  'journal.activite.zoneIntense': 'Intense',
+  'journal.activite.zoneMax': 'Maximum',
 
   // ── Carte d'exercice (partagée) ──
   'exCard.dragTitle': 'Glisser pour réordonner cet exercice',

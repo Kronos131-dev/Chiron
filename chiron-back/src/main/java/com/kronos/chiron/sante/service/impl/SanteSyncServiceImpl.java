@@ -4,11 +4,17 @@ import com.kronos.chiron.fitbit.client.FitbitClient;
 import com.kronos.chiron.fitbit.client.GoogleHealthDataType;
 import com.kronos.chiron.fitbit.client.GoogleHealthParser;
 import com.kronos.chiron.fitbit.service.FitbitService;
+import com.kronos.chiron.sante.model.SanteActivite;
 import com.kronos.chiron.sante.model.SanteFrequenceCardiaque;
 import com.kronos.chiron.sante.model.SanteJour;
 import com.kronos.chiron.sante.model.SanteSommeil;
 import com.kronos.chiron.sante.model.SanteSyncState;
+import com.kronos.chiron.sante.model.SourceActivite;
+import com.kronos.chiron.sante.model.StatutEnrichissement;
 import com.kronos.chiron.sante.model.StatutSync;
+import com.kronos.chiron.sante.model.TypeActivite;
+import com.kronos.chiron.sante.model.ZoneCardiaque;
+import com.kronos.chiron.sante.persistence.SanteActiviteRepository;
 import com.kronos.chiron.sante.persistence.SanteFrequenceCardiaqueRepository;
 import com.kronos.chiron.sante.persistence.SanteJourRepository;
 import com.kronos.chiron.sante.persistence.SanteSommeilRepository;
@@ -54,6 +60,7 @@ public class SanteSyncServiceImpl implements SanteSyncService {
             "countSum", "count"};
     private static final String[] CANDIDATS_LIST = {"beatsPerMinute", "percentage", "breathsPerMinute", "bpm",
             "value"};
+    private static final int TOLERANCE_CHEVAUCHEMENT_MINUTES = 5;
 
     private final FitbitService fitbitService;
     private final FitbitClient fitbitClient;
@@ -62,6 +69,7 @@ public class SanteSyncServiceImpl implements SanteSyncService {
     private final SanteSommeilRepository santeSommeilRepository;
     private final SanteFrequenceCardiaqueRepository santeFrequenceCardiaqueRepository;
     private final SanteSyncStateRepository santeSyncStateRepository;
+    private final SanteActiviteRepository santeActiviteRepository;
     private final ScoreSommeilService scoreSommeilService;
     private final ChargeCardioService chargeCardioService;
 
@@ -169,6 +177,9 @@ public class SanteSyncServiceImpl implements SanteSyncService {
         if (types.contains(GoogleHealthDataType.SLEEP)) {
             syncSleep(user, token, from, to);
             completerFcSommeil(user, from, to);
+        }
+        if (types.contains(GoogleHealthDataType.EXERCISE)) {
+            syncExercises(user, token, from, to);
         }
 
         chargeCardioService.recalculerPlage(user, from, to);
@@ -379,6 +390,70 @@ public class SanteSyncServiceImpl implements SanteSyncService {
                 santeSommeilRepository.save(session);
             }
         }
+    }
+
+    private void syncExercises(Utilisateur user, String token, LocalDate from, LocalDate to) {
+        GoogleHealthDataType type = GoogleHealthDataType.EXERCISE;
+        ZoneId zone = clock.getZone();
+        try {
+            int points = 0;
+            String pageToken = null;
+            int pages = 0;
+            do {
+                JsonNode reponse = fitbitClient.listDataPoints(token, type, from, pageToken);
+                List<GoogleHealthParser.ExerciceBrut> sessions = GoogleHealthParser.exerciseSessions(reponse);
+                points += sessions.size();
+                for (GoogleHealthParser.ExerciceBrut brut : sessions) {
+                    enregistrerActiviteGoogle(user, zone, brut);
+                }
+                pageToken = GoogleHealthParser.nextPageToken(reponse);
+                pages++;
+            } while (pageToken != null && pages < MAX_PAGES);
+            marquerSucces(user, type, to, points);
+        } catch (RuntimeException e) {
+            marquerEchec(user, type, e);
+        }
+    }
+
+    // WHY: un exercice détecté par Google peut chevaucher une séance déjà loggée dans
+    // Chiron (l'utilisateur logge parfois aussi manuellement dans l'appli montre) — on
+    // enrichit alors cette ligne CHIRON_MUSCU avec les chiffres, plus précis, de Google
+    // plutôt que de créer une seconde ligne GOOGLE_DETECTE en doublon pour le même effort.
+    private void enregistrerActiviteGoogle(Utilisateur user, ZoneId zone, GoogleHealthParser.ExerciceBrut brut) {
+        if (brut.debut() == null || brut.fin() == null) return;
+        LocalDateTime debut = LocalDateTime.ofInstant(brut.debut(), zone);
+        LocalDateTime fin = LocalDateTime.ofInstant(brut.fin(), zone);
+        LocalDateTime toleranceDebut = debut.minusMinutes(TOLERANCE_CHEVAUCHEMENT_MINUTES);
+        LocalDateTime toleranceFin = fin.plusMinutes(TOLERANCE_CHEVAUCHEMENT_MINUTES);
+
+        SanteActivite activite = santeActiviteRepository
+                .findFirstByUtilisateurAndSourceAndStartTimeLessThanAndEndTimeGreaterThan(user,
+                        SourceActivite.CHIRON_MUSCU, toleranceFin, toleranceDebut)
+                .orElseGet(() -> santeActiviteRepository
+                        .findByUtilisateurAndStartTimeAndSource(user, debut, SourceActivite.GOOGLE_DETECTE)
+                        .orElseGet(() -> SanteActivite.builder().utilisateur(user)
+                                .source(SourceActivite.GOOGLE_DETECTE).startTime(debut)
+                                .statutEnrichissement(StatutEnrichissement.COMPLET).build()));
+
+        if (activite.getSource() == SourceActivite.GOOGLE_DETECTE) {
+            activite.setEndTime(fin);
+            activite.setTypeActivite(TypeActivite.fromGoogle(brut.exerciseType()));
+        }
+        activite.setExternalId(brut.externalId());
+        activite.setCalories(brut.caloriesKcal());
+        activite.setFcMoyenne(brut.fcMoyenne());
+        activite.setMinutesZoneActive(brut.activeZoneMinutes());
+        activite.setMinutesZoneBasse(brut.minutesBasse());
+        activite.setMinutesZoneBruleuse(brut.minutesBruleuse());
+        activite.setMinutesZoneCardio(brut.minutesCardio());
+        activite.setMinutesZonePic(brut.minutesPic());
+        activite.setChargeCardio(
+                ZoneCardiaque.chargeCardio(brut.minutesBruleuse(), brut.minutesCardio(), brut.minutesPic()));
+        if (activite.getStatutEnrichissement() == StatutEnrichissement.EN_ATTENTE) {
+            activite.setStatutEnrichissement(StatutEnrichissement.COMPLET);
+            activite.setProchaineTentativeAt(null);
+        }
+        santeActiviteRepository.save(activite);
     }
 
     private SanteJour jourDe(Utilisateur user, LocalDate date) {

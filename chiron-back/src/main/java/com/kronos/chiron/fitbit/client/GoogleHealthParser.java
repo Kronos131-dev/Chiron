@@ -331,6 +331,53 @@ public final class GoogleHealthParser {
         return result;
     }
 
+    public record ExerciceBrut(String externalId, Instant debut, Instant fin, String exerciseType,
+            Integer caloriesKcal, Double fcMoyenne, Integer activeZoneMinutes, Integer minutesBasse,
+            Integer minutesBruleuse, Integer minutesCardio, Integer minutesPic) {
+    }
+
+    public static List<ExerciceBrut> exerciseSessions(JsonNode listResponse) {
+        List<ExerciceBrut> result = new ArrayList<>();
+        if (listResponse == null) return result;
+        JsonNode points = listResponse.get("dataPoints");
+        if (points == null || !points.isArray()) return result;
+        for (JsonNode pt : points) {
+            JsonNode exercise = pt.get("exercise");
+            if (exercise == null) continue;
+            JsonNode interval = exercise.get("interval");
+            Instant debut = instantField(interval, "startTime");
+            Instant fin = instantField(interval, "endTime");
+            if (debut == null || fin == null) continue;
+
+            String externalId = pt.hasNonNull("name") ? pt.get("name").asText() : null;
+            String exerciseType = exercise.hasNonNull("exerciseType") ? exercise.get("exerciseType").asText() : null;
+
+            JsonNode metrics = exercise.get("metricsSummary");
+            Integer calories = intField(metrics, "caloriesKcal");
+            Double fcMoyenne = doubleField(metrics, "averageHeartRateBeatsPerMinute");
+            Integer activeZoneMinutes = intField(metrics, "activeZoneMinutes");
+            JsonNode zones = metrics != null ? metrics.get("heartRateZoneDurations") : null;
+
+            result.add(new ExerciceBrut(externalId, debut, fin, exerciseType, calories, fcMoyenne,
+                    activeZoneMinutes, minutesDeZone(zones, "lightTime"), minutesDeZone(zones, "moderateTime"),
+                    minutesDeZone(zones, "vigorousTime"), minutesDeZone(zones, "peakTime")));
+        }
+        return result;
+    }
+
+    private static Integer minutesDeZone(JsonNode zones, String champ) {
+        if (zones == null) return null;
+        JsonNode valeur = zones.get(champ);
+        if (valeur == null || !valeur.isTextual()) return null;
+        String texte = valeur.asText().trim();
+        if (texte.endsWith("s")) texte = texte.substring(0, texte.length() - 1);
+        try {
+            return (int) Math.round(Double.parseDouble(texte) / 60.0);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
     private static LocalDate dataPointDate(JsonNode dataPoint, JsonNode value) {
         LocalDate d = FitbitParser.googleDate(value.get("date"));
         if (d != null) return d;

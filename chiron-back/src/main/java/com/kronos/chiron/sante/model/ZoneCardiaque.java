@@ -23,4 +23,14 @@ public enum ZoneCardiaque {
         if (s.contains("MODERATE") || s.contains("FAT_BURN") || s.contains("FATBURN")) return BRULE_GRAISSE;
         return HORS_ZONE;
     }
+
+    public static Double chargeCardio(Integer minutesBruleuse, Integer minutesCardio, Integer minutesPic) {
+        if (minutesBruleuse == null && minutesCardio == null && minutesPic == null) {
+            return null;
+        }
+        double bruleuse = minutesBruleuse != null ? minutesBruleuse : 0;
+        double cardio = minutesCardio != null ? minutesCardio : 0;
+        double pic = minutesPic != null ? minutesPic : 0;
+        return bruleuse * BRULE_GRAISSE.poidsTrimp() + cardio * CARDIO.poidsTrimp() + pic * PIC.poidsTrimp();
+    }
 }

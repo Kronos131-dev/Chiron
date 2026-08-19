@@ -414,6 +414,78 @@ class GoogleHealthParserTest {
     }
 
     @Test
+    void exerciseSessions_realWeightMachinesPayload_readsMetricsAndZones() {
+        JsonNode node = json.readTree(
+                """
+                        {"dataPoints":[
+                          {"name":"users/4369363054743728680/dataTypes/exercise/dataPoints/3327996276727937408",
+                           "dataSource":{"recordingMethod":"MANUAL","device":{"formFactor":"PHONE"},"platform":"FITBIT"},
+                           "exercise":{
+                             "interval":{"startTime":"2026-08-18T10:15:00Z","endTime":"2026-08-18T11:30:00Z"},
+                             "exerciseType":"WEIGHT_MACHINES",
+                             "metricsSummary":{
+                               "caloriesKcal":406,
+                               "averageHeartRateBeatsPerMinute":"124",
+                               "activeZoneMinutes":"73",
+                               "heartRateZoneDurations":{"lightTime":"840s","moderateTime":"2760s","vigorousTime":"900s","peakTime":"0s"}
+                             },
+                             "displayName":"Appareils de musculation"
+                           }}
+                        ]}""");
+
+        List<GoogleHealthParser.ExerciceBrut> sessions = GoogleHealthParser.exerciseSessions(node);
+
+        assertThat(sessions).hasSize(1);
+        GoogleHealthParser.ExerciceBrut ex = sessions.get(0);
+        assertThat(ex.exerciseType()).isEqualTo("WEIGHT_MACHINES");
+        assertThat(ex.debut()).isEqualTo(Instant.parse("2026-08-18T10:15:00Z"));
+        assertThat(ex.fin()).isEqualTo(Instant.parse("2026-08-18T11:30:00Z"));
+        assertThat(ex.caloriesKcal()).isEqualTo(406);
+        assertThat(ex.fcMoyenne()).isEqualTo(124.0);
+        assertThat(ex.activeZoneMinutes()).isEqualTo(73);
+        assertThat(ex.minutesBasse()).isEqualTo(14);
+        assertThat(ex.minutesBruleuse()).isEqualTo(46);
+        assertThat(ex.minutesCardio()).isEqualTo(15);
+        assertThat(ex.minutesPic()).isEqualTo(0);
+        assertThat(ex.externalId())
+                .isEqualTo("users/4369363054743728680/dataTypes/exercise/dataPoints/3327996276727937408");
+    }
+
+    @Test
+    void exerciseSessions_walkingWithNoActiveZoneMinutes_optionalFieldsAreNull() {
+        JsonNode node = json.readTree(
+                """
+                        {"dataPoints":[
+                          {"name":"users/x/dataTypes/exercise/dataPoints/1",
+                           "exercise":{
+                             "interval":{"startTime":"2026-08-16T17:13:09.200Z","endTime":"2026-08-16T17:55:52.400Z"},
+                             "exerciseType":"WALKING",
+                             "metricsSummary":{
+                               "caloriesKcal":306,
+                               "averageHeartRateBeatsPerMinute":"80",
+                               "heartRateZoneDurations":{"lightTime":"2520s","moderateTime":"0s","vigorousTime":"0s","peakTime":"0s"}
+                             }
+                           }}
+                        ]}""");
+
+        GoogleHealthParser.ExerciceBrut ex = GoogleHealthParser.exerciseSessions(node).get(0);
+
+        assertThat(ex.exerciseType()).isEqualTo("WALKING");
+        assertThat(ex.activeZoneMinutes()).isNull();
+        assertThat(ex.minutesBasse()).isEqualTo(42);
+    }
+
+    @Test
+    void exerciseSessions_missingInterval_isSkipped() {
+        JsonNode node = json.readTree("""
+                {"dataPoints":[
+                  {"exercise":{"exerciseType":"RUNNING","metricsSummary":{"caloriesKcal":100}}}
+                ]}""");
+
+        assertThat(GoogleHealthParser.exerciseSessions(node)).isEmpty();
+    }
+
+    @Test
     void nextPageToken_presentAndAbsent() {
         assertThat(GoogleHealthParser.nextPageToken(json.readTree("{\"nextPageToken\":\"abc\"}"))).isEqualTo("abc");
         assertThat(GoogleHealthParser.nextPageToken(json.readTree("{}"))).isNull();

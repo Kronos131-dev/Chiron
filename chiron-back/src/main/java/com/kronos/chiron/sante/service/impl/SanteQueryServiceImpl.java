@@ -2,6 +2,7 @@ package com.kronos.chiron.sante.service.impl;
 
 import com.kronos.chiron.fitbit.dto.FitbitLinkStatus;
 import com.kronos.chiron.fitbit.service.FitbitService;
+import com.kronos.chiron.sante.dto.SanteActiviteDto;
 import com.kronos.chiron.sante.dto.SanteCardioHebdoDto;
 import com.kronos.chiron.sante.dto.SanteFcJourDto;
 import com.kronos.chiron.sante.dto.SanteFcPointDto;
@@ -9,8 +10,12 @@ import com.kronos.chiron.sante.dto.SanteJourDto;
 import com.kronos.chiron.sante.dto.SanteResumeDto;
 import com.kronos.chiron.sante.dto.SanteSommeilDto;
 import com.kronos.chiron.sante.dto.SanteSyncEtatDto;
+import com.kronos.chiron.sante.model.SanteActivite;
 import com.kronos.chiron.sante.model.SanteJour;
 import com.kronos.chiron.sante.model.SanteSommeil;
+import com.kronos.chiron.sante.model.SourceActivite;
+import com.kronos.chiron.sante.model.StatutEnrichissement;
+import com.kronos.chiron.sante.persistence.SanteActiviteRepository;
 import com.kronos.chiron.sante.persistence.SanteFrequenceCardiaqueRepository;
 import com.kronos.chiron.sante.persistence.SanteJourRepository;
 import com.kronos.chiron.sante.persistence.SanteSommeilRepository;
@@ -44,6 +49,7 @@ public class SanteQueryServiceImpl implements SanteQueryService {
     private final SanteSommeilRepository santeSommeilRepository;
     private final SanteFrequenceCardiaqueRepository santeFrequenceCardiaqueRepository;
     private final SanteSyncStateRepository santeSyncStateRepository;
+    private final SanteActiviteRepository santeActiviteRepository;
     private final PreparationService preparationService;
 
     private final Clock clock;
@@ -141,6 +147,27 @@ public class SanteQueryServiceImpl implements SanteQueryService {
                 .map(e -> new SanteSyncEtatDto(e.getTypeDonnee(), e.getDerniereDateSynchronisee(),
                         e.getDerniereExecution(), e.getDernierStatut().name(), e.getDernierMessage()))
                 .toList();
+    }
+
+    @Override
+    public List<SanteActiviteDto> getActivites(Utilisateur utilisateur, int jours, SourceActivite sourceFiltre) {
+        LocalDate[] plage = plageDepuisAujourdhui(jours);
+        LocalDateTime debut = plage[0].atStartOfDay();
+        LocalDateTime fin = plage[1].plusDays(1).atStartOfDay();
+        return santeActiviteRepository
+                .findByUtilisateurAndStartTimeBetweenOrderByStartTimeDesc(utilisateur, debut, fin).stream()
+                .filter(a -> sourceFiltre == null || a.getSource() == sourceFiltre)
+                .map(this::versDto)
+                .toList();
+    }
+
+    private SanteActiviteDto versDto(SanteActivite a) {
+        return new SanteActiviteDto(a.getId(), a.getSource(), a.getTypeActivite(), a.getStartTime(),
+                a.getEndTime(), a.getCalories(), a.getFcMoyenne(), a.getFcMin(), a.getFcMax(),
+                a.getMinutesZoneBasse(), a.getMinutesZoneBruleuse(), a.getMinutesZoneCardio(),
+                a.getMinutesZonePic(), a.getMinutesZoneActive(), a.getChargeCardio(),
+                a.getSeance() != null ? a.getSeance().getId() : null,
+                a.getStatutEnrichissement() == StatutEnrichissement.EN_ATTENTE);
     }
 
     private SanteJourDto versDto(SanteJour j) {

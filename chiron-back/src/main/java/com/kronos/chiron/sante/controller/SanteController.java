@@ -2,6 +2,7 @@ package com.kronos.chiron.sante.controller;
 
 import com.kronos.chiron.core.security.AuthenticatedUserService;
 import com.kronos.chiron.fitbit.client.GoogleHealthDataType;
+import com.kronos.chiron.sante.dto.SanteActiviteDto;
 import com.kronos.chiron.sante.dto.SanteCardioHebdoDto;
 import com.kronos.chiron.sante.dto.SanteFcJourDto;
 import com.kronos.chiron.sante.dto.SanteFcPointDto;
@@ -9,6 +10,7 @@ import com.kronos.chiron.sante.dto.SanteJourDto;
 import com.kronos.chiron.sante.dto.SanteResumeDto;
 import com.kronos.chiron.sante.dto.SanteSommeilDto;
 import com.kronos.chiron.sante.dto.SanteSyncEtatDto;
+import com.kronos.chiron.sante.model.SourceActivite;
 import com.kronos.chiron.sante.service.SanteDiagnosticService;
 import com.kronos.chiron.sante.service.SanteQueryService;
 import com.kronos.chiron.sante.service.SanteSyncService;
@@ -71,9 +73,12 @@ public class SanteController {
 
     @GetMapping("/diagnostic")
     public ResponseEntity<JsonNode> diagnostic(@RequestParam GoogleHealthDataType type,
-            @RequestParam(defaultValue = "3") int jours) {
+            @RequestParam(defaultValue = "3") int jours,
+            @RequestParam(defaultValue = "false") boolean sousJournalier,
+            @RequestParam(defaultValue = "3600") int fenetreSecondes) {
         Utilisateur user = authenticatedUserService.getAuthenticatedUser();
-        return ResponseEntity.ok(santeDiagnosticService.capturerBrut(user.getUsername(), type, jours));
+        return ResponseEntity.ok(santeDiagnosticService.capturerBrut(user.getUsername(), type, jours,
+                sousJournalier, fenetreSecondes));
     }
 
     @GetMapping("/diagnostic/types")
@@ -88,6 +93,13 @@ public class SanteController {
             @RequestParam(defaultValue = "true") boolean filtre) {
         Utilisateur user = authenticatedUserService.getAuthenticatedUser();
         return ResponseEntity.ok(santeDiagnosticService.sonderSlug(user.getUsername(), slug, jours, filtre));
+    }
+
+    @GetMapping("/activites")
+    public ResponseEntity<List<SanteActiviteDto>> activites(@RequestParam(defaultValue = "366") int jours,
+            @RequestParam(required = false) SourceActivite source) {
+        Utilisateur user = authenticatedUserService.getAuthenticatedUser();
+        return ResponseEntity.ok(santeQueryService.getActivites(user, jours, source));
     }
 
     @GetMapping("/sync")

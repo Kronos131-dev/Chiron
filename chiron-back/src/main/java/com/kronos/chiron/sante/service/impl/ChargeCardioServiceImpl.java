@@ -31,19 +31,7 @@ public class ChargeCardioServiceImpl implements ChargeCardioService {
     }
 
     private Double calculer(SanteJour jour) {
-        if (jour.getMinutesZoneBruleuse() == null && jour.getMinutesZoneCardio() == null
-                && jour.getMinutesZonePic() == null) {
-            return null;
-        }
-        double bruleuse = nz(jour.getMinutesZoneBruleuse());
-        double cardio = nz(jour.getMinutesZoneCardio());
-        double pic = nz(jour.getMinutesZonePic());
-        return bruleuse * ZoneCardiaque.BRULE_GRAISSE.poidsTrimp()
-                + cardio * ZoneCardiaque.CARDIO.poidsTrimp()
-                + pic * ZoneCardiaque.PIC.poidsTrimp();
-    }
-
-    private double nz(Integer v) {
-        return v != null ? v : 0;
+        return ZoneCardiaque.chargeCardio(jour.getMinutesZoneBruleuse(), jour.getMinutesZoneCardio(),
+                jour.getMinutesZonePic());
     }
 }

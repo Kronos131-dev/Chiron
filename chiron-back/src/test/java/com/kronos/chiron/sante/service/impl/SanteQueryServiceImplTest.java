@@ -2,9 +2,15 @@ package com.kronos.chiron.sante.service.impl;
 
 import com.kronos.chiron.fitbit.dto.FitbitLinkStatus;
 import com.kronos.chiron.fitbit.service.FitbitService;
+import com.kronos.chiron.sante.dto.SanteActiviteDto;
 import com.kronos.chiron.sante.dto.SanteCardioHebdoDto;
 import com.kronos.chiron.sante.dto.SanteResumeDto;
+import com.kronos.chiron.sante.model.SanteActivite;
 import com.kronos.chiron.sante.model.SanteJour;
+import com.kronos.chiron.sante.model.SourceActivite;
+import com.kronos.chiron.sante.model.StatutEnrichissement;
+import com.kronos.chiron.sante.model.TypeActivite;
+import com.kronos.chiron.sante.persistence.SanteActiviteRepository;
 import com.kronos.chiron.sante.persistence.SanteFrequenceCardiaqueRepository;
 import com.kronos.chiron.sante.persistence.SanteJourRepository;
 import com.kronos.chiron.sante.persistence.SanteSommeilRepository;
@@ -24,6 +30,7 @@ import org.mockito.quality.Strictness;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
@@ -47,6 +54,8 @@ class SanteQueryServiceImplTest {
     private SanteFrequenceCardiaqueRepository santeFrequenceCardiaqueRepository;
     @Mock
     private SanteSyncStateRepository santeSyncStateRepository;
+    @Mock
+    private SanteActiviteRepository santeActiviteRepository;
     @Mock
     private PreparationService preparationService;
 
@@ -145,5 +154,58 @@ class SanteQueryServiceImplTest {
         assertThat(semaines).hasSize(1);
         assertThat(semaines.get(0).cibleBasse()).isEqualTo(80.0);
         assertThat(semaines.get(0).cibleHaute()).isEqualTo(130.0);
+    }
+
+    @Test
+    void getActivites_noSourceFilter_returnsAllMappedToDto() {
+        SanteActivite muscu = SanteActivite.builder()
+                .id(1L).utilisateur(user).source(SourceActivite.CHIRON_MUSCU)
+                .typeActivite(TypeActivite.MUSCULATION)
+                .startTime(LocalDateTime.of(2026, 8, 17, 18, 0))
+                .endTime(LocalDateTime.of(2026, 8, 17, 19, 15))
+                .fcMoyenne(124.0).statutEnrichissement(StatutEnrichissement.COMPLET)
+                .build();
+        SanteActivite marche = SanteActivite.builder()
+                .id(2L).utilisateur(user).source(SourceActivite.GOOGLE_DETECTE)
+                .typeActivite(TypeActivite.MARCHE)
+                .startTime(LocalDateTime.of(2026, 8, 17, 7, 0))
+                .endTime(LocalDateTime.of(2026, 8, 17, 7, 30))
+                .statutEnrichissement(StatutEnrichissement.EN_ATTENTE)
+                .build();
+        when(santeActiviteRepository.findByUtilisateurAndStartTimeBetweenOrderByStartTimeDesc(eq(user), any(),
+                any())).thenReturn(List.of(muscu, marche));
+
+        List<SanteActiviteDto> result = santeQueryService.getActivites(user, 30, null);
+
+        assertThat(result).hasSize(2);
+        assertThat(result).extracting(SanteActiviteDto::typeActivite)
+                .containsExactlyInAnyOrder(TypeActivite.MUSCULATION, TypeActivite.MARCHE);
+        assertThat(result).filteredOn(a -> a.source() == SourceActivite.GOOGLE_DETECTE)
+                .allMatch(SanteActiviteDto::enrichissementEnCours);
+    }
+
+    @Test
+    void getActivites_sourceFilter_keepsOnlyMatchingSource() {
+        SanteActivite muscu = SanteActivite.builder()
+                .id(1L).utilisateur(user).source(SourceActivite.CHIRON_MUSCU)
+                .typeActivite(TypeActivite.MUSCULATION)
+                .startTime(LocalDateTime.of(2026, 8, 17, 18, 0))
+                .endTime(LocalDateTime.of(2026, 8, 17, 19, 15))
+                .statutEnrichissement(StatutEnrichissement.COMPLET)
+                .build();
+        SanteActivite marche = SanteActivite.builder()
+                .id(2L).utilisateur(user).source(SourceActivite.GOOGLE_DETECTE)
+                .typeActivite(TypeActivite.MARCHE)
+                .startTime(LocalDateTime.of(2026, 8, 17, 7, 0))
+                .endTime(LocalDateTime.of(2026, 8, 17, 7, 30))
+                .statutEnrichissement(StatutEnrichissement.COMPLET)
+                .build();
+        when(santeActiviteRepository.findByUtilisateurAndStartTimeBetweenOrderByStartTimeDesc(eq(user), any(),
+                any())).thenReturn(List.of(muscu, marche));
+
+        List<SanteActiviteDto> result = santeQueryService.getActivites(user, 30, SourceActivite.CHIRON_MUSCU);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).source()).isEqualTo(SourceActivite.CHIRON_MUSCU);
     }
 }

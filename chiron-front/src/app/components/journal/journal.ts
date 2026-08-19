@@ -1,7 +1,7 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ChironApi } from '../../service/chiron-api';
+import { ChironApi, SanteActiviteDto } from '../../service/chiron-api';
 import { AuthService } from '../../service/auth.service';
 import { I18nService } from '../../service/i18n.service';
 import { TranslatePipe } from '../../service/translate.pipe';
@@ -34,6 +34,7 @@ export class Journal implements OnInit {
   historique = signal<any[]>([]);
   historiqueGrouped = signal<any[]>([]);
   isLoading = signal(true);
+  activiteParSeance = signal<Map<number, SanteActiviteDto>>(new Map());
 
   currentUsername: string | null = null;
 
@@ -83,6 +84,19 @@ export class Journal implements OnInit {
         this.isLoading.set(false);
       }
     });
+
+    this.chironApi.getActivites(400, 'CHIRON_MUSCU').subscribe({
+      next: (activites) => this.activiteParSeance.set(this.groupBySeanceId(activites)),
+      error: (err) => console.error("Erreur lors du chargement des activités montre", err)
+    });
+  }
+
+  private groupBySeanceId(activites: SanteActiviteDto[]): Map<number, SanteActiviteDto> {
+    const map = new Map<number, SanteActiviteDto>();
+    for (const activite of activites) {
+      if (activite.seanceId != null) map.set(activite.seanceId, activite);
+    }
+    return map;
   }
 
   groupHistoriqueByWeekAndDay(data: any[]) {
@@ -264,5 +278,26 @@ export class Journal implements OnInit {
   dureeSeance(startTime: string | null, endTime?: string | null): string | null {
     const min = durationMinutes(startTime, endTime);
     return min == null ? null : formatDuration(min);
+  }
+
+  activiteMontre(seanceId: number): SanteActiviteDto | undefined {
+    return this.activiteParSeance().get(seanceId);
+  }
+
+  zonesActivite(activite: SanteActiviteDto): { key: string; minutes: number; color: string }[] {
+    return [
+      { key: 'journal.activite.zoneLow', minutes: activite.minutesZoneBasse ?? 0, color: '#22d3ee' },
+      { key: 'journal.activite.zoneModerate', minutes: activite.minutesZoneBruleuse ?? 0, color: '#2dd4bf' },
+      { key: 'journal.activite.zoneIntense', minutes: activite.minutesZoneCardio ?? 0, color: '#fbbf24' },
+      { key: 'journal.activite.zoneMax', minutes: activite.minutesZonePic ?? 0, color: '#f87171' }
+    ];
+  }
+
+  totalMinutesZonesActivite(activite: SanteActiviteDto): number {
+    return this.zonesActivite(activite).reduce((sum, z) => sum + z.minutes, 0) || 1;
+  }
+
+  hasZonesActivite(activite: SanteActiviteDto): boolean {
+    return this.zonesActivite(activite).some(z => z.minutes > 0);
   }
 }

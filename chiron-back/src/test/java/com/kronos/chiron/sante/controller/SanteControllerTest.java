@@ -1,10 +1,13 @@
 package com.kronos.chiron.sante.controller;
 
 import com.kronos.chiron.core.security.AuthenticatedUserService;
+import com.kronos.chiron.sante.dto.SanteActiviteDto;
 import com.kronos.chiron.sante.dto.SanteFcPointDto;
 import com.kronos.chiron.sante.dto.SanteJourDto;
 import com.kronos.chiron.sante.dto.SanteResumeDto;
 import com.kronos.chiron.sante.dto.SanteSyncEtatDto;
+import com.kronos.chiron.sante.model.SourceActivite;
+import com.kronos.chiron.sante.model.TypeActivite;
 import com.kronos.chiron.sante.service.SanteDiagnosticService;
 import com.kronos.chiron.sante.service.SanteQueryService;
 import com.kronos.chiron.sante.service.SanteSyncService;
@@ -57,7 +60,8 @@ class SanteControllerTest {
     void resume_returnsResumeDto() throws Exception {
         when(authenticatedUserService.getAuthenticatedUser()).thenReturn(user);
         when(santeQueryService.getResume(user)).thenReturn(
-                new SanteResumeDto(true, false, LocalDate.of(2026, 8, 17), 8500, 6.2, 2100, 450, 32, 58, 82, 310.0, 74));
+                new SanteResumeDto(true, false, LocalDate.of(2026, 8, 17), 8500, 6.2, 2100, 450, 32, 58, 82, 310.0,
+                        74));
 
         mockMvc.perform(get("/api/sante/resume"))
                 .andExpect(status().isOk())
@@ -107,6 +111,33 @@ class SanteControllerTest {
         mockMvc.perform(get("/api/sante/frequence-cardiaque").param("date", "2026-08-17"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].fcMoyenne").value(62.0));
+    }
+
+    @Test
+    void activites_defaultsTo366Days_noSourceFilter() throws Exception {
+        when(authenticatedUserService.getAuthenticatedUser()).thenReturn(user);
+        when(santeQueryService.getActivites(user, 366, null)).thenReturn(List.of(
+                new SanteActiviteDto(1L, SourceActivite.CHIRON_MUSCU, TypeActivite.MUSCULATION,
+                        LocalDateTime.of(2026, 8, 17, 18, 0), LocalDateTime.of(2026, 8, 17, 19, 15), 406, 124.0,
+                        95, 168, 14, 46, 15, 0, 73, 71.0, 42L, false)));
+
+        mockMvc.perform(get("/api/sante/activites"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].typeActivite").value("MUSCULATION"))
+                .andExpect(jsonPath("$[0].seanceId").value(42));
+
+        verify(santeQueryService).getActivites(user, 366, null);
+    }
+
+    @Test
+    void activites_sourceParam_isForwarded() throws Exception {
+        when(authenticatedUserService.getAuthenticatedUser()).thenReturn(user);
+        when(santeQueryService.getActivites(user, 30, SourceActivite.CHIRON_MUSCU)).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/sante/activites").param("jours", "30").param("source", "CHIRON_MUSCU"))
+                .andExpect(status().isOk());
+
+        verify(santeQueryService).getActivites(user, 30, SourceActivite.CHIRON_MUSCU);
     }
 
     @Test

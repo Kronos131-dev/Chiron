@@ -17,6 +17,7 @@ import com.kronos.chiron.seance.model.Serie;
 import com.kronos.chiron.utilisateur.model.Role;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 
+import com.kronos.chiron.sante.service.ActiviteEnrichissementService;
 import com.kronos.chiron.seance.dto.ExerciceDto;
 import com.kronos.chiron.seance.dto.SeanceDto;
 import com.kronos.chiron.seance.dto.SerieDto;
@@ -47,6 +48,8 @@ class ProgrammeServiceTest {
     private SeanceRepository seanceRepository;
     @Mock
     private UtilisateurRepository utilisateurRepository;
+    @Mock
+    private ActiviteEnrichissementService activiteEnrichissementService;
 
     @Spy
     private Clock clock = Clock.system(ZoneId.of("Europe/Paris"));
@@ -231,6 +234,80 @@ class ProgrammeServiceTest {
         programmeService.sauvegarderProgramme("coach", dto);
 
         verify(seanceRepository).save(any());
+    }
+
+    // --- sauvegarderProgramme : déclenchement de l'enrichissement montre ---
+
+    @Test
+    void sauvegarderProgramme_newFinishedHistoriqueSession_triggersActiviteEnrichissement() {
+        when(utilisateurRepository.findByUsername("owner")).thenReturn(Optional.of(owner));
+
+        SeanceDto dto = new SeanceDto(null, "Muscu", null, LocalDateTime.now(clock), LocalDateTime.now(clock), 1,
+                true, null, List.of());
+
+        programmeService.sauvegarderProgramme("owner", dto);
+
+        verify(activiteEnrichissementService).planifierEnrichissement(any());
+    }
+
+    @Test
+    void sauvegarderProgramme_newFinishedHistoriqueSessionWithoutEndTime_doesNotTrigger() {
+        when(utilisateurRepository.findByUsername("owner")).thenReturn(Optional.of(owner));
+
+        SeanceDto dto = new SeanceDto(null, "Muscu", null, LocalDateTime.now(clock), null, 1, true, null,
+                List.of());
+
+        programmeService.sauvegarderProgramme("owner", dto);
+
+        verifyNoInteractions(activiteEnrichissementService);
+    }
+
+    @Test
+    void sauvegarderProgramme_templateResyncAfterFinish_doesNotTrigger() {
+        // Deuxième appel que le front envoie après la sauvegarde réelle, pour resynchroniser
+        // le modèle source (historique=false) avec les derniers poids/reps.
+        Seance template = new Seance();
+        template.setId(5L);
+        template.setHistorique(false);
+        template.setUtilisateur(owner);
+
+        when(utilisateurRepository.findByUsername("owner")).thenReturn(Optional.of(owner));
+        when(seanceRepository.findById(5L)).thenReturn(Optional.of(template));
+
+        SeanceDto dto = new SeanceDto(5L, "Muscu", null, null, null, null, false, null, List.of());
+
+        programmeService.sauvegarderProgramme("owner", dto);
+
+        verifyNoInteractions(activiteEnrichissementService);
+    }
+
+    @Test
+    void sauvegarderProgramme_editExistingHistoriqueEntry_doesNotTrigger() {
+        Seance existing = new Seance();
+        existing.setId(8L);
+        existing.setHistorique(true);
+        existing.setEndTime(LocalDateTime.now(clock));
+        existing.setUtilisateur(owner);
+
+        when(utilisateurRepository.findByUsername("owner")).thenReturn(Optional.of(owner));
+        when(seanceRepository.findById(8L)).thenReturn(Optional.of(existing));
+
+        SeanceDto dto = new SeanceDto(8L, "Muscu edited", null, null, null, null, true, null, List.of());
+
+        programmeService.sauvegarderProgramme("owner", dto);
+
+        verifyNoInteractions(activiteEnrichissementService);
+    }
+
+    @Test
+    void sauvegarderProgramme_newTemplate_doesNotTrigger() {
+        when(utilisateurRepository.findByUsername("owner")).thenReturn(Optional.of(owner));
+
+        SeanceDto dto = new SeanceDto(null, "Leg Day", null, null, null, null, false, null, List.of());
+
+        programmeService.sauvegarderProgramme("owner", dto);
+
+        verifyNoInteractions(activiteEnrichissementService);
     }
 
     // --- getProgrammes ---

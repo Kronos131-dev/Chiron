@@ -79,6 +79,24 @@
                       {{ seance.exercices?.length || 0 }} {{ 'journal.exercises' | t }}
                     </div>
 
+                    @if (activiteMontre(seance.id); as activite) {
+                      @if (activite.fcMoyenne || activite.calories) {
+                        <div class="text-xs font-bold text-secondary px-4 py-2 rounded bg-secondary/10 flex items-center gap-3">
+                          @if (activite.fcMoyenne) {
+                            <span class="flex items-center gap-1">♥ {{ activite.fcMoyenne | number:'1.0-0' }} bpm</span>
+                          }
+                          @if (activite.calories) {
+                            <span class="flex items-center gap-1">🔥 {{ activite.calories }} kcal</span>
+                          }
+                        </div>
+                      } @else if (activite.enrichissementEnCours) {
+                        <div class="text-xs font-bold uppercase tracking-widest text-on-surface-variant px-4 py-2 rounded bg-slate-800/60 flex items-center gap-2">
+                          <span class="w-3 h-3 border-2 border-secondary/30 border-t-secondary rounded-full animate-spin"></span>
+                          {{ 'journal.activite.syncing' | t }}
+                        </div>
+                      }
+                    }
+
                     <!-- Edit Session Button -->
                     @if (editingSeanceId() !== seance.id) {
                       <button (click)="startEdit(seance, $event)"
@@ -113,6 +131,59 @@
                           </p>
                           <p class="text-on-surface text-sm font-body whitespace-pre-wrap break-words">{{ seance.note }}</p>
                         </div>
+                      }
+
+                      @if (activiteMontre(seance.id); as activite) {
+                        @if (activite.fcMoyenne || activite.calories || activite.chargeCardio || activite.minutesZoneActive) {
+                          <div class="bg-slate-950/30 rounded-lg p-4 border border-white/5">
+                            <h4 class="font-headline text-lg text-on-surface mb-3 flex items-center gap-2">
+                              <span class="material-symbols-outlined text-secondary text-lg">monitor_heart</span>
+                              {{ 'journal.activite.title' | t }}
+                            </h4>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+                              @if (activite.fcMoyenne) {
+                                <div>
+                                  <p class="text-[9px] font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-0.5">{{ 'journal.activite.avgHr' | t }}</p>
+                                  <p class="text-lg font-black text-secondary">{{ activite.fcMoyenne | number:'1.0-0' }} bpm</p>
+                                </div>
+                              }
+                              @if (activite.calories) {
+                                <div>
+                                  <p class="text-[9px] font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-0.5">{{ 'journal.activite.calories' | t }}</p>
+                                  <p class="text-lg font-black text-secondary">{{ activite.calories }} kcal</p>
+                                </div>
+                              }
+                              @if (activite.chargeCardio) {
+                                <div>
+                                  <p class="text-[9px] font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-0.5">{{ 'journal.activite.cardioLoad' | t }}</p>
+                                  <p class="text-lg font-black text-secondary">{{ activite.chargeCardio | number:'1.0-0' }}</p>
+                                </div>
+                              }
+                              @if (activite.minutesZoneActive) {
+                                <div>
+                                  <p class="text-[9px] font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-0.5">{{ 'journal.activite.activeMinutes' | t }}</p>
+                                  <p class="text-lg font-black text-secondary">{{ activite.minutesZoneActive }} min</p>
+                                </div>
+                              }
+                            </div>
+                            @if (hasZonesActivite(activite)) {
+                              <div class="flex h-3 rounded-full overflow-hidden">
+                                @for (zone of zonesActivite(activite); track zone.key) {
+                                  <div [style.width.%]="(zone.minutes / totalMinutesZonesActivite(activite)) * 100"
+                                       [style.background-color]="zone.color"></div>
+                                }
+                              </div>
+                              <div class="flex flex-wrap gap-x-3 gap-y-1 mt-2">
+                                @for (zone of zonesActivite(activite); track zone.key) {
+                                  <span class="text-[10px] text-on-surface-variant flex items-center gap-1">
+                                    <span class="w-2 h-2 rounded-full" [style.background-color]="zone.color"></span>
+                                    {{ zone.key | t }} {{ zone.minutes }}min
+                                  </span>
+                                }
+                              </div>
+                            }
+                          </div>
+                        }
                       }
 
                       @for (exo of seance.exercices; track exo.id) {

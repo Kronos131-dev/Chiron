@@ -21,6 +21,7 @@ import com.kronos.chiron.seance.persistence.SeanceRepository;
 import com.kronos.chiron.utilisateur.persistence.UtilisateurRepository;
 import com.kronos.chiron.exercice.service.ExerciceDefinitionService;
 import com.kronos.chiron.programme.service.ProgrammeService;
+import com.kronos.chiron.sante.service.ActiviteEnrichissementService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -56,6 +57,8 @@ class WorkoutToolsTest {
     private ProgrammeService programmeService;
     @Mock
     private ToolUserResolver toolUserResolver;
+    @Mock
+    private ActiviteEnrichissementService activiteEnrichissementService;
 
     @Spy
     private Clock clock = Clock.system(ZoneId.of("Europe/Paris"));
@@ -205,6 +208,7 @@ class WorkoutToolsTest {
 
         assertThat(result).containsIgnoringCase("terminée");
         assertThat(activeSeance.getEndTime()).isNotNull();
+        verify(activiteEnrichissementService).planifierEnrichissement(activeSeance);
     }
 
     @Test
@@ -215,6 +219,7 @@ class WorkoutToolsTest {
         String result = workoutTools.endSession(MEMORY_ID);
 
         assertThat(result).isNotBlank();
+        verifyNoInteractions(activiteEnrichissementService);
     }
 
     @Test

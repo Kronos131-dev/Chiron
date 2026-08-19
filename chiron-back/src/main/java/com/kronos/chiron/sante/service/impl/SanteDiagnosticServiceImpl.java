@@ -32,11 +32,17 @@ public class SanteDiagnosticServiceImpl implements SanteDiagnosticService {
     private final Clock clock;
 
     @Override
-    public JsonNode capturerBrut(String chironUsername, GoogleHealthDataType type, int jours) {
+    public JsonNode capturerBrut(String chironUsername, GoogleHealthDataType type, int jours,
+            boolean sousJournalier, int fenetreSecondes) {
         String token = jetonOuErreur(chironUsername);
         int n = Math.max(1, Math.min(jours, JOURS_MAX));
         LocalDate aujourdhui = LocalDate.now(clock);
         LocalDate depuis = aujourdhui.minusDays(n - 1L);
+
+        if (sousJournalier && type.operation() == GoogleHealthDataType.Operation.DAILY_ROLLUP) {
+            int fenetre = fenetreSecondes > 0 ? fenetreSecondes : FENETRE_FC_SECONDES;
+            return fitbitClient.rollUp(token, type, debutDe(depuis), debutDe(depuis.plusDays(1)), fenetre);
+        }
 
         return switch (type.operation()) {
             case LIST -> fitbitClient.listDataPoints(token, type, depuis, null);

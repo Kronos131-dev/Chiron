@@ -5,7 +5,7 @@ import { ChartConfiguration, ChartData } from 'chart.js';
 import { HeaderComponent } from '../shared/header/header';
 import { TranslatePipe } from '../../service/translate.pipe';
 import { I18nService } from '../../service/i18n.service';
-import { GlauxApi, SanteJourDto } from '../../service/glaux-api';
+import { GlauxApi, SanteActiviteDto, SanteJourDto, TypeActivite } from '../../service/glaux-api';
 
 type Periode = 7 | 30 | 90 | 365;
 
@@ -39,8 +39,62 @@ export class Activite implements OnInit {
   jours = signal<SanteJourDto[]>([]);
   loading = signal(true);
 
+  activites = signal<SanteActiviteDto[]>([]);
+  activitesLoading = signal(true);
+
+  private readonly typeIcons: Record<TypeActivite, string> = {
+    MUSCULATION: 'fitness_center',
+    MARCHE: 'directions_walk',
+    COURSE: 'directions_run',
+    VELO: 'directions_bike',
+    FOOTBALL: 'sports_soccer',
+    SPORT_AUTRE: 'sports',
+  };
+
   ngOnInit(): void {
     this.load();
+    this.loadActivites();
+  }
+
+  private loadActivites(): void {
+    this.activitesLoading.set(true);
+    this.api.getActivites(90).subscribe({
+      next: (d) => {
+        this.activites.set(d);
+        this.activitesLoading.set(false);
+      },
+      error: () => this.activitesLoading.set(false),
+    });
+  }
+
+  iconFor(type: TypeActivite): string {
+    return this.typeIcons[type] ?? 'sports';
+  }
+
+  duree(activite: SanteActiviteDto): string {
+    const minutes = Math.round(
+      (new Date(activite.endTime).getTime() - new Date(activite.startTime).getTime()) / 60000,
+    );
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    return h > 0 ? `${h}h${m.toString().padStart(2, '0')}` : `${m}min`;
+  }
+
+  zonesActivite(activite: SanteActiviteDto): { key: string; minutes: number; color: string }[] {
+    return [
+      { key: 'activite.zoneLow', minutes: activite.minutesZoneBasse ?? 0, color: this.COL.cyan },
+      { key: 'activite.zoneModerate', minutes: activite.minutesZoneBruleuse ?? 0, color: this.COL.teal },
+      { key: 'activite.zoneIntense', minutes: activite.minutesZoneCardio ?? 0, color: this.COL.amber },
+      { key: 'activite.zoneMax', minutes: activite.minutesZonePic ?? 0, color: '#f87171' },
+    ];
+  }
+
+  totalMinutesZonesActivite(activite: SanteActiviteDto): number {
+    return this.zonesActivite(activite).reduce((sum, z) => sum + z.minutes, 0) || 1;
+  }
+
+  hasZonesActivite(activite: SanteActiviteDto): boolean {
+    return this.zonesActivite(activite).some((z) => z.minutes > 0);
   }
 
   changePeriode(p: Periode): void {

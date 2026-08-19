@@ -90,6 +90,28 @@ export interface SanteSyncEtatDto {
   message: string | null;
 }
 
+export type TypeActivite = 'MUSCULATION' | 'MARCHE' | 'COURSE' | 'VELO' | 'FOOTBALL' | 'SPORT_AUTRE';
+
+export interface SanteActiviteDto {
+  id: number;
+  source: 'CHIRON_MUSCU' | 'GOOGLE_DETECTE';
+  typeActivite: TypeActivite;
+  startTime: string;
+  endTime: string;
+  calories: number | null;
+  fcMoyenne: number | null;
+  fcMin: number | null;
+  fcMax: number | null;
+  minutesZoneBasse: number | null;
+  minutesZoneBruleuse: number | null;
+  minutesZoneCardio: number | null;
+  minutesZonePic: number | null;
+  minutesZoneActive: number | null;
+  chargeCardio: number | null;
+  seanceId: number | null;
+  enrichissementEnCours: boolean;
+}
+
 @Injectable({ providedIn: 'root' })
 export class GlauxApi {
   private apiUrl = `${environment.apiUrl}/sante`;
@@ -128,5 +150,9 @@ export class GlauxApi {
 
   forcerSync(): Observable<SanteSyncEtatDto[]> {
     return this.http.post<SanteSyncEtatDto[]>(`${this.apiUrl}/sync`, {});
+  }
+
+  getActivites(jours = 30): Observable<SanteActiviteDto[]> {
+    return this.http.get<SanteActiviteDto[]>(`${this.apiUrl}/activites?jours=${jours}`);
   }
 }
