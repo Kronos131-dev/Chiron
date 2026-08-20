@@ -12,12 +12,20 @@ import { GlauxApi, SanteResumeDto, SanteSyncEtatDto } from '../../service/glaux-
   styleUrl: './today.css',
 })
 export class Today implements OnInit {
+  private static readonly PULL_THRESHOLD_PX = 70;
+  private static readonly PULL_MAX_PX = 100;
+
   private api = inject(GlauxApi);
 
   resume = signal<SanteResumeDto | null>(null);
   loading = signal(true);
   syncing = signal(false);
   syncEnEchec = signal<SanteSyncEtatDto[]>([]);
+
+  pullDistance = signal(0);
+
+  private pullActive = false;
+  private touchStartY = 0;
 
   ngOnInit(): void {
     this.load();
@@ -56,6 +64,26 @@ export class Today implements OnInit {
       },
       error: () => this.syncing.set(false),
     });
+  }
+
+  onTouchStart(event: TouchEvent): void {
+    if (window.scrollY > 0 || this.syncing()) return;
+    this.pullActive = true;
+    this.touchStartY = event.touches[0].clientY;
+  }
+
+  onTouchMove(event: TouchEvent): void {
+    if (!this.pullActive) return;
+    const delta = event.touches[0].clientY - this.touchStartY;
+    this.pullDistance.set(delta > 0 ? Math.min(delta, Today.PULL_MAX_PX) : 0);
+  }
+
+  onTouchEnd(): void {
+    if (!this.pullActive) return;
+    this.pullActive = false;
+    const triggered = this.pullDistance() >= Today.PULL_THRESHOLD_PX;
+    this.pullDistance.set(0);
+    if (triggered) this.sync();
   }
 
   // WHY: les trois seuils sont ceux de Google Health — 1-29 faible, 30-64 modérée,

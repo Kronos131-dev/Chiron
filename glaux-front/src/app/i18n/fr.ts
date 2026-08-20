@@ -38,8 +38,6 @@ export const fr: Record<string, string> = {
     'Lie ton compte depuis les paramètres de Chiron pour voir tes données ici.',
   'today.reconnectNeeded': 'Reconnexion nécessaire',
   'today.reconnectDesc': "L'accès à Google Health a expiré. Relie ton compte depuis Chiron.",
-  'today.syncNow': 'Synchroniser maintenant',
-  'today.syncing': 'Synchronisation…',
 
   'coeur.title': 'Cœur',
   'coeur.heartRateToday': 'Fréquence cardiaque',

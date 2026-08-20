@@ -11,6 +11,7 @@ import { environment } from '../../../environments/environment';
 function flushActiviteRequests(httpMock: HttpTestingController, activites: SanteActiviteDto[] = []) {
   httpMock.expectOne(`${environment.apiUrl}/sante/jours?jours=30`).flush([]);
   httpMock.expectOne(`${environment.apiUrl}/sante/activites?jours=90`).flush(activites);
+  httpMock.expectOne(`${environment.apiUrl}/noctua/non-lus`).flush({ count: 0 });
 }
 
 function buildActivite(overrides: Partial<SanteActiviteDto>): SanteActiviteDto {

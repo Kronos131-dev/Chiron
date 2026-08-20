@@ -1,7 +1,29 @@
 <app-header [title]="'today.title' | t"></app-header>
 
-<main class="min-h-screen pt-24 pb-32 heroic-texture px-4 md:px-8">
+<main
+  class="min-h-screen pt-24 pb-32 heroic-texture px-4 md:px-8"
+  (touchstart)="onTouchStart($event)"
+  (touchmove)="onTouchMove($event)"
+  (touchend)="onTouchEnd()"
+>
   <div class="max-w-4xl mx-auto">
+    @if (syncing()) {
+      <div class="flex justify-center mb-4">
+        <span
+          class="w-8 h-8 border-4 border-secondary/20 border-t-secondary rounded-full animate-spin"
+        ></span>
+      </div>
+    } @else if (pullDistance() > 0) {
+      <div class="flex justify-center mb-4" [style.opacity]="pullDistance() / 70">
+        <span
+          class="material-symbols-outlined text-secondary text-2xl"
+          [style.transform]="'rotate(' + pullDistance() * 3 + 'deg)'"
+        >
+          arrow_downward
+        </span>
+      </div>
+    }
+
     <div class="text-center mb-6">
       <h2
         class="font-headline text-3xl md:text-4xl font-black text-on-surface uppercase tracking-tight"
@@ -120,16 +142,6 @@
           </div>
         </div>
       }
-
-      <div class="flex justify-center">
-        <button
-          (click)="sync()"
-          [disabled]="syncing()"
-          class="px-5 py-2.5 rounded-lg border border-secondary/30 text-secondary text-xs font-bold uppercase tracking-widest hover:bg-secondary/10 transition-colors disabled:opacity-50"
-        >
-          {{ syncing() ? ('today.syncing' | t) : ('today.syncNow' | t) }}
-        </button>
-      </div>
     }
   </div>
 </main>

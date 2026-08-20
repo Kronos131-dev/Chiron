@@ -37,8 +37,6 @@ export const en: Record<string, string> = {
   'today.notLinkedDesc': 'Link your account from Chiron settings to see your data here.',
   'today.reconnectNeeded': 'Reconnection needed',
   'today.reconnectDesc': 'Access to Google Health has expired. Relink your account from Chiron.',
-  'today.syncNow': 'Sync now',
-  'today.syncing': 'Syncing…',
 
   'coeur.title': 'Heart',
   'coeur.heartRateToday': 'Heart rate',
