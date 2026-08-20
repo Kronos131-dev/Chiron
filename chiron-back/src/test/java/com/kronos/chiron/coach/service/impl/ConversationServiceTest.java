@@ -10,6 +10,7 @@ import java.time.ZoneId;
 
 import java.time.Clock;
 
+import com.kronos.chiron.coach.model.AgentType;
 import com.kronos.chiron.coach.model.Conversation;
 import com.kronos.chiron.coach.model.ConversationMessage;
 import com.kronos.chiron.coach.model.MessageRole;
@@ -55,7 +56,7 @@ class ConversationServiceTest {
     void setUp() {
         user = new Utilisateur();
         user.setId(1L);
-        conversation = Conversation.builder().id(10L).utilisateur(user).build();
+        conversation = Conversation.builder().id(10L).utilisateur(user).agent(AgentType.CHIRON).build();
     }
 
     private List<ConversationMessage> captureSavedMessages() {
@@ -66,17 +67,17 @@ class ConversationServiceTest {
 
     @Test
     void listForUser_delegatesToRepositoryOrderedByLastActivity() {
-        when(conversationRepository.findByUtilisateurOrderByUpdatedAtDesc(user))
+        when(conversationRepository.findByUtilisateurAndAgentOrderByUpdatedAtDesc(user, AgentType.CHIRON))
                 .thenReturn(List.of(conversation));
 
-        assertThat(conversationService.listForUser(user)).containsExactly(conversation);
+        assertThat(conversationService.listForUser(user, AgentType.CHIRON)).containsExactly(conversation);
     }
 
     @Test
     void getOrCreate_nullId_createsAndPersistsANewConversationForTheUser() {
         when(conversationRepository.save(any(Conversation.class))).thenAnswer(i -> i.getArgument(0));
 
-        Conversation created = conversationService.getOrCreate(user, null);
+        Conversation created = conversationService.getOrCreate(user, null, AgentType.CHIRON);
 
         assertThat(created.getUtilisateur()).isSameAs(user);
         verify(conversationRepository).save(any(Conversation.class));
@@ -84,18 +85,19 @@ class ConversationServiceTest {
 
     @Test
     void getOrCreate_existingIdOwnedByUser_returnsIt() {
-        when(conversationRepository.findByIdAndUtilisateur(10L, user))
+        when(conversationRepository.findByIdAndUtilisateurAndAgent(10L, user, AgentType.CHIRON))
                 .thenReturn(Optional.of(conversation));
 
-        assertThat(conversationService.getOrCreate(user, 10L)).isSameAs(conversation);
+        assertThat(conversationService.getOrCreate(user, 10L, AgentType.CHIRON)).isSameAs(conversation);
         verify(conversationRepository, never()).save(any());
     }
 
     @Test
     void getOrCreate_conversationOfAnotherUser_throwsNoSuchElement() {
-        when(conversationRepository.findByIdAndUtilisateur(99L, user)).thenReturn(Optional.empty());
+        when(conversationRepository.findByIdAndUtilisateurAndAgent(99L, user, AgentType.CHIRON))
+                .thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> conversationService.getOrCreate(user, 99L))
+        assertThatThrownBy(() -> conversationService.getOrCreate(user, 99L, AgentType.CHIRON))
                 .isInstanceOfSatisfying(ErrorResponseException.class,
                         e -> assertThat(e.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND));
     }
@@ -111,19 +113,20 @@ class ConversationServiceTest {
 
     @Test
     void getMessages_byId_checksOwnershipFirst() {
-        when(conversationRepository.findByIdAndUtilisateur(10L, user))
+        when(conversationRepository.findByIdAndUtilisateurAndAgent(10L, user, AgentType.CHIRON))
                 .thenReturn(Optional.of(conversation));
         when(conversationMessageRepository.findByConversationOrderByCreatedAtAsc(conversation))
                 .thenReturn(List.of());
 
-        assertThat(conversationService.getMessages(user, 10L)).isEmpty();
+        assertThat(conversationService.getMessages(user, 10L, AgentType.CHIRON)).isEmpty();
     }
 
     @Test
     void getMessages_byId_conversationOfAnotherUser_throwsNoSuchElement() {
-        when(conversationRepository.findByIdAndUtilisateur(99L, user)).thenReturn(Optional.empty());
+        when(conversationRepository.findByIdAndUtilisateurAndAgent(99L, user, AgentType.CHIRON))
+                .thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> conversationService.getMessages(user, 99L))
+        assertThatThrownBy(() -> conversationService.getMessages(user, 99L, AgentType.CHIRON))
                 .isInstanceOfSatisfying(ErrorResponseException.class,
                         e -> assertThat(e.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND));
     }
@@ -209,19 +212,20 @@ class ConversationServiceTest {
 
     @Test
     void delete_conversationOwnedByUser_isDeleted() {
-        when(conversationRepository.findByIdAndUtilisateur(10L, user))
+        when(conversationRepository.findByIdAndUtilisateurAndAgent(10L, user, AgentType.CHIRON))
                 .thenReturn(Optional.of(conversation));
 
-        conversationService.delete(user, 10L);
+        conversationService.delete(user, 10L, AgentType.CHIRON);
 
         verify(conversationRepository).delete(conversation);
     }
 
     @Test
     void delete_conversationOfAnotherUser_throwsAndDeletesNothing() {
-        when(conversationRepository.findByIdAndUtilisateur(99L, user)).thenReturn(Optional.empty());
+        when(conversationRepository.findByIdAndUtilisateurAndAgent(99L, user, AgentType.CHIRON))
+                .thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> conversationService.delete(user, 99L))
+        assertThatThrownBy(() -> conversationService.delete(user, 99L, AgentType.CHIRON))
                 .isInstanceOfSatisfying(ErrorResponseException.class,
                         e -> assertThat(e.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND));
         verify(conversationRepository, never()).delete(any(Conversation.class));

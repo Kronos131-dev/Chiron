@@ -6,6 +6,7 @@ import com.kronos.chiron.coach.service.ConversationService;
 
 import java.time.Clock;
 
+import com.kronos.chiron.coach.model.AgentType;
 import com.kronos.chiron.coach.model.Conversation;
 import com.kronos.chiron.coach.model.ConversationMessage;
 import com.kronos.chiron.coach.model.MessageRole;
@@ -31,18 +32,18 @@ public class ConversationServiceImpl implements ConversationService {
     private final Clock clock;
     @Transactional(readOnly = true)
     @Override
-    public List<Conversation> listForUser(Utilisateur user) {
-        return conversationRepository.findByUtilisateurOrderByUpdatedAtDesc(user);
+    public List<Conversation> listForUser(Utilisateur user, AgentType agent) {
+        return conversationRepository.findByUtilisateurAndAgentOrderByUpdatedAtDesc(user, agent);
     }
 
     @Transactional
     @Override
-    public Conversation getOrCreate(Utilisateur user, Long conversationId) {
+    public Conversation getOrCreate(Utilisateur user, Long conversationId, AgentType agent) {
         if (conversationId == null) {
-            Conversation conv = Conversation.builder().utilisateur(user).build();
+            Conversation conv = Conversation.builder().utilisateur(user).agent(agent).build();
             return conversationRepository.save(conv);
         }
-        return conversationRepository.findByIdAndUtilisateur(conversationId, user)
+        return conversationRepository.findByIdAndUtilisateurAndAgent(conversationId, user, agent)
                 .orElseThrow(() -> notFound("Conversation introuvable"));
     }
 
@@ -54,8 +55,8 @@ public class ConversationServiceImpl implements ConversationService {
 
     @Transactional(readOnly = true)
     @Override
-    public List<ConversationMessage> getMessages(Utilisateur user, Long conversationId) {
-        Conversation conv = conversationRepository.findByIdAndUtilisateur(conversationId, user)
+    public List<ConversationMessage> getMessages(Utilisateur user, Long conversationId, AgentType agent) {
+        Conversation conv = conversationRepository.findByIdAndUtilisateurAndAgent(conversationId, user, agent)
                 .orElseThrow(() -> notFound("Conversation introuvable"));
         return conversationMessageRepository.findByConversationOrderByCreatedAtAsc(conv);
     }
@@ -74,8 +75,8 @@ public class ConversationServiceImpl implements ConversationService {
 
     @Transactional
     @Override
-    public void delete(Utilisateur user, Long conversationId) {
-        Conversation conv = conversationRepository.findByIdAndUtilisateur(conversationId, user)
+    public void delete(Utilisateur user, Long conversationId, AgentType agent) {
+        Conversation conv = conversationRepository.findByIdAndUtilisateurAndAgent(conversationId, user, agent)
                 .orElseThrow(() -> notFound("Conversation introuvable"));
         conversationRepository.delete(conv);
     }

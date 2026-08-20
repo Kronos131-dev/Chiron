@@ -2,7 +2,7 @@ import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BaseChartDirective } from 'ng2-charts';
-import { ChartConfiguration, ChartData } from 'chart.js';
+import { ChartConfiguration, ChartData, Plugin } from 'chart.js';
 import { HeaderComponent } from '../shared/header/header';
 import { TranslatePipe } from '../../service/translate.pipe';
 import { I18nService } from '../../service/i18n.service';
@@ -29,7 +29,44 @@ export class Coeur implements OnInit {
     teal: '#2dd4bf',
     grid: 'rgba(255,255,255,0.06)',
     text: '#7dd3c0',
+    seuil: 'rgba(240,253,250,0.35)',
   };
+
+  private readonly SEUILS_FC = [
+    { valeur: 110, cle: 'coeur.zoneModeree' },
+    { valeur: 139, cle: 'coeur.zoneIntense' },
+    { valeur: 175, cle: 'coeur.zoneMaximale' },
+  ];
+
+  private readonly seuilsFcPlugin: Plugin<'line'> = {
+    id: 'seuilsFc',
+    afterDatasetsDraw: (chart) => {
+      const { ctx, chartArea, scales } = chart;
+      const y = scales['y'];
+      if (!chartArea || !y) return;
+
+      ctx.save();
+      ctx.strokeStyle = this.COL.seuil;
+      ctx.fillStyle = this.COL.seuil;
+      ctx.font = '10px sans-serif';
+      ctx.textAlign = 'right';
+      ctx.setLineDash([4, 4]);
+
+      for (const seuil of this.SEUILS_FC) {
+        if (seuil.valeur < y.min || seuil.valeur > y.max) continue;
+        const pixelY = y.getPixelForValue(seuil.valeur);
+        ctx.beginPath();
+        ctx.moveTo(chartArea.left, pixelY);
+        ctx.lineTo(chartArea.right, pixelY);
+        ctx.stroke();
+        ctx.fillText(this.i18n.t(seuil.cle), chartArea.right, pixelY - 4);
+      }
+
+      ctx.restore();
+    },
+  };
+
+  fcPlugins = [this.seuilsFcPlugin];
 
   selectedDate = signal(new Date().toISOString().slice(0, 10));
   fcPoints = signal<SanteFcPointDto[]>([]);
@@ -211,7 +248,7 @@ export class Coeur implements OnInit {
         ticks: { color: this.COL.text, maxRotation: 0, autoSkip: true, maxTicksLimit: 8 },
         grid: { color: this.COL.grid },
       },
-      y: { ticks: { color: this.COL.text }, grid: { color: this.COL.grid } },
+      y: { ticks: { color: this.COL.text }, grid: { color: this.COL.grid }, suggestedMax: 175 },
     },
   };
 

@@ -25,7 +25,13 @@
         <p class="text-center text-on-surface-variant py-16">{{ 'coeur.noData' | t }}</p>
       } @else {
         <div class="h-56">
-          <canvas baseChart [data]="fcChart()" [options]="lineOptions" type="line"></canvas>
+          <canvas
+            baseChart
+            [data]="fcChart()"
+            [options]="lineOptions"
+            [plugins]="fcPlugins"
+            type="line"
+          ></canvas>
         </div>
       }
     </div>

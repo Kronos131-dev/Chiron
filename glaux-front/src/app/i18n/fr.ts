@@ -18,6 +18,7 @@ export const fr: Record<string, string> = {
   'nav.coeur': 'Cœur',
   'nav.sommeil': 'Sommeil',
   'nav.activite': 'Activité',
+  'nav.noctua': 'Noctua',
 
   'today.title': "Aujourd'hui",
   'today.subtitle': 'Le résumé du jour',
@@ -52,6 +53,9 @@ export const fr: Record<string, string> = {
   'coeur.thisWeek': 'cette semaine',
   'coeur.noData': 'Aucune donnée cardiaque pour cette date.',
   'coeur.approx': "Approximation Chiron, jamais identique au chiffre de l'app Google Health.",
+  'coeur.zoneModeree': 'Modérée',
+  'coeur.zoneIntense': 'Intense',
+  'coeur.zoneMaximale': 'Maximale',
 
   'sommeil.title': 'Sommeil',
   'sommeil.score': 'Score',
@@ -87,4 +91,16 @@ export const fr: Record<string, string> = {
   'activite.type.VELO': 'Vélo',
   'activite.type.FOOTBALL': 'Football',
   'activite.type.SPORT_AUTRE': 'Sport',
+
+  'noctua.title': 'Noctua',
+  'noctua.subtitle': 'Ce que ta chouette a remarqué',
+  'noctua.empty':
+    "Rien à signaler pour l'instant. Noctua parlera au réveil, après une activité et au coucher.",
+  'noctua.typeReveil': 'Réveil',
+  'noctua.typeActivite': 'Activité',
+  'noctua.typeCoucher': 'Coucher',
+  'noctua.ask': 'Répondre à Noctua…',
+  'noctua.send': 'Envoyer',
+  'noctua.thinking': 'Noctua réfléchit…',
+  'noctua.error': "Noctua n'a pas pu répondre, réessaie.",
 };

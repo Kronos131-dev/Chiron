@@ -82,6 +82,36 @@ export interface SanteCardioHebdoDto {
   minutesZoneActive: number | null;
 }
 
+export type NoctuaBriefingType = 'REVEIL' | 'ACTIVITE' | 'COUCHER';
+
+export interface NoctuaBriefingDto {
+  id: number;
+  type: NoctuaBriefingType;
+  dateReference: string;
+  createdAt: string;
+  lu: boolean;
+  premierParagraphe: string;
+}
+
+export interface NoctuaConversationMessageDto {
+  role: 'USER' | 'AI';
+  content: string;
+}
+
+export interface NoctuaBriefingDetailDto {
+  briefing: NoctuaBriefingDto;
+  messages: NoctuaConversationMessageDto[];
+}
+
+export interface NoctuaChatResponse {
+  conversationId: number;
+  reply: string;
+}
+
+export interface NoctuaNonLusDto {
+  count: number;
+}
+
 export interface SanteSyncEtatDto {
   typeDonnee: string;
   derniereDateSynchronisee: string | null;
@@ -90,7 +120,8 @@ export interface SanteSyncEtatDto {
   message: string | null;
 }
 
-export type TypeActivite = 'MUSCULATION' | 'MARCHE' | 'COURSE' | 'VELO' | 'FOOTBALL' | 'SPORT_AUTRE';
+export type TypeActivite =
+  'MUSCULATION' | 'MARCHE' | 'COURSE' | 'VELO' | 'FOOTBALL' | 'SPORT_AUTRE';
 
 export interface SanteActiviteDto {
   id: number;
@@ -154,5 +185,37 @@ export class GlauxApi {
 
   getActivites(jours = 30): Observable<SanteActiviteDto[]> {
     return this.http.get<SanteActiviteDto[]>(`${this.apiUrl}/activites?jours=${jours}`);
+  }
+
+  getNoctuaBriefings(jours = 14): Observable<NoctuaBriefingDto[]> {
+    return this.http.get<NoctuaBriefingDto[]>(
+      `${environment.apiUrl}/noctua/briefings?jours=${jours}`,
+    );
+  }
+
+  getNoctuaBriefing(id: number): Observable<NoctuaBriefingDetailDto> {
+    return this.http.get<NoctuaBriefingDetailDto>(`${environment.apiUrl}/noctua/briefings/${id}`);
+  }
+
+  envoyerMessageNoctua(
+    id: number,
+    message: string,
+    language: string,
+  ): Observable<NoctuaChatResponse> {
+    return this.http.post<NoctuaChatResponse>(
+      `${environment.apiUrl}/noctua/briefings/${id}/messages`,
+      {
+        message,
+        language,
+      },
+    );
+  }
+
+  marquerBriefingLu(id: number): Observable<void> {
+    return this.http.post<void>(`${environment.apiUrl}/noctua/briefings/${id}/lu`, {});
+  }
+
+  getNoctuaNonLus(): Observable<NoctuaNonLusDto> {
+    return this.http.get<NoctuaNonLusDto>(`${environment.apiUrl}/noctua/non-lus`);
   }
 }

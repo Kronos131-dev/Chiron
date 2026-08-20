@@ -24,7 +24,7 @@ public class MemoryTools {
     private final MemoryNoteService memoryNoteService;
 
     private final ToolUserResolver toolUserResolver;
-    @Tool("Enregistre une note durable sur l'utilisateur. Types : BLESSURE (douleur, limitation médicale), PREFERENCE (goûts, régime alimentaire), OBJECTIF (objectif précis/chiffré), ENGAGEMENT (promesse), NOTE_LIBRE (autre).")
+    @Tool("Enregistre une note durable sur l'utilisateur. Types : BLESSURE (douleur, limitation médicale), PREFERENCE (goûts, régime alimentaire), OBJECTIF (objectif précis/chiffré), ENGAGEMENT (promesse), SANTE (constat de santé structurel remonté par Noctua), NOTE_LIBRE (autre).")
     public String enregistrerNote(@ToolMemoryId String memoryId, String type, String contenu) {
         Utilisateur user = toolUserResolver.load(memoryId);
         if (contenu == null || contenu.isBlank()) {
@@ -34,13 +34,13 @@ public class MemoryTools {
         try {
             t = MemoryNoteType.valueOf(type == null ? "NOTE_LIBRE" : type.trim().toUpperCase());
         } catch (IllegalArgumentException e) {
-            return "Type de note invalide. Valeurs autorisées : BLESSURE, PREFERENCE, OBJECTIF, ENGAGEMENT, NOTE_LIBRE.";
+            return "Type de note invalide. Valeurs autorisées : BLESSURE, PREFERENCE, OBJECTIF, ENGAGEMENT, SANTE, NOTE_LIBRE.";
         }
         ChironMemoryNote saved = memoryNoteService.save(user, t, contenu.trim());
         return "Note enregistrée (id=" + saved.getId() + ", type=" + t.name() + ").";
     }
 
-    @Tool("Récupère les notes durables de l'utilisateur. Si type fourni (BLESSURE, PREFERENCE, OBJECTIF, ENGAGEMENT, NOTE_LIBRE), filtre dessus ; sinon les 20 plus récentes.")
+    @Tool("Récupère les notes durables de l'utilisateur. Si type fourni (BLESSURE, PREFERENCE, OBJECTIF, ENGAGEMENT, SANTE, NOTE_LIBRE), filtre dessus ; sinon les 20 plus récentes.")
     public String getMesNotes(@ToolMemoryId String memoryId, String type) {
         Utilisateur user = toolUserResolver.load(memoryId);
         List<ChironMemoryNote> notes;
@@ -49,7 +49,7 @@ public class MemoryTools {
             try {
                 t = MemoryNoteType.valueOf(type.trim().toUpperCase());
             } catch (IllegalArgumentException e) {
-                return "Type de note invalide. Valeurs autorisées : BLESSURE, PREFERENCE, OBJECTIF, ENGAGEMENT, NOTE_LIBRE.";
+                return "Type de note invalide. Valeurs autorisées : BLESSURE, PREFERENCE, OBJECTIF, ENGAGEMENT, SANTE, NOTE_LIBRE.";
             }
             notes = memoryNoteService.getByType(user, t);
         } else {

@@ -51,4 +51,18 @@ public class MemoryNoteServiceImpl implements MemoryNoteService {
         repository.delete(note.get());
         return true;
     }
+
+    @Transactional(readOnly = true)
+    @Override
+    public String formatForPrompt(Utilisateur user, int limit) {
+        List<ChironMemoryNote> notes = getRecent(user, limit);
+        if (notes.isEmpty()) return "";
+        StringBuilder sb = new StringBuilder("[MÉMOIRE LONG-TERME — notes durables, à utiliser sans les répéter] :\n");
+        for (ChironMemoryNote n : notes) {
+            sb.append("- #").append(n.getId()).append(" [").append(n.getType().name()).append("] ")
+                    .append(n.getContent()).append("\n");
+        }
+        sb.append("\n");
+        return sb.toString();
+    }
 }

@@ -21,6 +21,11 @@ spring:
       hibernate:
         format_sql: true
 
+  task:
+    scheduling:
+      pool:
+        size: 4
+
   flyway:
     enabled: true
     # Tolère les migrations appliquées en base mais retirées du code (ex. V34/35/36,

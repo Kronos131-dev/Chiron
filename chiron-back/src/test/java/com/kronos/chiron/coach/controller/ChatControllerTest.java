@@ -4,6 +4,7 @@ import tools.jackson.databind.json.JsonMapper;
 import com.kronos.chiron.coach.agent.ChironAgentRouter;
 import com.kronos.chiron.coach.agent.ConversationMemoryManager;
 import com.kronos.chiron.utilisateur.model.AiProvider;
+import com.kronos.chiron.coach.model.AgentType;
 import com.kronos.chiron.coach.model.Conversation;
 import com.kronos.chiron.utilisateur.model.Role;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
@@ -89,9 +90,10 @@ class ChatControllerTest {
     @BeforeEach
     void setUp() {
         // La conversation résolue porte l'id 42 → la mémoire IA est indexée sur "42".
-        when(conversationService.getOrCreate(any(), any()))
-                .thenReturn(Conversation.builder().id(42L).build());
+        when(conversationService.getOrCreate(any(), any(), eq(AgentType.CHIRON)))
+                .thenReturn(Conversation.builder().id(42L).agent(AgentType.CHIRON).build());
         when(aiUsageService.resolveProvider(any())).thenReturn(AiProvider.MISTRAL);
+        when(memoryNoteService.formatForPrompt(any(), anyInt())).thenReturn("");
     }
 
     @Test

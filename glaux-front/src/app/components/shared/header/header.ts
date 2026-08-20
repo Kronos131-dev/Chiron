@@ -1,8 +1,9 @@
-import { Component, Input, signal } from '@angular/core';
+import { Component, Input, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../../service/auth.service';
 import { TranslatePipe } from '../../../service/translate.pipe';
+import { NoctuaNotifications } from '../../../service/noctua-notifications';
 import { environment } from '../../../../environments/environment';
 
 @Component({
@@ -11,13 +12,20 @@ import { environment } from '../../../../environments/environment';
   imports: [CommonModule, RouterLink, RouterLinkActive, TranslatePipe],
   templateUrl: './header.html',
 })
-export class HeaderComponent {
+export class HeaderComponent implements OnInit {
   @Input() title: string = 'Noctua';
 
   showMenu = signal(false);
   readonly chironUrl = environment.chironUrl;
 
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    public noctuaNotifications: NoctuaNotifications,
+  ) {}
+
+  ngOnInit(): void {
+    this.noctuaNotifications.rafraichir();
+  }
 
   toggleMenu(): void {
     this.showMenu.update((v) => !v);

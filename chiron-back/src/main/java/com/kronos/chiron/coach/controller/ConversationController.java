@@ -3,6 +3,7 @@ package com.kronos.chiron.coach.controller;
 import static com.kronos.chiron.core.exceptions.ErrorFactory.notFound;
 
 import com.kronos.chiron.coach.agent.ConversationMemoryManager;
+import com.kronos.chiron.coach.model.AgentType;
 import com.kronos.chiron.coach.dto.ConversationMessageDto;
 import com.kronos.chiron.coach.dto.ConversationSummaryDto;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
@@ -28,7 +29,7 @@ public class ConversationController {
     @GetMapping
     public List<ConversationSummaryDto> list(@AuthenticationPrincipal UserDetails userDetails) {
         Utilisateur user = currentUser(userDetails);
-        return conversationService.listForUser(user).stream()
+        return conversationService.listForUser(user, AgentType.CHIRON).stream()
                 .map(c -> new ConversationSummaryDto(c.getId(), c.getTitre(), c.getUpdatedAt()))
                 .toList();
     }
@@ -37,7 +38,7 @@ public class ConversationController {
     public List<ConversationMessageDto> messages(@AuthenticationPrincipal UserDetails userDetails,
             @PathVariable Long id) {
         Utilisateur user = currentUser(userDetails);
-        return conversationService.getMessages(user, id).stream()
+        return conversationService.getMessages(user, id, AgentType.CHIRON).stream()
                 .map(m -> new ConversationMessageDto(m.getRole().name(), m.getContent()))
                 .toList();
     }
@@ -46,7 +47,7 @@ public class ConversationController {
     public ResponseEntity<Void> delete(@AuthenticationPrincipal UserDetails userDetails,
             @PathVariable Long id) {
         Utilisateur user = currentUser(userDetails);
-        conversationService.delete(user, id);
+        conversationService.delete(user, id, AgentType.CHIRON);
         memoryManager.evict(String.valueOf(id));
         return ResponseEntity.noContent().build();
     }

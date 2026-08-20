@@ -15,4 +15,6 @@ public interface MemoryNoteService {
     List<ChironMemoryNote> getByType(Utilisateur user, MemoryNoteType type);
 
     boolean delete(Utilisateur user, Long id);
+
+    String formatForPrompt(Utilisateur user, int limit);
 }

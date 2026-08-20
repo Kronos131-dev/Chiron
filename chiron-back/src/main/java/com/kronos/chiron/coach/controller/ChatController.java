@@ -6,7 +6,7 @@ import com.kronos.chiron.coach.agent.ChironAgentRouter;
 import com.kronos.chiron.coach.agent.ConversationMemoryManager;
 import com.kronos.chiron.coach.dto.ChatResponse;
 import com.kronos.chiron.utilisateur.model.AiProvider;
-import com.kronos.chiron.coach.model.ChironMemoryNote;
+import com.kronos.chiron.coach.model.AgentType;
 import com.kronos.chiron.coach.model.Conversation;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 import com.kronos.chiron.utilisateur.persistence.UtilisateurRepository;
@@ -16,8 +16,6 @@ import com.kronos.chiron.coach.service.MemoryNoteService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api")
@@ -88,7 +86,8 @@ public class ChatController {
         Utilisateur user = utilisateurRepository.findByUsername(principal.getUsername())
                 .orElseThrow(() -> notFound("User not found"));
 
-        Conversation conversation = conversationService.getOrCreate(user, request.getConversationId());
+        Conversation conversation = conversationService.getOrCreate(user, request.getConversationId(),
+                AgentType.CHIRON);
         String memoryId = String.valueOf(conversation.getId());
         memoryManager.seedIfAbsent(memoryId, () -> conversationService.getMessages(conversation));
 
@@ -98,10 +97,7 @@ public class ChatController {
                 .append(". Son rôle est : ").append(user.getRole().name())
                 .append(". S'il est ADMIN, il a le droit de demander des informations sur d'autres utilisateurs.\n");
 
-        String memoryBlock = formatMemoryNotes(user);
-        if (!memoryBlock.isEmpty()) {
-            ctx.append(memoryBlock);
-        }
+        ctx.append(memoryNoteService.formatForPrompt(user, MEMORY_INJECTION_LIMIT));
 
         ctx.append("MESSAGE DE L'UTILISATEUR : ").append(request.getMessage());
 
@@ -112,24 +108,13 @@ public class ChatController {
         return new ChatResponse(conversation.getId(), reply);
     }
 
-    private String formatMemoryNotes(Utilisateur user) {
-        List<ChironMemoryNote> notes = memoryNoteService.getRecent(user, MEMORY_INJECTION_LIMIT);
-        if (notes.isEmpty()) return "";
-        StringBuilder sb = new StringBuilder("[MÉMOIRE LONG-TERME — notes durables, à utiliser sans les répéter] :\n");
-        for (ChironMemoryNote n : notes) {
-            sb.append("- #").append(n.getId()).append(" [").append(n.getType().name()).append("] ")
-                    .append(n.getContent()).append("\n");
-        }
-        sb.append("\n");
-        return sb.toString();
-    }
-
     @PostMapping("/end-session")
     public ChatResponse endSession(@AuthenticationPrincipal UserDetails principal, @RequestBody ChatRequest request) {
         Utilisateur user = utilisateurRepository.findByUsername(principal.getUsername())
                 .orElseThrow(() -> notFound("User not found"));
 
-        Conversation conversation = conversationService.getOrCreate(user, request.getConversationId());
+        Conversation conversation = conversationService.getOrCreate(user, request.getConversationId(),
+                AgentType.CHIRON);
         String memoryId = String.valueOf(conversation.getId());
         memoryManager.seedIfAbsent(memoryId, () -> conversationService.getMessages(conversation));
 

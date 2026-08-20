@@ -1,0 +1,149 @@
+<app-header [title]="'noctua.title' | t"></app-header>
+
+<main class="min-h-screen pt-24 pb-32 heroic-texture px-4 md:px-8">
+  <div class="max-w-4xl mx-auto">
+    @if (selectedId() === null) {
+      <div class="text-center mb-6">
+        <h2
+          class="font-headline text-3xl md:text-4xl font-black text-on-surface uppercase tracking-tight"
+        >
+          {{ 'noctua.title' | t }}
+        </h2>
+        <p class="text-on-surface-variant font-body mt-2">{{ 'noctua.subtitle' | t }}</p>
+      </div>
+
+      @if (loading()) {
+        <div class="flex justify-center mt-16">
+          <span
+            class="w-12 h-12 border-4 border-secondary/20 border-t-secondary rounded-full animate-spin"
+          ></span>
+        </div>
+      } @else if (briefings().length === 0) {
+        <div class="bg-slate-900/40 border border-white/5 rounded-2xl p-8 text-center">
+          <p class="text-4xl mb-3">🦉</p>
+          <p class="text-on-surface-variant text-sm">{{ 'noctua.empty' | t }}</p>
+        </div>
+      } @else {
+        <div class="space-y-3">
+          @for (b of briefings(); track b.id) {
+            <button
+              type="button"
+              (click)="ouvrir(b.id)"
+              class="w-full text-left bg-slate-900/40 border border-white/5 rounded-xl p-4 hover:bg-slate-900/70 transition-colors flex gap-3"
+            >
+              <span class="material-symbols-outlined text-2xl text-secondary shrink-0 mt-0.5">
+                {{ iconFor(b.type) }}
+              </span>
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center justify-between gap-2">
+                  <p
+                    class="text-[10px] font-bold tracking-[0.2em] uppercase text-on-surface-variant"
+                  >
+                    {{ labelFor(b.type) | t }} · {{ dateLabel(b.createdAt) }}
+                  </p>
+                  @if (!b.lu) {
+                    <span class="w-2 h-2 rounded-full bg-secondary shrink-0"></span>
+                  }
+                </div>
+                <p class="text-on-surface text-sm mt-1 line-clamp-2 whitespace-pre-line">
+                  {{ b.premierParagraphe }}
+                </p>
+              </div>
+            </button>
+          }
+        </div>
+      }
+    } @else {
+      <div class="flex items-center gap-2 mb-4">
+        <button
+          type="button"
+          (click)="retour()"
+          [attr.aria-label]="'common.close' | t"
+          class="material-symbols-outlined text-2xl text-on-surface-variant hover:text-secondary transition-colors cursor-pointer"
+        >
+          arrow_back
+        </button>
+        @if (detail(); as d) {
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-xl text-secondary">{{
+              iconFor(d.briefing.type)
+            }}</span>
+            <p class="text-sm font-bold uppercase tracking-widest text-on-surface">
+              {{ labelFor(d.briefing.type) | t }} · {{ dateLabel(d.briefing.createdAt) }}
+            </p>
+          </div>
+        }
+      </div>
+
+      @if (loadingDetail()) {
+        <div class="flex justify-center mt-16">
+          <span
+            class="w-12 h-12 border-4 border-secondary/20 border-t-secondary rounded-full animate-spin"
+          ></span>
+        </div>
+      } @else if (detail(); as d) {
+        <div class="space-y-3 mb-6">
+          @for (m of d.messages; track $index) {
+            @if (m.role === 'USER') {
+              <div class="flex justify-center">
+                <span
+                  class="text-[10px] uppercase tracking-widest text-on-surface-variant bg-slate-900/60 rounded-full px-3 py-1"
+                >
+                  {{ m.content }}
+                </span>
+              </div>
+            } @else {
+              <div class="flex gap-2 items-start">
+                <span class="material-symbols-outlined text-lg text-secondary mt-1 shrink-0"
+                  >nights_stay</span
+                >
+                <div
+                  class="bg-slate-900/40 border border-white/5 rounded-xl rounded-tl-sm p-4 whitespace-pre-line text-on-surface text-sm"
+                >
+                  {{ m.content }}
+                </div>
+              </div>
+            }
+          }
+          @if (sending()) {
+            <div class="flex gap-2 items-start">
+              <span class="material-symbols-outlined text-lg text-secondary mt-1 shrink-0"
+                >nights_stay</span
+              >
+              <div
+                class="bg-slate-900/40 border border-white/5 rounded-xl rounded-tl-sm p-4 flex items-center gap-2"
+              >
+                <span
+                  class="w-4 h-4 border-2 border-secondary/20 border-t-secondary rounded-full animate-spin inline-block shrink-0"
+                ></span>
+                <span class="text-on-surface-variant text-sm">{{ 'noctua.thinking' | t }}</span>
+              </div>
+            </div>
+          }
+          @if (sendError()) {
+            <p class="text-center text-amber-300 text-xs">{{ 'noctua.error' | t }}</p>
+          }
+        </div>
+
+        <form (ngSubmit)="envoyer()" class="flex gap-2 sticky bottom-20">
+          <input
+            type="text"
+            [ngModel]="userInput()"
+            (ngModelChange)="userInput.set($event)"
+            name="message"
+            [placeholder]="'noctua.ask' | t"
+            [disabled]="sending()"
+            class="flex-1 bg-slate-900/60 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-on-surface placeholder:text-on-surface-variant/60 disabled:opacity-50"
+          />
+          <button
+            type="submit"
+            [disabled]="sending() || !userInput().trim()"
+            class="px-4 py-2.5 rounded-lg border border-secondary/30 text-secondary text-xs font-bold uppercase tracking-widest hover:bg-secondary/10 transition-colors disabled:opacity-50"
+          >
+            {{ 'noctua.send' | t }}
+          </button>
+        </form>
+      }
+    }
+  </div>
+</main>

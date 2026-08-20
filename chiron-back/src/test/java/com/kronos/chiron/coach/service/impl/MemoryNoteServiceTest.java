@@ -103,4 +103,24 @@ class MemoryNoteServiceTest {
         assertThat(memoryNoteService.delete(user, 7L)).isFalse();
         verify(repository, never()).delete(any());
     }
+
+    @Test
+    void formatForPrompt_notesPresentes_rendsUnBlocAvecIdTypeEtContenu() {
+        ChironMemoryNote note = ChironMemoryNote.builder().id(3L).type(MemoryNoteType.SANTE)
+                .content("FC de repos en dérive depuis 3 semaines.").build();
+        when(repository.findByUtilisateurOrderByCreatedAtDesc(user, PageRequest.of(0, 10)))
+                .thenReturn(List.of(note));
+
+        String result = memoryNoteService.formatForPrompt(user, 10);
+
+        assertThat(result).contains("MÉMOIRE LONG-TERME").contains("#3").contains("[SANTE]")
+                .contains("FC de repos en dérive depuis 3 semaines.");
+    }
+
+    @Test
+    void formatForPrompt_aucuneNote_rendUneChaineVide() {
+        when(repository.findByUtilisateurOrderByCreatedAtDesc(user, PageRequest.of(0, 10))).thenReturn(List.of());
+
+        assertThat(memoryNoteService.formatForPrompt(user, 10)).isEmpty();
+    }
 }

@@ -29,6 +29,11 @@ public class Conversation {
     @Column(name = "titre", length = 120)
     private String titre;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "agent", nullable = false, length = 16)
+    @Builder.Default
+    private AgentType agent = AgentType.CHIRON;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 

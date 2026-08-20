@@ -9,6 +9,16 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'noctua',
+    loadComponent: () => import('./components/noctua/noctua').then((m) => m.Noctua),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'noctua/:id',
+    loadComponent: () => import('./components/noctua/noctua').then((m) => m.Noctua),
+    canActivate: [authGuard],
+  },
+  {
     path: 'coeur',
     loadComponent: () => import('./components/coeur/coeur').then((m) => m.Coeur),
     canActivate: [authGuard],

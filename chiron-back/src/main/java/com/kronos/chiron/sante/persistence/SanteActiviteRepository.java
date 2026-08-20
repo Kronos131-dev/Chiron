@@ -28,4 +28,9 @@ public interface SanteActiviteRepository extends JpaRepository<SanteActivite, Lo
     Optional<SanteActivite> findFirstByUtilisateurAndSourceAndStartTimeLessThanAndEndTimeGreaterThan(
             Utilisateur utilisateur, SourceActivite source, LocalDateTime endTimeExclusive,
             LocalDateTime startTimeExclusive);
+
+    Optional<SanteActivite> findFirstByUtilisateurOrderByEndTimeDesc(Utilisateur utilisateur);
+
+    List<SanteActivite> findByUtilisateurAndStatutEnrichissementAndEndTimeBetweenOrderByEndTimeDesc(
+            Utilisateur utilisateur, StatutEnrichissement statut, LocalDateTime from, LocalDateTime to);
 }
