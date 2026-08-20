@@ -3,6 +3,7 @@ package com.kronos.chiron.sante.persistence;
 import com.kronos.chiron.sante.model.SanteActivite;
 import com.kronos.chiron.sante.model.SourceActivite;
 import com.kronos.chiron.sante.model.StatutEnrichissement;
+import com.kronos.chiron.sante.model.TypeActivite;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -33,4 +34,14 @@ public interface SanteActiviteRepository extends JpaRepository<SanteActivite, Lo
 
     List<SanteActivite> findByUtilisateurAndStatutEnrichissementAndEndTimeBetweenOrderByEndTimeDesc(
             Utilisateur utilisateur, StatutEnrichissement statut, LocalDateTime from, LocalDateTime to);
+
+    List<SanteActivite> findByUtilisateurAndTypeActiviteAndStartTimeAfterOrderByStartTimeDesc(
+            Utilisateur utilisateur, TypeActivite typeActivite, LocalDateTime after);
+
+    List<SanteActivite> findByUtilisateurAndSourceAndStartTimeBetweenOrderByStartTimeAsc(Utilisateur utilisateur,
+            SourceActivite source, LocalDateTime from, LocalDateTime to);
+
+    List<SanteActivite> findByUtilisateurAndSourceAndStartTimeGreaterThanEqualAndEndTimeLessThanEqual(
+            Utilisateur utilisateur, SourceActivite source, LocalDateTime startTimeInclusive,
+            LocalDateTime endTimeInclusive);
 }

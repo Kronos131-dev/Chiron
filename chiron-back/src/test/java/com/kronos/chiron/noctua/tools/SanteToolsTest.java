@@ -136,6 +136,48 @@ class SanteToolsTest {
     }
 
     @Test
+    void getDerniereActivite_avecHistoriqueComparable_ajouteUneComparaisonAMediane() {
+        SanteActivite activite = SanteActivite.builder().id(5L).utilisateur(user)
+                .typeActivite(TypeActivite.MUSCULATION).source(SourceActivite.CHIRON_MUSCU)
+                .startTime(LocalDateTime.of(2026, 8, 20, 18, 0))
+                .endTime(LocalDateTime.of(2026, 8, 20, 19, 0)).fcMoyenne(130.0).chargeCardio(43.0).build();
+        when(santeActiviteRepository.findFirstByUtilisateurOrderByEndTimeDesc(user)).thenReturn(Optional.of(activite));
+
+        List<SanteActivite> historique = List.of(
+                autreActiviteAvecCharge(1L, 20.0), autreActiviteAvecCharge(2L, 21.0),
+                autreActiviteAvecCharge(3L, 22.0));
+        when(santeActiviteRepository.findByUtilisateurAndTypeActiviteAndStartTimeAfterOrderByStartTimeDesc(user,
+                TypeActivite.MUSCULATION, TODAY.minusDays(90).atStartOfDay())).thenReturn(historique);
+
+        String result = santeTools.getDerniereActivite(MEMORY_ID);
+
+        assertThat(result).contains("médiane de charge cardio de 21").contains("3 dernières séances de MUSCULATION");
+    }
+
+    @Test
+    void getDerniereActivite_historiqueInsuffisant_neComparePas() {
+        SanteActivite activite = SanteActivite.builder().id(5L).utilisateur(user)
+                .typeActivite(TypeActivite.MUSCULATION).source(SourceActivite.CHIRON_MUSCU)
+                .startTime(LocalDateTime.of(2026, 8, 20, 18, 0))
+                .endTime(LocalDateTime.of(2026, 8, 20, 19, 0)).fcMoyenne(130.0).chargeCardio(43.0).build();
+        when(santeActiviteRepository.findFirstByUtilisateurOrderByEndTimeDesc(user)).thenReturn(Optional.of(activite));
+        when(santeActiviteRepository.findByUtilisateurAndTypeActiviteAndStartTimeAfterOrderByStartTimeDesc(user,
+                TypeActivite.MUSCULATION, TODAY.minusDays(90).atStartOfDay()))
+                .thenReturn(List.of(autreActiviteAvecCharge(1L, 20.0)));
+
+        String result = santeTools.getDerniereActivite(MEMORY_ID);
+
+        assertThat(result).doesNotContain("médiane");
+    }
+
+    private SanteActivite autreActiviteAvecCharge(long id, double chargeCardio) {
+        return SanteActivite.builder().id(id).utilisateur(user).typeActivite(TypeActivite.MUSCULATION)
+                .source(SourceActivite.CHIRON_MUSCU)
+                .startTime(LocalDateTime.of(2026, 8, 10, 18, 0)).endTime(LocalDateTime.of(2026, 8, 10, 19, 0))
+                .chargeCardio(chargeCardio).build();
+    }
+
+    @Test
     void getActivite_idAppartientAUnAutreUtilisateur_refuses() {
         Utilisateur autre = Utilisateur.builder().id(99L).username("bob").build();
         SanteActivite activite = SanteActivite.builder().id(5L).utilisateur(autre)

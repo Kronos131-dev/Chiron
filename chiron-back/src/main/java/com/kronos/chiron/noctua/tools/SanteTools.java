@@ -31,6 +31,8 @@ import java.util.Optional;
 public class SanteTools {
 
     private static final int HISTORIQUE_JOURS_DEFAUT = 30;
+    private static final int HISTORIQUE_ACTIVITES_JOURS = 90;
+    private static final int MIN_ACTIVITES_COMPARABLES = 3;
 
     private final SanteQueryService santeQueryService;
     private final SanteJourRepository santeJourRepository;
@@ -200,8 +202,32 @@ public class SanteTools {
                     .append("/pic ").append(minutesOuInconnu(a.getMinutesZonePic()));
         }
         if (a.getChargeCardio() != null) res.append(", charge cardio ").append(Math.round(a.getChargeCardio()));
-        res.append(".");
-        return res.toString();
+        res.append(". ").append(comparerActiviteAMediane(a));
+        return res.toString().trim();
+    }
+
+    // WHY: le prompt de Noctua exige une comparaison avant toute interprétation ; sans
+    // cette clause le modèle n'a que les chiffres de la séance elle-même et inventerait
+    // une base de comparaison.
+    private String comparerActiviteAMediane(SanteActivite a) {
+        if (a.getChargeCardio() == null) return "";
+        LocalDate depuis = LocalDate.now(clock).minusDays(HISTORIQUE_ACTIVITES_JOURS);
+        List<SanteActivite> historique = santeActiviteRepository
+                .findByUtilisateurAndTypeActiviteAndStartTimeAfterOrderByStartTimeDesc(a.getUtilisateur(),
+                        a.getTypeActivite(), depuis.atStartOfDay())
+                .stream()
+                .filter(autre -> !autre.getId().equals(a.getId()) && autre.getChargeCardio() != null)
+                .toList();
+        if (historique.size() < MIN_ACTIVITES_COMPARABLES) return "";
+
+        List<Double> charges = historique.stream().map(SanteActivite::getChargeCardio).sorted().toList();
+        double mediane = charges.size() % 2 == 1
+                ? charges.get(charges.size() / 2)
+                : (charges.get(charges.size() / 2 - 1) + charges.get(charges.size() / 2)) / 2.0;
+        if (mediane <= 0) return "";
+
+        return String.format(Locale.FRANCE, "Contre une médiane de charge cardio de %.0f sur les %d dernières"
+                + " séances de %s.", mediane, historique.size(), a.getTypeActivite());
     }
 
     private String comparerAMediane(String libelle, Double valeurDuJour, List<SanteJour> historique,
