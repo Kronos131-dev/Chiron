@@ -2,12 +2,11 @@ package com.kronos.chiron.sante.service.impl;
 
 import com.kronos.chiron.fitbit.service.FitbitService;
 import com.kronos.chiron.sante.model.SanteActivite;
-import com.kronos.chiron.sante.model.SanteFrequenceCardiaque;
 import com.kronos.chiron.sante.model.SourceActivite;
 import com.kronos.chiron.sante.model.StatutEnrichissement;
 import com.kronos.chiron.sante.model.TypeActivite;
 import com.kronos.chiron.sante.persistence.SanteActiviteRepository;
-import com.kronos.chiron.sante.persistence.SanteFrequenceCardiaqueRepository;
+import com.kronos.chiron.sante.service.ActiviteFusionService;
 import com.kronos.chiron.sante.service.SanteSyncService;
 import com.kronos.chiron.seance.model.Seance;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
@@ -26,11 +25,11 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -44,11 +43,11 @@ class ActiviteEnrichissementServiceImplTest {
     @Mock
     private SanteActiviteRepository santeActiviteRepository;
     @Mock
-    private SanteFrequenceCardiaqueRepository santeFrequenceCardiaqueRepository;
-    @Mock
     private FitbitService fitbitService;
     @Mock
     private SanteSyncService santeSyncService;
+    @Mock
+    private ActiviteFusionService activiteFusionService;
 
     @Spy
     private Clock clock = Clock.fixed(Instant.parse("2026-08-19T20:00:00Z"), ZoneId.of("Europe/Paris"));
@@ -61,8 +60,8 @@ class ActiviteEnrichissementServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        service = new ActiviteEnrichissementServiceImpl(santeActiviteRepository, santeFrequenceCardiaqueRepository,
-                fitbitService, santeSyncService, clock);
+        service = new ActiviteEnrichissementServiceImpl(santeActiviteRepository, fitbitService, santeSyncService,
+                activiteFusionService, clock);
         user = Utilisateur.builder().id(1L).username("athlete").build();
         debut = LocalDateTime.of(2026, 8, 19, 18, 0);
         fin = LocalDateTime.of(2026, 8, 19, 19, 15);
@@ -106,7 +105,7 @@ class ActiviteEnrichissementServiceImplTest {
         service.tenterEnrichissement(10L);
 
         verify(santeActiviteRepository, never()).save(any());
-        verifyNoInteractions(fitbitService, santeSyncService);
+        verifyNoInteractions(fitbitService, santeSyncService, activiteFusionService);
     }
 
     @Test
@@ -118,7 +117,7 @@ class ActiviteEnrichissementServiceImplTest {
         service.tenterEnrichissement(10L);
 
         verify(santeActiviteRepository, never()).save(any());
-        verifyNoInteractions(fitbitService, santeSyncService);
+        verifyNoInteractions(fitbitService, santeSyncService, activiteFusionService);
     }
 
     @Test
@@ -131,7 +130,7 @@ class ActiviteEnrichissementServiceImplTest {
 
         assertThat(activite.getStatutEnrichissement()).isEqualTo(StatutEnrichissement.ABANDONNE);
         assertThat(activite.getProchaineTentativeAt()).isNull();
-        verifyNoInteractions(santeSyncService);
+        verifyNoInteractions(santeSyncService, activiteFusionService);
         verify(santeActiviteRepository).save(activite);
     }
 
@@ -147,25 +146,45 @@ class ActiviteEnrichissementServiceImplTest {
     }
 
     @Test
-    void tenterEnrichissement_heartRateDataFound_marksCompletWithAveragedValues() {
+    void tenterEnrichissement_fusionFindsData_marksCompletFromFusedValues() {
         SanteActivite activite = activiteEnAttente(0);
         when(santeActiviteRepository.findById(10L)).thenReturn(Optional.of(activite));
         when(fitbitService.getValidToken("athlete")).thenReturn("token");
-
-        List<SanteFrequenceCardiaque> buckets = List.of(
-                SanteFrequenceCardiaque.builder().fcMin(100).fcMoyenne(110.0).fcMax(120).build(),
-                SanteFrequenceCardiaque.builder().fcMin(120).fcMoyenne(130.0).fcMax(140).build());
-        when(santeFrequenceCardiaqueRepository
-                .findByUtilisateurAndHorodatageBetweenOrderByHorodatageAsc(user, debut, fin))
-                .thenReturn(buckets);
+        // Simule ActiviteFusionService qui a rempli fcMoyenne et chargeCardio depuis les buckets.
+        doAnswer(invocation -> {
+            activite.setFcMoyenne(120.0);
+            activite.setFcMin(100);
+            activite.setFcMax(140);
+            activite.setChargeCardio(30.0);
+            return null;
+        }).when(activiteFusionService).fusionnerActivite(activite);
 
         service.tenterEnrichissement(10L);
 
         assertThat(activite.getFcMoyenne()).isEqualTo(120.0);
-        assertThat(activite.getFcMin()).isEqualTo(100);
-        assertThat(activite.getFcMax()).isEqualTo(140);
+        assertThat(activite.getChargeCardio()).isEqualTo(30.0);
         assertThat(activite.getStatutEnrichissement()).isEqualTo(StatutEnrichissement.COMPLET);
         assertThat(activite.getProchaineTentativeAt()).isNull();
+        assertThat(activite.getTentativesEnrichissement()).isEqualTo(1);
+        verify(activiteFusionService).fusionnerActivite(activite);
+    }
+
+    @Test
+    void tenterEnrichissement_fcSansChargeCardio_neVerrouillePasEnComplet() {
+        SanteActivite activite = activiteEnAttente(0);
+        when(santeActiviteRepository.findById(10L)).thenReturn(Optional.of(activite));
+        when(fitbitService.getValidToken("athlete")).thenReturn("token");
+        // fusionnerActivite pose une FC mais pas de charge cardio (pas de zones calculables) :
+        // le verrou ne doit plus se refermer sur la seule FC, sans quoi la ligne se fige
+        // avec des calories et une charge cardio à null pour toujours.
+        doAnswer(invocation -> {
+            activite.setFcMoyenne(68.0);
+            return null;
+        }).when(activiteFusionService).fusionnerActivite(activite);
+
+        service.tenterEnrichissement(10L);
+
+        assertThat(activite.getStatutEnrichissement()).isEqualTo(StatutEnrichissement.EN_ATTENTE);
         assertThat(activite.getTentativesEnrichissement()).isEqualTo(1);
     }
 
@@ -174,9 +193,6 @@ class ActiviteEnrichissementServiceImplTest {
         SanteActivite activite = activiteEnAttente(0);
         when(santeActiviteRepository.findById(10L)).thenReturn(Optional.of(activite));
         when(fitbitService.getValidToken("athlete")).thenReturn("token");
-        when(santeFrequenceCardiaqueRepository
-                .findByUtilisateurAndHorodatageBetweenOrderByHorodatageAsc(user, debut, fin))
-                .thenReturn(List.of());
 
         service.tenterEnrichissement(10L);
 
@@ -190,9 +206,6 @@ class ActiviteEnrichissementServiceImplTest {
         SanteActivite activite = activiteEnAttente(4);
         when(santeActiviteRepository.findById(10L)).thenReturn(Optional.of(activite));
         when(fitbitService.getValidToken("athlete")).thenReturn("token");
-        when(santeFrequenceCardiaqueRepository
-                .findByUtilisateurAndHorodatageBetweenOrderByHorodatageAsc(user, debut, fin))
-                .thenReturn(List.of());
 
         service.tenterEnrichissement(10L);
 
@@ -206,9 +219,6 @@ class ActiviteEnrichissementServiceImplTest {
         when(santeActiviteRepository.findById(10L)).thenReturn(Optional.of(activite));
         when(fitbitService.getValidToken("athlete")).thenReturn("token");
         doThrow(new RuntimeException("boom")).when(santeSyncService).syncRecent("athlete", 1);
-        when(santeFrequenceCardiaqueRepository
-                .findByUtilisateurAndHorodatageBetweenOrderByHorodatageAsc(user, debut, fin))
-                .thenReturn(List.of());
 
         service.tenterEnrichissement(10L);
 

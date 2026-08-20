@@ -15,6 +15,7 @@ import com.kronos.chiron.sante.persistence.SanteFrequenceCardiaqueRepository;
 import com.kronos.chiron.sante.persistence.SanteJourRepository;
 import com.kronos.chiron.sante.persistence.SanteSommeilRepository;
 import com.kronos.chiron.sante.persistence.SanteSyncStateRepository;
+import com.kronos.chiron.sante.service.ActiviteFusionService;
 import com.kronos.chiron.sante.service.ChargeCardioService;
 import com.kronos.chiron.sante.service.ScoreSommeilService;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
@@ -68,6 +69,8 @@ class SanteSyncServiceImplTest {
     private ScoreSommeilService scoreSommeilService;
     @Mock
     private ChargeCardioService chargeCardioService;
+    @Mock
+    private ActiviteFusionService activiteFusionService;
 
     @Spy
     private Clock clock = Clock.fixed(java.time.Instant.parse("2026-08-17T10:00:00Z"), ZoneId.of("Europe/Paris"));
@@ -291,7 +294,11 @@ class SanteSyncServiceImplTest {
     }
 
     @Test
-    void syncRecent_exerciseOverlappingChironSeance_enrichesTheExistingRowInstead() {
+    void syncRecent_exerciseOverlappingChironSeance_delegatesRecalculationToFusionServiceInsteadOfCopyingGoogleNumbers() {
+        // WHY: la fenêtre de l'exercice détecté par Google est presque toujours plus courte
+        // que la vraie séance Chiron — copier ses agrégats (calories, charge cardio) donnerait
+        // des chiffres calculés sur la mauvaise durée. La ligne Chiron ne reçoit que
+        // l'externalId ; le recalcul sur sa vraie fenêtre est délégué à ActiviteFusionService.
         SanteActivite chironRow = SanteActivite.builder().id(9L).utilisateur(user)
                 .source(SourceActivite.CHIRON_MUSCU).typeActivite(TypeActivite.MUSCULATION)
                 .startTime(java.time.LocalDateTime.of(2026, 8, 17, 18, 0))
@@ -305,15 +312,31 @@ class SanteSyncServiceImplTest {
 
         santeSyncService.syncRecent("athlete", 1);
 
-        ArgumentCaptor<SanteActivite> captor = ArgumentCaptor.forClass(SanteActivite.class);
-        verify(santeActiviteRepository).save(captor.capture());
-        SanteActivite saved = captor.getValue();
-        assertThat(saved.getId()).isEqualTo(9L);
-        assertThat(saved.getSource()).isEqualTo(SourceActivite.CHIRON_MUSCU);
-        assertThat(saved.getCalories()).isEqualTo(406);
-        assertThat(saved.getStatutEnrichissement()).isEqualTo(StatutEnrichissement.COMPLET);
-        assertThat(saved.getProchaineTentativeAt()).isNull();
+        assertThat(chironRow.getExternalId()).isNotNull();
+        assertThat(chironRow.getCalories()).isNull();
+        verify(activiteFusionService).fusionnerActivite(chironRow);
+        verify(santeActiviteRepository, org.mockito.Mockito.never()).save(any());
         verify(santeActiviteRepository, org.mockito.Mockito.never())
                 .findByUtilisateurAndStartTimeAndSource(any(), any(), any());
+    }
+
+    @Test
+    void syncRecent_exerciseOverlappingChironSeanceWithExternalIdAlready_doesNotOverwriteIt() {
+        SanteActivite chironRow = SanteActivite.builder().id(9L).utilisateur(user)
+                .source(SourceActivite.CHIRON_MUSCU).typeActivite(TypeActivite.MUSCULATION)
+                .startTime(java.time.LocalDateTime.of(2026, 8, 17, 18, 0))
+                .endTime(java.time.LocalDateTime.of(2026, 8, 17, 19, 15))
+                .externalId("deja-connu")
+                .statutEnrichissement(StatutEnrichissement.EN_ATTENTE).build();
+        when(fitbitService.getValidToken("athlete")).thenReturn("token");
+        when(fitbitClient.listDataPoints(eq("token"), eq(GoogleHealthDataType.EXERCISE), any(), any()))
+                .thenReturn(new tools.jackson.databind.json.JsonMapper().readTree(EXERCICE_MUSCU_JSON));
+        when(santeActiviteRepository.findFirstByUtilisateurAndSourceAndStartTimeLessThanAndEndTimeGreaterThan(
+                eq(user), eq(SourceActivite.CHIRON_MUSCU), any(), any())).thenReturn(Optional.of(chironRow));
+
+        santeSyncService.syncRecent("athlete", 1);
+
+        assertThat(chironRow.getExternalId()).isEqualTo("deja-connu");
+        verify(activiteFusionService).fusionnerActivite(chironRow);
     }
 }

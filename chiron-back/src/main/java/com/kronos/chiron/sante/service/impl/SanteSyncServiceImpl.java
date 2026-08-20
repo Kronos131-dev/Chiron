@@ -19,6 +19,7 @@ import com.kronos.chiron.sante.persistence.SanteFrequenceCardiaqueRepository;
 import com.kronos.chiron.sante.persistence.SanteJourRepository;
 import com.kronos.chiron.sante.persistence.SanteSommeilRepository;
 import com.kronos.chiron.sante.persistence.SanteSyncStateRepository;
+import com.kronos.chiron.sante.service.ActiviteFusionService;
 import com.kronos.chiron.sante.service.ChargeCardioService;
 import com.kronos.chiron.sante.service.ScoreSommeilService;
 import com.kronos.chiron.sante.service.SanteSyncService;
@@ -41,6 +42,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -72,6 +74,7 @@ public class SanteSyncServiceImpl implements SanteSyncService {
     private final SanteActiviteRepository santeActiviteRepository;
     private final ScoreSommeilService scoreSommeilService;
     private final ChargeCardioService chargeCardioService;
+    private final ActiviteFusionService activiteFusionService;
 
     private final Clock clock;
 
@@ -415,10 +418,6 @@ public class SanteSyncServiceImpl implements SanteSyncService {
         }
     }
 
-    // WHY: un exercice détecté par Google peut chevaucher une séance déjà loggée dans
-    // Chiron (l'utilisateur logge parfois aussi manuellement dans l'appli montre) — on
-    // enrichit alors cette ligne CHIRON_MUSCU avec les chiffres, plus précis, de Google
-    // plutôt que de créer une seconde ligne GOOGLE_DETECTE en doublon pour le même effort.
     private void enregistrerActiviteGoogle(Utilisateur user, ZoneId zone, GoogleHealthParser.ExerciceBrut brut) {
         if (brut.debut() == null || brut.fin() == null) return;
         LocalDateTime debut = LocalDateTime.ofInstant(brut.debut(), zone);
@@ -426,19 +425,30 @@ public class SanteSyncServiceImpl implements SanteSyncService {
         LocalDateTime toleranceDebut = debut.minusMinutes(TOLERANCE_CHEVAUCHEMENT_MINUTES);
         LocalDateTime toleranceFin = fin.plusMinutes(TOLERANCE_CHEVAUCHEMENT_MINUTES);
 
-        SanteActivite activite = santeActiviteRepository
+        Optional<SanteActivite> chironCorrespondante = santeActiviteRepository
                 .findFirstByUtilisateurAndSourceAndStartTimeLessThanAndEndTimeGreaterThan(user,
-                        SourceActivite.CHIRON_MUSCU, toleranceFin, toleranceDebut)
-                .orElseGet(() -> santeActiviteRepository
-                        .findByUtilisateurAndStartTimeAndSource(user, debut, SourceActivite.GOOGLE_DETECTE)
-                        .orElseGet(() -> SanteActivite.builder().utilisateur(user)
-                                .source(SourceActivite.GOOGLE_DETECTE).startTime(debut)
-                                .statutEnrichissement(StatutEnrichissement.COMPLET).build()));
-
-        if (activite.getSource() == SourceActivite.GOOGLE_DETECTE) {
-            activite.setEndTime(fin);
-            activite.setTypeActivite(TypeActivite.fromGoogle(brut.exerciseType()));
+                        SourceActivite.CHIRON_MUSCU, toleranceFin, toleranceDebut);
+        if (chironCorrespondante.isPresent()) {
+            // WHY: la fenêtre de l'exercice détecté par Google est presque toujours plus
+            // courte que la vraie séance Chiron (le capteur ne s'active qu'une fois
+            // l'effort assez intense) — copier ses agrégats donnerait des calories et une
+            // charge cardio calculées sur la mauvaise durée. On ne récupère que son
+            // externalId ; les chiffres sont recalculés sur la vraie fenêtre Chiron par
+            // ActiviteFusionService, à partir des buckets de fréquence cardiaque.
+            SanteActivite activite = chironCorrespondante.get();
+            if (activite.getExternalId() == null) activite.setExternalId(brut.externalId());
+            activiteFusionService.fusionnerActivite(activite);
+            return;
         }
+
+        SanteActivite activite = santeActiviteRepository
+                .findByUtilisateurAndStartTimeAndSource(user, debut, SourceActivite.GOOGLE_DETECTE)
+                .orElseGet(() -> SanteActivite.builder().utilisateur(user)
+                        .source(SourceActivite.GOOGLE_DETECTE).startTime(debut)
+                        .statutEnrichissement(StatutEnrichissement.COMPLET).build());
+
+        activite.setEndTime(fin);
+        activite.setTypeActivite(TypeActivite.fromGoogle(brut.exerciseType()));
         activite.setExternalId(brut.externalId());
         activite.setCalories(brut.caloriesKcal());
         activite.setFcMoyenne(brut.fcMoyenne());
@@ -449,10 +459,6 @@ public class SanteSyncServiceImpl implements SanteSyncService {
         activite.setMinutesZonePic(brut.minutesPic());
         activite.setChargeCardio(
                 ZoneCardiaque.chargeCardio(brut.minutesBruleuse(), brut.minutesCardio(), brut.minutesPic()));
-        if (activite.getStatutEnrichissement() == StatutEnrichissement.EN_ATTENTE) {
-            activite.setStatutEnrichissement(StatutEnrichissement.COMPLET);
-            activite.setProchaineTentativeAt(null);
-        }
         santeActiviteRepository.save(activite);
     }
 

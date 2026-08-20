@@ -1,5 +1,7 @@
 package com.kronos.chiron.sante.model;
 
+import com.kronos.chiron.sante.dto.SeuilsCardiaquesDto;
+
 import java.util.Locale;
 
 public enum ZoneCardiaque {
@@ -21,6 +23,15 @@ public enum ZoneCardiaque {
         if (s.contains("PEAK")) return PIC;
         if (s.contains("VIGOROUS") || s.contains("CARDIO")) return CARDIO;
         if (s.contains("MODERATE") || s.contains("FAT_BURN") || s.contains("FATBURN")) return BRULE_GRAISSE;
+        return HORS_ZONE;
+    }
+
+    // WHY: bornes calculées par SeuilsCardiaquesService (réserve de Karvonen) — l'API
+    // Google ne fournit jamais de seuil bpm, seulement des libellés de zone déjà agrégés.
+    public static ZoneCardiaque fromBpm(int bpm, SeuilsCardiaquesDto seuils) {
+        if (bpm >= seuils.maximum()) return PIC;
+        if (bpm >= seuils.intense()) return CARDIO;
+        if (bpm >= seuils.modere()) return BRULE_GRAISSE;
         return HORS_ZONE;
     }
 

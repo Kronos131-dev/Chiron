@@ -2,13 +2,12 @@ package com.kronos.chiron.sante.service.impl;
 
 import com.kronos.chiron.fitbit.service.FitbitService;
 import com.kronos.chiron.sante.model.SanteActivite;
-import com.kronos.chiron.sante.model.SanteFrequenceCardiaque;
 import com.kronos.chiron.sante.model.SourceActivite;
 import com.kronos.chiron.sante.model.StatutEnrichissement;
 import com.kronos.chiron.sante.model.TypeActivite;
 import com.kronos.chiron.sante.persistence.SanteActiviteRepository;
-import com.kronos.chiron.sante.persistence.SanteFrequenceCardiaqueRepository;
 import com.kronos.chiron.sante.service.ActiviteEnrichissementService;
+import com.kronos.chiron.sante.service.ActiviteFusionService;
 import com.kronos.chiron.sante.service.SanteSyncService;
 import com.kronos.chiron.seance.model.Seance;
 import lombok.RequiredArgsConstructor;
@@ -19,8 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -31,9 +28,9 @@ public class ActiviteEnrichissementServiceImpl implements ActiviteEnrichissement
             Duration.ofMinutes(30), Duration.ofHours(2), Duration.ofHours(6)};
 
     private final SanteActiviteRepository santeActiviteRepository;
-    private final SanteFrequenceCardiaqueRepository santeFrequenceCardiaqueRepository;
     private final FitbitService fitbitService;
     private final SanteSyncService santeSyncService;
+    private final ActiviteFusionService activiteFusionService;
     private final Clock clock;
 
     @Override
@@ -79,14 +76,9 @@ public class ActiviteEnrichissementServiceImpl implements ActiviteEnrichissement
             return;
         }
 
-        List<SanteFrequenceCardiaque> buckets = santeFrequenceCardiaqueRepository
-                .findByUtilisateurAndHorodatageBetweenOrderByHorodatageAsc(activite.getUtilisateur(),
-                        activite.getStartTime(), activite.getEndTime());
-        if (!buckets.isEmpty()) {
-            appliquerFrequenceCardiaque(activite, buckets);
-        }
+        activiteFusionService.fusionnerActivite(activite);
 
-        boolean donneesTrouvees = activite.getFcMoyenne() != null;
+        boolean donneesTrouvees = activite.getFcMoyenne() != null && activite.getChargeCardio() != null;
         int tentative = activite.getTentativesEnrichissement() + 1;
         activite.setTentativesEnrichissement(tentative);
 
@@ -101,25 +93,6 @@ public class ActiviteEnrichissementServiceImpl implements ActiviteEnrichissement
         }
 
         santeActiviteRepository.save(activite);
-    }
-
-    private void appliquerFrequenceCardiaque(SanteActivite activite, List<SanteFrequenceCardiaque> buckets) {
-        List<Double> moyennes = buckets.stream().map(SanteFrequenceCardiaque::getFcMoyenne)
-                .filter(Objects::nonNull).toList();
-        List<Integer> mins = buckets.stream().map(SanteFrequenceCardiaque::getFcMin)
-                .filter(Objects::nonNull).toList();
-        List<Integer> maxs = buckets.stream().map(SanteFrequenceCardiaque::getFcMax)
-                .filter(Objects::nonNull).toList();
-
-        if (!moyennes.isEmpty()) {
-            activite.setFcMoyenne(moyennes.stream().mapToDouble(Double::doubleValue).average().orElse(0));
-        }
-        if (!mins.isEmpty()) {
-            activite.setFcMin(mins.stream().mapToInt(Integer::intValue).min().orElse(0));
-        }
-        if (!maxs.isEmpty()) {
-            activite.setFcMax(maxs.stream().mapToInt(Integer::intValue).max().orElse(0));
-        }
     }
 
     private void abandonner(SanteActivite activite, String message) {

@@ -14,4 +14,7 @@ public interface SanteJourRepository extends JpaRepository<SanteJour, Long> {
 
     List<SanteJour> findByUtilisateurAndDateBetweenOrderByDateAsc(Utilisateur utilisateur, LocalDate from,
             LocalDate to);
+
+    Optional<SanteJour> findFirstByUtilisateurAndFcReposIsNotNullAndDateBetweenOrderByDateDesc(
+            Utilisateur utilisateur, LocalDate from, LocalDate to);
 }
