@@ -1,11 +1,13 @@
 package com.kronos.chiron.sante.controller;
 
 import com.kronos.chiron.core.security.AuthenticatedUserService;
+import com.kronos.chiron.sante.dto.SanteActiviteDetailDto;
 import com.kronos.chiron.sante.dto.SanteActiviteDto;
 import com.kronos.chiron.sante.dto.SanteFcPointDto;
 import com.kronos.chiron.sante.dto.SanteJourDto;
 import com.kronos.chiron.sante.dto.SanteResumeDto;
 import com.kronos.chiron.sante.dto.SanteSyncEtatDto;
+import com.kronos.chiron.sante.dto.SeuilsCardiaquesDto;
 import com.kronos.chiron.sante.model.SourceActivite;
 import com.kronos.chiron.sante.model.TypeActivite;
 import com.kronos.chiron.sante.service.SanteDiagnosticService;
@@ -26,6 +28,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -162,5 +165,32 @@ class SanteControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].typeDonnee").value("STEPS"))
                 .andExpect(jsonPath("$[0].statut").value("OK"));
+    }
+
+    @Test
+    void activiteDetail_activiteExistante_returnsActiviteEtPointsFcEtSeuils() throws Exception {
+        when(authenticatedUserService.getAuthenticatedUser()).thenReturn(user);
+        SanteActiviteDto activite = new SanteActiviteDto(5L, SourceActivite.CHIRON_MUSCU, TypeActivite.MUSCULATION,
+                LocalDateTime.of(2026, 8, 20, 11, 59), LocalDateTime.of(2026, 8, 20, 12, 45), 320, 128.0, 90, 150,
+                10, 20, 12, 4, 36, 61.0, 42L, false);
+        SanteActiviteDetailDto detail = new SanteActiviteDetailDto(activite,
+                List.of(new SanteFcPointDto(LocalDateTime.of(2026, 8, 20, 12, 0), 100, 120.0, 140)),
+                new SeuilsCardiaquesDto(110, 139, 175));
+        when(santeQueryService.getActiviteDetail(user, 5L)).thenReturn(Optional.of(detail));
+
+        mockMvc.perform(get("/api/sante/activites/5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.activite.id").value(5))
+                .andExpect(jsonPath("$.pointsFrequenceCardiaque[0].fcMoyenne").value(120.0))
+                .andExpect(jsonPath("$.seuils.modere").value(110));
+    }
+
+    @Test
+    void activiteDetail_inconnueOuAutreUtilisateur_returns404() throws Exception {
+        when(authenticatedUserService.getAuthenticatedUser()).thenReturn(user);
+        when(santeQueryService.getActiviteDetail(user, 99L)).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/api/sante/activites/99"))
+                .andExpect(status().isNotFound());
     }
 }

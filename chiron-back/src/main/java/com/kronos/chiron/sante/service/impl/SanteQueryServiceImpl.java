@@ -2,6 +2,7 @@ package com.kronos.chiron.sante.service.impl;
 
 import com.kronos.chiron.fitbit.dto.FitbitLinkStatus;
 import com.kronos.chiron.fitbit.service.FitbitService;
+import com.kronos.chiron.sante.dto.SanteActiviteDetailDto;
 import com.kronos.chiron.sante.dto.SanteActiviteDto;
 import com.kronos.chiron.sante.dto.SanteCardioHebdoDto;
 import com.kronos.chiron.sante.dto.SanteFcJourDto;
@@ -10,6 +11,7 @@ import com.kronos.chiron.sante.dto.SanteJourDto;
 import com.kronos.chiron.sante.dto.SanteResumeDto;
 import com.kronos.chiron.sante.dto.SanteSommeilDto;
 import com.kronos.chiron.sante.dto.SanteSyncEtatDto;
+import com.kronos.chiron.sante.dto.SeuilsCardiaquesDto;
 import com.kronos.chiron.sante.model.SanteActivite;
 import com.kronos.chiron.sante.model.SanteJour;
 import com.kronos.chiron.sante.model.SanteSommeil;
@@ -22,6 +24,7 @@ import com.kronos.chiron.sante.persistence.SanteSommeilRepository;
 import com.kronos.chiron.sante.persistence.SanteSyncStateRepository;
 import com.kronos.chiron.sante.service.PreparationService;
 import com.kronos.chiron.sante.service.SanteQueryService;
+import com.kronos.chiron.sante.service.SeuilsCardiaquesService;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -33,6 +36,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -51,6 +55,7 @@ public class SanteQueryServiceImpl implements SanteQueryService {
     private final SanteSyncStateRepository santeSyncStateRepository;
     private final SanteActiviteRepository santeActiviteRepository;
     private final PreparationService preparationService;
+    private final SeuilsCardiaquesService seuilsCardiaquesService;
 
     private final Clock clock;
 
@@ -159,6 +164,22 @@ public class SanteQueryServiceImpl implements SanteQueryService {
                 .filter(a -> sourceFiltre == null || a.getSource() == sourceFiltre)
                 .map(this::versDto)
                 .toList();
+    }
+
+    @Override
+    public Optional<SanteActiviteDetailDto> getActiviteDetail(Utilisateur utilisateur, Long id) {
+        SanteActivite activite = santeActiviteRepository.findById(id).orElse(null);
+        if (activite == null || !activite.getUtilisateur().getId().equals(utilisateur.getId())) {
+            return Optional.empty();
+        }
+        List<SanteFcPointDto> points = santeFrequenceCardiaqueRepository
+                .findByUtilisateurAndHorodatageBetweenOrderByHorodatageAsc(utilisateur, activite.getStartTime(),
+                        activite.getEndTime())
+                .stream()
+                .map(fc -> new SanteFcPointDto(fc.getHorodatage(), fc.getFcMin(), fc.getFcMoyenne(), fc.getFcMax()))
+                .toList();
+        SeuilsCardiaquesDto seuils = seuilsCardiaquesService.calculer(utilisateur);
+        return Optional.of(new SanteActiviteDetailDto(versDto(activite), points, seuils));
     }
 
     private SanteActiviteDto versDto(SanteActivite a) {

@@ -66,6 +66,15 @@ public class NoctuaController {
         return new NoctuaBriefingDetailDto(toDto(briefing), messages);
     }
 
+    @GetMapping("/briefings/par-activite/{activiteId}")
+    public NoctuaBriefingDto briefingParActivite(@PathVariable Long activiteId) {
+        Utilisateur user = authenticatedUserService.getAuthenticatedUser();
+        NoctuaBriefing briefing = noctuaBriefingRepository
+                .findByUtilisateurAndCleDeclencheur(user, "ACTIVITE:" + activiteId)
+                .orElseThrow(() -> notFound("Briefing introuvable"));
+        return toDto(briefing);
+    }
+
     @PostMapping("/briefings/{id}/messages")
     public ChatResponse envoyerMessage(@PathVariable Long id, @RequestBody NoctuaMessageRequest request) {
         Utilisateur user = authenticatedUserService.getAuthenticatedUser();

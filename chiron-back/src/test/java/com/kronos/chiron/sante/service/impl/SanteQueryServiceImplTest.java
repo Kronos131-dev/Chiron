@@ -2,10 +2,13 @@ package com.kronos.chiron.sante.service.impl;
 
 import com.kronos.chiron.fitbit.dto.FitbitLinkStatus;
 import com.kronos.chiron.fitbit.service.FitbitService;
+import com.kronos.chiron.sante.dto.SanteActiviteDetailDto;
 import com.kronos.chiron.sante.dto.SanteActiviteDto;
 import com.kronos.chiron.sante.dto.SanteCardioHebdoDto;
 import com.kronos.chiron.sante.dto.SanteResumeDto;
+import com.kronos.chiron.sante.dto.SeuilsCardiaquesDto;
 import com.kronos.chiron.sante.model.SanteActivite;
+import com.kronos.chiron.sante.model.SanteFrequenceCardiaque;
 import com.kronos.chiron.sante.model.SanteJour;
 import com.kronos.chiron.sante.model.SourceActivite;
 import com.kronos.chiron.sante.model.StatutEnrichissement;
@@ -16,6 +19,7 @@ import com.kronos.chiron.sante.persistence.SanteJourRepository;
 import com.kronos.chiron.sante.persistence.SanteSommeilRepository;
 import com.kronos.chiron.sante.persistence.SanteSyncStateRepository;
 import com.kronos.chiron.sante.service.PreparationService;
+import com.kronos.chiron.sante.service.SeuilsCardiaquesService;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -58,6 +62,8 @@ class SanteQueryServiceImplTest {
     private SanteActiviteRepository santeActiviteRepository;
     @Mock
     private PreparationService preparationService;
+    @Mock
+    private SeuilsCardiaquesService seuilsCardiaquesService;
 
     @Spy
     private Clock clock = Clock.fixed(Instant.parse("2026-08-17T10:00:00Z"), ZoneId.of("Europe/Paris"));
@@ -207,5 +213,56 @@ class SanteQueryServiceImplTest {
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).source()).isEqualTo(SourceActivite.CHIRON_MUSCU);
+    }
+
+    @Test
+    void getActiviteDetail_appartientAUtilisateur_returnsActiviteEtPointsFcEtSeuils() {
+        SanteActivite activite = SanteActivite.builder()
+                .id(5L).utilisateur(user).source(SourceActivite.CHIRON_MUSCU)
+                .typeActivite(TypeActivite.MUSCULATION)
+                .startTime(LocalDateTime.of(2026, 8, 20, 11, 59))
+                .endTime(LocalDateTime.of(2026, 8, 20, 12, 45))
+                .statutEnrichissement(StatutEnrichissement.COMPLET)
+                .build();
+        when(santeActiviteRepository.findById(5L)).thenReturn(Optional.of(activite));
+        SanteFrequenceCardiaque point = SanteFrequenceCardiaque.builder()
+                .horodatage(LocalDateTime.of(2026, 8, 20, 12, 0)).fcMin(100).fcMoyenne(120.0).fcMax(140).build();
+        when(santeFrequenceCardiaqueRepository.findByUtilisateurAndHorodatageBetweenOrderByHorodatageAsc(user,
+                activite.getStartTime(), activite.getEndTime())).thenReturn(List.of(point));
+        SeuilsCardiaquesDto seuils = new SeuilsCardiaquesDto(110, 139, 175);
+        when(seuilsCardiaquesService.calculer(user)).thenReturn(seuils);
+
+        Optional<SanteActiviteDetailDto> result = santeQueryService.getActiviteDetail(user, 5L);
+
+        assertThat(result).isPresent();
+        assertThat(result.get().activite().id()).isEqualTo(5L);
+        assertThat(result.get().pointsFrequenceCardiaque()).hasSize(1);
+        assertThat(result.get().pointsFrequenceCardiaque().get(0).fcMoyenne()).isEqualTo(120.0);
+        assertThat(result.get().seuils()).isEqualTo(seuils);
+    }
+
+    @Test
+    void getActiviteDetail_appartientAUnAutreUtilisateur_returnsEmpty() {
+        Utilisateur autre = Utilisateur.builder().id(99L).username("bob").build();
+        SanteActivite activite = SanteActivite.builder()
+                .id(5L).utilisateur(autre).source(SourceActivite.CHIRON_MUSCU)
+                .typeActivite(TypeActivite.MUSCULATION)
+                .startTime(LocalDateTime.of(2026, 8, 20, 11, 59))
+                .endTime(LocalDateTime.of(2026, 8, 20, 12, 45))
+                .build();
+        when(santeActiviteRepository.findById(5L)).thenReturn(Optional.of(activite));
+
+        Optional<SanteActiviteDetailDto> result = santeQueryService.getActiviteDetail(user, 5L);
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void getActiviteDetail_idInconnu_returnsEmpty() {
+        when(santeActiviteRepository.findById(5L)).thenReturn(Optional.empty());
+
+        Optional<SanteActiviteDetailDto> result = santeQueryService.getActiviteDetail(user, 5L);
+
+        assertThat(result).isEmpty();
     }
 }

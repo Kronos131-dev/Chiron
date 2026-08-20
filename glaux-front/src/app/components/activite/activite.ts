@@ -1,5 +1,6 @@
 import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartData } from 'chart.js';
 import { HeaderComponent } from '../shared/header/header';
@@ -19,6 +20,7 @@ type Periode = 7 | 30 | 90 | 365;
 export class Activite implements OnInit {
   private api = inject(GlauxApi);
   private i18n = inject(I18nService);
+  private router = inject(Router);
 
   private readonly COL = {
     cyan: '#22d3ee',
@@ -71,6 +73,10 @@ export class Activite implements OnInit {
     return this.typeIcons[type] ?? 'sports';
   }
 
+  ouvrir(id: number): void {
+    this.router.navigate(['/activite', id]);
+  }
+
   duree(activite: SanteActiviteDto): string {
     const minutes = Math.round(
       (new Date(activite.endTime).getTime() - new Date(activite.startTime).getTime()) / 60000,
@@ -83,8 +89,16 @@ export class Activite implements OnInit {
   zonesActivite(activite: SanteActiviteDto): { key: string; minutes: number; color: string }[] {
     return [
       { key: 'activite.zoneLow', minutes: activite.minutesZoneBasse ?? 0, color: this.COL.cyan },
-      { key: 'activite.zoneModerate', minutes: activite.minutesZoneBruleuse ?? 0, color: this.COL.teal },
-      { key: 'activite.zoneIntense', minutes: activite.minutesZoneCardio ?? 0, color: this.COL.amber },
+      {
+        key: 'activite.zoneModerate',
+        minutes: activite.minutesZoneBruleuse ?? 0,
+        color: this.COL.teal,
+      },
+      {
+        key: 'activite.zoneIntense',
+        minutes: activite.minutesZoneCardio ?? 0,
+        color: this.COL.amber,
+      },
       { key: 'activite.zoneMax', minutes: activite.minutesZonePic ?? 0, color: '#f87171' },
     ];
   }

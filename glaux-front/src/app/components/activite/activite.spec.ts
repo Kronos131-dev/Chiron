@@ -1,14 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { provideRouter } from '@angular/router';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { Router, provideRouter } from '@angular/router';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Activite } from './activite';
 import { SanteActiviteDto } from '../../service/glaux-api';
 import { environment } from '../../../environments/environment';
 
-function flushActiviteRequests(httpMock: HttpTestingController, activites: SanteActiviteDto[] = []) {
+function flushActiviteRequests(
+  httpMock: HttpTestingController,
+  activites: SanteActiviteDto[] = [],
+) {
   httpMock.expectOne(`${environment.apiUrl}/sante/jours?jours=30`).flush([]);
   httpMock.expectOne(`${environment.apiUrl}/sante/activites?jours=90`).flush(activites);
   httpMock.expectOne(`${environment.apiUrl}/noctua/non-lus`).flush({ count: 0 });
@@ -86,7 +89,10 @@ describe('Activite', () => {
     fixture.detectChanges();
     flushActiviteRequests(httpMock);
 
-    const activite = buildActivite({ startTime: '2026-08-18T18:00:00', endTime: '2026-08-18T18:45:00' });
+    const activite = buildActivite({
+      startTime: '2026-08-18T18:00:00',
+      endTime: '2026-08-18T18:45:00',
+    });
     expect(component.duree(activite)).toBe('45min');
   });
 
@@ -94,7 +100,10 @@ describe('Activite', () => {
     fixture.detectChanges();
     flushActiviteRequests(httpMock);
 
-    const activite = buildActivite({ startTime: '2026-08-18T18:00:00', endTime: '2026-08-18T19:15:00' });
+    const activite = buildActivite({
+      startTime: '2026-08-18T18:00:00',
+      endTime: '2026-08-18T19:15:00',
+    });
     expect(component.duree(activite)).toBe('1h15');
   });
 
@@ -114,5 +123,17 @@ describe('Activite', () => {
 
     const withoutZones = buildActivite({});
     expect(component.hasZonesActivite(withoutZones)).toBe(false);
+  });
+
+  it('ouvrir navigates to the activity detail page', () => {
+    fixture.detectChanges();
+    flushActiviteRequests(httpMock);
+
+    const router = TestBed.inject(Router);
+    const navigateSpy = vi.spyOn(router, 'navigate');
+
+    component.ouvrir(7);
+
+    expect(navigateSpy).toHaveBeenCalledWith(['/activite', 7]);
   });
 });

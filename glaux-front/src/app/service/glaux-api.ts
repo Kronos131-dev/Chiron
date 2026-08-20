@@ -143,6 +143,18 @@ export interface SanteActiviteDto {
   enrichissementEnCours: boolean;
 }
 
+export interface SeuilsCardiaquesDto {
+  modere: number;
+  intense: number;
+  maximum: number;
+}
+
+export interface SanteActiviteDetailDto {
+  activite: SanteActiviteDto;
+  pointsFrequenceCardiaque: SanteFcPointDto[];
+  seuils: SeuilsCardiaquesDto;
+}
+
 @Injectable({ providedIn: 'root' })
 export class GlauxApi {
   private apiUrl = `${environment.apiUrl}/sante`;
@@ -185,6 +197,16 @@ export class GlauxApi {
 
   getActivites(jours = 30): Observable<SanteActiviteDto[]> {
     return this.http.get<SanteActiviteDto[]>(`${this.apiUrl}/activites?jours=${jours}`);
+  }
+
+  getActiviteDetail(id: number): Observable<SanteActiviteDetailDto> {
+    return this.http.get<SanteActiviteDetailDto>(`${this.apiUrl}/activites/${id}`);
+  }
+
+  getNoctuaBriefingParActivite(activiteId: number): Observable<NoctuaBriefingDto> {
+    return this.http.get<NoctuaBriefingDto>(
+      `${environment.apiUrl}/noctua/briefings/par-activite/${activiteId}`,
+    );
   }
 
   getNoctuaBriefings(jours = 14): Observable<NoctuaBriefingDto[]> {

@@ -15,6 +15,8 @@ public interface NoctuaBriefingRepository extends JpaRepository<NoctuaBriefing, 
 
     Optional<NoctuaBriefing> findByIdAndUtilisateur(Long id, Utilisateur utilisateur);
 
+    Optional<NoctuaBriefing> findByUtilisateurAndCleDeclencheur(Utilisateur utilisateur, String cleDeclencheur);
+
     boolean existsByUtilisateurAndCleDeclencheur(Utilisateur utilisateur, String cleDeclencheur);
 
     long countByUtilisateurAndLuFalse(Utilisateur utilisateur);

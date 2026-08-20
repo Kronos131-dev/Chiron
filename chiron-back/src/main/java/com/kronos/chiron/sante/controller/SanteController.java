@@ -1,7 +1,10 @@
 package com.kronos.chiron.sante.controller;
 
+import static com.kronos.chiron.core.exceptions.ErrorFactory.notFound;
+
 import com.kronos.chiron.core.security.AuthenticatedUserService;
 import com.kronos.chiron.fitbit.client.GoogleHealthDataType;
+import com.kronos.chiron.sante.dto.SanteActiviteDetailDto;
 import com.kronos.chiron.sante.dto.SanteActiviteDto;
 import com.kronos.chiron.sante.dto.SanteCardioHebdoDto;
 import com.kronos.chiron.sante.dto.SanteFcJourDto;
@@ -100,6 +103,14 @@ public class SanteController {
             @RequestParam(required = false) SourceActivite source) {
         Utilisateur user = authenticatedUserService.getAuthenticatedUser();
         return ResponseEntity.ok(santeQueryService.getActivites(user, jours, source));
+    }
+
+    @GetMapping("/activites/{id}")
+    public ResponseEntity<SanteActiviteDetailDto> activiteDetail(@PathVariable Long id) {
+        Utilisateur user = authenticatedUserService.getAuthenticatedUser();
+        SanteActiviteDetailDto detail = santeQueryService.getActiviteDetail(user, id)
+                .orElseThrow(() -> notFound("Activité introuvable"));
+        return ResponseEntity.ok(detail);
     }
 
     @GetMapping("/sync")

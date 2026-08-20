@@ -113,6 +113,36 @@ class NoctuaControllerTest {
     }
 
     @Test
+    void briefingParActivite_briefingExistant_returnsSummary() throws Exception {
+        when(authenticatedUserService.getAuthenticatedUser()).thenReturn(user);
+        Conversation conversation = Conversation.builder().id(55L).utilisateur(user).agent(AgentType.NOCTUA).build();
+        NoctuaBriefing briefing = NoctuaBriefing.builder().id(3L).utilisateur(user).conversation(conversation)
+                .type(NoctuaBriefingType.ACTIVITE).dateReference(LocalDate.of(2026, 8, 20)).lu(false)
+                .createdAt(LocalDateTime.of(2026, 8, 20, 12, 45)).build();
+        when(noctuaBriefingRepository.findByUtilisateurAndCleDeclencheur(user, "ACTIVITE:42"))
+                .thenReturn(Optional.of(briefing));
+        when(conversationService.getMessages(conversation)).thenReturn(List.of(
+                ConversationMessage.builder().role(MessageRole.AI).content("Séance dense, effort au-dessus de la"
+                        + " moyenne.").build()));
+
+        mockMvc.perform(get("/api/noctua/briefings/par-activite/42"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(3))
+                .andExpect(jsonPath("$.premierParagraphe")
+                        .value("Séance dense, effort au-dessus de la moyenne."));
+    }
+
+    @Test
+    void briefingParActivite_aucunBriefing_returns404() throws Exception {
+        when(authenticatedUserService.getAuthenticatedUser()).thenReturn(user);
+        when(noctuaBriefingRepository.findByUtilisateurAndCleDeclencheur(user, "ACTIVITE:99"))
+                .thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/api/noctua/briefings/par-activite/99"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     void envoyerMessage_conversationNoctuaExistante_returnsReply() throws Exception {
         // Le briefing #3 et sa conversation #55 sont volontairement des identifiants différents :
         // reproduit le bug où le contrôleur passait l'id de briefing (issu de l'URL) directement à

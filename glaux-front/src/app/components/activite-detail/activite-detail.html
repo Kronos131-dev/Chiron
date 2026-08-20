@@ -1,0 +1,127 @@
+<app-header [title]="'activite.title' | t"></app-header>
+
+<main class="min-h-screen pt-24 pb-32 heroic-texture px-4 md:px-8">
+  <div class="max-w-4xl mx-auto">
+    @if (loading()) {
+      <div class="flex justify-center mt-16">
+        <span
+          class="w-12 h-12 border-4 border-secondary/20 border-t-secondary rounded-full animate-spin"
+        ></span>
+      </div>
+    } @else if (notFound()) {
+      <p class="text-center text-on-surface-variant py-16">{{ 'activite.notFound' | t }}</p>
+    } @else if (detail(); as d) {
+      <div class="flex items-center gap-2 mb-4">
+        <button
+          type="button"
+          (click)="retour()"
+          [attr.aria-label]="'common.close' | t"
+          class="material-symbols-outlined text-2xl text-on-surface-variant hover:text-secondary transition-colors cursor-pointer"
+        >
+          arrow_back
+        </button>
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-xl text-secondary">{{
+            iconFor(d.activite.typeActivite)
+          }}</span>
+          <p class="text-sm font-bold uppercase tracking-widest text-on-surface">
+            {{ 'activite.type.' + d.activite.typeActivite | t }} ·
+            {{ dateLabel(d.activite.startTime) }} · {{ heureLabel(d.activite.startTime) }}
+          </p>
+        </div>
+      </div>
+
+      @if (briefing(); as b) {
+        <button
+          type="button"
+          (click)="ouvrirBriefing()"
+          class="w-full text-left bg-slate-900/40 border border-white/5 rounded-xl p-4 mb-6 hover:bg-slate-900/70 transition-colors"
+        >
+          <p class="text-[10px] font-bold tracking-[0.2em] uppercase text-secondary mb-1">
+            {{ 'activite.noctuaSays' | t }}
+          </p>
+          <p class="text-on-surface text-sm whitespace-pre-line line-clamp-4">
+            {{ b.premierParagraphe }}
+          </p>
+        </button>
+      }
+
+      <div class="bg-slate-900/40 border border-white/5 rounded-xl divide-y divide-white/5 mb-2">
+        <div class="flex items-center justify-between px-4 py-3">
+          <span class="text-sm text-on-surface-variant">{{ 'activite.duration' | t }}</span>
+          <span class="text-lg font-black text-white">{{ duree() }}</span>
+        </div>
+        <div class="flex items-center justify-between px-4 py-3">
+          <span class="text-sm text-on-surface-variant">{{ 'activite.energy' | t }}</span>
+          <span class="text-lg font-black text-white">
+            {{ d.activite.calories != null ? d.activite.calories + ' kcal' : '—' }}
+          </span>
+        </div>
+        <div class="flex items-center justify-between px-4 py-3">
+          <span class="text-sm text-on-surface-variant">{{ 'activite.avgHr' | t }}</span>
+          <span class="text-lg font-black text-white">
+            {{
+              d.activite.fcMoyenne != null ? (d.activite.fcMoyenne | number: '1.0-0') + ' bpm' : '—'
+            }}
+          </span>
+        </div>
+        <div class="flex items-center justify-between px-4 py-3">
+          <span class="text-sm text-on-surface-variant">{{ 'activite.cardioLoad' | t }}</span>
+          <span class="text-lg font-black text-white">
+            {{
+              d.activite.chargeCardio != null ? (d.activite.chargeCardio | number: '1.0-0') : '—'
+            }}
+          </span>
+        </div>
+        <div class="flex items-center justify-between px-4 py-3">
+          <span class="text-sm text-on-surface-variant">{{ 'activite.activeMinutes' | t }}</span>
+          <span class="text-lg font-black text-white">
+            {{ d.activite.minutesZoneActive != null ? d.activite.minutesZoneActive + ' min' : '—' }}
+          </span>
+        </div>
+      </div>
+      <p class="text-[11px] text-on-surface-variant/70 mb-6">{{ 'activite.approx' | t }}</p>
+
+      <h3 class="text-sm font-bold uppercase tracking-widest text-on-surface-variant mb-3">
+        {{ 'coeur.heartRateToday' | t }}
+      </h3>
+      <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4 mb-6">
+        <div class="h-56">
+          <canvas
+            baseChart
+            [data]="fcChart()"
+            [options]="lineOptions()"
+            [plugins]="fcPlugins"
+            type="line"
+          ></canvas>
+        </div>
+      </div>
+
+      @if (hasZones()) {
+        <h3 class="text-sm font-bold uppercase tracking-widest text-on-surface-variant mb-3">
+          {{ 'activite.zoneDuration' | t }}
+        </h3>
+        <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4 space-y-3">
+          @for (zone of zones(); track zone.key) {
+            <div>
+              <div class="flex items-center justify-between mb-1 text-xs">
+                <span class="text-on-surface-variant">{{ zone.key | t }}</span>
+                <span class="text-on-surface"
+                  >{{ zone.minutes }} min ·
+                  {{ (zone.minutes / totalMinutesZones()) * 100 | number: '1.0-0' }}%</span
+                >
+              </div>
+              <div class="h-2 rounded-full bg-white/5 overflow-hidden">
+                <div
+                  class="h-full rounded-full"
+                  [style.width.%]="(zone.minutes / totalMinutesZones()) * 100"
+                  [style.background-color]="zone.color"
+                ></div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    }
+  </div>
+</main>
