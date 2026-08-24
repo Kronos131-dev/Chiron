@@ -19,6 +19,8 @@ export const en: Record<string, string> = {
   'nav.sommeil': 'Sleep',
   'nav.activite': 'Activity',
   'nav.noctua': 'Noctua',
+  'nav.pushOn': 'Notifications on',
+  'nav.pushOff': 'Enable notifications',
 
   'today.title': 'Today',
   'today.subtitle': "Today's summary",

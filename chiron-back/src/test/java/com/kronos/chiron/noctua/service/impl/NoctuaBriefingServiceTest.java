@@ -16,12 +16,16 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.dao.DataIntegrityViolationException;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -46,6 +50,10 @@ class NoctuaBriefingServiceTest {
     private MemoryNoteService memoryNoteService;
     @Mock
     private NoctuaAgentRouter noctuaAgentRouter;
+    @Mock
+    private com.kronos.chiron.push.service.WebPushService webPushService;
+    @Spy
+    private Clock clock = Clock.fixed(Instant.parse("2026-08-20T07:00:00Z"), ZoneId.of("Europe/Paris"));
 
     @InjectMocks
     private NoctuaBriefingServiceImpl noctuaBriefingService;
@@ -89,6 +97,8 @@ class NoctuaBriefingServiceTest {
         assertThat(conversation.getTitre()).isEqualTo("Réveil — 20 août");
         verify(conversationService).recordExchange(conversation, "Réveil — 07h12", "Nuit correcte, préparation à 71.");
         verify(noctuaBriefingRepository).save(any(NoctuaBriefing.class));
+        verify(webPushService).envoyerAuxAbonnements(eq(user), eq("Réveil"), eq("Nuit correcte, préparation à 71."),
+                anyString());
     }
 
     @Test

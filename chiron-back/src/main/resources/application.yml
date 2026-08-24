@@ -72,6 +72,14 @@ jwt:
   # Expiration du token (ex: 2592000000ms = 30 jours)
   expiration: 2592000000
 
+# Notifications push web (RFC 8291/8292). Sans VAPID_PUBLIC_KEY/VAPID_PRIVATE_KEY, une paire
+# éphémère est générée au démarrage : les abonnements existants ne survivent pas à un
+# redémarrage. Générer une vraie paire avec la commande décrite dans manage-env-and-secrets.
+vapid:
+  public-key: ${VAPID_PUBLIC_KEY:}
+  private-key: ${VAPID_PRIVATE_KEY:}
+  subject: ${VAPID_SUBJECT:mailto:contact@chiron-sanctuaire.fr}
+
 chiron:
   uploads-dir: ${UPLOADS_DIR:./uploads/images}
   frontend-url: ${FRONTEND_URL:https://chiron-sanctuaire.fr}

@@ -31,6 +31,13 @@ export class HeaderComponent implements OnInit {
     this.showMenu.update((v) => !v);
   }
 
+  togglePush(): void {
+    const action = this.noctuaNotifications.pushActif()
+      ? this.noctuaNotifications.desactiverPush()
+      : this.noctuaNotifications.activerPush();
+    action.catch(() => {});
+  }
+
   logout(): void {
     this.authService.logout();
   }

@@ -112,6 +112,15 @@ export interface NoctuaNonLusDto {
   count: number;
 }
 
+export interface VapidPublicKeyDto {
+  clePublique: string;
+}
+
+export interface PushSubscriptionRequestDto {
+  endpoint: string;
+  keys: { p256dh: string; auth: string };
+}
+
 export interface SanteSyncEtatDto {
   typeDonnee: string;
   derniereDateSynchronisee: string | null;
@@ -239,5 +248,19 @@ export class GlauxApi {
 
   getNoctuaNonLus(): Observable<NoctuaNonLusDto> {
     return this.http.get<NoctuaNonLusDto>(`${environment.apiUrl}/noctua/non-lus`);
+  }
+
+  getVapidClePublique(): Observable<VapidPublicKeyDto> {
+    return this.http.get<VapidPublicKeyDto>(`${environment.apiUrl}/push/cle-publique`);
+  }
+
+  abonnerPush(request: PushSubscriptionRequestDto): Observable<void> {
+    return this.http.post<void>(`${environment.apiUrl}/push/abonnement`, request);
+  }
+
+  desabonnerPush(endpoint: string): Observable<void> {
+    return this.http.request<void>('DELETE', `${environment.apiUrl}/push/abonnement`, {
+      body: { endpoint },
+    });
   }
 }

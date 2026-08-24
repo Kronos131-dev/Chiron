@@ -30,6 +30,17 @@
           <span class="material-symbols-outlined text-sm text-secondary">account_balance</span>
           {{ 'nav.chiron' | t }}
         </a>
+        @if (noctuaNotifications.pushDisponible) {
+          <button
+            (click)="togglePush()"
+            class="w-full flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-white/5 transition-colors cursor-pointer"
+          >
+            <span class="material-symbols-outlined text-sm text-secondary">
+              {{ noctuaNotifications.pushActif() ? 'notifications_active' : 'notifications_off' }}
+            </span>
+            {{ (noctuaNotifications.pushActif() ? 'nav.pushOn' : 'nav.pushOff') | t }}
+          </button>
+        }
         <div class="border-t border-white/5 mt-1 pt-1">
           <button
             (click)="logout()"
