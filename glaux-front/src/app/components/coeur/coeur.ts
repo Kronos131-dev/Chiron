@@ -68,7 +68,7 @@ export class Coeur implements OnInit {
 
   fcPlugins = [this.seuilsFcPlugin];
 
-  selectedDate = signal(new Date().toISOString().slice(0, 10));
+  selectedDate = signal(this.enIso(new Date()));
   fcPoints = signal<SanteFcPointDto[]>([]);
   jours = signal<SanteJourDto[]>([]);
   joursCardio = signal<SanteJourDto[]>([]);

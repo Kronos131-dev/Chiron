@@ -6,6 +6,7 @@ import tools.jackson.databind.json.JsonMapper;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 
@@ -207,7 +208,8 @@ class GoogleHealthParserTest {
                 ]}""");
 
         // When
-        List<GoogleHealthParser.SommeilBrut> sessions = GoogleHealthParser.sleepSessions(node);
+        List<GoogleHealthParser.SommeilBrut> sessions = GoogleHealthParser.sleepSessions(node,
+                ZoneId.of("Europe/Paris"));
 
         // Then
         GoogleHealthParser.SommeilBrut nuit = sessions.get(0);
@@ -245,7 +247,8 @@ class GoogleHealthParserTest {
                 ]}""");
 
         // When
-        List<GoogleHealthParser.SommeilBrut> sessions = GoogleHealthParser.sleepSessions(node);
+        List<GoogleHealthParser.SommeilBrut> sessions = GoogleHealthParser.sleepSessions(node,
+                ZoneId.of("Europe/Paris"));
 
         // Then
         assertThat(sessions.get(0).minutesAgite()).isEqualTo(18);
@@ -276,7 +279,8 @@ class GoogleHealthParserTest {
                 ]}""");
 
         // When
-        List<GoogleHealthParser.SommeilBrut> sessions = GoogleHealthParser.sleepSessions(node);
+        List<GoogleHealthParser.SommeilBrut> sessions = GoogleHealthParser.sleepSessions(node,
+                ZoneId.of("Europe/Paris"));
 
         // Then
         assertThat(sessions.get(0).minutesAgite()).isEqualTo(18);
@@ -307,7 +311,8 @@ class GoogleHealthParserTest {
                 ]}""");
 
         // When
-        List<GoogleHealthParser.SommeilBrut> sessions = GoogleHealthParser.sleepSessions(node);
+        List<GoogleHealthParser.SommeilBrut> sessions = GoogleHealthParser.sleepSessions(node,
+                ZoneId.of("Europe/Paris"));
 
         // Then
         assertThat(sessions.get(0).minutesAgite()).isEqualTo(18);
@@ -336,7 +341,8 @@ class GoogleHealthParserTest {
                 ]}""");
 
         // When
-        List<GoogleHealthParser.SommeilBrut> sessions = GoogleHealthParser.sleepSessions(node);
+        List<GoogleHealthParser.SommeilBrut> sessions = GoogleHealthParser.sleepSessions(node,
+                ZoneId.of("Europe/Paris"));
 
         // Then
         assertThat(sessions.get(0).minutesAgite()).isZero();
@@ -364,7 +370,8 @@ class GoogleHealthParserTest {
                   }}
                 ]}""");
 
-        List<GoogleHealthParser.SommeilBrut> sessions = GoogleHealthParser.sleepSessions(node);
+        List<GoogleHealthParser.SommeilBrut> sessions = GoogleHealthParser.sleepSessions(node,
+                ZoneId.of("Europe/Paris"));
 
         assertThat(sessions).hasSize(1);
         GoogleHealthParser.SommeilBrut s = sessions.get(0);
@@ -393,7 +400,8 @@ class GoogleHealthParserTest {
                   }}
                 ]}""");
 
-        List<GoogleHealthParser.SommeilBrut> sessions = GoogleHealthParser.sleepSessions(node);
+        List<GoogleHealthParser.SommeilBrut> sessions = GoogleHealthParser.sleepSessions(node,
+                ZoneId.of("Europe/Paris"));
 
         assertThat(sessions.get(0).stadesDisponibles()).isFalse();
         assertThat(sessions.get(0).minutesEndormi()).isEqualTo(420);
@@ -410,7 +418,7 @@ class GoogleHealthParserTest {
                   }}
                 ]}""");
 
-        assertThat(GoogleHealthParser.sleepSessions(node).get(0).sieste()).isTrue();
+        assertThat(GoogleHealthParser.sleepSessions(node, ZoneId.of("Europe/Paris")).get(0).sieste()).isTrue();
     }
 
     @Test

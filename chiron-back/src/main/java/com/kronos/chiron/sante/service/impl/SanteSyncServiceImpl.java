@@ -345,7 +345,7 @@ public class SanteSyncServiceImpl implements SanteSyncService {
             int pages = 0;
             do {
                 JsonNode reponse = fitbitClient.listDataPoints(token, type, from, pageToken);
-                List<GoogleHealthParser.SommeilBrut> sessions = GoogleHealthParser.sleepSessions(reponse);
+                List<GoogleHealthParser.SommeilBrut> sessions = GoogleHealthParser.sleepSessions(reponse, zone);
                 points += sessions.size();
                 for (GoogleHealthParser.SommeilBrut brut : sessions) {
                     if (brut.debut() == null) continue;

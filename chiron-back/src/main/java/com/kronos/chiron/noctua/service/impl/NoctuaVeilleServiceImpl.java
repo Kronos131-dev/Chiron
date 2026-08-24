@@ -64,7 +64,9 @@ public class NoctuaVeilleServiceImpl implements NoctuaVeilleService {
             noctuaBriefingService.genererSiNecessaire(user, NoctuaBriefingType.REVEIL, date, cle,
                     "Réveil — " + date.format(TITRE_DATE),
                     "Réveil — " + LocalDateTime.now(clock).format(HEURE),
-                    "L'utilisateur vient de se réveiller. Fais le briefing de réveil.");
+                    "L'utilisateur vient de se réveiller d'une nuit datée du " + date
+                            + " (AAAA-MM-JJ). Fais le briefing de réveil en appelant les outils avec cette"
+                            + " date, pas la date du jour.");
         }
     }
 
@@ -81,8 +83,8 @@ public class NoctuaVeilleServiceImpl implements NoctuaVeilleService {
                     activite.getStartTime().toLocalDate(), cle,
                     "Activité — " + activite.getStartTime().toLocalDate().format(TITRE_DATE),
                     "Fin de séance — " + now.format(HEURE),
-                    "L'utilisateur vient de terminer une activité physique (identifiant " + activite.getId()
-                            + "). Fais le briefing d'activité.");
+                    "L'utilisateur vient de terminer une activité physique du " + activite.getStartTime().toLocalDate()
+                            + " (identifiant " + activite.getId() + "). Fais le briefing d'activité.");
         }
     }
 
@@ -98,7 +100,8 @@ public class NoctuaVeilleServiceImpl implements NoctuaVeilleService {
         noctuaBriefingService.genererSiNecessaire(user, NoctuaBriefingType.COUCHER, today, cle,
                 "Coucher — " + today.format(TITRE_DATE),
                 "Coucher — " + LocalDateTime.now(clock).format(HEURE),
-                "C'est bientôt l'heure de se coucher. Fais le briefing du coucher.");
+                "C'est bientôt l'heure de se coucher, nous sommes le " + today
+                        + " (AAAA-MM-JJ). Fais le briefing du coucher.");
     }
 
     private LocalTime heureCoucherHabituelle(Utilisateur user, LocalDate today) {

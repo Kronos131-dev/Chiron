@@ -179,11 +179,24 @@ public class SanteTools {
     public String getEtatSync(@ToolMemoryId String memoryId) {
         Utilisateur user = toolUserResolver.load(memoryId);
         List<SanteSyncState> etats = santeSyncStateRepository.findByUtilisateur(user);
-        List<SanteSyncState> enEchec = etats.stream().filter(e -> e.getDernierStatut() != StatutSync.OK).toList();
-        if (enEchec.isEmpty()) return "Toutes les données Google Health sont à jour.";
-        StringBuilder res = new StringBuilder("Données non à jour : ");
-        for (SanteSyncState e : enEchec) {
-            res.append(e.getTypeDonnee()).append(" (").append(e.getDernierStatut()).append(") ");
+        List<SanteSyncState> enEchec = etats.stream()
+                .filter(e -> e.getDernierStatut() != StatutSync.OK && e.getDernierStatut() != StatutSync.VIDE)
+                .toList();
+        List<SanteSyncState> vides = etats.stream().filter(e -> e.getDernierStatut() == StatutSync.VIDE).toList();
+        if (enEchec.isEmpty() && vides.isEmpty()) return "Toutes les données Google Health sont à jour.";
+
+        StringBuilder res = new StringBuilder();
+        if (!enEchec.isEmpty()) {
+            res.append("Données non à jour : ");
+            for (SanteSyncState e : enEchec) {
+                res.append(e.getTypeDonnee()).append(" (").append(e.getDernierStatut()).append(") ");
+            }
+        }
+        if (!vides.isEmpty()) {
+            res.append("Aucune donnée nouvelle depuis la dernière synchro pour : ");
+            for (SanteSyncState e : vides) {
+                res.append(e.getTypeDonnee()).append(" ");
+            }
         }
         return res.toString().trim() + ".";
     }

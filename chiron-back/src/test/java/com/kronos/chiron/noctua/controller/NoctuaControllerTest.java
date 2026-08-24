@@ -148,6 +148,8 @@ class NoctuaControllerTest {
         // reproduit le bug où le contrôleur passait l'id de briefing (issu de l'URL) directement à
         // conversationService.getOrCreate, qui attend un id de conversation.
         when(authenticatedUserService.getAuthenticatedUser()).thenReturn(user);
+        when(clock.instant()).thenReturn(Instant.parse("2026-08-20T10:00:00Z"));
+        when(clock.getZone()).thenReturn(ZoneId.of("Europe/Paris"));
         Conversation conversation = Conversation.builder().id(55L).utilisateur(user).agent(AgentType.NOCTUA).build();
         NoctuaBriefing briefing = NoctuaBriefing.builder().id(3L).utilisateur(user).conversation(conversation)
                 .type(NoctuaBriefingType.REVEIL).build();

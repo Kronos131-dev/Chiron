@@ -272,6 +272,17 @@ class SanteToolsTest {
         assertThat(result).contains("à jour");
     }
 
+    @Test
+    void getEtatSync_typeVide_neLeSignalePasCommeUneErreur() {
+        SanteSyncState etat = SanteSyncState.builder().utilisateur(user).typeDonnee("SLEEP")
+                .dernierStatut(StatutSync.VIDE).build();
+        when(santeSyncStateRepository.findByUtilisateur(user)).thenReturn(List.of(etat));
+
+        String result = santeTools.getEtatSync(MEMORY_ID);
+
+        assertThat(result).contains("SLEEP").doesNotContain("non à jour").doesNotContain("(VIDE)");
+    }
+
     private List<SanteJour> fabriquerHistoriqueVfc() {
         List<SanteJour> jours = new java.util.ArrayList<>();
         double[] vfcValeurs = {60, 62, 61, 63, 59, 64, 60, 62, 61, 63};

@@ -5,6 +5,7 @@ import tools.jackson.databind.JsonNode;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -259,7 +260,7 @@ public final class GoogleHealthParser {
             Integer minutesLeger, Integer minutesParadoxal, Integer minutesAgite, Integer nbReveils) {
     }
 
-    public static List<SommeilBrut> sleepSessions(JsonNode listResponse) {
+    public static List<SommeilBrut> sleepSessions(JsonNode listResponse, ZoneId zone) {
         List<SommeilBrut> result = new ArrayList<>();
         if (listResponse == null) return result;
         JsonNode points = listResponse.get("dataPoints");
@@ -271,7 +272,7 @@ public final class GoogleHealthParser {
             Instant debut = instantField(interval, "startTime");
             Instant fin = instantField(interval, "endTime");
             if (debut == null && fin == null) continue;
-            LocalDate date = fin != null ? asLocalDate(fin) : asLocalDate(debut);
+            LocalDate date = fin != null ? asLocalDate(fin, zone) : asLocalDate(debut, zone);
 
             JsonNode metadata = sleep.get("metadata");
             String externalId = metadata != null && metadata.hasNonNull("externalId")
@@ -414,7 +415,7 @@ public final class GoogleHealthParser {
         }
     }
 
-    private static LocalDate asLocalDate(Instant instant) {
-        return instant.atZone(java.time.ZoneOffset.UTC).toLocalDate();
+    private static LocalDate asLocalDate(Instant instant, ZoneId zone) {
+        return instant.atZone(zone).toLocalDate();
     }
 }

@@ -26,8 +26,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Clock;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 
 @RestController
 @RequestMapping("/api/noctua")
@@ -35,6 +38,7 @@ import java.util.List;
 public class NoctuaController {
 
     private static final int MEMORY_INJECTION_LIMIT = 10;
+    private static final DateTimeFormatter HEURE = DateTimeFormatter.ofPattern("HH'h'mm", Locale.FRANCE);
 
     private final AuthenticatedUserService authenticatedUserService;
     private final NoctuaBriefingRepository noctuaBriefingRepository;
@@ -91,6 +95,8 @@ public class NoctuaController {
                 ? "LANGUE DE RÉPONSE : réponds exclusivement en anglais.\n"
                 : "LANGUE DE RÉPONSE : réponds exclusivement en français.\n");
         ctx.append("SYSTEM CONTEXT - L'utilisateur qui te parle est : ").append(user.getUsername()).append(".\n");
+        ctx.append("DATE DU JOUR (AAAA-MM-JJ) : ").append(LocalDate.now(clock)).append(", heure actuelle ")
+                .append(LocalDateTime.now(clock).format(HEURE)).append(".\n");
         ctx.append(memoryNoteService.formatForPrompt(user, MEMORY_INJECTION_LIMIT));
         ctx.append("MESSAGE DE L'UTILISATEUR : ").append(request.message());
 
