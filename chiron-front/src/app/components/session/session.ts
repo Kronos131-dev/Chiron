@@ -10,11 +10,8 @@ import { ExerciceCardComponent } from '../shared/exercice-card/exercice-card';
 import { ExercisePickerComponent } from '../shared/exercise-picker/exercise-picker';
 import { TranslatePipe } from '../../service/translate.pipe';
 import { I18nService } from '../../service/i18n.service';
-import {
-  ExerciceForm,
-  generateFormId,
-  makeEmptyExercice,
-} from '../../shared/exercise-forms';
+import { nowAsLocalDateTime } from '../../util/local-date-time';
+import { ExerciceForm, generateFormId, makeEmptyExercice } from '../../shared/exercise-forms';
 
 // Re-export so existing imports (e.g. tests) keep working until they're migrated.
 export type { DegressifForm, SerieForm, ExerciceForm } from '../../shared/exercise-forms';
@@ -25,8 +22,8 @@ export type { DegressifForm, SerieForm, ExerciceForm } from '../../shared/exerci
  */
 function getIsoWeekNumber(d: Date): number {
   const target = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-  const dayNr = (target.getUTCDay() + 6) % 7;          // Mon=0 .. Sun=6
-  target.setUTCDate(target.getUTCDate() - dayNr + 3);  // jump to nearest Thursday
+  const dayNr = (target.getUTCDay() + 6) % 7; // Mon=0 .. Sun=6
+  target.setUTCDate(target.getUTCDate() - dayNr + 3); // jump to nearest Thursday
   const firstThursday = new Date(Date.UTC(target.getUTCFullYear(), 0, 4));
   const firstThursdayDayNr = (firstThursday.getUTCDay() + 6) % 7;
   firstThursday.setUTCDate(firstThursday.getUTCDate() - firstThursdayDayNr + 3);
@@ -40,12 +37,18 @@ function getIsoWeekNumber(d: Date): number {
 @Component({
   selector: 'app-session',
   standalone: true,
-  imports: [CommonModule, FormsModule, HeaderComponent, ExerciceCardComponent, ExercisePickerComponent, TranslatePipe],
+  imports: [
+    CommonModule,
+    FormsModule,
+    HeaderComponent,
+    ExerciceCardComponent,
+    ExercisePickerComponent,
+    TranslatePipe,
+  ],
   templateUrl: './session.html',
-  styleUrls: ['./session.css']
+  styleUrls: ['./session.css'],
 })
 export class Session implements OnInit, OnDestroy {
-
   /** Signal holding the title of the current routine. */
   titreRoutine = signal('');
 
@@ -85,7 +88,9 @@ export class Session implements OnInit, OnDestroy {
     const ms = this.now() - new Date(started).getTime();
     if (ms < 0) return null;
     const totalMin = Math.floor(ms / 60000);
-    const hh = Math.floor(totalMin / 60).toString().padStart(2, '0');
+    const hh = Math.floor(totalMin / 60)
+      .toString()
+      .padStart(2, '0');
     const mm = (totalMin % 60).toString().padStart(2, '0');
     return `${hh}:${mm}`;
   });
@@ -98,19 +103,19 @@ export class Session implements OnInit, OnDestroy {
   private _saveStatusTimer: ReturnType<typeof setTimeout> | null = null;
 
   /** "Add exercise" picker — open flag + the exos appended during the current session. */
-  pickerOpen     = signal(false);
+  pickerOpen = signal(false);
   addedExercises = signal<ExerciceForm[]>([]);
 
   // ── Drag & drop state for exercise reordering ──────────────────────────────
   dragFromIdx = signal(-1);
   dragOverIdx = signal(-1);
 
-  private _from           = -1;
-  private _to             = -1;
-  private _touchDragging  = false;
+  private _from = -1;
+  private _to = -1;
+  private _touchDragging = false;
   private _longPressTimer: any = null;
-  private _touchStartX    = 0;
-  private _touchStartY    = 0;
+  private _touchStartX = 0;
+  private _touchStartY = 0;
 
   /**
    * Initializes a new instance of the Session component.
@@ -126,7 +131,7 @@ export class Session implements OnInit, OnDestroy {
     private chironApi: ChironApi,
     private authService: AuthService,
     private activeSession: ActiveSessionService,
-    private i18n: I18nService
+    private i18n: I18nService,
   ) {}
 
   /**
@@ -135,19 +140,21 @@ export class Session implements OnInit, OnDestroy {
    * and loads the requested session data.
    */
   ngOnInit() {
-    this.derniereSession.set(new Date().toLocaleDateString(this.i18n.lang() === 'en' ? 'en-US' : 'fr-FR'));
+    this.derniereSession.set(
+      new Date().toLocaleDateString(this.i18n.lang() === 'en' ? 'en-US' : 'fr-FR'),
+    );
     // Tick once a second to keep the live session timer up to date.
     this._timer = setInterval(() => this.now.set(Date.now()), 1000);
 
-    this.route.paramMap.subscribe(params => {
+    this.route.paramMap.subscribe((params) => {
       this.routineId = params.get('id');
 
-      this.route.queryParams.subscribe(queryParams => {
+      this.route.queryParams.subscribe((queryParams) => {
         // Session is now solely for executing a workout (from "Commencer") or browsing
         // an existing one read-only (from Journal / external profile). Edition/creation
         // lives in ProgrammeBuilder.
         const fromJournal = queryParams['from'] === 'journal';
-        const isExternal  = queryParams['external'] === 'true';
+        const isExternal = queryParams['external'] === 'true';
         this.isReadonly.set(fromJournal || isExternal);
         this.isExternalView.set(isExternal);
 
@@ -157,7 +164,7 @@ export class Session implements OnInit, OnDestroy {
           // charge entered so far after navigating away and back.
           if (!this.isReadonly() && this.activeSession.isActiveFor(this.routineId)) {
             this.titreRoutine = this.activeSession.titre;
-            this.exercices    = this.activeSession.exercices;
+            this.exercices = this.activeSession.exercices;
           } else {
             this.chargerRoutine(this.routineId);
           }
@@ -207,7 +214,7 @@ export class Session implements OnInit, OnDestroy {
         this.titreRoutine.set(data.titre);
 
         if (data.utilisateur && data.utilisateur.username) {
-            this.targetUsername.set(data.utilisateur.username);
+          this.targetUsername.set(data.utilisateur.username);
         }
 
         this.noteSeance.set(data.note ?? '');
@@ -228,12 +235,14 @@ export class Session implements OnInit, OnDestroy {
             allureKmh: serie.allureKmh ?? null,
             pentePct: serie.pentePct ?? null,
             calories: serie.calories ?? null,
-            degressifs: serie.degressifs ? serie.degressifs.map((deg: any) => ({
-              id: deg.id || generateFormId(),
-              poids: deg.poids,
-              reps: deg.reps
-            })) : []
-          }))
+            degressifs: serie.degressifs
+              ? serie.degressifs.map((deg: any) => ({
+                  id: deg.id || generateFormId(),
+                  poids: deg.poids,
+                  reps: deg.reps,
+                }))
+              : [],
+          })),
         }));
 
         this.exercices.set(exosFormates);
@@ -243,17 +252,17 @@ export class Session implements OnInit, OnDestroy {
         if (!this.isReadonly() && this.routineId) {
           this.activeSession.start(this.routineId, data.titre, exosFormates);
           this.titreRoutine = this.activeSession.titre;
-          this.exercices    = this.activeSession.exercices;
+          this.exercices = this.activeSession.exercices;
         }
 
         this.isLoading.set(false);
       },
       error: (err) => {
-        console.error("Erreur de chargement", err);
+        console.error('Erreur de chargement', err);
         this.isLoading.set(false);
         alert(this.i18n.t('session.loadError'));
         this.router.navigate(['/programme']);
-      }
+      },
     });
   }
 
@@ -264,8 +273,8 @@ export class Session implements OnInit, OnDestroy {
    */
   supprimerExercice(exoId: number | string) {
     if (this.isReadonly()) return;
-    this.exercices.update(exos => exos.filter(e => e.id !== exoId));
-    this.addedExercises.update(list => list.filter(e => e.id !== exoId));
+    this.exercices.update((exos) => exos.filter((e) => e.id !== exoId));
+    this.addedExercises.update((list) => list.filter((e) => e.id !== exoId));
   }
 
   // ── Library picker (bottom sheet) ─────────────────────────────────────────
@@ -286,14 +295,14 @@ export class Session implements OnInit, OnDestroy {
     if (this.isReadonly()) return;
     const nom = this.i18n.pick(def.nomFr, def.nomEn);
     const exo = makeEmptyExercice(nom, def.id, def.cardioType as ExerciceForm['cardioType']);
-    this.exercices.update(list => [...list, exo]);
-    this.addedExercises.update(list => [...list, exo]);
+    this.exercices.update((list) => [...list, exo]);
+    this.addedExercises.update((list) => [...list, exo]);
   }
 
   /** Append a blank custom (free-text) exercise and close the picker. */
   addCustomExercice() {
     if (this.isReadonly()) return;
-    this.exercices.update(list => [...list, makeEmptyExercice()]);
+    this.exercices.update((list) => [...list, makeEmptyExercice()]);
     this.closePicker();
   }
 
@@ -332,7 +341,7 @@ export class Session implements OnInit, OnDestroy {
     this.dragFromIdx.set(-1);
     this.dragOverIdx.set(-1);
     this._from = -1;
-    this._to   = -1;
+    this._to = -1;
   }
 
   // ── Touch drag (mobile long-press) ───────────────────────────────────────────
@@ -356,13 +365,16 @@ export class Session implements OnInit, OnDestroy {
     const t = event.touches[0];
 
     if (!this._touchDragging) {
-      if (Math.abs(t.clientX - this._touchStartX) > 8 || Math.abs(t.clientY - this._touchStartY) > 8) {
+      if (
+        Math.abs(t.clientX - this._touchStartX) > 8 ||
+        Math.abs(t.clientY - this._touchStartY) > 8
+      ) {
         clearTimeout(this._longPressTimer);
       }
       return;
     }
 
-    const el   = document.elementFromPoint(t.clientX, t.clientY) as HTMLElement;
+    const el = document.elementFromPoint(t.clientX, t.clientY) as HTMLElement;
     const card = el?.closest<HTMLElement>('[data-exo-idx]');
     if (card) {
       const idx = parseInt(card.getAttribute('data-exo-idx')!);
@@ -385,12 +397,12 @@ export class Session implements OnInit, OnDestroy {
 
   private _applyExoReorder() {
     const from = this._from;
-    const to   = this._to;
+    const to = this._to;
     this._from = -1;
-    this._to   = -1;
+    this._to = -1;
     if (from < 0 || to < 0 || from === to) return;
 
-    this.exercices.update(list => {
+    this.exercices.update((list) => {
       const next = [...list];
       const [moved] = next.splice(from, 1);
       next.splice(to, 0, moved);
@@ -417,24 +429,24 @@ export class Session implements OnInit, OnDestroy {
 
     const currentWeekNumber = getIsoWeekNumber(new Date());
 
-    const exercicesPayload = this.exercices().map(exo => ({
+    const exercicesPayload = this.exercices().map((exo) => ({
       nom: exo.nom,
-      commentaire: exo.commentaire ?? "",
+      commentaire: exo.commentaire ?? '',
       unilateral: exo.unilateral ?? false,
       exerciceDefinitionId: exo.definitionId ?? null,
-      series: exo.series.map(serie => ({
+      series: exo.series.map((serie) => ({
         poids: serie.poids != null ? Number(serie.poids) : 0,
         reps: serie.reps != null ? Number(serie.reps) : 0,
-        commentaire: "",
+        commentaire: '',
         dureeMin: serie.dureeMin != null ? Number(serie.dureeMin) : null,
         distanceM: serie.distanceM != null ? Number(serie.distanceM) : null,
         allureKmh: serie.allureKmh != null ? Number(serie.allureKmh) : null,
         pentePct: serie.pentePct != null ? Number(serie.pentePct) : null,
-        degressifs: serie.degressifs.map(deg => ({
+        degressifs: serie.degressifs.map((deg) => ({
           poids: deg.poids != null ? Number(deg.poids) : 0,
-          reps: deg.reps != null ? Number(deg.reps) : 0
-        }))
-      }))
+          reps: deg.reps != null ? Number(deg.reps) : 0,
+        })),
+      })),
     }));
 
     // Always create a new historical session entry (the user can run the same programme
@@ -444,10 +456,10 @@ export class Session implements OnInit, OnDestroy {
       titre: this.titreRoutine(),
       note: this.noteSeance() || null,
       weekNumber: currentWeekNumber,
-      startTime: this.activeSession.startedAt() ?? new Date().toISOString(),
-      endTime: new Date().toISOString(),
+      startTime: this.activeSession.startedAt() ?? nowAsLocalDateTime(),
+      endTime: nowAsLocalDateTime(),
       historique: true,
-      exercices: exercicesPayload
+      exercices: exercicesPayload,
     };
 
     this.chironApi.sauvegarderProgramme(username, journalDto).subscribe({
@@ -458,10 +470,10 @@ export class Session implements OnInit, OnDestroy {
         // (a fresh start is required next time) while keeping the current view
         // intact by re-creating local signals holding the same values.
         if (this.routineId && !this.isReadonly()) {
-          const exos  = this.exercices();
+          const exos = this.exercices();
           const titre = this.titreRoutine();
           this.activeSession.clear();
-          this.exercices    = signal(exos);
+          this.exercices = signal(exos);
           this.titreRoutine = signal(titre);
         }
 
@@ -472,10 +484,10 @@ export class Session implements OnInit, OnDestroy {
             id: parseInt(this.routineId, 10),
             titre: this.titreRoutine(),
             historique: false,
-            exercices: exercicesPayload
+            exercices: exercicesPayload,
           };
           this.chironApi.sauvegarderProgramme(username, templateDto).subscribe({
-            error: () => this.flashStatus(this.i18n.t('session.modelUpdateFailed'))
+            error: () => this.flashStatus(this.i18n.t('session.modelUpdateFailed')),
           });
         }
       },
@@ -488,9 +500,9 @@ export class Session implements OnInit, OnDestroy {
    */
   retour() {
     if (this.isReadonly()) {
-        this.router.navigate(['/profile']);
+      this.router.navigate(['/profile']);
     } else {
-        this.router.navigate(['/programme']);
+      this.router.navigate(['/programme']);
     }
   }
 }

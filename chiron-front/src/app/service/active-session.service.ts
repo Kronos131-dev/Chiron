@@ -1,5 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { ExerciceForm } from '../shared/exercise-forms';
+import { nowAsLocalDateTime } from '../util/local-date-time';
 
 /** localStorage key under which the in-progress session is persisted. */
 const STORAGE_KEY = 'chiron.activeSession';
@@ -23,7 +24,6 @@ interface StoredSession {
  */
 @Injectable({ providedIn: 'root' })
 export class ActiveSessionService {
-
   /** Id of the routine being executed, or `null` when no session is active. */
   readonly routineId = signal<string | null>(null);
 
@@ -62,7 +62,7 @@ export class ActiveSessionService {
     this.routineId.set(routineId);
     this.titre.set(titre);
     this.exercices.set(exercices);
-    this.startedAt.set(new Date().toISOString());
+    this.startedAt.set(nowAsLocalDateTime());
     this.snapshot();
   }
 
