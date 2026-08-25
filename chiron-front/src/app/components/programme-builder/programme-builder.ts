@@ -130,6 +130,7 @@ export class ProgrammeBuilder implements OnInit {
           nom: exo.nom,
           definitionId: exo.exerciceDefinitionId ?? undefined,
           cardioType: exo.cardioType ?? null,
+          wodType: exo.wodType ?? null,
           commentaire: exo.commentaire ?? '',
           unilateral: exo.unilateral ?? false,
           blockId: exo.blockId ?? null,
@@ -166,7 +167,12 @@ export class ProgrammeBuilder implements OnInit {
   /** Append an exercise to the programme — from a library card OR as a blank custom one. */
   addExerciceFromDefinition(def: ExerciceDefinitionDto) {
     const nom = this.i18n.pick(def.nomFr, def.nomEn);
-    const exo = makeEmptyExercice(nom, def.id, def.cardioType as ExerciceForm['cardioType']);
+    const exo = makeEmptyExercice(
+      nom,
+      def.id,
+      def.cardioType as ExerciceForm['cardioType'],
+      def.wodType as ExerciceForm['wodType'],
+    );
     this.exercices.update(list => [...list, exo]);
     this.addedExercises.update(list => [...list, exo]);
   }

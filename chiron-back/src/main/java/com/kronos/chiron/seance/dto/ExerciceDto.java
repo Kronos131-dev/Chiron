@@ -11,5 +11,6 @@ public record ExerciceDto(
         Long blockId,
         String blockType,
         String cardioType,
+        String wodType,
         boolean unilateral) {
 }

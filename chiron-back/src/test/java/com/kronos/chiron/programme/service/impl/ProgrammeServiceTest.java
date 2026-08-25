@@ -81,7 +81,7 @@ class ProgrammeServiceTest {
         SeanceDto dto = new SeanceDto(null, "Leg Day", null, LocalDateTime.now(clock), null, 1, false, null,
                 List.of(new ExerciceDto(null, "Squat", null, null,
                         List.of(new SerieDto(100.0, 5, null, null, null, null, null, null, null)), null, null, null,
-                        false)));
+                        null, false)));
 
         Seance result = programmeService.sauvegarderProgramme("owner", dto);
 
@@ -137,9 +137,9 @@ class ProgrammeServiceTest {
 
         SeanceDto dto = new SeanceDto(7L, "Push", null, null, null, null, false, null,
                 List.of(
-                        new ExerciceDto(null, "Dips", null, null, List.of(), null, null, null, false),
-                        new ExerciceDto(null, "Bench", null, null, List.of(), null, null, null, false),
-                        new ExerciceDto(null, "Squat", null, null, List.of(), null, null, null, false)));
+                        new ExerciceDto(null, "Dips", null, null, List.of(), null, null, null, null, false),
+                        new ExerciceDto(null, "Bench", null, null, List.of(), null, null, null, null, false),
+                        new ExerciceDto(null, "Squat", null, null, List.of(), null, null, null, null, false)));
 
         programmeService.sauvegarderProgramme("owner", dto);
 

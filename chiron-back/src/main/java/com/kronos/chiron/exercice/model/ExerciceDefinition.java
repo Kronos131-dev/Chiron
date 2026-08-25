@@ -1,6 +1,7 @@
 package com.kronos.chiron.exercice.model;
 
 import com.kronos.chiron.seance.model.CardioType;
+import com.kronos.chiron.seance.model.WodType;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -55,6 +56,10 @@ public class ExerciceDefinition {
     @Enumerated(EnumType.STRING)
     @Column(name = "cardio_type", length = 32)
     private CardioType cardioType;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "wod_type", length = 32)
+    private WodType wodType;
 
     @Column(unique = true)
     private String externalId;

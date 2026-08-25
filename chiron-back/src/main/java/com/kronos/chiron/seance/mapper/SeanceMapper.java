@@ -21,6 +21,7 @@ public interface SeanceMapper {
 
     @Mapping(target = "exerciceDefinitionId", source = "definition.id")
     @Mapping(target = "cardioType", source = "definition.cardioType")
+    @Mapping(target = "wodType", source = "definition.wodType")
     ExerciceDto toExerciceDto(Exercice exercice);
 
     @Mapping(target = "reps", source = "nombreReps")

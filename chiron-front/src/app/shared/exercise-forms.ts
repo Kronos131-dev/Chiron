@@ -5,6 +5,8 @@
  * Kept here so all three stay in sync — adding a field to ExerciceForm must apply everywhere.
  */
 
+import { WOD_SPECS } from './wod-specs';
+
 export interface DegressifForm {
   id: number | string;
   poids: number | null;
@@ -30,12 +32,15 @@ export type BlockType = 'SUPERSET' | 'BISET';
 /** Types de cardio — miroir de l'enum backend {@code CardioType}. */
 export type CardioType = 'MARCHE_PENTE' | 'COURSE' | 'RAMEUR' | 'SKIERG';
 
+export type WodType = 'CINDY';
+
 export interface ExerciceForm {
   id: number | string;
   nom: string;
   definitionId?: number;
   /** Type de cardio si l'exercice en est un, sinon absent/null. */
   cardioType?: CardioType | null;
+  wodType?: WodType | null;
   /** Note libre facultative sur l'exercice (ressenti, point à savoir, condition…). */
   commentaire?: string | null;
   /** Exercice réalisé en unilatéral (un membre à la fois) → tonnage ×2 + info pour Chiron. */
@@ -62,16 +67,27 @@ export function generateFormId(): string {
  * Build a default empty exercise with one empty serie — used both by the "+ Add exercise"
  * action and as the seed when the user creates a brand-new programme.
  */
-export function makeEmptyExercice(nom: string = '', definitionId?: number, cardioType?: CardioType | null): ExerciceForm {
+export function makeEmptyExercice(
+  nom: string = '',
+  definitionId?: number,
+  cardioType?: CardioType | null,
+  wodType?: WodType | null,
+): ExerciceForm {
   return {
     id: generateFormId(),
     nom,
     definitionId,
     cardioType: cardioType ?? null,
+    wodType: wodType ?? null,
     commentaire: '',
     unilateral: false,
-    series: [cardioType ? makeEmptyCardioSerie() : makeEmptySerie()],
+    series: [makeSerieFor(cardioType, wodType)],
   };
+}
+
+export function makeSerieFor(cardioType?: CardioType | null, wodType?: WodType | null): SerieForm {
+  if (wodType) return makeEmptyWodSerie(wodType);
+  return cardioType ? makeEmptyCardioSerie() : makeEmptySerie();
 }
 
 export function makeEmptySerie(): SerieForm {
@@ -95,6 +111,16 @@ export function makeEmptyCardioSerie(): SerieForm {
     allureKmh: null,
     pentePct: null,
     calories: null,
+  };
+}
+
+export function makeEmptyWodSerie(wodType: WodType): SerieForm {
+  return {
+    id: generateFormId(),
+    poids: 0,
+    reps: null,
+    degressifs: [],
+    dureeMin: WOD_SPECS[wodType].dureeMin,
   };
 }
 

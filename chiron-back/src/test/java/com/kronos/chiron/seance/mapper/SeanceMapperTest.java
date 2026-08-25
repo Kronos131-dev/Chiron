@@ -4,6 +4,7 @@ import com.kronos.chiron.seance.model.Degressif;
 import com.kronos.chiron.seance.model.Exercice;
 import com.kronos.chiron.seance.model.Seance;
 import com.kronos.chiron.seance.model.Serie;
+import com.kronos.chiron.seance.model.WodType;
 
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 
@@ -163,6 +164,25 @@ class SeanceMapperTest {
         ExerciceDto dto = mapper.toExerciceDto(e);
 
         assertThat(dto.exerciceDefinitionId()).isEqualTo(99L);
+    }
+
+    @Test
+    void toExerciceDto_definitionWithWodType_mapsWodType() {
+        Exercice e = buildExerciceWithDefinition("Cindy", 42L);
+        e.getDefinition().setWodType(WodType.CINDY);
+
+        ExerciceDto dto = mapper.toExerciceDto(e);
+
+        assertThat(dto.wodType()).isEqualTo("CINDY");
+    }
+
+    @Test
+    void toExerciceDto_definitionWithoutWodType_wodTypeIsNull() {
+        Exercice e = buildExerciceWithDefinition("Bench Press", 99L);
+
+        ExerciceDto dto = mapper.toExerciceDto(e);
+
+        assertThat(dto.wodType()).isNull();
     }
 
     @Test

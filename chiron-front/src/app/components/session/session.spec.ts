@@ -56,7 +56,7 @@ describe('Session', () => {
       return {
         id, nomFr: nom, nomEn: nom, imageUrl: null, imageUrl2: null,
         musclePrincipal: null, musclesSecondaires: [], typeEquipement: null,
-        difficulte: null, descriptionFr: null, descriptionEn: null, cardioType: null,
+        difficulte: null, descriptionFr: null, descriptionEn: null, cardioType: null, wodType: null,
       };
     }
 
@@ -83,6 +83,26 @@ describe('Session', () => {
 
       expect(component.exercices().map(e => e.nom)).toEqual(['B']);
       expect(component.addedExercises().map(e => e.nom)).toEqual(['B']);
+    });
+
+    it('demarrerWod navigates to the WOD screen of that exercise', () => {
+      component.routineId = '7';
+      component.isReadonly.set(false);
+      const wod = { id: 'w1', nom: 'Cindy', wodType: 'CINDY' as const, series: [] };
+
+      component.demarrerWod(wod);
+
+      expect(TestBed.inject(Router).navigate).toHaveBeenCalledWith(['/session', '7', 'wod', 'w1']);
+    });
+
+    it('demarrerWod does nothing in read-only mode', () => {
+      component.routineId = '7';
+      component.isReadonly.set(true);
+      const wod = { id: 'w1', nom: 'Cindy', wodType: 'CINDY' as const, series: [] };
+
+      component.demarrerWod(wod);
+
+      expect(TestBed.inject(Router).navigate).not.toHaveBeenCalledWith(['/session', '7', 'wod', 'w1']);
     });
 
     it('closePicker clears the picker session list but keeps the session exos', () => {

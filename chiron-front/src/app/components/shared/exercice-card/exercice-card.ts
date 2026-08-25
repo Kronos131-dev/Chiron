@@ -8,10 +8,13 @@ import { TranslatePipe, LocalizePipe } from '../../../service/translate.pipe';
 import {
   ExerciceForm,
   BlockType,
+  WodType,
   makeEmptySerie,
   makeEmptyCardioSerie,
   makeEmptyDegressif,
+  makeSerieFor,
 } from '../../../shared/exercise-forms';
+import { WodSpec, wodSpec } from '../../../shared/wod-specs';
 
 /**
  * Inline editable card for one exercise in a programme/session form.
@@ -37,8 +40,10 @@ export class ExerciceCardComponent implements OnInit {
   @Input() inBlock = false;
   /** Indique s'il existe un exo suivant — désactive le bouton "Grouper" sur le dernier. */
   @Input() hasNext = false;
+  @Input() canStartWod = false;
 
   @Output() remove = new EventEmitter<void>();
+  @Output() startWod = new EventEmitter<void>();
   @Output() groupWithNext = new EventEmitter<BlockType>();
   @Output() exoDragStart = new EventEmitter<{ event: DragEvent; cardEl: HTMLElement }>();
   @Output() exoDragOver  = new EventEmitter<DragEvent>();
@@ -59,6 +64,18 @@ export class ExerciceCardComponent implements OnInit {
   /** Vrai si l'exercice est un cardio (saisie durée/vitesse/pente/distance au lieu de poids/reps). */
   isCardio(): boolean {
     return !!this.exercice.cardioType;
+  }
+
+  isWod(): boolean {
+    return this.spec() !== null;
+  }
+
+  spec(): WodSpec | null {
+    return wodSpec(this.exercice.wodType);
+  }
+
+  scoreWod(): number | null {
+    return this.exercice.series[0]?.reps ?? null;
   }
 
   /** Bascule l'exercice en unilatéral / bilatéral (tonnage ×2 + info pour Chiron). */
@@ -113,6 +130,7 @@ export class ExerciceCardComponent implements OnInit {
     this.exercice.nom = query;
     this.exercice.definitionId = undefined;
     this.exercice.cardioType = null;
+    this.exercice.wodType = null;
 
     if (this.debounceTimer) clearTimeout(this.debounceTimer);
 
@@ -137,8 +155,10 @@ export class ExerciceCardComponent implements OnInit {
     this.exercice.nom = this.i18n.pick(def.nomFr, def.nomEn);
     this.exercice.definitionId = def.id;
     this.exercice.cardioType = (def.cardioType as ExerciceForm['cardioType']) ?? null;
-    // Bascule la première série en mode cardio si besoin (et inversement).
-    if (this.exercice.cardioType && this.exercice.series.length > 0 && this.exercice.series[0].dureeMin === undefined) {
+    this.exercice.wodType = (def.wodType as WodType) ?? null;
+    if (this.exercice.wodType) {
+      this.exercice.series = [makeSerieFor(null, this.exercice.wodType)];
+    } else if (this.exercice.cardioType && this.exercice.series.length > 0 && this.exercice.series[0].dureeMin === undefined) {
       this.exercice.series = [makeEmptyCardioSerie()];
     }
     this.suggestions.set([]);

@@ -1,0 +1,18 @@
+/* WHY: sans ces règles, un enchaînement de taps rapides sur la cible déclenche la sélection de
+   texte, le zoom double-tap et le halo de tap Android — trois façons de rater un tour. */
+.wod-target {
+  width: min(70vw, 20rem);
+  height: min(70vw, 20rem);
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.wod-target:active {
+  transform: scale(0.97);
+}
+
+.wod-target:disabled {
+  cursor: default;
+}

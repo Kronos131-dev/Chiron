@@ -90,6 +90,7 @@ public class ExerciceDefinitionServiceImpl implements ExerciceDefinitionService 
                 e.getDifficulte(),
                 e.getDescriptionFr(),
                 e.getDescriptionEn(),
-                e.getCardioType());
+                e.getCardioType(),
+                e.getWodType());
     }
 }

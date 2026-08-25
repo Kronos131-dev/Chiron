@@ -224,6 +224,7 @@ export class Session implements OnInit, OnDestroy {
           nom: exo.nom,
           definitionId: exo.exerciceDefinitionId ?? undefined,
           cardioType: exo.cardioType ?? null,
+          wodType: exo.wodType ?? null,
           commentaire: exo.commentaire ?? '',
           unilateral: exo.unilateral ?? false,
           series: exo.series.map((serie: any) => ({
@@ -294,9 +295,20 @@ export class Session implements OnInit, OnDestroy {
   addExerciceFromDefinition(def: ExerciceDefinitionDto) {
     if (this.isReadonly()) return;
     const nom = this.i18n.pick(def.nomFr, def.nomEn);
-    const exo = makeEmptyExercice(nom, def.id, def.cardioType as ExerciceForm['cardioType']);
+    const exo = makeEmptyExercice(
+      nom,
+      def.id,
+      def.cardioType as ExerciceForm['cardioType'],
+      def.wodType as ExerciceForm['wodType'],
+    );
     this.exercices.update((list) => [...list, exo]);
     this.addedExercises.update((list) => [...list, exo]);
+  }
+
+  demarrerWod(exo: ExerciceForm) {
+    if (this.isReadonly() || !this.routineId) return;
+    this.persistActiveSession();
+    this.router.navigate(['/session', this.routineId, 'wod', exo.id]);
   }
 
   /** Append a blank custom (free-text) exercise and close the picker. */

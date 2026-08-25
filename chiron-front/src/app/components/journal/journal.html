@@ -201,7 +201,14 @@
                             </div>
                           }
 
-                          @if (exo.cardioType) {
+                          @if (exo.wodType) {
+                            <div class="flex items-baseline gap-2 bg-slate-900/30 rounded px-3 py-2">
+                              <span class="font-headline text-2xl font-black text-secondary tabular-nums">{{ exo.series[0]?.reps ?? 0 }}</span>
+                              <span class="text-on-surface-variant text-[10px] font-bold tracking-widest uppercase">
+                                {{ 'journal.wodRounds' | t: { minutes: exo.series[0]?.dureeMin ?? 20 } }}
+                              </span>
+                            </div>
+                          } @else if (exo.cardioType) {
                             <div class="space-y-2">
                               @for (serie of exo.series; track serie.id) {
                                 <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-on-surface bg-slate-900/30 rounded px-3 py-2">

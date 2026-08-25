@@ -70,7 +70,7 @@
           }
 
           <!-- Unilatéral : tonnage ×2 + info pour Chiron (caché pour le cardio) -->
-          @if (!isCardio() && (!readonly || exercice.unilateral)) {
+          @if (!isCardio() && !isWod() && (!readonly || exercice.unilateral)) {
             <button type="button"
                     [disabled]="readonly"
                     (click)="toggleUnilateral()"
@@ -140,7 +140,36 @@
       </div>
     </div>
 
-    @if (!isCardio()) {
+    @if (isWod()) {
+    <div class="bg-slate-950/40 border border-secondary/20 rounded-lg p-4 mb-5">
+      <p class="text-secondary text-[9px] font-bold tracking-[0.2em] uppercase mb-2">
+        {{ 'exCard.wodFormat' | t: { minutes: spec()!.dureeMin } }}
+      </p>
+      <ul class="space-y-1">
+        @for (mouvement of spec()!.mouvements; track mouvement) {
+          <li class="text-on-surface font-body text-sm flex items-center gap-2">
+            <span class="w-1 h-1 rounded-full bg-secondary/70 flex-shrink-0"></span>
+            {{ mouvement | t }}
+          </li>
+        }
+      </ul>
+
+      @if (scoreWod() !== null) {
+        <div class="mt-4 pt-3 border-t border-white/10 flex items-baseline gap-2">
+          <span class="font-headline text-3xl font-black text-secondary tabular-nums">{{ scoreWod() }}</span>
+          <span class="text-on-surface-variant text-[10px] font-bold tracking-widest uppercase">{{ 'exCard.wodRounds' | t }}</span>
+        </div>
+      }
+    </div>
+
+    @if (canStartWod) {
+      <button type="button" (click)="startWod.emit()"
+              class="w-full bg-gradient-to-r from-secondary to-amber-500 text-slate-950 font-black text-sm px-6 py-4 rounded-xl uppercase tracking-[0.2em] hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-secondary/25 flex items-center justify-center gap-2">
+        <span class="material-symbols-outlined text-xl">timer</span>
+        {{ (scoreWod() !== null ? 'exCard.wodRestart' : 'exCard.wodStart') | t }}
+      </button>
+    }
+    } @else if (!isCardio()) {
     <!-- Sets Table Headers -->
     <div class="grid grid-cols-12 gap-3 mb-2 px-1">
       <div class="col-span-3 text-on-surface-variant text-[9px] font-bold tracking-widest uppercase">{{ 'exCard.set' | t }}</div>
@@ -268,7 +297,7 @@
     }
 
     <!-- Add Set Button -->
-    @if (!readonly) {
+    @if (!readonly && !isWod()) {
       <button (click)="ajouterSerie()"
               class="w-full border border-dashed border-white/10 rounded py-3 flex items-center justify-center gap-2 text-on-surface-variant text-[10px] font-bold tracking-widest uppercase hover:text-secondary hover:bg-white/5 transition-colors">
         <span class="text-lg leading-none">+</span> {{ isCardio() ? ('exCard.addInterval' | t) : ('exCard.addSet' | t) }}

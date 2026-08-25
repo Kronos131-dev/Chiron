@@ -58,7 +58,7 @@ class ExerciceDefinitionControllerTest {
                 List.of(),
                 TypeEquipement.BARRE,
                 NiveauDifficulte.INTERMEDIAIRE,
-                null, null, null);
+                null, null, null, null);
     }
 
     // ── GET /api/exercices ────────────────────────────────────────────────────

@@ -676,7 +676,8 @@ public class WorkoutTools {
             }
 
             String nomCanonique = def.nomFr() != null ? def.nomFr() : def.nomEn();
-            exerciceDtos.add(new ExerciceDto(null, nomCanonique, null, def.id(), series, null, null, null, false));
+            exerciceDtos
+                    .add(new ExerciceDto(null, nomCanonique, null, def.id(), series, null, null, null, null, false));
             resumeExos.add(nomCanonique + " (" + nbSeries + "x" + reps + ")");
         }
 

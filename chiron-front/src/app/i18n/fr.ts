@@ -263,6 +263,7 @@ export const fr: Record<string, string> = {
   'equip.ELASTIQUE': 'Élastiques',
   'equip.BARRE_FIXE': 'Barre fixe',
   'equip.ANNEAUX': 'Anneaux',
+  'equip.WOD': 'WOD',
   'equip.AUTRE': 'Autre',
 
   // ── Journal / Annales ──
@@ -283,6 +284,7 @@ export const fr: Record<string, string> = {
   'journal.speed': 'Vitesse',
   'journal.incline': 'Pente',
   'journal.distance': 'Distance',
+  'journal.wodRounds': 'tours en {{minutes}} min',
   'journal.drop': 'Dég.',
   'journal.addSet': 'Ajouter une série',
   'journal.removeSet': 'Supprimer la série',
@@ -331,6 +333,23 @@ export const fr: Record<string, string> = {
   'exCard.noteOptional': 'Note (facultatif)',
   'exCard.notePh': 'Ressenti, point à savoir, condition…',
   'exCard.note': 'Note',
+  'exCard.wodFormat': 'AMRAP {{minutes}} min — un tour',
+  'exCard.wodRounds': 'tours',
+  'exCard.wodStart': 'Commencer',
+  'exCard.wodRestart': 'Recommencer',
+
+  'wod.title': 'WOD',
+  'wod.start': 'Démarrer',
+  'wod.rounds': 'tours',
+  'wod.record': 'Record : {{tours}} tours',
+  'wod.newRecord': 'Nouveau record !',
+  'wod.removeRound': 'Retirer un tour',
+  'wod.backToSession': 'Retour à la séance',
+  'wod.confirmLeave':
+    'Le WOD est en cours. Quitter maintenant enregistrera le score actuel. Continuer ?',
+  'wod.cindy.pullups': '5 tractions',
+  'wod.cindy.pushups': '10 pompes',
+  'wod.cindy.squats': '15 squats',
 
   // Exercise picker
   'picker.add': 'Ajouter',

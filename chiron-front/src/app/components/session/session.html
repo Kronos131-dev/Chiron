@@ -52,6 +52,8 @@
           [index]="i"
           [isDragging]="dragFromIdx() === i"
           [isDropTarget]="dragOverIdx() === i && dragFromIdx() !== i"
+          [canStartWod]="!isReadonly()"
+          (startWod)="demarrerWod(exo)"
           (remove)="supprimerExercice(exo.id)"
           (exoDragStart)="onExoDragStart($event.event, i, $event.cardEl)"
           (exoDragOver)="onExoDragOver($event, i)"

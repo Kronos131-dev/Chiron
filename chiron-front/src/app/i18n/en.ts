@@ -259,6 +259,7 @@ export const en: Record<string, string> = {
   'equip.ELASTIQUE': 'Bands',
   'equip.BARRE_FIXE': 'Pull-up bar',
   'equip.ANNEAUX': 'Rings',
+  'equip.WOD': 'WOD',
   'equip.AUTRE': 'Other',
 
   // ── Journal / Annals ──
@@ -279,6 +280,7 @@ export const en: Record<string, string> = {
   'journal.speed': 'Speed',
   'journal.incline': 'Incline',
   'journal.distance': 'Distance',
+  'journal.wodRounds': 'rounds in {{minutes}} min',
   'journal.drop': 'Drop',
   'journal.addSet': 'Add a set',
   'journal.removeSet': 'Remove set',
@@ -327,6 +329,22 @@ export const en: Record<string, string> = {
   'exCard.noteOptional': 'Note (optional)',
   'exCard.notePh': 'How it felt, things to note, condition…',
   'exCard.note': 'Note',
+  'exCard.wodFormat': 'AMRAP {{minutes}} min — one round',
+  'exCard.wodRounds': 'rounds',
+  'exCard.wodStart': 'Start',
+  'exCard.wodRestart': 'Start again',
+
+  'wod.title': 'WOD',
+  'wod.start': 'Start',
+  'wod.rounds': 'rounds',
+  'wod.record': 'Record: {{tours}} rounds',
+  'wod.newRecord': 'New record!',
+  'wod.removeRound': 'Remove a round',
+  'wod.backToSession': 'Back to session',
+  'wod.confirmLeave': 'The WOD is running. Leaving now will save the current score. Continue?',
+  'wod.cindy.pullups': '5 pull-ups',
+  'wod.cindy.pushups': '10 push-ups',
+  'wod.cindy.squats': '15 air squats',
 
   // Exercise picker
   'picker.add': 'Add',

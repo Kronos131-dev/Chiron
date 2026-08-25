@@ -8,6 +8,7 @@ import com.kronos.chiron.exercice.model.ExerciceDefinition;
 import com.kronos.chiron.exercice.model.MuscleGroup;
 import com.kronos.chiron.exercice.model.NiveauDifficulte;
 import com.kronos.chiron.exercice.model.TypeEquipement;
+import com.kronos.chiron.seance.model.WodType;
 
 import com.kronos.chiron.exercice.dto.ExerciceDefinitionDto;
 import com.kronos.chiron.exercice.persistence.ExerciceDefinitionRepository;
@@ -161,6 +162,36 @@ class ExerciceDefinitionServiceTest {
 
         assertThat(dto.imageUrl()).isNull();
         assertThat(dto.imageUrl2()).isNull();
+    }
+
+    @Test
+    void toDto_wodDefinition_exposesWodType() {
+        ExerciceDefinition def = ExerciceDefinition.builder()
+                .id(9L)
+                .nomFr("Cindy")
+                .nomEn("Cindy")
+                .musclePrincipal(MuscleGroup.CARDIO)
+                .typeEquipement(TypeEquipement.WOD)
+                .difficulte(NiveauDifficulte.AVANCE)
+                .wodType(WodType.CINDY)
+                .musclesSecondaires(List.of())
+                .build();
+        when(repository.search(null, "%", null, null, null)).thenReturn(List.of(def));
+
+        ExerciceDefinitionDto dto = service.search(null, null, null, null).get(0);
+
+        assertThat(dto.wodType()).isEqualTo(WodType.CINDY);
+        assertThat(dto.typeEquipement()).isEqualTo(TypeEquipement.WOD);
+    }
+
+    @Test
+    void toDto_standardDefinition_wodTypeIsNull() {
+        ExerciceDefinition def = buildDef(3L, "Squat barre", "Barbell Squat", MuscleGroup.QUADRICEPS);
+        when(repository.search(null, "%", null, null, null)).thenReturn(List.of(def));
+
+        ExerciceDefinitionDto dto = service.search(null, null, null, null).get(0);
+
+        assertThat(dto.wodType()).isNull();
     }
 
     // ── streamImage ───────────────────────────────────────────────────────────

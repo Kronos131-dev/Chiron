@@ -67,6 +67,11 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
+    path: 'session/:id/wod/:exoId',
+    loadComponent: () => import('./components/wod/wod').then(m => m.Wod),
+    canActivate: [authGuard]
+  },
+  {
     path: 'profile/:id',
     component: Profile,
     canActivate: [authGuard]

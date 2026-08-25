@@ -23,7 +23,7 @@ describe('ProgrammeBuilder', () => {
     return {
       id, nomFr: nom, nomEn: nom, imageUrl: null, imageUrl2: null,
       musclePrincipal: null, musclesSecondaires: [], typeEquipement: null,
-      difficulte: null, descriptionFr: null, descriptionEn: null, cardioType: null,
+      difficulte: null, descriptionFr: null, descriptionEn: null, cardioType: null, wodType: null,
     };
   }
 

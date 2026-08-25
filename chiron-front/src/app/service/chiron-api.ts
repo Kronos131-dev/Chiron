@@ -16,6 +16,7 @@ export interface ExerciceDefinitionDto {
   descriptionFr: string | null;
   descriptionEn: string | null;
   cardioType: string | null;
+  wodType: string | null;
 }
 
 /** Préférences de calcul du tonnage de l'utilisateur (conventions de saisie du poids). */

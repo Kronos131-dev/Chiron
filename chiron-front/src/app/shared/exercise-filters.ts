@@ -34,6 +34,7 @@ export const EQUIPEMENTS: FilterChip[] = [
   { key: 'POULIE',         label: 'equip.POULIE' },
   { key: 'KETTLEBELL',     label: 'equip.KETTLEBELL' },
   { key: 'ELASTIQUE',      label: 'equip.ELASTIQUE' },
+  { key: 'WOD',            label: 'equip.WOD' },
 ];
 
 export const DIFFICULTES: FilterChip[] = [
