@@ -41,9 +41,11 @@ export class ExerciceCardComponent implements OnInit {
   /** Indique s'il existe un exo suivant — désactive le bouton "Grouper" sur le dernier. */
   @Input() hasNext = false;
   @Input() canStartWod = false;
+  @Input() canStartCourse = false;
 
   @Output() remove = new EventEmitter<void>();
   @Output() startWod = new EventEmitter<void>();
+  @Output() startCourse = new EventEmitter<void>();
   @Output() groupWithNext = new EventEmitter<BlockType>();
   @Output() exoDragStart = new EventEmitter<{ event: DragEvent; cardEl: HTMLElement }>();
   @Output() exoDragOver  = new EventEmitter<DragEvent>();
@@ -68,6 +70,14 @@ export class ExerciceCardComponent implements OnInit {
 
   isWod(): boolean {
     return this.spec() !== null;
+  }
+
+  isCourse(): boolean {
+    return this.exercice.cardioType === 'COURSE_EXTERIEUR';
+  }
+
+  distanceCourse(): number | null {
+    return this.exercice.series[0]?.distanceM ?? null;
   }
 
   spec(): WodSpec | null {

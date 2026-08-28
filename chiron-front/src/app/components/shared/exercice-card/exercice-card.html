@@ -243,6 +243,40 @@
         }
       }
     </div>
+    } @else if (isCourse()) {
+    <div class="bg-slate-950/40 border border-secondary/20 rounded-lg p-4 mb-5">
+      <p class="text-secondary text-[9px] font-bold tracking-[0.2em] uppercase mb-3">
+        {{ 'exCard.courseTracked' | t }}
+      </p>
+      <div class="grid grid-cols-3 gap-3">
+        <div class="text-center">
+          <p class="text-on-surface-variant text-[9px] font-bold tracking-widest uppercase">{{ 'exCard.distanceM' | t }}</p>
+          <p class="font-headline text-xl font-black text-white tabular-nums mt-0.5">{{ distanceCourse() !== null ? ((distanceCourse()! / 1000) | number: '1.2-2') : '—' }}</p>
+        </div>
+        <div class="text-center">
+          <p class="text-on-surface-variant text-[9px] font-bold tracking-widest uppercase">{{ 'exCard.durationMin' | t }}</p>
+          <p class="font-headline text-xl font-black text-white tabular-nums mt-0.5">{{ exercice.series[0]?.dureeMin ? (exercice.series[0].dureeMin! | number: '1.0-0') : '—' }}</p>
+        </div>
+        <div class="text-center">
+          <p class="text-on-surface-variant text-[9px] font-bold tracking-widest uppercase">{{ 'exCard.speedKmh' | t }}</p>
+          <p class="font-headline text-xl font-black text-white tabular-nums mt-0.5">{{ exercice.series[0]?.allureKmh ? (exercice.series[0].allureKmh! | number: '1.1-1') : '—' }}</p>
+        </div>
+      </div>
+
+      @if (exercice.series[0]?.calories) {
+        <p class="text-secondary text-xs font-bold mt-3 flex items-center gap-1">
+          <span>🔥</span> {{ exercice.series[0].calories! | number: '1.0-0' }} kcal
+        </p>
+      }
+    </div>
+
+    @if (canStartCourse) {
+      <button type="button" (click)="startCourse.emit()"
+              class="w-full bg-gradient-to-r from-secondary to-amber-500 text-slate-950 font-black text-sm px-6 py-4 rounded-xl uppercase tracking-[0.2em] hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-secondary/25 flex items-center justify-center gap-2">
+        <span class="material-symbols-outlined text-xl">directions_run</span>
+        {{ (distanceCourse() ? 'exCard.courseRestart' : 'exCard.courseStart') | t }}
+      </button>
+    }
     } @else {
     <!-- Cardio: paramètres d'effort -->
     <div class="space-y-3 mb-5">
@@ -297,7 +331,7 @@
     }
 
     <!-- Add Set Button -->
-    @if (!readonly && !isWod()) {
+    @if (!readonly && !isWod() && !isCourse()) {
       <button (click)="ajouterSerie()"
               class="w-full border border-dashed border-white/10 rounded py-3 flex items-center justify-center gap-2 text-on-surface-variant text-[10px] font-bold tracking-widest uppercase hover:text-secondary hover:bg-white/5 transition-colors">
         <span class="text-lg leading-none">+</span> {{ isCardio() ? ('exCard.addInterval' | t) : ('exCard.addSet' | t) }}

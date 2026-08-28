@@ -1,3 +1,5 @@
+import { reglerSessionAudio } from './session-audio';
+
 export type NomStrategie = 'audioElement' | 'webAudio' | 'webLock' | 'wakeLock';
 
 export interface Survie {
@@ -47,6 +49,10 @@ function bouclePresqueSilencieuse(): Blob {
 }
 
 function survieParAudioElement(): Survie | null {
+  // WHY: sans ce réglage la boucle prend le focus audio exclusif et met en pause l'application
+  // de musique de l'athlète. « ambient » demande à s'y mélanger — c'est le seul levier que le
+  // web expose, et il reste sans effet sur les navigateurs qui ignorent audioSession.
+  reglerSessionAudio('ambient');
   const url = URL.createObjectURL(bouclePresqueSilencieuse());
   const element = new Audio(url);
   element.loop = true;
@@ -66,6 +72,7 @@ function survieParWebAudio(): Survie | null {
     (window as any).AudioContext ?? (window as any).webkitAudioContext;
   if (!Ctor) return null;
 
+  reglerSessionAudio('ambient');
   const contexte = new Ctor();
   contexte.resume().catch(() => {});
   const oscillateur = contexte.createOscillator();

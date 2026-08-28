@@ -72,6 +72,11 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'session/:id/course/:exoId',
+    loadComponent: () => import('./components/course/course').then((m) => m.Course),
+    canActivate: [authGuard],
+  },
+  {
     path: 'profile/:id',
     component: Profile,
     canActivate: [authGuard],

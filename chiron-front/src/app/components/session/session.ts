@@ -236,6 +236,7 @@ export class Session implements OnInit, OnDestroy {
             allureKmh: serie.allureKmh ?? null,
             pentePct: serie.pentePct ?? null,
             calories: serie.calories ?? null,
+            courseTraceId: serie.courseTraceId ?? null,
             degressifs: serie.degressifs
               ? serie.degressifs.map((deg: any) => ({
                   id: deg.id || generateFormId(),
@@ -309,6 +310,12 @@ export class Session implements OnInit, OnDestroy {
     if (this.isReadonly() || !this.routineId) return;
     this.persistActiveSession();
     this.router.navigate(['/session', this.routineId, 'wod', exo.id]);
+  }
+
+  demarrerCourse(exo: ExerciceForm) {
+    if (this.isReadonly() || !this.routineId) return;
+    this.persistActiveSession();
+    this.router.navigate(['/session', this.routineId, 'course', exo.id]);
   }
 
   /** Append a blank custom (free-text) exercise and close the picker. */
@@ -454,11 +461,20 @@ export class Session implements OnInit, OnDestroy {
         distanceM: serie.distanceM != null ? Number(serie.distanceM) : null,
         allureKmh: serie.allureKmh != null ? Number(serie.allureKmh) : null,
         pentePct: serie.pentePct != null ? Number(serie.pentePct) : null,
+        courseTraceId: serie.courseTraceId ?? null,
         degressifs: serie.degressifs.map((deg) => ({
           poids: deg.poids != null ? Number(deg.poids) : 0,
           reps: deg.reps != null ? Number(deg.reps) : 0,
         })),
       })),
+    }));
+
+    // WHY: ce même payload part deux fois — une fois dans le journal, une fois pour remettre à
+    // jour le modèle de programme. Une trace GPS appartient à la sortie du jour, pas au modèle :
+    // l'y laisser rattacherait la course d'aujourd'hui à toutes celles de demain.
+    const exercicesModele = exercicesPayload.map((exo) => ({
+      ...exo,
+      series: exo.series.map(({ courseTraceId, ...serie }) => serie),
     }));
 
     // Always create a new historical session entry (the user can run the same programme
@@ -496,7 +512,7 @@ export class Session implements OnInit, OnDestroy {
             id: parseInt(this.routineId, 10),
             titre: this.titreRoutine(),
             historique: false,
-            exercices: exercicesPayload,
+            exercices: exercicesModele,
           };
           this.chironApi.sauvegarderProgramme(username, templateDto).subscribe({
             error: () => this.flashStatus(this.i18n.t('session.modelUpdateFailed')),

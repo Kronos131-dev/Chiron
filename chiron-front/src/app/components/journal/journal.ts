@@ -1,13 +1,17 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ChironApi, SanteActiviteDto } from '../../service/chiron-api';
+import { ChironApi, CourseTraceDto, SanteActiviteDto } from '../../service/chiron-api';
 import { AuthService } from '../../service/auth.service';
 import { I18nService } from '../../service/i18n.service';
 import { TranslatePipe } from '../../service/translate.pipe';
 import { Router } from '@angular/router';
 import { HeaderComponent } from '../shared/header/header';
 import { durationMinutes, formatDuration } from '../../util/duration';
+import { formaterAllure, formaterChrono } from '../../util/allure';
+import { TraceSvg, projeterTrace } from '../../util/trace-svg';
+
+const COTE_TRACE = 320;
 
 /** ISO-8601 week number (lundi = 1er jour de la semaine, semaine 1 = celle du premier jeudi). */
 function getIsoWeekNumber(d: Date): number {
@@ -48,6 +52,10 @@ export class Journal implements OnInit {
 
   /** True while the save request is in flight. */
   isSaving = signal(false);
+
+  tracesChargees = signal<Map<number, CourseTraceDto>>(new Map());
+
+  traceDepliee = signal<number | null>(null);
 
   /** Transient status message (success / error). */
   saveStatus = signal<string | null>(null);
@@ -299,5 +307,47 @@ export class Journal implements OnInit {
 
   hasZonesActivite(activite: SanteActiviteDto): boolean {
     return this.zonesActivite(activite).some(z => z.minutes > 0);
+  }
+
+  // WHY: une trace pèse quelques dizaines de milliers de points. Elle n'est demandée qu'au
+  // moment où l'athlète veut la voir, et jamais deux fois pour la même sortie.
+  basculerTrace(courseTraceId: number): void {
+    if (this.traceDepliee() === courseTraceId) {
+      this.traceDepliee.set(null);
+      return;
+    }
+    this.traceDepliee.set(courseTraceId);
+    if (this.tracesChargees().has(courseTraceId)) return;
+
+    this.chironApi.getTraceCourse(courseTraceId).subscribe({
+      next: (trace) => {
+        this.tracesChargees.update((cache) => new Map(cache).set(courseTraceId, trace));
+      },
+      error: () => this.traceDepliee.set(null)
+    });
+  }
+
+  trace(courseTraceId: number): CourseTraceDto | undefined {
+    return this.tracesChargees().get(courseTraceId);
+  }
+
+  traceSvg(courseTraceId: number): TraceSvg {
+    const trace = this.trace(courseTraceId);
+    return projeterTrace(trace?.points ?? [], COTE_TRACE);
+  }
+
+  couleurSegment(courseTraceId: number, allureKmh: number): string {
+    const { allureMinKmh, allureMaxKmh } = this.traceSvg(courseTraceId);
+    if (allureMaxKmh <= allureMinKmh) return 'hsl(200 90% 60%)';
+    const ratio = Math.min(1, Math.max(0, (allureKmh - allureMinKmh) / (allureMaxKmh - allureMinKmh)));
+    return `hsl(${Math.round(220 - 220 * ratio)} 90% ${Math.round(52 + 12 * ratio)}%)`;
+  }
+
+  allureFormatee(kmh: number): string {
+    return formaterAllure(kmh);
+  }
+
+  chronoFormate(secondes: number): string {
+    return formaterChrono(secondes);
   }
 }

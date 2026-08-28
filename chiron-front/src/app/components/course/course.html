@@ -1,0 +1,331 @@
+<app-header [title]="'course.title' | t" [showBack]="false"></app-header>
+
+<main class="min-h-screen pt-20 pb-10 bg-slate-950 heroic-texture flex flex-col items-center px-5">
+  <p class="text-secondary text-[10px] font-bold tracking-[0.25em] uppercase">
+    {{ exercice?.nom }}
+  </p>
+
+  @if (!termine()) {
+    <p
+      class="font-headline text-7xl md:text-8xl font-black tabular-nums tracking-tight leading-none mt-3 text-white"
+    >
+      {{ distanceKm() }}<span class="text-2xl text-on-surface-variant ml-2">km</span>
+    </p>
+
+    <div class="grid grid-cols-2 gap-3 w-full max-w-sm mt-6">
+      <div class="bg-slate-950/50 border border-white/5 rounded-xl p-4 text-center">
+        <p class="text-on-surface-variant text-[9px] font-bold tracking-[0.2em] uppercase">
+          {{ 'course.duration' | t }}
+        </p>
+        <p class="font-headline text-3xl font-black text-white tabular-nums mt-1">{{ chrono() }}</p>
+      </div>
+      <div
+        class="bg-slate-950/50 border rounded-xl p-4 text-center transition-colors"
+        [class.border-white/5]="!tropLent() && !tropRapide()"
+        [class.border-amber-400/50]="tropLent()"
+        [class.border-sky-400/50]="tropRapide()"
+      >
+        <p class="text-on-surface-variant text-[9px] font-bold tracking-[0.2em] uppercase">
+          {{ 'course.pace' | t }}
+        </p>
+        <p
+          class="font-headline text-3xl font-black tabular-nums mt-1"
+          [class.text-white]="!tropLent() && !tropRapide()"
+          [class.text-amber-400]="tropLent()"
+          [class.text-sky-400]="tropRapide()"
+        >
+          {{ allureCourante() }}
+        </p>
+      </div>
+    </div>
+
+    <p class="text-on-surface-variant text-[10px] font-bold tracking-[0.2em] uppercase mt-3">
+      {{ 'course.avgPace' | t: { allure: allureMoyenne() } }}
+    </p>
+
+    <div
+      class="w-full max-w-sm mt-6 bg-slate-950/50 border border-white/5 rounded-xl p-4 flex items-center justify-between gap-3"
+    >
+      <button
+        type="button"
+        (click)="ralentirCible()"
+        class="w-11 h-11 rounded-full border border-white/15 text-on-surface-variant hover:text-white hover:border-white/40 transition-colors flex items-center justify-center flex-shrink-0"
+        [attr.aria-label]="'course.targetSlower' | t"
+      >
+        <span class="material-symbols-outlined text-2xl leading-none">remove</span>
+      </button>
+
+      <div class="text-center">
+        <p class="text-secondary text-[9px] font-bold tracking-[0.2em] uppercase">
+          {{ 'course.target' | t }}
+        </p>
+        <input
+          type="text"
+          inputmode="numeric"
+          [ngModel]="cibleSaisie()"
+          (ngModelChange)="cibleSaisie.set($event)"
+          (blur)="validerCibleSaisie()"
+          (keyup.enter)="validerCibleSaisie()"
+          [placeholder]="'course.targetPlaceholder' | t"
+          [attr.aria-label]="'course.target' | t"
+          class="course-cible-saisie font-headline text-2xl font-black text-secondary tabular-nums leading-tight bg-transparent border-b border-secondary/30 focus:border-secondary outline-none text-center w-24"
+        />
+        @if (cibleMinParKm() !== null) {
+          <button
+            type="button"
+            (click)="effacerCible()"
+            class="block mx-auto text-on-surface-variant text-[9px] font-bold tracking-widest uppercase hover:text-white transition-colors"
+          >
+            {{ 'course.clearTarget' | t }}
+          </button>
+        }
+      </div>
+
+      <button
+        type="button"
+        (click)="accelererCible()"
+        class="w-11 h-11 rounded-full border border-white/15 text-on-surface-variant hover:text-white hover:border-white/40 transition-colors flex items-center justify-center flex-shrink-0"
+        [attr.aria-label]="'course.targetFaster' | t"
+      >
+        <span class="material-symbols-outlined text-2xl leading-none">add</span>
+      </button>
+    </div>
+
+    <p class="text-on-surface-variant text-[10px] font-bold tracking-[0.15em] uppercase mt-4">
+      @if (tracker.erreurGps()) {
+        <span class="text-red-400">{{ 'course.gpsError' | t }}</span>
+      } @else if (tracker.signalPerdu()) {
+        <span class="text-amber-400">{{ 'course.gpsLost' | t }}</span>
+      } @else if (tracker.precisionM() === null) {
+        {{ 'course.gpsSearching' | t }}
+      } @else {
+        {{ 'course.gpsAccuracy' | t: { metres: tracker.precisionM()! } }}
+      }
+    </p>
+  }
+
+  @if (!demarree()) {
+    <button
+      type="button"
+      class="course-cible mt-8 rounded-full flex items-center justify-center border-4 border-secondary bg-secondary/10 transition-colors"
+      (pointerdown)="demarrer()"
+    >
+      <span
+        class="font-headline text-3xl font-black text-secondary uppercase tracking-[0.15em] text-center px-6"
+      >
+        {{ 'course.start' | t }}
+      </span>
+    </button>
+
+    <p class="text-on-surface-variant text-[10px] leading-relaxed text-center max-w-xs mt-6">
+      {{ 'course.startHint' | t }}
+    </p>
+
+    <button
+      type="button"
+      (click)="basculerReglages()"
+      class="mt-6 text-secondary text-[10px] font-bold tracking-[0.2em] uppercase hover:text-white transition-colors flex items-center gap-1"
+    >
+      <span class="material-symbols-outlined text-base">headphones</span>
+      {{ 'course.headsetSettings' | t }}
+    </button>
+
+    @if (reglagesOuverts()) {
+      <div
+        class="w-full max-w-sm mt-4 bg-slate-950/50 border border-white/5 rounded-xl p-4 space-y-3"
+      >
+        <p class="text-on-surface-variant text-[10px] leading-relaxed">
+          {{ 'course.headsetHint' | t }}
+        </p>
+        @for (bouton of boutonsCasque; track bouton) {
+          <div class="flex items-center justify-between gap-3">
+            <span class="text-on-surface text-xs font-bold">
+              {{ 'course.button.' + bouton | t }}
+            </span>
+            <select
+              [ngModel]="mappingCasque()[bouton]"
+              (ngModelChange)="changerMappingCasque(bouton, $event)"
+              class="bg-slate-950/80 border border-white/10 rounded p-2 text-white text-xs outline-none focus:border-secondary/50 transition-colors"
+            >
+              @for (action of actionsCasque; track action) {
+                <option [value]="action">{{ 'course.action.' + action | t }}</option>
+              }
+            </select>
+          </div>
+        }
+      </div>
+    }
+  } @else if (!termine()) {
+    <div class="flex items-center gap-4 mt-8">
+      <button
+        type="button"
+        (click)="basculerPause()"
+        class="w-20 h-20 rounded-full border-2 border-white/15 bg-slate-950/60 text-white flex items-center justify-center active:scale-95 transition-transform"
+        [attr.aria-label]="(enPause() ? 'course.resume' : 'course.pause') | t"
+      >
+        <span class="material-symbols-outlined text-4xl leading-none">
+          {{ enPause() ? 'play_arrow' : 'pause' }}
+        </span>
+      </button>
+
+      @if (microDisponible()) {
+        <!-- WHY: pointerdown plutôt que click — sur mobile le click arrive après un délai que
+             l'athlète en mouvement lit comme un bouton mort. -->
+        <button
+          type="button"
+          (pointerdown)="commencerEcoute()"
+          (pointerup)="terminerEcoute()"
+          (pointercancel)="terminerEcoute()"
+          (pointerleave)="terminerEcoute()"
+          class="course-micro w-20 h-20 rounded-full border-2 flex items-center justify-center active:scale-95 transition-all"
+          [class.border-white/15]="!ecoute()"
+          [class.bg-slate-950/60]="!ecoute()"
+          [class.text-on-surface-variant]="!ecoute()"
+          [class.border-secondary]="ecoute()"
+          [class.bg-secondary/20]="ecoute()"
+          [class.text-secondary]="ecoute()"
+          [class.animate-pulse]="ecoute()"
+          [attr.aria-label]="'course.listen' | t"
+        >
+          <span class="material-symbols-outlined text-4xl leading-none">mic</span>
+        </button>
+      }
+    </div>
+
+    @if (microDisponible()) {
+      <p class="text-on-surface-variant text-[10px] font-bold tracking-[0.15em] uppercase mt-3">
+        {{ 'course.pushToTalkHint' | t }}
+      </p>
+    }
+
+    @if (transcript()) {
+      <p
+        class="text-center text-sm mt-3 max-w-sm"
+        [class.text-on-surface]="commandeComprise() !== false"
+        [class.text-amber-400]="commandeComprise() === false"
+      >
+        « {{ transcript() }} »
+      </p>
+    }
+
+    <button
+      type="button"
+      (click)="terminer()"
+      class="w-full max-w-sm mt-8 bg-gradient-to-r from-emerald-500 to-emerald-700 text-white font-bold text-sm px-6 py-4 rounded-xl uppercase tracking-widest active:scale-95 transition-all shadow-lg shadow-emerald-500/25 flex items-center justify-center gap-2"
+    >
+      <span class="material-symbols-outlined text-lg">flag</span>
+      {{ 'course.finish' | t }}
+    </button>
+
+    <button
+      type="button"
+      (click)="quitter()"
+      class="mt-6 text-on-surface-variant text-[10px] font-bold tracking-[0.2em] uppercase hover:text-white transition-colors"
+    >
+      {{ 'course.backToSession' | t }}
+    </button>
+  } @else {
+    <p class="font-headline text-6xl font-black tabular-nums text-emerald-400 leading-none mt-4">
+      {{ distanceKm() }}<span class="text-2xl text-emerald-400/70 ml-2">km</span>
+    </p>
+
+    <div class="grid grid-cols-3 gap-3 w-full max-w-sm mt-6">
+      <div class="bg-slate-950/50 border border-white/5 rounded-xl p-3 text-center">
+        <p class="text-on-surface-variant text-[9px] font-bold tracking-[0.15em] uppercase">
+          {{ 'course.duration' | t }}
+        </p>
+        <p class="font-headline text-xl font-black text-white tabular-nums mt-1">{{ chrono() }}</p>
+      </div>
+      <div class="bg-slate-950/50 border border-white/5 rounded-xl p-3 text-center">
+        <p class="text-on-surface-variant text-[9px] font-bold tracking-[0.15em] uppercase">
+          {{ 'course.pace' | t }}
+        </p>
+        <p class="font-headline text-xl font-black text-white tabular-nums mt-1">
+          {{ allureMoyenne() }}
+        </p>
+      </div>
+      <div class="bg-slate-950/50 border border-white/5 rounded-xl p-3 text-center">
+        <p class="text-on-surface-variant text-[9px] font-bold tracking-[0.15em] uppercase">
+          {{ 'course.elevation' | t }}
+        </p>
+        <p class="font-headline text-xl font-black text-white tabular-nums mt-1">
+          {{ resume()?.denivelePositifM ?? 0 | number: '1.0-0' }}
+        </p>
+      </div>
+    </div>
+
+    @if (enregistrement()) {
+      <p class="text-on-surface-variant text-[10px] font-bold tracking-[0.2em] uppercase mt-5">
+        {{ 'course.saving' | t }}
+      </p>
+    } @else if (erreurEnregistrement()) {
+      <div class="w-full max-w-sm mt-5 text-center">
+        <p class="text-red-400 text-[10px] font-bold tracking-[0.15em] uppercase">
+          {{ 'course.saveError' | t }}
+        </p>
+        <button
+          type="button"
+          (click)="reessayerEnregistrement()"
+          class="mt-2 text-secondary text-[10px] font-bold tracking-[0.2em] uppercase hover:text-white transition-colors"
+        >
+          {{ 'course.retry' | t }}
+        </button>
+      </div>
+    }
+
+    @if (trace().segments.length) {
+      <div class="w-full max-w-sm mt-6 bg-slate-950/50 border border-white/5 rounded-xl p-4">
+        <p class="text-secondary text-[9px] font-bold tracking-[0.2em] uppercase mb-3">
+          {{ 'course.trace' | t }}
+        </p>
+        <svg
+          class="w-full h-auto"
+          [attr.viewBox]="'0 0 ' + trace().largeur + ' ' + trace().hauteur"
+          [attr.aria-label]="'course.trace' | t"
+        >
+          @for (segment of trace().segments; track $index) {
+            <path
+              [attr.d]="segment.d"
+              [attr.stroke]="couleurSegment(segment.allureKmh)"
+              stroke-width="3"
+              stroke-linecap="round"
+              fill="none"
+            />
+          }
+        </svg>
+      </div>
+    }
+
+    @if (splits().length) {
+      <div class="w-full max-w-sm mt-4 bg-slate-950/50 border border-white/5 rounded-xl p-4">
+        <p class="text-secondary text-[9px] font-bold tracking-[0.2em] uppercase mb-3">
+          {{ 'course.splits' | t }}
+        </p>
+        @for (split of splits(); track split.kilometre) {
+          <div
+            class="flex items-baseline justify-between py-1.5 border-b border-white/5 last:border-0"
+          >
+            <span class="text-on-surface-variant text-[10px] font-bold tracking-widest uppercase">
+              {{ 'course.km' | t: { km: split.kilometre } }}
+            </span>
+            <span class="font-headline text-lg font-black text-white tabular-nums">
+              {{ allureSplit(split.allureKmh) }}
+            </span>
+            <span class="text-on-surface-variant text-xs tabular-nums">
+              {{ dureeSplit(split.dureeS) }}
+            </span>
+          </div>
+        }
+      </div>
+    }
+
+    <button
+      type="button"
+      (click)="retourSeance()"
+      class="w-full max-w-sm mt-8 bg-gradient-to-r from-blue-500 to-blue-700 text-white font-bold text-sm px-6 py-4 rounded-xl uppercase tracking-widest active:scale-95 transition-all shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2"
+    >
+      <span class="material-symbols-outlined text-lg">arrow_back</span>
+      {{ 'course.backToSession' | t }}
+    </button>
+  }
+</main>

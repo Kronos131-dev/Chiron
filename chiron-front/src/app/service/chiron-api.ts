@@ -8,6 +8,9 @@ export interface CoursePointDto {
   lon: number;
   t: number;
   alt: number | null;
+  // WHY: drapeau de reprise, lu par le serveur : le segment qui atteint ce point a été
+  // parcouru pendant une pause et ne compte ni en distance, ni en durée, ni dans les splits.
+  coupure?: boolean;
 }
 
 export interface CourseSplitDto {

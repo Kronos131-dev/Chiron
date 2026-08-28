@@ -1,0 +1,18 @@
+/* WHY: mêmes protections que la cible du WOD — sans elles, un appui en pleine foulée
+   déclenche la sélection de texte, le zoom double-tap et le halo de tap Android. */
+.course-cible,
+.course-micro {
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.course-cible {
+  width: min(60vw, 16rem);
+  height: min(60vw, 16rem);
+}
+
+.course-cible:active {
+  transform: scale(0.97);
+}

@@ -218,6 +218,44 @@
                                   @if (serie.distanceM) { <span><span class="text-on-surface-variant">{{ 'journal.distance' | t }}</span> {{ serie.distanceM }} m</span> }
                                   @if (serie.calories) { <span class="text-secondary font-bold ml-auto flex items-center gap-1"><span>🔥</span> {{ serie.calories | number:'1.0-0' }} kcal</span> }
                                 </div>
+
+                                @if (serie.courseTraceId) {
+                                  <button type="button" (click)="basculerTrace(serie.courseTraceId)"
+                                          class="text-secondary text-[10px] font-bold tracking-[0.2em] uppercase hover:text-white transition-colors">
+                                    {{ (traceDepliee() === serie.courseTraceId ? 'journal.hideTrace' : 'journal.showTrace') | t }}
+                                  </button>
+
+                                  @if (traceDepliee() === serie.courseTraceId) {
+                                    @if (trace(serie.courseTraceId); as trace) {
+                                      <div class="bg-slate-900/30 rounded p-3 space-y-3">
+                                        @if (traceSvg(serie.courseTraceId).segments.length) {
+                                          <svg class="w-full h-auto max-h-64"
+                                               [attr.viewBox]="'0 0 ' + traceSvg(serie.courseTraceId).largeur + ' ' + traceSvg(serie.courseTraceId).hauteur"
+                                               [attr.aria-label]="'journal.trace' | t">
+                                            @for (segment of traceSvg(serie.courseTraceId).segments; track $index) {
+                                              <path [attr.d]="segment.d" [attr.stroke]="couleurSegment(serie.courseTraceId, segment.allureKmh)"
+                                                    stroke-width="3" stroke-linecap="round" fill="none" />
+                                            }
+                                          </svg>
+                                        }
+
+                                        <p class="text-on-surface-variant text-[10px] font-bold tracking-[0.15em] uppercase">
+                                          {{ 'journal.elevation' | t }} {{ trace.denivelePositifM | number:'1.0-0' }} m
+                                        </p>
+
+                                        @for (split of trace.splits; track split.kilometre) {
+                                          <div class="flex items-baseline justify-between border-b border-white/5 last:border-0 py-1">
+                                            <span class="text-on-surface-variant text-[10px] font-bold tracking-widest uppercase">{{ 'journal.km' | t: { km: split.kilometre } }}</span>
+                                            <span class="font-headline text-base font-black text-white tabular-nums">{{ allureFormatee(split.allureKmh) }}</span>
+                                            <span class="text-on-surface-variant text-xs tabular-nums">{{ chronoFormate(split.dureeS) }}</span>
+                                          </div>
+                                        }
+                                      </div>
+                                    } @else {
+                                      <p class="text-on-surface-variant text-[10px] font-bold tracking-[0.2em] uppercase">{{ 'journal.loadingTrace' | t }}</p>
+                                    }
+                                  }
+                                }
                               }
                             </div>
                           } @else {
