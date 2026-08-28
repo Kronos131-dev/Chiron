@@ -7,6 +7,7 @@ import java.time.Clock;
 import static com.kronos.chiron.core.exceptions.ErrorFactory.forbidden;
 import static com.kronos.chiron.core.exceptions.ErrorFactory.notFound;
 
+import com.kronos.chiron.course.persistence.CourseTraceRepository;
 import com.kronos.chiron.seance.service.CardioCalorieService;
 import com.kronos.chiron.sante.service.ActiviteEnrichissementService;
 
@@ -48,6 +49,7 @@ public class ProgrammeServiceImpl implements ProgrammeService {
     private final ExerciceDefinitionRepository exerciceDefinitionRepository;
     private final CardioCalorieService cardioCalorieService;
     private final ActiviteEnrichissementService activiteEnrichissementService;
+    private final CourseTraceRepository courseTraceRepository;
 
     private final Clock clock;
     @Transactional
@@ -150,6 +152,7 @@ public class ProgrammeServiceImpl implements ProgrammeService {
                         serie.setDistanceM(serieDto.distanceM());
                         serie.setAllureKmh(serieDto.allureKmh());
                         serie.setPentePct(serieDto.pentePct());
+                        serie.setCourseTraceId(traceAppartenant(serieDto.courseTraceId(), targetUser));
                         if (cardioType != null) {
                             serie.setCalories(cardioCalorieService.estimate(
                                     cardioType, serieDto.dureeMin(), serieDto.allureKmh(),
@@ -189,6 +192,16 @@ public class ProgrammeServiceImpl implements ProgrammeService {
         }
 
         return saved;
+    }
+
+    // WHY: la trace est téléversée avant la séance, donc son identifiant arrive du client.
+    // Sans ce contrôle, un identifiant deviné rattacherait la sortie d'un autre athlète.
+    private Long traceAppartenant(Long courseTraceId, Utilisateur proprietaire) {
+        if (courseTraceId == null) return null;
+        if (!courseTraceRepository.existsByIdAndUtilisateur(courseTraceId, proprietaire)) {
+            throw forbidden("Cette trace de course appartient à un autre utilisateur");
+        }
+        return courseTraceId;
     }
 
     @Override

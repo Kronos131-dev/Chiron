@@ -672,7 +672,7 @@ public class WorkoutTools {
 
             List<SerieDto> series = new ArrayList<>();
             for (int i = 0; i < nbSeries; i++) {
-                series.add(new SerieDto(null, reps, null, null, null, null, null, null, null));
+                series.add(new SerieDto(null, reps, null, null, null, null, null, null, null, null));
             }
 
             String nomCanonique = def.nomFr() != null ? def.nomFr() : def.nomEn();

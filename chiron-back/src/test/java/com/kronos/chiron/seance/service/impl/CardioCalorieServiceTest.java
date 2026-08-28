@@ -38,6 +38,51 @@ class CardioCalorieServiceTest {
     }
 
     @Test
+    void estimate_outdoorRun_derivesPaceFromMeasuredDistance() {
+        double allureDeduiteKmh = 10000.0 / 1000.0 / (50.0 / 60.0);
+        double vitesseMetresParMinute = allureDeduiteKmh * 1000.0 / 60.0;
+        double met = (3.5 + 0.2 * vitesseMetresParMinute) / 3.5;
+        double expected = met * 3.5 * POIDS_KG / 200.0 * 50.0;
+
+        double actual = cardioCalorieService.estimate(
+                CardioType.COURSE_EXTERIEUR, 50.0, null, 0.0, 10000.0, POIDS_KG);
+
+        assertThat(actual).isCloseTo(expected, within(0.0001));
+    }
+
+    // WHY: en extérieur la distance vient du GPS. Si une allure saisie primait, une valeur
+    // fantaisiste laissée dans le formulaire écraserait la mesure réelle.
+    @Test
+    void estimate_outdoorRun_measuredDistanceWinsOverProvidedPace() {
+        double avecAllureFantaisiste = cardioCalorieService.estimate(
+                CardioType.COURSE_EXTERIEUR, 50.0, 25.0, 0.0, 10000.0, POIDS_KG);
+        double sansAllure = cardioCalorieService.estimate(
+                CardioType.COURSE_EXTERIEUR, 50.0, null, 0.0, 10000.0, POIDS_KG);
+
+        assertThat(avecAllureFantaisiste).isCloseTo(sansAllure, within(0.0001));
+    }
+
+    @Test
+    void estimate_outdoorRunWithoutDistance_fallsBackOnProvidedPace() {
+        double avecAllure = cardioCalorieService.estimate(
+                CardioType.COURSE_EXTERIEUR, 45.0, 12.0, 0.0, null, POIDS_KG);
+        double surTapis = cardioCalorieService.estimate(
+                CardioType.COURSE, 45.0, 12.0, 0.0, null, POIDS_KG);
+
+        assertThat(avecAllure).isCloseTo(surTapis, within(0.0001));
+    }
+
+    @Test
+    void estimate_outdoorRunUphill_countsTheGradient() {
+        double surLePlat = cardioCalorieService.estimate(
+                CardioType.COURSE_EXTERIEUR, 50.0, null, 0.0, 10000.0, POIDS_KG);
+        double enCote = cardioCalorieService.estimate(
+                CardioType.COURSE_EXTERIEUR, 50.0, null, 5.0, 10000.0, POIDS_KG);
+
+        assertThat(enCote).isGreaterThan(surLePlat);
+    }
+
+    @Test
     void estimate_walkingOnFlat_appliesAcsmWalkingEquation() {
         double vitesseMetresParMinute = 5.0 * 1000.0 / 60.0;
         double met = (3.5 + 0.1 * vitesseMetresParMinute) / 3.5;

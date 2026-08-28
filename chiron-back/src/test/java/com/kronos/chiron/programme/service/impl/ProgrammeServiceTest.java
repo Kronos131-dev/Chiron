@@ -80,7 +80,8 @@ class ProgrammeServiceTest {
 
         SeanceDto dto = new SeanceDto(null, "Leg Day", null, LocalDateTime.now(clock), null, 1, false, null,
                 List.of(new ExerciceDto(null, "Squat", null, null,
-                        List.of(new SerieDto(100.0, 5, null, null, null, null, null, null, null)), null, null, null,
+                        List.of(new SerieDto(100.0, 5, null, null, null, null, null, null, null, null)), null, null,
+                        null,
                         null, false)));
 
         Seance result = programmeService.sauvegarderProgramme("owner", dto);

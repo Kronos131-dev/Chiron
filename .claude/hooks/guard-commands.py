@@ -36,7 +36,8 @@ MCP_LEADING_VERBS_THAT_READ = {
     "log", "logs", "diff", "browse", "info", "summary", "check", "inspect",
 }
 
-MCP_WHOLE_NAMES_THAT_READ = {"who_am_i", "whoami", "me", "ping", "health"}
+MCP_WHOLE_NAMES_THAT_READ = {"who_am_i", "whoami", "me", "ping", "health",
+                             "actions_list", "actions_get"}
 
 MCP_WRITES_EXPLICITLY_ALLOWED = {"create_pull_request", "create_branch"}
 

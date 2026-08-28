@@ -3,6 +3,29 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
+export interface CoursePointDto {
+  lat: number;
+  lon: number;
+  t: number;
+  alt: number | null;
+}
+
+export interface CourseSplitDto {
+  kilometre: number;
+  dureeS: number;
+  allureKmh: number;
+}
+
+export interface CourseTraceDto {
+  id: number;
+  distanceM: number;
+  dureeS: number;
+  allureMoyenneKmh: number;
+  denivelePositifM: number;
+  splits: CourseSplitDto[];
+  points: CoursePointDto[];
+}
+
 export interface ExerciceDefinitionDto {
   id: number;
   nomFr: string | null;
@@ -66,7 +89,7 @@ export interface Exercise {
  * Core API service handling all HTTP communication with the Chiron backend.
  */
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ChironApi {
   private apiUrl = environment.apiUrl;
@@ -76,7 +99,7 @@ export class ChironApi {
    *
    * @param http The Angular HttpClient instance used for requests.
    */
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
   /**
    * Constructs the full URL for retrieving a specific image resource.
@@ -99,7 +122,7 @@ export class ChironApi {
     return this.http.post<ChatResponse>(`${this.apiUrl}/chat`, {
       message,
       conversationId,
-      language
+      language,
     });
   }
 
@@ -112,7 +135,7 @@ export class ChironApi {
   endSession(conversationId: number | null, language: string) {
     return this.http.post<ChatResponse>(`${this.apiUrl}/end-session`, {
       conversationId,
-      language
+      language,
     });
   }
 
@@ -147,7 +170,9 @@ export class ChironApi {
    * @return An Observable emitting the list of historical workout sessions.
    */
   getHistorique(username: string) {
-    return this.http.get<any[]>(`${this.apiUrl}/journal/historique?username=${encodeURIComponent(username)}`);
+    return this.http.get<any[]>(
+      `${this.apiUrl}/journal/historique?username=${encodeURIComponent(username)}`,
+    );
   }
 
   /**
@@ -157,7 +182,9 @@ export class ChironApi {
    * @return An Observable emitting the list of workout programs.
    */
   getProgrammes(username: string) {
-    return this.http.get<any[]>(`${this.apiUrl}/programmes?username=${encodeURIComponent(username)}`);
+    return this.http.get<any[]>(
+      `${this.apiUrl}/programmes?username=${encodeURIComponent(username)}`,
+    );
   }
 
   /**
@@ -185,7 +212,9 @@ export class ChironApi {
    * @return An Observable emitting the detailed program data.
    */
   getProgrammeById(username: string, id: string) {
-    return this.http.get<any>(`${this.apiUrl}/programmes/${id}?username=${encodeURIComponent(username)}`);
+    return this.http.get<any>(
+      `${this.apiUrl}/programmes/${id}?username=${encodeURIComponent(username)}`,
+    );
   }
 
   /**
@@ -196,7 +225,9 @@ export class ChironApi {
    * @return An Observable indicating the completion of the delete request.
    */
   deleteProgramme(id: number, username: string): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/programmes/${id}?username=${encodeURIComponent(username)}`);
+    return this.http.delete(
+      `${this.apiUrl}/programmes/${id}?username=${encodeURIComponent(username)}`,
+    );
   }
 
   /**
@@ -207,7 +238,10 @@ export class ChironApi {
    * @return An Observable indicating the completion of the reorder request.
    */
   updateProgrammesOrder(username: string, orderedIds: number[]): Observable<any> {
-    return this.http.put(`${this.apiUrl}/programmes/order?username=${encodeURIComponent(username)}`, orderedIds);
+    return this.http.put(
+      `${this.apiUrl}/programmes/order?username=${encodeURIComponent(username)}`,
+      orderedIds,
+    );
   }
 
   /**
@@ -218,7 +252,9 @@ export class ChironApi {
    * @return An Observable emitting the profile data.
    */
   getProfile(username: string, requestUsername: string): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/profile/${encodeURIComponent(username)}?requestUsername=${encodeURIComponent(requestUsername)}`);
+    return this.http.get<any>(
+      `${this.apiUrl}/profile/${encodeURIComponent(username)}?requestUsername=${encodeURIComponent(requestUsername)}`,
+    );
   }
 
   /**
@@ -229,7 +265,9 @@ export class ChironApi {
    * @return An Observable emitting a list of matching profiles.
    */
   searchProfiles(query: string, requestUsername: string): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/profile/search?query=${encodeURIComponent(query)}&requestUsername=${encodeURIComponent(requestUsername)}`);
+    return this.http.get<any[]>(
+      `${this.apiUrl}/profile/search?query=${encodeURIComponent(query)}&requestUsername=${encodeURIComponent(requestUsername)}`,
+    );
   }
 
   /**
@@ -239,7 +277,9 @@ export class ChironApi {
    * @return An Observable emitting the list of Agora participants.
    */
   getAgoraParticipants(requestUsername: string): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/agora/participants?requestUsername=${encodeURIComponent(requestUsername)}`);
+    return this.http.get<any[]>(
+      `${this.apiUrl}/agora/participants?requestUsername=${encodeURIComponent(requestUsername)}`,
+    );
   }
 
   /**
@@ -250,7 +290,10 @@ export class ChironApi {
    * @return An Observable indicating the completion of the update.
    */
   updateProfileVisibility(username: string, isPublic: boolean): Observable<any> {
-    return this.http.put(`${this.apiUrl}/profile/${encodeURIComponent(username)}/visibility?isPublic=${isPublic}`, {});
+    return this.http.put(
+      `${this.apiUrl}/profile/${encodeURIComponent(username)}/visibility?isPublic=${isPublic}`,
+      {},
+    );
   }
 
   /**
@@ -272,7 +315,11 @@ export class ChironApi {
    * @return An Observable emitting the server response confirmation.
    */
   copyProgrammeToMyProfile(progId: number, targetUsername: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/programmes/${progId}/copy?targetUsername=${encodeURIComponent(targetUsername)}`, {}, { responseType: 'text' as 'json' });
+    return this.http.post(
+      `${this.apiUrl}/programmes/${progId}/copy?targetUsername=${encodeURIComponent(targetUsername)}`,
+      {},
+      { responseType: 'text' as 'json' },
+    );
   }
 
   /**
@@ -283,7 +330,10 @@ export class ChironApi {
    * @return An Observable indicating the completion of the assignment.
    */
   addCoach(username: string, coachUsername: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/profile/${encodeURIComponent(username)}/coach/${encodeURIComponent(coachUsername)}`, {});
+    return this.http.post(
+      `${this.apiUrl}/profile/${encodeURIComponent(username)}/coach/${encodeURIComponent(coachUsername)}`,
+      {},
+    );
   }
 
   /**
@@ -294,7 +344,9 @@ export class ChironApi {
    * @return An Observable indicating the completion of the revocation.
    */
   removeCoach(username: string, coachUsername: string): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/profile/${encodeURIComponent(username)}/coach/${encodeURIComponent(coachUsername)}`);
+    return this.http.delete(
+      `${this.apiUrl}/profile/${encodeURIComponent(username)}/coach/${encodeURIComponent(coachUsername)}`,
+    );
   }
 
   /**
@@ -311,19 +363,35 @@ export class ChironApi {
     return this.http.get<any>(`${this.apiUrl}/performance/${encodeURIComponent(username)}`);
   }
 
-  addPerformanceRecord(username: string, dto: { exerciseType: string; poids: number; nombreReps: number }): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/performance/${encodeURIComponent(username)}/record`, dto);
+  addPerformanceRecord(
+    username: string,
+    dto: { exerciseType: string; poids: number; nombreReps: number },
+  ): Observable<any> {
+    return this.http.post<any>(
+      `${this.apiUrl}/performance/${encodeURIComponent(username)}/record`,
+      dto,
+    );
   }
 
   updateBodyweight(username: string, poidsCorps: number): Observable<any> {
-    return this.http.put<any>(`${this.apiUrl}/performance/${encodeURIComponent(username)}/bodyweight`, { poidsCorps });
+    return this.http.put<any>(
+      `${this.apiUrl}/performance/${encodeURIComponent(username)}/bodyweight`,
+      { poidsCorps },
+    );
   }
 
   getPerformanceHistory(username: string, exerciseType: string): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/performance/${encodeURIComponent(username)}/history/${encodeURIComponent(exerciseType)}`);
+    return this.http.get<any[]>(
+      `${this.apiUrl}/performance/${encodeURIComponent(username)}/history/${encodeURIComponent(exerciseType)}`,
+    );
   }
 
-  searchExercices(q: string, muscle?: string, equipement?: string, difficulte?: string): Observable<ExerciceDefinitionDto[]> {
+  searchExercices(
+    q: string,
+    muscle?: string,
+    equipement?: string,
+    difficulte?: string,
+  ): Observable<ExerciceDefinitionDto[]> {
     let url = `${this.apiUrl}/exercices?q=${encodeURIComponent(q)}`;
     if (muscle) url += `&muscle=${encodeURIComponent(muscle)}`;
     if (equipement) url += `&equipement=${encodeURIComponent(equipement)}`;
@@ -331,7 +399,11 @@ export class ChironApi {
     return this.http.get<ExerciceDefinitionDto[]>(url);
   }
 
-  getExercices(muscle?: string, equipement?: string, difficulte?: string): Observable<ExerciceDefinitionDto[]> {
+  getExercices(
+    muscle?: string,
+    equipement?: string,
+    difficulte?: string,
+  ): Observable<ExerciceDefinitionDto[]> {
     let url = `${this.apiUrl}/exercices?`;
     if (muscle) url += `&muscle=${encodeURIComponent(muscle)}`;
     if (equipement) url += `&equipement=${encodeURIComponent(equipement)}`;
@@ -343,6 +415,14 @@ export class ChironApi {
     return this.http.get<ExerciceDefinitionDto>(`${this.apiUrl}/exercices/${id}`);
   }
 
+  enregistrerTraceCourse(points: CoursePointDto[]): Observable<CourseTraceDto> {
+    return this.http.post<CourseTraceDto>(`${this.apiUrl}/courses/traces`, { points });
+  }
+
+  getTraceCourse(id: number): Observable<CourseTraceDto> {
+    return this.http.get<CourseTraceDto>(`${this.apiUrl}/courses/traces/${id}`);
+  }
+
   getExerciceGifUrl(id: number): string {
     return `${this.apiUrl}/exercices/${id}/gif`;
   }
@@ -351,8 +431,18 @@ export class ChironApi {
     return this.http.put<void>(`${this.apiUrl}/settings/password`, req);
   }
 
-  getSettingsInfo(): Observable<{ username: string; email: string | null; prenom: string | null; nom: string | null }> {
-    return this.http.get<{ username: string; email: string | null; prenom: string | null; nom: string | null }>(`${this.apiUrl}/settings/me`);
+  getSettingsInfo(): Observable<{
+    username: string;
+    email: string | null;
+    prenom: string | null;
+    nom: string | null;
+  }> {
+    return this.http.get<{
+      username: string;
+      email: string | null;
+      prenom: string | null;
+      nom: string | null;
+    }>(`${this.apiUrl}/settings/me`);
   }
 
   changeIdentity(req: { prenom: string | null; nom: string | null }): Observable<void> {
@@ -400,7 +490,10 @@ export class ChironApi {
   }
 
   linkOlympus(pseudo: string, password: string): Observable<NutritionLinkStatus> {
-    return this.http.post<NutritionLinkStatus>(`${this.apiUrl}/nutrition/link`, { pseudo, password });
+    return this.http.post<NutritionLinkStatus>(`${this.apiUrl}/nutrition/link`, {
+      pseudo,
+      password,
+    });
   }
 
   unlinkOlympus(): Observable<void> {
@@ -430,7 +523,10 @@ export class ChironApi {
     return this.http.get<FitbitDashboard>(`${this.apiUrl}/fitbit/dashboard?days=${days}`);
   }
 
-  getActivites(jours: number = 400, source?: 'CHIRON_MUSCU' | 'GOOGLE_DETECTE'): Observable<SanteActiviteDto[]> {
+  getActivites(
+    jours: number = 400,
+    source?: 'CHIRON_MUSCU' | 'GOOGLE_DETECTE',
+  ): Observable<SanteActiviteDto[]> {
     let url = `${this.apiUrl}/sante/activites?jours=${jours}`;
     if (source) url += `&source=${source}`;
     return this.http.get<SanteActiviteDto[]>(url);
@@ -465,7 +561,9 @@ export class ChironApi {
   }
 
   getStatsExerciseProgress(nom: string): Observable<ExerciseProgressPoint[]> {
-    return this.http.get<ExerciseProgressPoint[]>(`${this.apiUrl}/stats/exercises/progress?nom=${encodeURIComponent(nom)}`);
+    return this.http.get<ExerciseProgressPoint[]>(
+      `${this.apiUrl}/stats/exercises/progress?nom=${encodeURIComponent(nom)}`,
+    );
   }
 
   getStatsNutrition(days: number = 30): Observable<NutritionStats> {
@@ -481,7 +579,9 @@ export class ChironApi {
   }
 
   getStatsBodyComposition(days: number = 180): Observable<BodyCompositionStats> {
-    return this.http.get<BodyCompositionStats>(`${this.apiUrl}/stats/body-composition?days=${days}`);
+    return this.http.get<BodyCompositionStats>(
+      `${this.apiUrl}/stats/body-composition?days=${days}`,
+    );
   }
 
   /** Upload manuel d'un rapport PDF Visbody (test / fallback de l'ingestion par email). */
@@ -564,7 +664,7 @@ export type TypeEquipement =
 
 export interface UserProfileSetup {
   isOnboarded: boolean;
-  dateNaissance: string | null;          // ISO YYYY-MM-DD
+  dateNaissance: string | null; // ISO YYYY-MM-DD
   sexe: Sexe | null;
   tailleCm: number | null;
   poidsCorps: number | null;
@@ -591,8 +691,8 @@ export interface StatsOverview {
 }
 
 export interface WeeklyVolumePoint {
-  semaine: string;   // date ISO du lundi
-  label: string;     // « jj/MM »
+  semaine: string; // date ISO du lundi
+  label: string; // « jj/MM »
   tonnage: number;
   nbSeances: number;
   nbSeries: number;
@@ -698,7 +798,13 @@ export interface VisbodyImportResult {
   detail: string;
 }
 
-export type TypeActivite = 'MUSCULATION' | 'MARCHE' | 'COURSE' | 'VELO' | 'FOOTBALL' | 'SPORT_AUTRE';
+export type TypeActivite =
+  | 'MUSCULATION'
+  | 'MARCHE'
+  | 'COURSE'
+  | 'VELO'
+  | 'FOOTBALL'
+  | 'SPORT_AUTRE';
 
 export interface SanteActiviteDto {
   id: number;

@@ -40,6 +40,9 @@ public class Serie {
     @Column(name = "calories")
     private Double calories;
 
+    @Column(name = "course_trace_id")
+    private Long courseTraceId;
+
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "exercice_id")

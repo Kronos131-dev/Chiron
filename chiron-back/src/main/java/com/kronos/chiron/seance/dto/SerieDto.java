@@ -11,5 +11,6 @@ public record SerieDto(
         Double distanceM,
         Double allureKmh,
         Double pentePct,
-        Double calories) {
+        Double calories,
+        Long courseTraceId) {
 }

@@ -19,8 +19,17 @@ public class CardioCalorieServiceImpl implements CardioCalorieService {
         return switch (type) {
             case MARCHE_PENTE -> metBased(walkingMet(allureKmh, pentePct, 5.0), poids, dureeMin);
             case COURSE -> metBased(runningMet(allureKmh, pentePct, 9.0), poids, dureeMin);
+            case COURSE_EXTERIEUR -> metBased(
+                    runningMet(allureMesuree(distanceM, dureeMin, allureKmh), pentePct, 9.0), poids, dureeMin);
             case RAMEUR, SKIERG -> ergCalories(distanceM, dureeMin, poids);
         };
+    }
+
+    // WHY: en extérieur la distance est mesurée au GPS, pas saisie. Elle prime donc sur toute
+    // allure fournie, qui n'est qu'un repli quand la trace manque.
+    private Double allureMesuree(Double distanceM, double dureeMin, Double allureKmh) {
+        if (distanceM == null || distanceM <= 0) return allureKmh;
+        return distanceM / 1000.0 / (dureeMin / 60.0);
     }
 
     private double metBased(double met, double poidsKg, double dureeMin) {

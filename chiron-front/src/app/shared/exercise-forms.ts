@@ -25,12 +25,14 @@ export interface SerieForm {
   pentePct?: number | null;
   /** Calories brûlées, calculées côté serveur (lecture seule côté front). */
   calories?: number | null;
+  /** Trace GPS d'une sortie en extérieur, téléversée avant l'enregistrement de la séance. */
+  courseTraceId?: number | null;
 }
 
 export type BlockType = 'SUPERSET' | 'BISET';
 
 /** Types de cardio — miroir de l'enum backend {@code CardioType}. */
-export type CardioType = 'MARCHE_PENTE' | 'COURSE' | 'RAMEUR' | 'SKIERG';
+export type CardioType = 'MARCHE_PENTE' | 'COURSE' | 'COURSE_EXTERIEUR' | 'RAMEUR' | 'SKIERG';
 
 export type WodType = 'CINDY';
 
