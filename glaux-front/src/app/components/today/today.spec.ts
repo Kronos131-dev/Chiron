@@ -11,6 +11,16 @@ function fakeTouch(clientY: number): Partial<TouchEvent> {
   return { touches: [{ clientY } as Touch] as unknown as TouchList };
 }
 
+function stubScrollPosition(scrollY: number, scrollHeight: number) {
+  vi.spyOn(window, 'scrollY', 'get').mockReturnValue(scrollY);
+  vi.spyOn(window, 'innerHeight', 'get').mockReturnValue(800);
+  vi.spyOn(document.documentElement, 'scrollHeight', 'get').mockReturnValue(scrollHeight);
+}
+
+function stubBasDePage() {
+  stubScrollPosition(400, 1200);
+}
+
 function flushTodayRequests(httpMock: HttpTestingController) {
   httpMock.expectOne(`${environment.apiUrl}/sante/resume`).flush({ linked: false });
   httpMock.expectOne(`${environment.apiUrl}/sante/sync`).flush([]);
@@ -33,15 +43,18 @@ describe('Today', () => {
     httpMock = TestBed.inject(HttpTestingController);
   });
 
-  afterEach(() => httpMock.verify());
+  afterEach(() => {
+    httpMock.verify();
+    vi.restoreAllMocks();
+  });
 
-  it('pulling down past the threshold at the top of the page triggers a sync', () => {
+  it('swiping up past the threshold at the bottom of the page triggers a sync', () => {
     fixture.detectChanges();
     flushTodayRequests(httpMock);
-    vi.spyOn(window, 'scrollY', 'get').mockReturnValue(0);
+    stubBasDePage();
 
-    component.onTouchStart(fakeTouch(0) as TouchEvent);
-    component.onTouchMove(fakeTouch(90) as TouchEvent);
+    component.onTouchStart(fakeTouch(90) as TouchEvent);
+    component.onTouchMove(fakeTouch(0) as TouchEvent);
     expect(component.pullDistance()).toBe(90);
     component.onTouchEnd();
 
@@ -56,23 +69,23 @@ describe('Today', () => {
   it('releasing before the threshold resets without syncing', () => {
     fixture.detectChanges();
     flushTodayRequests(httpMock);
-    vi.spyOn(window, 'scrollY', 'get').mockReturnValue(0);
+    stubBasDePage();
 
-    component.onTouchStart(fakeTouch(0) as TouchEvent);
-    component.onTouchMove(fakeTouch(30) as TouchEvent);
+    component.onTouchStart(fakeTouch(30) as TouchEvent);
+    component.onTouchMove(fakeTouch(0) as TouchEvent);
     component.onTouchEnd();
 
     expect(component.syncing()).toBe(false);
     expect(component.pullDistance()).toBe(0);
   });
 
-  it('does nothing when the page is not scrolled to the top', () => {
+  it('does nothing when the page is not scrolled to the bottom', () => {
     fixture.detectChanges();
     flushTodayRequests(httpMock);
-    vi.spyOn(window, 'scrollY', 'get').mockReturnValue(120);
+    stubScrollPosition(0, 2000);
 
-    component.onTouchStart(fakeTouch(0) as TouchEvent);
-    component.onTouchMove(fakeTouch(90) as TouchEvent);
+    component.onTouchStart(fakeTouch(90) as TouchEvent);
+    component.onTouchMove(fakeTouch(0) as TouchEvent);
 
     expect(component.pullDistance()).toBe(0);
   });
@@ -80,10 +93,10 @@ describe('Today', () => {
   it('caps the visual pull distance so an aggressive drag does not overshoot', () => {
     fixture.detectChanges();
     flushTodayRequests(httpMock);
-    vi.spyOn(window, 'scrollY', 'get').mockReturnValue(0);
+    stubBasDePage();
 
-    component.onTouchStart(fakeTouch(0) as TouchEvent);
-    component.onTouchMove(fakeTouch(500) as TouchEvent);
+    component.onTouchStart(fakeTouch(500) as TouchEvent);
+    component.onTouchMove(fakeTouch(0) as TouchEvent);
 
     expect(component.pullDistance()).toBe(100);
   });

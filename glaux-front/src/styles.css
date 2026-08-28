@@ -20,6 +20,14 @@
   --font-body: 'Manrope', sans-serif;
 }
 
+/* WHY: sans overscroll-behavior-y, Chrome Android déclenche son propre pull-to-refresh sur
+   le geste vers le bas et recharge la PWA avant que le composant ne voie le touchmove. La
+   synchro maison se fait donc de bas en haut, et ce contain empêche le rechargement. */
+html,
+body {
+  overscroll-behavior-y: contain;
+}
+
 @layer utilities {
   .material-symbols-outlined {
     font-variation-settings:

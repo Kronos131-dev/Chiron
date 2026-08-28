@@ -14,6 +14,7 @@ import { GlauxApi, SanteResumeDto, SanteSyncEtatDto } from '../../service/glaux-
 export class Today implements OnInit {
   private static readonly PULL_THRESHOLD_PX = 70;
   private static readonly PULL_MAX_PX = 100;
+  private static readonly BAS_DE_PAGE_TOLERANCE_PX = 2;
 
   private api = inject(GlauxApi);
 
@@ -67,14 +68,14 @@ export class Today implements OnInit {
   }
 
   onTouchStart(event: TouchEvent): void {
-    if (window.scrollY > 0 || this.syncing()) return;
+    if (!this.estEnBasDePage() || this.syncing()) return;
     this.pullActive = true;
     this.touchStartY = event.touches[0].clientY;
   }
 
   onTouchMove(event: TouchEvent): void {
     if (!this.pullActive) return;
-    const delta = event.touches[0].clientY - this.touchStartY;
+    const delta = this.touchStartY - event.touches[0].clientY;
     this.pullDistance.set(delta > 0 ? Math.min(delta, Today.PULL_MAX_PX) : 0);
   }
 
@@ -84,6 +85,13 @@ export class Today implements OnInit {
     const triggered = this.pullDistance() >= Today.PULL_THRESHOLD_PX;
     this.pullDistance.set(0);
     if (triggered) this.sync();
+  }
+
+  private estEnBasDePage(): boolean {
+    return (
+      window.innerHeight + window.scrollY >=
+      document.documentElement.scrollHeight - Today.BAS_DE_PAGE_TOLERANCE_PX
+    );
   }
 
   // WHY: les trois seuils sont ceux de Google Health — 1-29 faible, 30-64 modérée,
