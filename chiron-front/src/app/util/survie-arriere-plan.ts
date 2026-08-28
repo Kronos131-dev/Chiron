@@ -4,6 +4,8 @@ export type NomStrategie = 'audioElement' | 'webAudio' | 'webLock' | 'wakeLock';
 
 export interface Survie {
   relacher(): void;
+  actives(): NomStrategie[];
+  audioEnLecture(): boolean;
 }
 
 const FREQUENCE_ECHANTILLONNAGE = 8000;
@@ -48,22 +50,32 @@ function bouclePresqueSilencieuse(): Blob {
   return new Blob([tampon], { type: 'audio/wav' });
 }
 
-function survieParAudioElement(): Survie | null {
-  // WHY: sans ce réglage la boucle prend le focus audio exclusif et met en pause l'application
-  // de musique de l'athlète. « ambient » demande à s'y mélanger — c'est le seul levier que le
-  // web expose, et il reste sans effet sur les navigateurs qui ignorent audioSession.
-  reglerSessionAudio('ambient');
+// WHY: c'est le même mécanisme qui maintient la page vivante et qui prend le focus audio.
+// Demander « ambient » pour se mêler à la musique revient à dire au système que ce flux est
+// interruptible et non prioritaire — il regèle alors la page écran éteint. On ne peut pas
+// avoir les deux : la survie prime, et l'athlète peut choisir l'inverse en connaissance.
+function survieParAudioElement(melangerAvecLaMusique: boolean): Survie | null {
+  if (melangerAvecLaMusique) reglerSessionAudio('ambient');
   const url = URL.createObjectURL(bouclePresqueSilencieuse());
   const element = new Audio(url);
   element.loop = true;
   element.volume = 1;
-  element.play().catch(() => {});
+
+  let echec: string | null = null;
+  element.play().catch((raison) => {
+    echec = String(raison?.name ?? raison);
+  });
+
   return {
     relacher: () => {
       element.pause();
       element.src = '';
       URL.revokeObjectURL(url);
     },
+    actives: () => ['audioElement'],
+    // WHY: `paused` est la seule preuve que la boucle tourne vraiment. Sans elle, un play()
+    // refusé passait inaperçu et la page se faisait geler sans que rien ne le signale.
+    audioEnLecture: () => !element.paused && echec === null,
   };
 }
 
@@ -90,6 +102,8 @@ function survieParWebAudio(): Survie | null {
       } catch {}
       contexte.close().catch(() => {});
     },
+    actives: () => ['webAudio'],
+    audioEnLecture: () => contexte.state === 'running',
   };
 }
 
@@ -126,6 +140,8 @@ function survieParWebLock(): Survie | null {
       etat.liberer?.();
       etat.liberer = null;
     },
+    actives: () => ['webLock'],
+    audioEnLecture: () => false,
   };
 }
 
@@ -155,10 +171,12 @@ function survieParWakeLock(): Survie | null {
       etat.sentinelle?.release?.().catch(() => {});
       etat.sentinelle = null;
     },
+    actives: () => ['wakeLock'],
+    audioEnLecture: () => false,
   };
 }
 
-const FABRIQUES: Record<NomStrategie, () => Survie | null> = {
+const FABRIQUES: Record<NomStrategie, (melanger: boolean) => Survie | null> = {
   audioElement: survieParAudioElement,
   webAudio: survieParWebAudio,
   webLock: survieParWebLock,
@@ -176,7 +194,14 @@ export function strategieDisponible(nom: NomStrategie): boolean {
 
 // WHY: chaque fabrique doit être appelée dans le geste utilisateur qui démarre la course —
 // Chrome refuse la lecture audio et le wake lock en dehors d'une interaction.
-export function tenirEnVie(strategies: NomStrategie[]): Survie {
-  const actives = strategies.map((nom) => FABRIQUES[nom]()).filter((s): s is Survie => s !== null);
-  return { relacher: () => actives.forEach((s) => s.relacher()) };
+export function tenirEnVie(strategies: NomStrategie[], melangerAvecLaMusique = false): Survie {
+  const actives = strategies
+    .map((nom) => FABRIQUES[nom](melangerAvecLaMusique))
+    .filter((s): s is Survie => s !== null);
+
+  return {
+    relacher: () => actives.forEach((s) => s.relacher()),
+    actives: () => actives.flatMap((s) => s.actives()),
+    audioEnLecture: () => actives.some((s) => s.audioEnLecture()),
+  };
 }

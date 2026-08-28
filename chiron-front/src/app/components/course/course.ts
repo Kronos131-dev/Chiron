@@ -46,6 +46,8 @@ const ECART_TOLERE_MIN_PAR_KM = 0.25;
 const DUREE_ECART_MS = 15000;
 const SILENCE_ENTRE_ANNONCES_MS = 60000;
 const CLE_MAPPING_CASQUE = 'chiron.course.casque';
+const CLE_MELANGER_MUSIQUE = 'chiron.course.melangerMusique';
+const ECART_FRANC_MIN_PAR_KM = 0.6;
 const ECOUTE_MAINS_LIBRES_MS = 7000;
 
 @Component({
@@ -74,6 +76,8 @@ export class Course implements OnInit, OnDestroy {
   readonly transcript = signal('');
   readonly commandeComprise = signal<boolean | null>(null);
   readonly reglagesOuverts = signal(false);
+  readonly melangerMusique = signal(false);
+  readonly audioActif = signal(true);
   readonly mappingCasque = signal<MappingCasque>({ ...MAPPING_PAR_DEFAUT });
   readonly boutonsCasque = BOUTONS_CASQUE;
   readonly actionsCasque = ACTIONS_CASQUE;
@@ -140,6 +144,7 @@ export class Course implements OnInit, OnDestroy {
     this.microDisponible.set(this.moteurReconnaissance() !== null);
 
     this.mappingCasque.set(this.lireMappingCasque());
+    this.melangerMusique.set(this.lireMelangerMusique());
 
     const reprise = this.tracker.restaurer();
     const snapshot = this.tracker.lireSnapshot();
@@ -164,6 +169,7 @@ export class Course implements OnInit, OnDestroy {
 
   private tick(): void {
     this.tracker.rafraichir(Date.now());
+    if (this.survie) this.audioActif.set(this.survie.audioEnLecture());
     if (!this.enCours()) return;
     this.annoncerKilometres();
     this.surveillerAllure();
@@ -206,12 +212,16 @@ export class Course implements OnInit, OnDestroy {
 
     this.derniereAnnonceEcart = maintenant;
     this.ecartDepuis = null;
-    this.dire(
-      this.i18n.t(this.tropLent() ? 'course.say.tooSlow' : 'course.say.tooFast', {
-        allure: this.allureParlee(this.tracker.allureCouranteKmh()),
-        cible: this.allureParlee(minParKmVersKmh(this.cibleMinParKm() ?? 0)),
-      }),
-    );
+    this.dire(this.i18n.t(this.consigneAllure()));
+  }
+
+  // WHY: un chiffre ne se corrige pas en courant. « Accélère un peu » se traduit tout de suite
+  // en foulée, « 5:40 au kilomètre, vise 5:15 » demande un calcul que personne ne fait à
+  // l'effort. Le chiffre reste disponible à la demande, par la commande « allure ».
+  private consigneAllure(): string {
+    const franc = Math.abs(this.ecartAllure()) >= ECART_FRANC_MIN_PAR_KM;
+    if (this.tropLent()) return franc ? 'course.say.speedUp' : 'course.say.speedUpABit';
+    return franc ? 'course.say.slowDown' : 'course.say.slowDownABit';
   }
 
   demarrer(): void {
@@ -346,7 +356,8 @@ export class Course implements OnInit, OnDestroy {
   // resterait muet pour toute la sortie.
   private activerLeSon(): void {
     if (this.survie) return;
-    this.survie = tenirEnVie(['audioElement', 'webLock']);
+    this.survie = tenirEnVie(['audioElement', 'webLock'], this.melangerMusique());
+    this.audioActif.set(this.survie.audioEnLecture());
     this.voix = voixDisponible()
       ? creerVoix(this.i18n.lang() === 'en' ? 'en-US' : 'fr-FR', baisserLaMusiquePendant)
       : null;
@@ -552,6 +563,25 @@ export class Course implements OnInit, OnDestroy {
       return;
     }
     this.fixerCible(cible);
+  }
+
+  // WHY: c'est un seul et même flux audio qui empêche le gel de la page et qui prend le focus
+  // sonore. Mêler Chiron à la musique le rend interruptible, donc la page regelable : le
+  // réglage est un arbitrage assumé, pas une préférence sans conséquence.
+  basculerMelangerMusique(): void {
+    const suivant = !this.melangerMusique();
+    this.melangerMusique.set(suivant);
+    try {
+      localStorage.setItem(CLE_MELANGER_MUSIQUE, String(suivant));
+    } catch {}
+  }
+
+  private lireMelangerMusique(): boolean {
+    try {
+      return localStorage.getItem(CLE_MELANGER_MUSIQUE) === 'true';
+    } catch {
+      return false;
+    }
   }
 
   basculerReglages(): void {

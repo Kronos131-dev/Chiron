@@ -251,10 +251,10 @@ describe('Course', () => {
       paroles.length = 0;
 
       vi.advanceTimersByTime(5000);
-      expect(paroles.filter((p) => p.includes('faiblit'))).toHaveLength(0);
+      expect(paroles.filter((p) => p.includes('Accélère'))).toHaveLength(0);
 
       vi.advanceTimersByTime(15000);
-      expect(paroles.filter((p) => p.includes('faiblit'))).toHaveLength(1);
+      expect(paroles.filter((p) => p.includes('Accélère'))).toHaveLength(1);
     });
 
     it('impose une minute de silence entre deux annonces d’allure', async () => {
@@ -266,7 +266,7 @@ describe('Course', () => {
 
       vi.advanceTimersByTime(20000);
       vi.advanceTimersByTime(20000);
-      expect(paroles.filter((p) => p.includes('faiblit'))).toHaveLength(1);
+      expect(paroles.filter((p) => p.includes('Accélère'))).toHaveLength(1);
     });
   });
 
@@ -417,6 +417,34 @@ describe('Course', () => {
 
       component.executer({ nom: 'distance' });
       expect(paroles.some((p) => p.includes('1.00'))).toBe(true);
+    });
+  });
+
+  describe('chrono', () => {
+    it('avance après le départ', async () => {
+      await boot([exoCourse('a')], 'a');
+      component.demarrer();
+      expect(component.chrono()).toBe('00:00');
+
+      vi.advanceTimersByTime(5000);
+      expect(component.chrono()).toBe('00:05');
+
+      vi.advanceTimersByTime(60000);
+      expect(component.chrono()).toBe('01:05');
+    });
+
+    it('se fige en pause et repart à la reprise', async () => {
+      await boot([exoCourse('a')], 'a');
+      component.demarrer();
+      vi.advanceTimersByTime(10000);
+      component.basculerPause();
+
+      vi.advanceTimersByTime(30000);
+      expect(component.chrono()).toBe('00:10');
+
+      component.basculerPause();
+      vi.advanceTimersByTime(5000);
+      expect(component.chrono()).toBe('00:15');
     });
   });
 

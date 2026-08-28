@@ -116,8 +116,11 @@ export class CourseTracker {
   private readonly mesures = computed(() => mesurer(this.points()));
 
   private veilleur: number | null = null;
-  private msAccumules = 0;
-  private repriseA: number | null = null;
+  // WHY: signaux et non champs simples. Lu avant le départ, un computed qui ne consulte
+  // `repriseA` que pour retourner zéro n'enregistre aucune dépendance réactive et reste figé
+  // pour toute la sortie — c'est ce qui bloquait le chrono à 00:00.
+  private readonly msAccumules = signal(0);
+  private readonly repriseA = signal<number | null>(null);
   private ouvrirUneCoupure = false;
   private routineId = '';
   private exoId = '';
@@ -128,8 +131,9 @@ export class CourseTracker {
   readonly splits = computed(() => this.mesures().splits);
 
   readonly dureeMs = computed(() => {
-    const debut = this.repriseA;
-    return this.msAccumules + (debut === null ? 0 : Math.max(0, this.maintenant() - debut));
+    const debut = this.repriseA();
+    const maintenant = this.maintenant();
+    return this.msAccumules() + (debut === null ? 0 : Math.max(0, maintenant - debut));
   });
 
   readonly dureeS = computed(() => Math.floor(this.dureeMs() / MS_PAR_SECONDE));
@@ -173,8 +177,8 @@ export class CourseTracker {
   demarrer(): void {
     if (this.etat() !== 'pret') return;
     const depart = Date.now();
-    this.msAccumules = 0;
-    this.repriseA = depart;
+    this.msAccumules.set(0);
+    this.repriseA.set(depart);
     this.maintenant.set(depart);
     this.derniereReception.set(depart);
     this.etat.set('enCours');
@@ -188,9 +192,9 @@ export class CourseTracker {
   }
 
   private mettreEnPause(): void {
-    const debut = this.repriseA;
-    if (debut !== null) this.msAccumules += Math.max(0, Date.now() - debut);
-    this.repriseA = null;
+    const debut = this.repriseA();
+    if (debut !== null) this.msAccumules.update((ms) => ms + Math.max(0, Date.now() - debut));
+    this.repriseA.set(null);
     this.couperGps();
     this.etat.set('enPause');
     this.ecrireSnapshot();
@@ -198,7 +202,7 @@ export class CourseTracker {
 
   private reprendre(): void {
     const reprise = Date.now();
-    this.repriseA = reprise;
+    this.repriseA.set(reprise);
     this.maintenant.set(reprise);
     this.derniereReception.set(reprise);
     // WHY: le premier point capté après une reprise est à une distance arbitraire du dernier
@@ -212,9 +216,9 @@ export class CourseTracker {
 
   arreter(): void {
     if (this.etat() === 'termine') return;
-    const debut = this.repriseA;
-    if (debut !== null) this.msAccumules += Math.max(0, Date.now() - debut);
-    this.repriseA = null;
+    const debut = this.repriseA();
+    if (debut !== null) this.msAccumules.update((ms) => ms + Math.max(0, Date.now() - debut));
+    this.repriseA.set(null);
     this.couperGps();
     this.etat.set('termine');
     this.ecrireSnapshot();
@@ -285,20 +289,20 @@ export class CourseTracker {
       if (!Array.isArray(data.points)) return false;
 
       this.points.set(data.points);
-      this.msAccumules = data.msAccumules ?? 0;
-      this.repriseA = data.repriseA ?? null;
+      this.msAccumules.set(data.msAccumules ?? 0);
+      this.repriseA.set(data.repriseA ?? null);
       this.cibleMinParKm = data.cibleMinParKm ?? null;
       this.kmAnnonces = data.kmAnnonces ?? 0;
       this.maintenant.set(Date.now());
       this.derniereReception.set(Date.now());
 
-      if (this.repriseA !== null) {
+      if (this.repriseA() !== null) {
         this.etat.set('enCours');
         // WHY: la page a pu être rechargée à côté de la course. La reprise démarre un nouveau
         // segment, dont le premier point ne doit pas être relié au dernier point d'avant.
         this.ouvrirUneCoupure = true;
         this.ecouterGps();
-      } else if (this.points().length > 0 || this.msAccumules > 0) {
+      } else if (this.points().length > 0 || this.msAccumules() > 0) {
         this.etat.set('enPause');
       }
       return true;
@@ -327,8 +331,8 @@ export class CourseTracker {
       routineId: this.routineId,
       exoId: this.exoId,
       points: this.points(),
-      msAccumules: this.msAccumules,
-      repriseA: this.repriseA,
+      msAccumules: this.msAccumules(),
+      repriseA: this.repriseA(),
       cibleMinParKm: this.cibleMinParKm,
       kmAnnonces: this.kmAnnonces,
     };

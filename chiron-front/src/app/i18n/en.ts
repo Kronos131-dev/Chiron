@@ -387,6 +387,11 @@ export const en: Record<string, string> = {
     'The run is in progress. Leaving now will save the distance covered. Continue?',
   'course.targetPlaceholder': '5:30',
   'course.pushToTalkHint': 'Hold the mic, speak, release',
+  'course.audioWarning':
+    'The background sound is not running: the app will freeze once the screen is off.',
+  'course.mixMusic': 'Let my music keep playing',
+  'course.mixMusicHint':
+    'The same inaudible sound that keeps the app alive with the screen off is what pauses your music. Mixing it with your music preserves it, but the phone may then freeze the run while locked.',
   'course.headsetSettings': 'Headset buttons',
   'course.headsetHint':
     'Choose what each button on your headset does while running. Not every headset exposes all five.',
@@ -406,6 +411,10 @@ export const en: Record<string, string> = {
   'course.action.moinsVite': 'Slower target',
   'course.say.summary': '{{km}} kilometres. | {{temps}}. | Pace {{allure}}.',
   'course.say.listening': 'I am listening.',
+  'course.say.speedUpABit': 'Pick it up a little.',
+  'course.say.speedUp': 'Pick it up.',
+  'course.say.slowDownABit': 'Ease off a little.',
+  'course.say.slowDown': 'Ease off.',
   'course.say.started': 'The road is open. | Run.',
   'course.say.paused': 'Rest. | I am keeping count.',
   'course.say.resumed': 'Move. | The road is waiting.',

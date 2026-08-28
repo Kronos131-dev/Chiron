@@ -392,6 +392,10 @@ export const fr: Record<string, string> = {
     'La course est en cours. Quitter maintenant enregistrera la distance parcourue. Continuer ?',
   'course.targetPlaceholder': '5:30',
   'course.pushToTalkHint': 'Maintiens le micro, parle, relâche',
+  'course.audioWarning': "Le son de fond ne tourne pas : l'app se fera geler écran éteint.",
+  'course.mixMusic': 'Laisser ma musique jouer',
+  'course.mixMusicHint':
+    "C'est le même son inaudible qui garde l'app vivante écran éteint et qui met ta musique en pause. Le mêler à ta musique la préserve, mais le téléphone peut alors geler la course écran verrouillé.",
   'course.headsetSettings': 'Boutons du casque',
   'course.headsetHint':
     "Choisis ce que fait chaque bouton de ton casque pendant la course. Tous les casques n'exposent pas les cinq.",
@@ -411,6 +415,10 @@ export const fr: Record<string, string> = {
   'course.action.moinsVite': 'Cible plus lente',
   'course.say.summary': '{{km}} kilomètres. | {{temps}}. | Allure {{allure}}.',
   'course.say.listening': "J'écoute.",
+  'course.say.speedUpABit': 'Accélère un peu.',
+  'course.say.speedUp': 'Accélère.',
+  'course.say.slowDownABit': 'Lève le pied.',
+  'course.say.slowDown': 'Ralentis.',
   'course.say.started': 'La route est ouverte. | Cours.',
   'course.say.paused': 'Repose-toi. | Je garde le compte.',
   'course.say.resumed': "Reprends. | La route t'attend.",
