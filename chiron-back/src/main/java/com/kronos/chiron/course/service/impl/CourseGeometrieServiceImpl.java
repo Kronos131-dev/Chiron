@@ -28,25 +28,38 @@ public class CourseGeometrieServiceImpl implements CourseGeometrieService {
             return new CourseMesuresDto(0.0, 0, 0.0, List.of());
         }
 
-        int dureeS = dureeEnSecondes(points);
         List<CourseSplitDto> splits = new ArrayList<>();
         double cumulM = 0.0;
-        long debutKmMs = points.get(0).t();
+        long pauseCumuleeMs = 0;
+        long debutKmMs = 0;
         int prochainKm = 1;
 
         for (int i = 1; i < points.size(); i++) {
             CoursePointDto precedent = points.get(i - 1);
             CoursePointDto courant = points.get(i);
+
+            // WHY: le premier point après une reprise est marqué d'une coupure par le tracker.
+            // Le segment qui l'atteint n'a pas été couru — l'athlète a pu marcher, monter dans
+            // une voiture ou simplement rester à l'arrêt — et ni sa longueur ni sa durée
+            // n'appartiennent à la sortie.
+            if (courant.ouvreUneReprise()) {
+                pauseCumuleeMs += courant.t() - precedent.t();
+                continue;
+            }
+
             double segmentM = distanceHaversineM(precedent, courant);
             if (segmentM <= 0) continue;
 
             double debutSegmentM = cumulM;
             cumulM += segmentM;
 
+            long debutSegmentMs = tempsDeCourseMs(precedent, points.get(0), pauseCumuleeMs);
+            long finSegmentMs = tempsDeCourseMs(courant, points.get(0), pauseCumuleeMs);
+
             while (cumulM >= prochainKm * KM_EN_METRES) {
                 double cibleM = prochainKm * KM_EN_METRES;
                 double fraction = (cibleM - debutSegmentM) / segmentM;
-                long instantMs = precedent.t() + Math.round(fraction * (courant.t() - precedent.t()));
+                long instantMs = debutSegmentMs + Math.round(fraction * (finSegmentMs - debutSegmentMs));
                 int splitS = (int) Math.round((instantMs - debutKmMs) / MS_PAR_SECONDE);
                 splits.add(new CourseSplitDto(prochainKm, splitS, allureKmh(KM_EN_METRES, splitS)));
                 debutKmMs = instantMs;
@@ -54,6 +67,7 @@ public class CourseGeometrieServiceImpl implements CourseGeometrieService {
             }
         }
 
+        int dureeS = dureeEnSecondes(points, pauseCumuleeMs);
         return new CourseMesuresDto(cumulM, dureeS, denivelePositifM(points), List.copyOf(splits));
     }
 
@@ -63,10 +77,14 @@ public class CourseGeometrieServiceImpl implements CourseGeometrieService {
         return (distanceM / KM_EN_METRES) / (dureeS / SECONDES_PAR_HEURE);
     }
 
-    private int dureeEnSecondes(List<CoursePointDto> points) {
+    private long tempsDeCourseMs(CoursePointDto point, CoursePointDto depart, long pauseCumuleeMs) {
+        return point.t() - depart.t() - pauseCumuleeMs;
+    }
+
+    private int dureeEnSecondes(List<CoursePointDto> points, long pauseCumuleeMs) {
         long debutMs = points.get(0).t();
         long finMs = points.get(points.size() - 1).t();
-        return (int) Math.max(0, Math.round((finMs - debutMs) / MS_PAR_SECONDE));
+        return (int) Math.max(0, Math.round((finMs - debutMs - pauseCumuleeMs) / MS_PAR_SECONDE));
     }
 
     private double distanceHaversineM(CoursePointDto a, CoursePointDto b) {

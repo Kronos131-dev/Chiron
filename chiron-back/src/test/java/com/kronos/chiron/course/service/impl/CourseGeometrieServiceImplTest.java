@@ -36,6 +36,15 @@ class CourseGeometrieServiceImplTest {
         return points;
     }
 
+    private CoursePointDto repriseApresMetres(double metres, long secondes) {
+        return new CoursePointDto(
+                LAT_DEPART + metres / DEGRE_LATITUDE_EN_METRES,
+                LON_DEPART,
+                T_DEPART + secondes * 1000L,
+                null,
+                true);
+    }
+
     @Test
     void mesurer_ligneDroiteDeUnKilometre_retrouveLaDistance() {
         // Given
@@ -146,6 +155,58 @@ class CourseGeometrieServiceImplTest {
         // Then
         assertThat(mesures.distanceM()).isZero();
         assertThat(mesures.splits()).isEmpty();
+    }
+
+    // WHY: le tracker marque d'une coupure le premier point suivant une reprise. Le segment
+    // franchi pendant la pause n'a pas été couru : ni sa longueur ni sa durée ne comptent.
+    @Test
+    void mesurer_repriseApresPause_ignoreLaDistanceParcouruePendantLaPause() {
+        // Given
+        List<CoursePointDto> points = List.of(
+                pointApresMetres(0, 0, null),
+                pointApresMetres(500, 150, null),
+                repriseApresMetres(2500, 900),
+                pointApresMetres(3000, 1050, null));
+
+        // When
+        CourseMesuresDto mesures = service.mesurer(points);
+
+        // Then
+        assertThat(mesures.distanceM()).isCloseTo(1000.0, within(2.0));
+    }
+
+    @Test
+    void mesurer_repriseApresPause_retireLaDureeDeLaPause() {
+        // Given
+        List<CoursePointDto> points = List.of(
+                pointApresMetres(0, 0, null),
+                pointApresMetres(500, 150, null),
+                repriseApresMetres(500, 900),
+                pointApresMetres(1000, 1050, null));
+
+        // When
+        CourseMesuresDto mesures = service.mesurer(points);
+
+        // Then
+        assertThat(mesures.dureeS()).isEqualTo(300);
+    }
+
+    @Test
+    void mesurer_pauseAuMilieuDUnKilometre_neGonflePasLeSplit() {
+        // Given
+        List<CoursePointDto> points = List.of(
+                pointApresMetres(0, 0, null),
+                pointApresMetres(500, 150, null),
+                repriseApresMetres(500, 900),
+                pointApresMetres(1000, 1050, null),
+                pointApresMetres(1500, 1200, null));
+
+        // When
+        CourseMesuresDto mesures = service.mesurer(points);
+
+        // Then
+        assertThat(mesures.splits()).hasSize(1);
+        assertThat(mesures.splits().get(0).dureeS()).isEqualTo(300);
     }
 
     @Test
