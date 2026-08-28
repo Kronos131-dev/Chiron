@@ -13,6 +13,7 @@ import com.kronos.chiron.sante.persistence.SanteJourRepository;
 import com.kronos.chiron.sante.persistence.SanteSommeilRepository;
 import com.kronos.chiron.sante.persistence.SanteSyncStateRepository;
 import com.kronos.chiron.sante.service.SanteQueryService;
+import com.kronos.chiron.seance.service.SeanceResumeService;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agent.tool.ToolMemoryId;
@@ -39,6 +40,7 @@ public class SanteTools {
     private final SanteSommeilRepository santeSommeilRepository;
     private final SanteActiviteRepository santeActiviteRepository;
     private final SanteSyncStateRepository santeSyncStateRepository;
+    private final SeanceResumeService seanceResumeService;
     private final ToolUserResolver toolUserResolver;
     private final Clock clock;
 
@@ -216,6 +218,9 @@ public class SanteTools {
         }
         if (a.getChargeCardio() != null) res.append(", charge cardio ").append(Math.round(a.getChargeCardio()));
         res.append(". ").append(comparerActiviteAMediane(a));
+        santeActiviteRepository.findSeanceIdByActiviteId(a.getId())
+                .map(seanceResumeService::decrireContenu)
+                .ifPresent(contenu -> res.append(" ").append(contenu));
         return res.toString().trim();
     }
 

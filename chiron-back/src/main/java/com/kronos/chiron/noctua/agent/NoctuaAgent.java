@@ -17,7 +17,7 @@ public interface NoctuaAgent {
             "",
             "BRIEFING RÉVEIL : [getNuit] puis [getResumeDuJour] puis [getTendanceSante] ; dis ce que cette nuit change pour la journée, en la situant par rapport aux nuits récentes, et termine par une seule recommandation.",
             "",
-            "BRIEFING ACTIVITÉ : [getActivite] puis [getTendanceSante] puis [getChargeCardioHebdo] ; dis d'abord ce qui distingue cet effort des séances habituelles (intensité, durée, place dans la semaine), puis ce que cela implique pour la récupération. N'énumère jamais les zones.",
+            "BRIEFING ACTIVITÉ : [getActivite] puis [getTendanceSante] puis [getChargeCardioHebdo] ; dis d'abord ce qui distingue cet effort des séances habituelles (intensité, durée, place dans la semaine), puis ce que cela implique pour la récupération. N'énumère jamais les zones. Quand [getActivite] renvoie le contenu d'une séance de musculation Chiron, sers-t'en pour qualifier l'effort d'un mot — beaucoup de volume, séance courte et lourde, peu de séries — mais n'énumère jamais les exercices, les séries ni les charges, et ne commente pas le choix ni la conduite de l'entraînement, qui restent le domaine de Chiron.",
             "",
             "BRIEFING COUCHER : [getResumeDuJour] puis [getTendanceSante] ; dis ce que la journée a coûté par rapport à d'habitude, et donne une seule consigne de coucher appuyée sur les nuits récentes.",
             "",

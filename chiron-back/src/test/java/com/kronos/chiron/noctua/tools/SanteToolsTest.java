@@ -15,6 +15,7 @@ import com.kronos.chiron.sante.persistence.SanteJourRepository;
 import com.kronos.chiron.sante.persistence.SanteSommeilRepository;
 import com.kronos.chiron.sante.persistence.SanteSyncStateRepository;
 import com.kronos.chiron.sante.service.SanteQueryService;
+import com.kronos.chiron.seance.service.SeanceResumeService;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,6 +36,9 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -54,6 +58,8 @@ class SanteToolsTest {
     private SanteActiviteRepository santeActiviteRepository;
     @Mock
     private SanteSyncStateRepository santeSyncStateRepository;
+    @Mock
+    private SeanceResumeService seanceResumeService;
     @Mock
     private ToolUserResolver toolUserResolver;
 
@@ -124,6 +130,37 @@ class SanteToolsTest {
         String result = santeTools.getDerniereActivite(MEMORY_ID);
 
         assertThat(result).contains("#5").contains("60 min").contains("130 bpm");
+    }
+
+    @Test
+    void getDerniereActivite_activiteLieeAUneSeance_inclutLeContenu() {
+        SanteActivite activite = SanteActivite.builder().id(5L).utilisateur(user)
+                .typeActivite(TypeActivite.MUSCULATION).source(SourceActivite.CHIRON_MUSCU)
+                .startTime(LocalDateTime.of(2026, 8, 20, 18, 0))
+                .endTime(LocalDateTime.of(2026, 8, 20, 19, 0)).fcMoyenne(130.0).build();
+        when(santeActiviteRepository.findFirstByUtilisateurOrderByEndTimeDesc(user)).thenReturn(Optional.of(activite));
+        when(santeActiviteRepository.findSeanceIdByActiviteId(5L)).thenReturn(Optional.of(12L));
+        when(seanceResumeService.decrireContenu(12L))
+                .thenReturn("Contenu de la séance 'Push A' : Développé couché : 10 reps @ 80,0kg. 1 série(s) au"
+                        + " total.");
+
+        String result = santeTools.getDerniereActivite(MEMORY_ID);
+
+        assertThat(result).contains("Développé couché : 10 reps @ 80,0kg");
+    }
+
+    @Test
+    void getDerniereActivite_activiteSansSeance_nInclutPasDeContenu() {
+        SanteActivite activite = SanteActivite.builder().id(5L).utilisateur(user)
+                .typeActivite(TypeActivite.COURSE).source(SourceActivite.GOOGLE_DETECTE)
+                .startTime(LocalDateTime.of(2026, 8, 20, 18, 0))
+                .endTime(LocalDateTime.of(2026, 8, 20, 19, 0)).fcMoyenne(150.0).build();
+        when(santeActiviteRepository.findFirstByUtilisateurOrderByEndTimeDesc(user)).thenReturn(Optional.of(activite));
+        when(santeActiviteRepository.findSeanceIdByActiviteId(5L)).thenReturn(Optional.empty());
+
+        santeTools.getDerniereActivite(MEMORY_ID);
+
+        verify(seanceResumeService, never()).decrireContenu(anyLong());
     }
 
     @Test
