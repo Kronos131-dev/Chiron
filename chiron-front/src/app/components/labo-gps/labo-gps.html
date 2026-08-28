@@ -1,0 +1,148 @@
+<app-header title="Labo GPS" [showBack]="true" backRoute="/chat"></app-header>
+
+<main class="min-h-screen pt-24 pb-32 px-4 md:px-8">
+  <div class="max-w-3xl mx-auto space-y-6">
+    <div class="bg-amber-950/20 border border-amber-500/20 rounded-xl p-4">
+      <p class="text-amber-300 font-bold text-sm">Page de mesure temporaire</p>
+      <p class="text-slate-300 text-xs mt-2">
+        Démarre, verrouille l'écran, marche dix minutes, reviens. Le relevé survit à une fermeture
+        de l'application.
+      </p>
+    </div>
+
+    <section class="bg-slate-900/40 border border-white/5 rounded-2xl p-5">
+      <h2 class="text-xs font-bold tracking-[0.2em] uppercase text-slate-400 mb-4">
+        Stratégies de survie
+      </h2>
+      <div class="space-y-2">
+        @for (nom of nomsStrategies; track nom) {
+          <button
+            type="button"
+            class="w-full text-left flex items-start gap-3 p-3 rounded-xl border transition"
+            [ngClass]="strategies()[nom] ? 'border-cyan-400 bg-cyan-400/10' : 'border-white/10'"
+            [disabled]="enCours() || !disponible(nom)"
+            (click)="basculer(nom)"
+          >
+            <span
+              class="material-symbols-outlined text-xl"
+              [class.text-cyan-400]="strategies()[nom]"
+            >
+              {{ strategies()[nom] ? 'check_box' : 'check_box_outline_blank' }}
+            </span>
+            <span class="flex-1">
+              <span class="block text-sm text-slate-200">{{ libelles[nom] }}</span>
+              @if (!disponible(nom)) {
+                <span class="block text-xs text-red-400 mt-1">non supporté par ce navigateur</span>
+              }
+            </span>
+          </button>
+        }
+      </div>
+    </section>
+
+    <div class="flex gap-3">
+      @if (!enCours()) {
+        <button
+          type="button"
+          class="flex-1 py-4 rounded-2xl bg-cyan-500 text-slate-950 font-black uppercase tracking-wide"
+          (click)="demarrer()"
+        >
+          Démarrer la mesure
+        </button>
+      } @else {
+        <button
+          type="button"
+          class="flex-1 py-4 rounded-2xl bg-red-500 text-white font-black uppercase tracking-wide"
+          (click)="arreter()"
+        >
+          Arrêter
+        </button>
+      }
+    </div>
+
+    @if (releve(); as r) {
+      <section class="bg-slate-900/40 border border-white/5 rounded-2xl p-5">
+        <h2 class="text-xs font-bold tracking-[0.2em] uppercase text-slate-400 mb-4">Verdict</h2>
+        <p class="text-slate-100 font-bold leading-relaxed">{{ verdict() }}</p>
+
+        <dl class="grid grid-cols-2 gap-4 mt-5">
+          <div>
+            <dt class="text-[10px] uppercase tracking-widest text-slate-500">Durée</dt>
+            <dd class="text-2xl font-black text-white">{{ dureeS() }} s</dd>
+          </div>
+          <div>
+            <dt class="text-[10px] uppercase tracking-widest text-slate-500">Écran éteint</dt>
+            <dd class="text-2xl font-black text-white">{{ tempsCacheS() }} s</dd>
+          </div>
+          <div>
+            <dt class="text-[10px] uppercase tracking-widest text-slate-500">Points GPS</dt>
+            <dd class="text-2xl font-black text-white">{{ nbPoints() }}</dd>
+          </div>
+          <div>
+            <dt class="text-[10px] uppercase tracking-widest text-slate-500">Écart GPS médian</dt>
+            <dd class="text-2xl font-black text-white">{{ ecartGpsMedianS() }} s</dd>
+          </div>
+          <div>
+            <dt class="text-[10px] uppercase tracking-widest text-slate-500">Pire écart GPS</dt>
+            <dd class="text-2xl font-black" [class.text-red-400]="ecartGpsMaxS() > 60">
+              {{ ecartGpsMaxS() }} s
+            </dd>
+          </div>
+          <div>
+            <dt class="text-[10px] uppercase tracking-widest text-slate-500">Pire gel d'horloge</dt>
+            <dd class="text-2xl font-black" [class.text-red-400]="gelMaxS() > 60">
+              {{ gelMaxS() }} s
+            </dd>
+          </div>
+          <div>
+            <dt class="text-[10px] uppercase tracking-widest text-slate-500">Voix prononcées</dt>
+            <dd class="text-2xl font-black text-white">{{ voixOk() }}</dd>
+          </div>
+          <div>
+            <dt class="text-[10px] uppercase tracking-widest text-slate-500">Voix en échec</dt>
+            <dd class="text-2xl font-black" [class.text-red-400]="voixEchouees() > 0">
+              {{ voixEchouees() }}
+            </dd>
+          </div>
+        </dl>
+
+        <p class="text-xs text-slate-500 mt-4">
+          Stratégies actives : {{ r.strategies.length ? r.strategies.join(' + ') : 'aucune' }}
+        </p>
+
+        <div class="flex gap-3 mt-5">
+          <button
+            type="button"
+            class="flex-1 py-3 rounded-xl border border-white/10 text-slate-300 text-sm"
+            (click)="copier()"
+          >
+            Copier le relevé
+          </button>
+          <button
+            type="button"
+            class="flex-1 py-3 rounded-xl border border-white/10 text-slate-300 text-sm"
+            [disabled]="enCours()"
+            (click)="effacer()"
+          >
+            Effacer
+          </button>
+        </div>
+      </section>
+
+      <section class="bg-slate-900/40 border border-white/5 rounded-2xl p-5">
+        <h2 class="text-xs font-bold tracking-[0.2em] uppercase text-slate-400 mb-4">
+          Derniers événements
+        </h2>
+        <ul class="space-y-1 font-mono text-xs">
+          @for (e of evenementsRecents(); track $index) {
+            <li class="flex gap-3">
+              <span class="text-slate-600 shrink-0">{{ e.t / 1000 | number: '1.0-0' }}s</span>
+              <span class="shrink-0 w-28 text-cyan-400">{{ e.type }}</span>
+              <span class="text-slate-400">{{ e.detail }}</span>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+  </div>
+</main>

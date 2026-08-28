@@ -24,106 +24,116 @@ export const routes: Routes = [
   {
     path: 'chat',
     component: Chat,
-    canActivate: [authGuard]
+    canActivate: [authGuard],
   },
   {
     path: 'journal',
     component: Journal,
-    canActivate: [authGuard]
+    canActivate: [authGuard],
   },
   {
     path: 'programme',
     component: Programme,
-    canActivate: [authGuard]
+    canActivate: [authGuard],
   },
   {
     path: 'programme/new',
     component: ProgrammeBuilder,
-    canActivate: [authGuard]
+    canActivate: [authGuard],
   },
   {
     path: 'programme/:id/edit',
     component: ProgrammeBuilder,
-    canActivate: [authGuard]
+    canActivate: [authGuard],
   },
   {
     path: 'session',
     component: Session,
-    canActivate: [authGuard]
+    canActivate: [authGuard],
   },
   {
     path: 'profile',
     component: Profile,
-    canActivate: [authGuard]
+    canActivate: [authGuard],
   },
   {
     path: 'agora',
     component: Agora,
-    canActivate: [authGuard]
+    canActivate: [authGuard],
   },
   {
     path: 'session/:id',
     component: Session,
-    canActivate: [authGuard]
+    canActivate: [authGuard],
   },
   {
     path: 'session/:id/wod/:exoId',
-    loadComponent: () => import('./components/wod/wod').then(m => m.Wod),
-    canActivate: [authGuard]
+    loadComponent: () => import('./components/wod/wod').then((m) => m.Wod),
+    canActivate: [authGuard],
   },
   {
     path: 'profile/:id',
     component: Profile,
-    canActivate: [authGuard]
+    canActivate: [authGuard],
   },
   {
     path: 'tresor',
     component: Tresor,
-    canActivate: [authGuard]
+    canActivate: [authGuard],
   },
   {
     path: 'tresor/:id',
     component: Tresor,
-    canActivate: [authGuard]
+    canActivate: [authGuard],
   },
 
   {
     path: 'bibliotheque',
     component: Bibliotheque,
-    canActivate: [authGuard]
+    canActivate: [authGuard],
   },
 
   {
     path: 'settings',
     component: Settings,
-    canActivate: [authGuard]
+    canActivate: [authGuard],
   },
   { path: 'reset-password', component: ResetPassword },
 
   {
     path: 'onboarding',
     component: OnboardingComponent,
-    canActivate: [authGuard]
+    canActivate: [authGuard],
   },
 
   {
     path: 'exercice/:id',
-    loadComponent: () => import('./components/exercice-detail/exercice-detail').then(m => m.ExerciceDetailComponent),
+    loadComponent: () =>
+      import('./components/exercice-detail/exercice-detail').then((m) => m.ExerciceDetailComponent),
     canActivate: [authGuard],
   },
 
   {
     path: 'fitbit',
-    loadComponent: () => import('./components/fitbit-dashboard/fitbit-dashboard').then(m => m.FitbitDashboard),
+    loadComponent: () =>
+      import('./components/fitbit-dashboard/fitbit-dashboard').then((m) => m.FitbitDashboard),
     canActivate: [authGuard],
   },
 
   {
     path: 'statistics',
-    loadComponent: () => import('./components/statistics/statistics').then(m => m.Statistics),
+    loadComponent: () => import('./components/statistics/statistics').then((m) => m.Statistics),
+    canActivate: [authGuard],
+  },
+
+  // WHY: instrument de mesure temporaire pour valider la survie du GPS écran éteint avant
+  // d'écrire la page Course. À retirer une fois le relevé fait.
+  {
+    path: 'labo-gps',
+    loadComponent: () => import('./components/labo-gps/labo-gps').then((m) => m.LaboGps),
     canActivate: [authGuard],
   },
 
   { path: '', redirectTo: 'chat', pathMatch: 'full' },
-  { path: '**', redirectTo: 'chat' }
+  { path: '**', redirectTo: 'chat' },
 ];
