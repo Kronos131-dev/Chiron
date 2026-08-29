@@ -55,7 +55,6 @@ const CLE_MAPPING_CASQUE_LONG = 'chiron.course.casqueLong';
 const CLE_MELANGER_MUSIQUE = 'chiron.course.melangerMusique';
 const CLE_UNITE_ALLURE = 'chiron.course.uniteAllure';
 const CLE_VOLUME_VOIX = 'chiron.course.volumeVoix';
-const CLE_VOIX = 'chiron.course.voix';
 const CLE_OBJECTIF = 'chiron.course.objectifKm';
 const OBJECTIF_MAX_KM = 300;
 
@@ -87,7 +86,6 @@ export class Course implements OnInit, OnDestroy {
   readonly melangerMusique = signal(false);
   readonly uniteAllure = signal<UniteAllure>('minParKm');
   readonly volumeVoix = signal(VOLUME_DEFAUT);
-  readonly voix = signal<string | null>(null);
   readonly objectifKm = signal('');
   readonly mappingCasque = signal<MappingCasque>({ ...MAPPING_PAR_DEFAUT });
   readonly mappingCasqueLong = signal<MappingCasque>({ ...MAPPING_LONG_PAR_DEFAUT });
@@ -107,7 +105,6 @@ export class Course implements OnInit, OnDestroy {
   readonly erreurMicro = this.runtime.erreurMicro;
   readonly audioActif = this.runtime.audioActif;
   readonly voixMuette = this.runtime.voixMuette;
-  readonly voixDisponibles = this.runtime.voixDisponibles;
   readonly objectifDureeS = this.runtime.objectifDureeS;
   readonly objectifAtteint = computed(() => this.objectifDureeS() > 0);
   readonly objectifResume = computed(() =>
@@ -180,7 +177,6 @@ export class Course implements OnInit, OnDestroy {
     this.melangerMusique.set(this.lireDrapeau(CLE_MELANGER_MUSIQUE));
     this.uniteAllure.set(this.lireUnite());
     this.volumeVoix.set(this.lireVolume());
-    this.voix.set(this.lire(CLE_VOIX));
     this.objectifKm.set(this.lire(CLE_OBJECTIF) ?? '');
     this.runtime.attacher(this.routineId, this.exoId);
     this.runtime.configurer(this.options());
@@ -211,7 +207,6 @@ export class Course implements OnInit, OnDestroy {
       melangerMusique: this.melangerMusique(),
       uniteAllure: this.uniteAllure(),
       volumeVoix: this.volumeVoix(),
-      voix: this.voix(),
       objectifDistanceM: this.objectifM(),
     };
   }
@@ -434,19 +429,7 @@ export class Course implements OnInit, OnDestroy {
   }
 
   basculerReglages(): void {
-    const ouvert = !this.reglagesOuverts();
-    this.reglagesOuverts.set(ouvert);
-    if (ouvert) this.runtime.chargerLesVoix();
-  }
-
-  // WHY: aucun moteur Android n'expose le genre d'une voix, et les voix françaises de Google
-  // s'appellent « fr-fr-x-vlf-local » — le nom ne révèle rien. Le choix automatique reste un
-  // pari : entendre chaque voix au moment où on la sélectionne est la seule façon d'en sortir.
-  choisirVoix(nom: string | null): void {
-    this.voix.set(nom);
-    if (nom === null) this.effacer(CLE_VOIX);
-    else this.ecrire(CLE_VOIX, nom);
-    this.essayerLaVoix();
+    this.reglagesOuverts.update((ouvert) => !ouvert);
   }
 
   changerMappingCasque(bouton: BoutonCasque, action: ActionCasque): void {

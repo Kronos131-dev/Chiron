@@ -2,7 +2,6 @@ export interface Voix {
   parler(texte: string): void;
   interrompreEtParler(texte: string): void;
   fixerVolume(fraction: number): void;
-  fixerVoix(nom: string | null): void;
   taire(): void;
 }
 
@@ -101,21 +100,17 @@ export function creerVoix(langue: string, pendantLaParole?: (parle: boolean) => 
       parler: () => {},
       interrompreEtParler: () => {},
       fixerVolume: () => {},
-      fixerVoix: () => {},
       taire: () => {},
     };
   }
 
   let volume = VOLUME;
-  let nomImpose: string | null = null;
 
   let choisie: SpeechSynthesisVoice | null = null;
 
   const rafraichirLaVoix = () => {
     try {
-      const catalogue = moteur.getVoices() ?? [];
-      const imposee = nomImpose ? catalogue.find((v) => v.name === nomImpose) : undefined;
-      choisie = imposee ?? choisirVoixGrave(catalogue, langue);
+      choisie = choisirVoixGrave(moteur.getVoices() ?? [], langue);
     } catch {}
   };
   rafraichirLaVoix();
@@ -164,14 +159,10 @@ export function creerVoix(langue: string, pendantLaParole?: (parle: boolean) => 
   return {
     parler: (texte) => enoncer(texte, false),
     interrompreEtParler: (texte) => enoncer(texte, true),
-    // WHY: le navigateur plafonne à 1. Un réglage au-delà n'a nulle part où aller : seul
-    // Android peut pousser le volume du flux média, et c'est le service natif qui le fait.
+    // WHY: le navigateur plafonne le volume d'un énoncé à 1. Le réglage ne peut donc
+    // qu'atténuer la voix sous le niveau de la page, jamais la pousser au-dessus.
     fixerVolume: (fraction) => {
       volume = Math.min(1, Math.max(0, fraction));
-    },
-    fixerVoix: (nom) => {
-      nomImpose = nom;
-      rafraichirLaVoix();
     },
     taire: () => {
       try {

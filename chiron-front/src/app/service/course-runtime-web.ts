@@ -1,7 +1,6 @@
 import { Signal, computed, signal } from '@angular/core';
 import { CourseTracker, tempsALaDistanceS } from './course-tracker';
 import { CourseRuntime, OptionsCourse, interpoler } from './course-runtime';
-import { VoixDisponible } from './chiron-course.plugin';
 import { formaterDistance, kmhVersMinParKm, minParKmVersKmh } from '../util/allure';
 import { Commande, interpreter } from '../util/commandes-vocales';
 import {
@@ -48,7 +47,6 @@ export class RuntimeWeb implements CourseRuntime {
   readonly commandeComprise = signal<boolean | null>(null);
   readonly erreurMicro = signal<string | null>(null);
   readonly voixMuette = signal(false);
-  readonly voixDisponibles = signal<VoixDisponible[]>([]);
   readonly objectifDureeS = signal(0);
   readonly audioActif = signal(true);
   readonly microDisponible: Signal<boolean> = computed(() => this.moteurReconnaissance() !== null);
@@ -90,7 +88,6 @@ export class RuntimeWeb implements CourseRuntime {
   configurer(options: OptionsCourse): void {
     this.options = options;
     this.voix?.fixerVolume(this.fractionDeVolume());
-    this.voix?.fixerVoix(options.voix);
     if (!this.telecommande) return;
     this.telecommande.relacher();
     this.telecommande = brancherTelecommande(options.appuiCourt, (action) =>
@@ -160,28 +157,7 @@ export class RuntimeWeb implements CourseRuntime {
       );
     }
     this.voix?.fixerVolume(this.fractionDeVolume());
-    this.voix?.fixerVoix(this.options?.voix ?? null);
     this.voix?.interrompreEtParler(texte);
-  }
-
-  // WHY: getVoices() rend une liste vide au premier appel sur Chrome, le catalogue arrivant de
-  // façon asynchrone. L'évènement voiceschanged est le seul moment où elle est sûrement peuplée.
-  chargerLesVoix(): void {
-    const relever = () => {
-      const moteur = typeof window === 'undefined' ? null : window.speechSynthesis;
-      if (!moteur) return;
-      const racine = (this.options?.langue ?? 'fr').slice(0, 2).toLowerCase();
-      const catalogue = (moteur.getVoices() ?? []).filter(
-        (v) => (v.lang ?? '').slice(0, 2).toLowerCase() === racine,
-      );
-      this.voixDisponibles.set(
-        catalogue.map((v) => ({ nom: v.name, reseau: v.localService === false })),
-      );
-    };
-    relever();
-    try {
-      window.speechSynthesis?.addEventListener?.('voiceschanged', relever, { once: true });
-    } catch {}
   }
 
   private fractionDeVolume(): number {
@@ -299,7 +275,6 @@ export class RuntimeWeb implements CourseRuntime {
       );
     }
     this.voix?.fixerVolume(this.fractionDeVolume());
-    this.voix?.fixerVoix(this.options.voix);
     this.telecommande = brancherTelecommande(this.options.appuiCourt, (action) =>
       this.executerAction(action),
     );

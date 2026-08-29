@@ -10,10 +10,9 @@ import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
 import android.speech.tts.Voice;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Deque;
-import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public final class Annonceur {
@@ -26,7 +25,12 @@ public final class Annonceur {
     private static final int POIDS_GENRE = 10000;
     private static final int POIDS_HORS_LIGNE = 1000;
     private static final int POIDS_PAYS = 500;
-    private static final int VOIX_MAX_LISTEES = 12;
+
+    // WHY: aucun moteur Android n'expose le genre d'une voix, et les voix françaises de Google
+    // portent un identifiant opaque — « fr-fr-x-frd-local » ne dit rien de ce qu'on entendra.
+    // Le choix automatique restait donc un pari, et il tombait sur une voix féminine. Celle-ci
+    // a été retenue à l'oreille. Absente de l'appareil, on repasse au score.
+    private static final Map<String, String> VOIX_PREFEREE = Map.of("fr", "fr-fr-x-frd-local");
 
     private final Context context;
     private final AudioManager audioManager;
@@ -39,9 +43,7 @@ public final class Annonceur {
     private boolean libere = false;
     private int volumePourcent = 100;
     private Runnable apresSilence;
-    private String voixChoisie;
     private Locale locale = Locale.FRANCE;
-    private final Deque<Runnable> aLaPreparation = new ArrayDeque<>();
     private volatile long derniereParoleA = 0;
     private AudioFocusRequest demandeFocus;
     private final AudioManager.OnAudioFocusChangeListener focusListener = changement -> {};
@@ -104,28 +106,13 @@ public final class Annonceur {
             }
         );
         pret = true;
-        while (!aLaPreparation.isEmpty()) aLaPreparation.poll().run();
         while (!attente.isEmpty()) enoncer(attente.poll());
     }
 
-    // WHY: lister ou choisir une voix n'a de sens qu'une fois le moteur lié, ce qui prend
-    // plusieurs centaines de millisecondes après la construction. La demande est donc mise en
-    // attente plutôt que rendue sur un catalogue vide.
-    public void quandPret(Runnable suite) {
-        if (pret) {
-            suite.run();
-            return;
-        }
-        aLaPreparation.add(suite);
-    }
-
-    public void fixerVoix(String nom) {
-        voixChoisie = nom == null || nom.isEmpty() ? null : nom;
-        if (pret) appliquerLaVoix();
-    }
 
     private void appliquerLaVoix() {
-        Voice retenue = voixChoisie == null ? null : parNom(voixChoisie);
+        String souhaitee = VOIX_PREFEREE.get(locale.getLanguage());
+        Voice retenue = souhaitee == null ? null : parNom(souhaitee);
         if (retenue != null) {
             tts.setVoice(retenue);
             tts.setPitch(estMasculine(retenue.getName()) ? HAUTEUR_MASCULINE : HAUTEUR_A_DEFAUT);
@@ -137,41 +124,12 @@ public final class Annonceur {
     private Voice parNom(String nom) {
         try {
             for (Voice voix : tts.getVoices()) {
-                if (voix != null && nom.equals(voix.getName())) return voix;
+                if (voix != null && nom.equalsIgnoreCase(voix.getName())) return voix;
             }
         } catch (Exception ignore) {}
         return null;
     }
 
-    // WHY: aucun moteur n'expose le genre d'une voix autrement que dans son nom, et les voix
-    // françaises de Google s'appellent « fr-fr-x-vlf-local » — le nom ne révèle rien. Le choix
-    // automatique reste donc un pari, et cette liste est ce qui permet à l'athlète de trancher
-    // à l'oreille plutôt que de subir le pari.
-    public List<Voice> catalogue() {
-        List<Voice> retenues = new ArrayList<>();
-        try {
-            for (Voice voix : tts.getVoices()) {
-                if (voix == null || voix.getLocale() == null) continue;
-                if (!voix.getLocale().getLanguage().equals(locale.getLanguage())) continue;
-                retenues.add(voix);
-            }
-        } catch (Exception ignore) {
-            return retenues;
-        }
-        retenues.sort((a, b) -> noter(b, locale) - noter(a, locale));
-        return retenues.size() > VOIX_MAX_LISTEES
-            ? retenues.subList(0, VOIX_MAX_LISTEES)
-            : retenues;
-    }
-
-    public String nomDeLaVoixCourante() {
-        try {
-            Voice courante = tts.getVoice();
-            return courante == null ? "" : courante.getName();
-        } catch (Exception ignore) {
-            return "";
-        }
-    }
 
     // WHY: aucun moteur Android n'expose le genre d'une voix. Le nom est le seul indice —
     // « fr-fr-x-vlf#male_1-local » — et il faut une frontière de mot, sinon « female » est

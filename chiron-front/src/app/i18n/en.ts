@@ -411,12 +411,6 @@ export const en: Record<string, string> = {
   'course.voiceVolume': 'Voice volume',
   'course.voiceVolumeHint':
     'How loud the voice is next to your music. Chiron never changes your phone volume. Move the slider to hear it.',
-  'course.voice': 'Coach voice',
-  'course.voiceHint':
-    'Android never says whether a voice is male or female. Tap them to hear each one, and keep the one you want.',
-  'course.voiceAuto': 'Automatic',
-  'course.voiceNumbered': 'Voice {{n}}',
-  'course.voiceOnline': 'needs a connection',
   'course.testVoice': 'Play',
   'course.micTalkHint':
     'The mic also opens from your headset: pick the button and the press that trigger it below.',

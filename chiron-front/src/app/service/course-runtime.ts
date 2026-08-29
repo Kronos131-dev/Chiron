@@ -4,7 +4,6 @@ import { EtatCourse } from './course-tracker';
 import { Commande } from '../util/commandes-vocales';
 import { MappingCasque } from '../util/telecommande-casque';
 import { UniteAllure } from '../util/allure';
-import { VoixDisponible } from './chiron-course.plugin';
 
 export interface OptionsCourse {
   langue: string;
@@ -16,7 +15,6 @@ export interface OptionsCourse {
   melangerMusique: boolean;
   uniteAllure: UniteAllure;
   volumeVoix: number;
-  voix: string | null;
   objectifDistanceM: number;
 }
 
@@ -40,7 +38,6 @@ export interface CourseRuntime {
   readonly commandeComprise: Signal<boolean | null>;
   readonly erreurMicro: Signal<string | null>;
   readonly voixMuette: Signal<boolean>;
-  readonly voixDisponibles: Signal<VoixDisponible[]>;
   readonly objectifDureeS: Signal<number>;
 
   attacher(routineId: string, exoId: string): void;
@@ -53,7 +50,6 @@ export interface CourseRuntime {
   fixerCible(minParKm: number | null): void;
   dire(texte: string, prioritaire: boolean): void;
   essayerVoix(texte: string): void;
-  chargerLesVoix(): void;
   commencerEcoute(): void;
   terminerEcoute(): void;
   executer(commande: Commande): void;

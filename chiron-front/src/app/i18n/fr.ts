@@ -415,12 +415,6 @@ export const fr: Record<string, string> = {
   'course.voiceVolume': 'Volume de la voix',
   'course.voiceVolumeHint':
     "Niveau de la voix par rapport à ta musique. Chiron ne touche jamais au volume de ton téléphone. Déplace le curseur pour l'entendre.",
-  'course.voice': 'Voix du coach',
-  'course.voiceHint':
-    'Android ne dit jamais si une voix est masculine ou féminine. Touche-les pour les entendre, et garde celle qui te va.',
-  'course.voiceAuto': 'Automatique',
-  'course.voiceNumbered': 'Voix {{n}}',
-  'course.voiceOnline': 'nécessite du réseau',
   'course.testVoice': 'Écouter',
   'course.micTalkHint':
     "Le micro s'ouvre aussi depuis le casque : choisis le bouton et l'appui qui le déclenchent ci-dessous.",
