@@ -21,6 +21,10 @@ jobs:
   build-android:
     name: Build APK
     runs-on: ubuntu-latest
+    # WHY: publier une release demande d'écrire dans le dépôt. Le jeton reste cantonné à ça —
+    # ce workflow n'a toujours aucun accès au serveur de production.
+    permissions:
+      contents: write
     defaults:
       run:
         working-directory: chiron-front
@@ -72,11 +76,32 @@ jobs:
 
       - name: Signature status
         working-directory: chiron-front/android
+        env:
+          KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
-          if [ -z "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
+          if [ -z "$KEYSTORE" ]; then
             echo "::warning::Aucun keystore configuré — l'APK produit n'est pas signé et ne s'installe pas."
+            echo "APK_SIGNE=false" >> $GITHUB_ENV
+          else
+            echo "APK_SIGNE=true" >> $GITHUB_ENV
           fi
           ls -l app/build/outputs/apk/release/
+
+      # WHY: un APK non signé ne s'installe sur aucun téléphone. Le publier donnerait un lien
+      # de téléchargement qui échoue au dernier moment, ce qui est pire que pas de lien.
+      - name: Publish the APK as a release
+        if: github.ref == 'refs/heads/main' && env.APK_SIGNE == 'true'
+        working-directory: chiron-front/android
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp app/build/outputs/apk/release/app-release.apk chiron.apk
+          TAG="android-v1.${{ github.run_number }}"
+          gh release create "$TAG" chiron.apk \
+            --title "Chiron Android 1.${{ github.run_number }}" \
+            --notes "Build automatique du commit ${{ github.sha }}." \
+            --latest \
+          || gh release upload "$TAG" chiron.apk --clobber
 
       - uses: actions/upload-artifact@v5
         with:
