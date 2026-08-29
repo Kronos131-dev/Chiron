@@ -116,10 +116,6 @@
         {{ 'course.start' | t }}
       </span>
     </button>
-
-    <p class="text-on-surface-variant text-[10px] leading-relaxed text-center max-w-xs mt-6">
-      {{ 'course.startHint' | t }}
-    </p>
   } @else if (!termine()) {
     <div class="flex items-center gap-4 mt-8">
       <button
@@ -160,6 +156,14 @@
     @if (microDisponible()) {
       <p class="text-on-surface-variant text-[10px] font-bold tracking-[0.15em] uppercase mt-3">
         {{ 'course.pushToTalkHint' | t }}
+      </p>
+    }
+
+    @if (objectifAtteint()) {
+      <p
+        class="w-full max-w-sm mt-3 bg-emerald-500/10 border border-emerald-500/40 rounded-xl p-3 text-emerald-300 text-[11px] font-bold tracking-[0.1em] uppercase text-center"
+      >
+        {{ objectifResume() }}
       </p>
     }
 
@@ -242,6 +246,14 @@
         </p>
       </div>
     </div>
+
+    @if (objectifAtteint()) {
+      <p
+        class="w-full max-w-sm mt-4 bg-emerald-500/10 border border-emerald-500/40 rounded-xl p-3 text-emerald-300 text-[11px] font-bold tracking-[0.1em] uppercase text-center"
+      >
+        {{ objectifResume() }}
+      </p>
+    }
 
     @if (enregistrement()) {
       <p class="text-on-surface-variant text-[10px] font-bold tracking-[0.2em] uppercase mt-5">
@@ -394,6 +406,28 @@
       >
         <div>
           <div class="flex items-baseline justify-between gap-3">
+            <span class="text-on-surface text-xs font-bold">
+              {{ 'course.goalDistance' | t }}
+            </span>
+            <input
+              type="text"
+              inputmode="decimal"
+              [ngModel]="objectifKm()"
+              (ngModelChange)="objectifKm.set($event)"
+              (blur)="validerObjectif()"
+              (keyup.enter)="validerObjectif()"
+              [placeholder]="'course.goalPlaceholder' | t"
+              [attr.aria-label]="'course.goalDistance' | t"
+              class="font-headline text-xl font-black text-secondary tabular-nums bg-transparent border-b border-secondary/30 focus:border-secondary outline-none text-center w-20"
+            />
+          </div>
+          <p class="text-on-surface-variant text-[10px] leading-relaxed mt-2">
+            {{ 'course.goalHint' | t }}
+          </p>
+        </div>
+
+        <div>
+          <div class="flex items-baseline justify-between gap-3">
             <span class="text-on-surface text-xs font-bold">{{ 'course.voiceVolume' | t }}</span>
             <span class="text-secondary text-xs font-black tabular-nums">{{ volumeVoix() }} %</span>
           </div>
@@ -461,6 +495,9 @@
                   [class.text-on-surface-variant]="voix() !== candidate.nom"
                 >
                   {{ 'course.voiceNumbered' | t: { n: i + 1 } }}
+                </span>
+                <span class="text-on-surface-variant text-[8px] block mt-0.5 break-all">
+                  {{ candidate.nom }}
                 </span>
                 @if (candidate.reseau) {
                   <span class="text-on-surface-variant text-[9px] block mt-0.5">

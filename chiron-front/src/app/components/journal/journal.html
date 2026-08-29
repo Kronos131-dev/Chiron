@@ -383,6 +383,45 @@
                                   @if (traceDepliee() === serie.courseTraceId) {
                                     @if (trace(serie.courseTraceId); as trace) {
                                       <div class="bg-slate-900/30 rounded p-3 space-y-3">
+                                        <div class="grid grid-cols-3 gap-2">
+                                          <div class="text-center">
+                                            <p
+                                              class="text-on-surface-variant text-[9px] font-bold tracking-[0.15em] uppercase"
+                                            >
+                                              {{ 'journal.distance' | t }}
+                                            </p>
+                                            <p
+                                              class="font-headline text-lg font-black text-white tabular-nums"
+                                            >
+                                              {{ trace.distanceM / 1000 | number: '1.2-2' }}
+                                            </p>
+                                          </div>
+                                          <div class="text-center">
+                                            <p
+                                              class="text-on-surface-variant text-[9px] font-bold tracking-[0.15em] uppercase"
+                                            >
+                                              {{ 'journal.duration' | t }}
+                                            </p>
+                                            <p
+                                              class="font-headline text-lg font-black text-white tabular-nums"
+                                            >
+                                              {{ chronoFormate(trace.dureeS) }}
+                                            </p>
+                                          </div>
+                                          <div class="text-center">
+                                            <p
+                                              class="text-on-surface-variant text-[9px] font-bold tracking-[0.15em] uppercase"
+                                            >
+                                              {{ 'journal.avgPace' | t }}
+                                            </p>
+                                            <p
+                                              class="font-headline text-lg font-black text-white tabular-nums"
+                                            >
+                                              {{ allureFormatee(trace.allureMoyenneKmh) }}
+                                            </p>
+                                          </div>
+                                        </div>
+
                                         @if (traceSvg(serie.courseTraceId).segments.length) {
                                           <svg
                                             class="w-full h-auto max-h-64"
@@ -412,6 +451,65 @@
                                               />
                                             }
                                           </svg>
+                                        }
+
+                                        @if (trace.objectifDureeS) {
+                                          <p
+                                            class="text-emerald-300 text-[10px] font-bold tracking-[0.15em] uppercase"
+                                          >
+                                            {{ 'journal.goal' | t }}
+                                            {{ trace.objectifDistanceM! / 1000 | number: '1.2-2' }}
+                                            km — {{ chronoFormate(trace.objectifDureeS) }}
+                                          </p>
+                                        }
+
+                                        @if (grapheAllure(serie.courseTraceId); as courbe) {
+                                          <div>
+                                            <p
+                                              class="text-secondary text-[9px] font-bold tracking-[0.2em] uppercase mb-1"
+                                            >
+                                              {{ 'journal.paceChart' | t }}
+                                            </p>
+                                            <svg
+                                              class="w-full h-24"
+                                              [attr.viewBox]="
+                                                '0 0 ' + courbe.largeur + ' ' + courbe.hauteur
+                                              "
+                                              preserveAspectRatio="none"
+                                              [attr.aria-label]="'journal.paceChart' | t"
+                                            >
+                                              @for (repere of courbe.reperes; track repere.km) {
+                                                <line
+                                                  [attr.x1]="repere.x"
+                                                  y1="0"
+                                                  [attr.x2]="repere.x"
+                                                  [attr.y2]="courbe.hauteur"
+                                                  stroke="rgba(255,255,255,0.09)"
+                                                  stroke-width="1"
+                                                  vector-effect="non-scaling-stroke"
+                                                />
+                                              }
+                                              <path
+                                                [attr.d]="courbe.chemin"
+                                                fill="none"
+                                                stroke="rgb(56 189 248)"
+                                                stroke-width="2"
+                                                stroke-linejoin="round"
+                                                stroke-linecap="round"
+                                                vector-effect="non-scaling-stroke"
+                                              />
+                                            </svg>
+                                            <div
+                                              class="flex justify-between text-on-surface-variant text-[9px] font-bold tabular-nums"
+                                            >
+                                              <span>{{
+                                                allureFormatee(courbe.allureLenteKmh)
+                                              }}</span>
+                                              <span>{{
+                                                allureFormatee(courbe.allureRapideKmh)
+                                              }}</span>
+                                            </div>
+                                          </div>
                                         }
 
                                         <p

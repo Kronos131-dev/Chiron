@@ -10,8 +10,11 @@ import { HeaderComponent } from '../shared/header/header';
 import { durationMinutes, formatDuration } from '../../util/duration';
 import { formaterAllure, formaterChrono } from '../../util/allure';
 import { TraceSvg, projeterTrace } from '../../util/trace-svg';
+import { GrapheAllure, construireGrapheAllure } from '../../util/graphe-allure';
 
 const COTE_TRACE = 320;
+const LARGEUR_GRAPHE = 320;
+const HAUTEUR_GRAPHE = 110;
 
 /** ISO-8601 week number (lundi = 1er jour de la semaine, semaine 1 = celle du premier jeudi). */
 function getIsoWeekNumber(d: Date): number {
@@ -32,7 +35,7 @@ function getIsoWeekNumber(d: Date): number {
   standalone: true,
   imports: [CommonModule, FormsModule, HeaderComponent, TranslatePipe],
   templateUrl: './journal.html',
-  styleUrls: ['./journal.css']
+  styleUrls: ['./journal.css'],
 })
 export class Journal implements OnInit {
   historique = signal<any[]>([]);
@@ -65,7 +68,7 @@ export class Journal implements OnInit {
     private chironApi: ChironApi,
     private authService: AuthService,
     private router: Router,
-    public i18n: I18nService
+    public i18n: I18nService,
   ) {}
 
   ngOnInit() {
@@ -74,7 +77,7 @@ export class Journal implements OnInit {
       this.loadJournal(this.currentUsername);
     } else {
       this.isLoading.set(false);
-      console.error("Aucun utilisateur connecté !");
+      console.error('Aucun utilisateur connecté !');
     }
   }
 
@@ -88,14 +91,14 @@ export class Journal implements OnInit {
         this.isLoading.set(false);
       },
       error: (err) => {
-        console.error("Erreur lors du chargement du journal", err);
+        console.error('Erreur lors du chargement du journal', err);
         this.isLoading.set(false);
-      }
+      },
     });
 
     this.chironApi.getActivites(400, 'CHIRON_MUSCU').subscribe({
       next: (activites) => this.activiteParSeance.set(this.groupBySeanceId(activites)),
-      error: (err) => console.error("Erreur lors du chargement des activités montre", err)
+      error: (err) => console.error('Erreur lors du chargement des activités montre', err),
     });
   }
 
@@ -122,11 +125,11 @@ export class Journal implements OnInit {
 
     const result = Object.keys(groupedByWeek)
       .sort((a, b) => parseInt(b) - parseInt(a))
-      .map(week => ({
+      .map((week) => ({
         weekNumber: week,
-        seances: groupedByWeek[week].sort((a, b) =>
-          new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
-        )
+        seances: groupedByWeek[week].sort(
+          (a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime(),
+        ),
       }));
 
     this.historiqueGrouped.set(result);
@@ -152,9 +155,9 @@ export class Journal implements OnInit {
           this.loadJournal(username);
         },
         error: (err) => {
-          console.error("Erreur lors de la suppression", err);
+          console.error('Erreur lors de la suppression', err);
           alert(this.i18n.t('journal.deleteError'));
-        }
+        },
       });
     }
   }
@@ -227,10 +230,10 @@ export class Journal implements OnInit {
           degressifs: (s.degressifs || []).map((d: any) => ({
             id: d.id ?? null,
             poids: d.poids != null ? Number(d.poids) : 0,
-            reps: d.reps != null ? Number(d.reps) : 0
-          }))
-        }))
-      }))
+            reps: d.reps != null ? Number(d.reps) : 0,
+          })),
+        })),
+      })),
     };
 
     this.isSaving.set(true);
@@ -243,10 +246,10 @@ export class Journal implements OnInit {
         this.loadJournal(username);
       },
       error: (err) => {
-        console.error("Erreur lors de la modification", err);
+        console.error('Erreur lors de la modification', err);
         this.isSaving.set(false);
         this.flashStatus(this.i18n.t('journal.updateError'));
-      }
+      },
     });
   }
 
@@ -263,17 +266,23 @@ export class Journal implements OnInit {
         ...exo,
         series: (exo.series || []).map((s: any) => ({
           ...s,
-          degressifs: (s.degressifs || []).map((d: any) => ({ ...d }))
-        }))
-      }))
+          degressifs: (s.degressifs || []).map((d: any) => ({ ...d })),
+        })),
+      })),
     };
   }
 
   formatDate(dateString: string): string {
     const options: Intl.DateTimeFormatOptions = {
-      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
     };
-    return new Date(dateString).toLocaleDateString(this.i18n.lang() === 'en' ? 'en-US' : 'fr-FR', options);
+    return new Date(dateString).toLocaleDateString(
+      this.i18n.lang() === 'en' ? 'en-US' : 'fr-FR',
+      options,
+    );
   }
 
   /**
@@ -294,10 +303,22 @@ export class Journal implements OnInit {
 
   zonesActivite(activite: SanteActiviteDto): { key: string; minutes: number; color: string }[] {
     return [
-      { key: 'journal.activite.zoneLow', minutes: activite.minutesZoneBasse ?? 0, color: '#22d3ee' },
-      { key: 'journal.activite.zoneModerate', minutes: activite.minutesZoneBruleuse ?? 0, color: '#2dd4bf' },
-      { key: 'journal.activite.zoneIntense', minutes: activite.minutesZoneCardio ?? 0, color: '#fbbf24' },
-      { key: 'journal.activite.zoneMax', minutes: activite.minutesZonePic ?? 0, color: '#f87171' }
+      {
+        key: 'journal.activite.zoneLow',
+        minutes: activite.minutesZoneBasse ?? 0,
+        color: '#22d3ee',
+      },
+      {
+        key: 'journal.activite.zoneModerate',
+        minutes: activite.minutesZoneBruleuse ?? 0,
+        color: '#2dd4bf',
+      },
+      {
+        key: 'journal.activite.zoneIntense',
+        minutes: activite.minutesZoneCardio ?? 0,
+        color: '#fbbf24',
+      },
+      { key: 'journal.activite.zoneMax', minutes: activite.minutesZonePic ?? 0, color: '#f87171' },
     ];
   }
 
@@ -306,7 +327,7 @@ export class Journal implements OnInit {
   }
 
   hasZonesActivite(activite: SanteActiviteDto): boolean {
-    return this.zonesActivite(activite).some(z => z.minutes > 0);
+    return this.zonesActivite(activite).some((z) => z.minutes > 0);
   }
 
   // WHY: une trace pèse quelques dizaines de milliers de points. Elle n'est demandée qu'au
@@ -323,7 +344,7 @@ export class Journal implements OnInit {
       next: (trace) => {
         this.tracesChargees.update((cache) => new Map(cache).set(courseTraceId, trace));
       },
-      error: () => this.traceDepliee.set(null)
+      error: () => this.traceDepliee.set(null),
     });
   }
 
@@ -336,10 +357,18 @@ export class Journal implements OnInit {
     return projeterTrace(trace?.points ?? [], COTE_TRACE);
   }
 
+  grapheAllure(courseTraceId: number): GrapheAllure | null {
+    const trace = this.trace(courseTraceId);
+    return construireGrapheAllure(trace?.points ?? [], LARGEUR_GRAPHE, HAUTEUR_GRAPHE);
+  }
+
   couleurSegment(courseTraceId: number, allureKmh: number): string {
     const { allureMinKmh, allureMaxKmh } = this.traceSvg(courseTraceId);
     if (allureMaxKmh <= allureMinKmh) return 'hsl(200 90% 60%)';
-    const ratio = Math.min(1, Math.max(0, (allureKmh - allureMinKmh) / (allureMaxKmh - allureMinKmh)));
+    const ratio = Math.min(
+      1,
+      Math.max(0, (allureKmh - allureMinKmh) / (allureMaxKmh - allureMinKmh)),
+    );
     return `hsl(${Math.round(220 - 220 * ratio)} 90% ${Math.round(52 + 12 * ratio)}%)`;
   }
 

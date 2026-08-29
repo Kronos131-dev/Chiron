@@ -19,6 +19,7 @@ import android.os.PowerManager;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.ServiceCompat;
 import androidx.core.content.ContextCompat;
+import androidx.media.session.MediaButtonReceiver;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -85,6 +86,8 @@ public final class CourseService extends Service {
     private String erreurGps = null;
     private String titre = "Course";
     private int volumeVoix = 100;
+    private double objectifM = 0;
+    private boolean objectifAnnonce = false;
     private long demandeEcouteA = 0;
 
     @Override
@@ -102,6 +105,14 @@ public final class CourseService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         String action = intent == null ? null : intent.getAction();
+        // WHY: les touches du casque arrivent par ce chemin quand l'application n'est plus au
+        // premier plan. MediaButtonReceiver les relaie au service, qui les rend a la session.
+        if (Intent.ACTION_MEDIA_BUTTON.equals(action)) {
+            if (telecommande != null) {
+                MediaButtonReceiver.handleIntent(telecommande.session(), intent);
+            }
+            return START_STICKY;
+        }
         if (ACTION_DEMARRER.equals(action)) {
             demarrer(intent.getStringExtra(EXTRA_CONFIGURATION));
         } else if (ACTION_BASCULER_PAUSE.equals(action)) {
@@ -135,6 +146,8 @@ public final class CourseService extends Service {
         titre = config.optString("titre", "Course");
         String langue = config.optString("langue", "fr");
         volumeVoix = config.optInt("volumeVoix", volumeVoix);
+        objectifM = config.optDouble("objectifDistanceM", 0);
+        mesure.fixerObjectif(objectifM);
         if (config.has("cibleMinParKm") && !config.isNull("cibleMinParKm")) {
             cibleMinParKm = config.optDouble("cibleMinParKm");
         }
@@ -169,6 +182,8 @@ public final class CourseService extends Service {
         if (config.has("uniteAllure")) phrases.fixerUnite(config.optString("uniteAllure"));
         if (config.has("volumeVoix")) {
             volumeVoix = config.optInt("volumeVoix", volumeVoix);
+        objectifM = config.optDouble("objectifDistanceM", 0);
+        mesure.fixerObjectif(objectifM);
             if (annonceur != null) annonceur.fixerVolume(volumeVoix);
         }
         if (config.has("voix") && annonceur != null) {
@@ -368,8 +383,23 @@ public final class CourseService extends Service {
         publierEtat();
         rafraichirLaNotification();
         if (enPause) return;
+        annoncerLObjectif();
         annoncerKilometres();
         surveillerAllure();
+    }
+
+    // WHY: l'objectif est dit une fois et la course ne s'arrête pas. L'athlète a demandé dix
+    // kilomètres, il veut savoir en combien il les a bouclés — et rester libre d'en courir deux
+    // de plus sans que l'application décide à sa place que c'est fini.
+    private void annoncerLObjectif() {
+        if (objectifAnnonce || mesure.instantObjectifMs() == null) return;
+        objectifAnnonce = true;
+        long dureeObjectifS = (long) Math.floor(mesure.instantObjectifMs() / MS_PAR_SECONDE);
+        Map<String, String> valeurs = new HashMap<>();
+        valeurs.put("km", Phrases.formaterDistance(objectifM));
+        valeurs.put("temps", phrases.dureeParlee(dureeObjectifS));
+        dire(phrases.t("goalReached", valeurs), true);
+        publierEtat();
     }
 
     // WHY: seul le dernier kilomètre franchi est annoncé. Après une reprise de signal
@@ -533,6 +563,11 @@ public final class CourseService extends Service {
             );
             etat.put("ecoute", ecoute != null && ecoute.active());
             etat.put("microDisponible", ecoute == null || ecoute.moteurPresent());
+            etat.put("objectifDistanceM", objectifM);
+            etat.put(
+                "objectifDureeMs",
+                mesure.instantObjectifMs() == null ? 0 : mesure.instantObjectifMs()
+            );
             etat.put("voixPrete", annonceur != null && annonceur.pret());
             etat.put("derniereParoleA", annonceur == null ? 0 : annonceur.derniereParoleA());
             etat.put(

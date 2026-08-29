@@ -24,6 +24,8 @@ public final class Mesure {
     private long pauseCumuleeMs = 0;
     private long depart = 0;
     private int prochainKm = 1;
+    private double objectifM = 0;
+    private Long instantObjectifMs = null;
 
     public static double distanceHaversineM(Point a, Point b) {
         double lat1 = Math.toRadians(a.lat);
@@ -71,6 +73,29 @@ public final class Mesure {
         double finSegmentMs = courant.t - depart - pauseCumuleeMs;
         parcours.add(new double[] { cumulM, finSegmentMs });
         releverLesFranchissements(debutSegmentM, segmentM, debutSegmentMs, finSegmentMs);
+        releverLObjectif(debutSegmentM, segmentM, debutSegmentMs, finSegmentMs);
+    }
+
+    public void fixerObjectif(double metres) {
+        objectifM = metres > 0 ? metres : 0;
+    }
+
+    public Long instantObjectifMs() {
+        return instantObjectifMs;
+    }
+
+    // WHY: interpolé dans le segment, comme les kilomètres et comme le serveur. C'est ce qui
+    // fait que le temps annoncé dans les oreilles est celui que le journal conservera.
+    private void releverLObjectif(
+        double debutSegmentM,
+        double segmentM,
+        double debutSegmentMs,
+        double finSegmentMs
+    ) {
+        if (objectifM <= 0 || instantObjectifMs != null) return;
+        if (segmentM <= 0 || cumulM < objectifM) return;
+        double fraction = (objectifM - debutSegmentM) / segmentM;
+        instantObjectifMs = Math.round(debutSegmentMs + fraction * (finSegmentMs - debutSegmentMs));
     }
 
     // WHY: l'instant exact d'un kilomètre tombe au milieu d'un segment GPS, jamais sur un

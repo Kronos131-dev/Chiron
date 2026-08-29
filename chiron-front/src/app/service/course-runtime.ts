@@ -17,6 +17,7 @@ export interface OptionsCourse {
   uniteAllure: UniteAllure;
   volumeVoix: number;
   voix: string | null;
+  objectifDistanceM: number;
 }
 
 export interface CourseRuntime {
@@ -40,6 +41,7 @@ export interface CourseRuntime {
   readonly erreurMicro: Signal<string | null>;
   readonly voixMuette: Signal<boolean>;
   readonly voixDisponibles: Signal<VoixDisponible[]>;
+  readonly objectifDureeS: Signal<number>;
 
   attacher(routineId: string, exoId: string): void;
   reprendreCourseEnCours(): Promise<boolean>;
@@ -68,6 +70,7 @@ export const CLES_PHRASES: Record<string, string> = {
   resumed: 'course.say.resumed',
   finished: 'course.say.finished',
   km: 'course.say.km',
+  goalReached: 'course.say.goalReached',
   speed: 'course.say.speed',
   volumeTest: 'course.say.volumeTest',
   speedUp: 'course.say.speedUp',

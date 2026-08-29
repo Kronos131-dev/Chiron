@@ -56,6 +56,8 @@ const CLE_MELANGER_MUSIQUE = 'chiron.course.melangerMusique';
 const CLE_UNITE_ALLURE = 'chiron.course.uniteAllure';
 const CLE_VOLUME_VOIX = 'chiron.course.volumeVoix';
 const CLE_VOIX = 'chiron.course.voix';
+const CLE_OBJECTIF = 'chiron.course.objectifKm';
+const OBJECTIF_MAX_KM = 300;
 
 @Component({
   selector: 'app-course',
@@ -86,6 +88,7 @@ export class Course implements OnInit, OnDestroy {
   readonly uniteAllure = signal<UniteAllure>('minParKm');
   readonly volumeVoix = signal(VOLUME_DEFAUT);
   readonly voix = signal<string | null>(null);
+  readonly objectifKm = signal('');
   readonly mappingCasque = signal<MappingCasque>({ ...MAPPING_PAR_DEFAUT });
   readonly mappingCasqueLong = signal<MappingCasque>({ ...MAPPING_LONG_PAR_DEFAUT });
   readonly boutonsCasque = BOUTONS_CASQUE;
@@ -105,6 +108,14 @@ export class Course implements OnInit, OnDestroy {
   readonly audioActif = this.runtime.audioActif;
   readonly voixMuette = this.runtime.voixMuette;
   readonly voixDisponibles = this.runtime.voixDisponibles;
+  readonly objectifDureeS = this.runtime.objectifDureeS;
+  readonly objectifAtteint = computed(() => this.objectifDureeS() > 0);
+  readonly objectifResume = computed(() =>
+    this.i18n.t('course.goalReached', {
+      km: formaterDistance(this.objectifM()),
+      temps: formaterChrono(this.objectifDureeS()),
+    }),
+  );
   readonly microDisponible = this.runtime.microDisponible;
   readonly natif = this.runtime.natif;
 
@@ -170,6 +181,7 @@ export class Course implements OnInit, OnDestroy {
     this.uniteAllure.set(this.lireUnite());
     this.volumeVoix.set(this.lireVolume());
     this.voix.set(this.lire(CLE_VOIX));
+    this.objectifKm.set(this.lire(CLE_OBJECTIF) ?? '');
     this.runtime.attacher(this.routineId, this.exoId);
     this.runtime.configurer(this.options());
     this.reprendre();
@@ -200,6 +212,7 @@ export class Course implements OnInit, OnDestroy {
       uniteAllure: this.uniteAllure(),
       volumeVoix: this.volumeVoix(),
       voix: this.voix(),
+      objectifDistanceM: this.objectifM(),
     };
   }
 
@@ -211,6 +224,26 @@ export class Course implements OnInit, OnDestroy {
     for (const [court, cle] of Object.entries(CLES_PHRASES)) phrases[court] = this.i18n.t(cle);
     phrases['uniteAllure'] = this.uniteLibelle();
     return phrases;
+  }
+
+  // WHY: la distance visée est une intention, pas une limite. Elle déclenche une annonce et
+  // fige le temps mis à l'atteindre ; la course, elle, ne s'arrête que quand l'athlète le
+  // décide — il peut vouloir deux kilomètres de plus, et rien ne doit l'en empêcher.
+  objectifM(): number {
+    const km = Number.parseFloat(this.objectifKm().replace(',', '.'));
+    if (!Number.isFinite(km) || km <= 0 || km > OBJECTIF_MAX_KM) return 0;
+    return Math.round(km * 1000);
+  }
+
+  validerObjectif(): void {
+    const metres = this.objectifM();
+    if (metres <= 0) {
+      this.objectifKm.set('');
+      this.effacer(CLE_OBJECTIF);
+    } else {
+      this.ecrire(CLE_OBJECTIF, this.objectifKm());
+    }
+    this.runtime.configurer(this.options());
   }
 
   allureAffichee(kmh: number): string {
@@ -297,7 +330,7 @@ export class Course implements OnInit, OnDestroy {
 
     this.enregistrement.set(true);
     this.erreurEnregistrement.set(false);
-    this.chironApi.enregistrerTraceCourse(points).subscribe({
+    this.chironApi.enregistrerTraceCourse(points, this.objectifM() || null).subscribe({
       next: (trace) => {
         this.enregistrement.set(false);
         this.resume.set(trace);

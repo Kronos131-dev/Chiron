@@ -13,6 +13,7 @@ export interface ConfigurationCourse {
   uniteAllure: UniteAllure;
   volumeVoix: number;
   voix: string | null;
+  objectifDistanceM: number;
 }
 
 export interface VoixDisponible {
@@ -36,6 +37,8 @@ export interface EtatNatif {
   microDisponible: boolean;
   voixPrete: boolean;
   derniereParoleA: number;
+  objectifDistanceM: number;
+  objectifDureeMs: number;
   cibleMinParKm: number | null;
   nouveauxPoints?: CoursePointDto[];
 }

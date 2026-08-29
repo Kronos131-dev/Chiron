@@ -290,7 +290,10 @@ export const fr: Record<string, string> = {
   'journal.hideTrace': 'Masquer le tracé',
   'journal.loadingTrace': 'Chargement du tracé…',
   'journal.trace': 'Tracé de la sortie',
+  'journal.goal': 'Objectif',
   'journal.elevation': 'D+',
+  'journal.avgPace': 'Allure moy.',
+  'journal.paceChart': 'Allure sur le parcours',
   'journal.km': 'Km {{km}}',
   'journal.wodRounds': 'tours en {{minutes}} min',
   'journal.drop': 'Dég.',
@@ -365,8 +368,6 @@ export const fr: Record<string, string> = {
 
   'course.title': 'Course',
   'course.start': 'Démarrer',
-  'course.startHint':
-    "Garde l'onglet ouvert et glisse le téléphone dans ta poche : le son maintient le GPS actif écran éteint, et les boutons du casque pilotent la course.",
   'course.pause': 'Mettre en pause',
   'course.resume': 'Reprendre',
   'course.finish': 'Terminer la course',
@@ -406,6 +407,11 @@ export const fr: Record<string, string> = {
   'course.paceUnit.kmh': 'Kilomètres par heure',
   'course.paceUnitShort.minParKm': '/km',
   'course.paceUnitShort.kmh': 'km/h',
+  'course.goalDistance': 'Distance visée (km)',
+  'course.goalPlaceholder': '10',
+  'course.goalHint':
+    "Chiron te l'annonce et enregistre ton temps quand tu l'atteins. La course continue tant que tu ne l'arrêtes pas.",
+  'course.goalReached': 'Objectif : {{km}} km en {{temps}}',
   'course.voiceVolume': 'Volume de la voix',
   'course.voiceVolumeHint':
     "Niveau de la voix par rapport à ta musique. Chiron ne touche jamais au volume de ton téléphone. Déplace le curseur pour l'entendre.",
@@ -466,6 +472,8 @@ export const fr: Record<string, string> = {
   'course.say.paused': 'Pause. | Je garde le compte.',
   'course.say.resumed': 'On repart.',
   'course.say.finished': 'Terminé. | Bien couru.',
+  'course.say.goalReached':
+    'Objectif atteint. | {{km}} kilomètres en {{temps}}. | Continue si tu veux.',
   'course.say.km': 'Kilomètre {{km}}. | Allure {{allure}} sur ce kilomètre. | {{temps}} au total.',
   'course.say.speed': '{{vitesse}} kilomètres heure',
   'course.say.volumeTest': 'Voilà comment je te parlerai.',

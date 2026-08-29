@@ -25,6 +25,8 @@ export interface CourseTraceDto {
   dureeS: number;
   allureMoyenneKmh: number;
   denivelePositifM: number;
+  objectifDistanceM: number | null;
+  objectifDureeS: number | null;
   splits: CourseSplitDto[];
   points: CoursePointDto[];
 }
@@ -418,8 +420,14 @@ export class ChironApi {
     return this.http.get<ExerciceDefinitionDto>(`${this.apiUrl}/exercices/${id}`);
   }
 
-  enregistrerTraceCourse(points: CoursePointDto[]): Observable<CourseTraceDto> {
-    return this.http.post<CourseTraceDto>(`${this.apiUrl}/courses/traces`, { points });
+  enregistrerTraceCourse(
+    points: CoursePointDto[],
+    objectifDistanceM: number | null,
+  ): Observable<CourseTraceDto> {
+    return this.http.post<CourseTraceDto>(`${this.apiUrl}/courses/traces`, {
+      points,
+      objectifDistanceM,
+    });
   }
 
   getTraceCourse(id: number): Observable<CourseTraceDto> {

@@ -286,7 +286,10 @@ export const en: Record<string, string> = {
   'journal.hideTrace': 'Hide the track',
   'journal.loadingTrace': 'Loading the track…',
   'journal.trace': 'Route of the run',
+  'journal.goal': 'Target',
   'journal.elevation': 'Elev.',
+  'journal.avgPace': 'Avg pace',
+  'journal.paceChart': 'Pace along the run',
   'journal.km': 'Km {{km}}',
   'journal.wodRounds': 'rounds in {{minutes}} min',
   'journal.drop': 'Drop',
@@ -360,8 +363,6 @@ export const en: Record<string, string> = {
 
   'course.title': 'Run',
   'course.start': 'Start',
-  'course.startHint':
-    'Keep the tab open and slip the phone in your pocket: the sound keeps the GPS alive with the screen off, and the headset buttons drive the run.',
   'course.pause': 'Pause',
   'course.resume': 'Resume',
   'course.finish': 'Finish the run',
@@ -402,6 +403,11 @@ export const en: Record<string, string> = {
   'course.paceUnit.kmh': 'Kilometres per hour',
   'course.paceUnitShort.minParKm': '/km',
   'course.paceUnitShort.kmh': 'km/h',
+  'course.goalDistance': 'Target distance (km)',
+  'course.goalPlaceholder': '10',
+  'course.goalHint':
+    'Chiron calls it out and records your time when you reach it. The run carries on until you stop it.',
+  'course.goalReached': 'Target: {{km}} km in {{temps}}',
   'course.voiceVolume': 'Voice volume',
   'course.voiceVolumeHint':
     'How loud the voice is next to your music. Chiron never changes your phone volume. Move the slider to hear it.',
@@ -462,6 +468,8 @@ export const en: Record<string, string> = {
   'course.say.paused': 'Paused. | I am keeping count.',
   'course.say.resumed': 'Back on.',
   'course.say.finished': 'Done. | Good run.',
+  'course.say.goalReached':
+    'Target reached. | {{km}} kilometres in {{temps}}. | Keep going if you want.',
   'course.say.km': 'Kilometre {{km}}. | Pace {{allure}} on that kilometre. | {{temps}} in total.',
   'course.say.speed': '{{vitesse}} kilometres per hour',
   'course.say.volumeTest': 'This is how I will speak to you.',

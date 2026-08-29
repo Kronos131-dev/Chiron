@@ -20,11 +20,25 @@
             </intent-filter>
         </activity>
 
+        <!-- WHY: sans ce couple recepteur + filtre, MediaSessionCompat ne recoit les touches
+             du casque que pendant que l'application est au premier plan. C'est exactement
+             l'inverse du besoin : l'ecran est dans la poche quand on appuie sur l'ecouteur. -->
         <service
             android:name="com.kronos.chiron.course.CourseService"
             android:enabled="true"
             android:exported="false"
-            android:foregroundServiceType="location|microphone" />
+            android:foregroundServiceType="location|microphone"
+        >
+            <intent-filter>
+                <action android:name="android.intent.action.MEDIA_BUTTON" />
+            </intent-filter>
+        </service>
+
+        <receiver android:name="androidx.media.session.MediaButtonReceiver" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MEDIA_BUTTON" />
+            </intent-filter>
+        </receiver>
 
         <provider
             android:name="androidx.core.content.FileProvider"

@@ -24,6 +24,8 @@ const ETAT_INITIAL: EtatNatif = {
   microDisponible: true,
   voixPrete: true,
   derniereParoleA: 0,
+  objectifDistanceM: 0,
+  objectifDureeMs: 0,
   cibleMinParKm: null,
 };
 
@@ -38,6 +40,9 @@ export class RuntimeNatif implements CourseRuntime {
   readonly commandeComprise = signal<boolean | null>(null);
   readonly erreurMicro = signal<string | null>(null);
   readonly voixDisponibles = signal<VoixDisponible[]>([]);
+  readonly objectifDureeS = computed(() =>
+    Math.floor(this.natifEtat().objectifDureeMs / MS_PAR_SECONDE),
+  );
   readonly audioActif = signal(true);
   readonly microDisponible = computed(() => this.natifEtat().microDisponible);
 
@@ -143,6 +148,7 @@ export class RuntimeNatif implements CourseRuntime {
       uniteAllure: options.uniteAllure,
       volumeVoix: options.volumeVoix,
       voix: options.voix,
+      objectifDistanceM: options.objectifDistanceM,
     }).catch(() => {});
   }
 
@@ -165,6 +171,7 @@ export class RuntimeNatif implements CourseRuntime {
         uniteAllure: options.uniteAllure,
         volumeVoix: options.volumeVoix,
         voix: options.voix,
+        objectifDistanceM: options.objectifDistanceM,
       });
     } catch (erreur) {
       // WHY: sans localisation le service refuse de démarrer. Rejeter en silence laisserait

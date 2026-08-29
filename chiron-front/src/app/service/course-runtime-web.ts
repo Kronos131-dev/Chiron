@@ -1,5 +1,5 @@
 import { Signal, computed, signal } from '@angular/core';
-import { CourseTracker } from './course-tracker';
+import { CourseTracker, tempsALaDistanceS } from './course-tracker';
 import { CourseRuntime, OptionsCourse, interpoler } from './course-runtime';
 import { VoixDisponible } from './chiron-course.plugin';
 import { formaterDistance, kmhVersMinParKm, minParKmVersKmh } from '../util/allure';
@@ -49,6 +49,7 @@ export class RuntimeWeb implements CourseRuntime {
   readonly erreurMicro = signal<string | null>(null);
   readonly voixMuette = signal(false);
   readonly voixDisponibles = signal<VoixDisponible[]>([]);
+  readonly objectifDureeS = signal(0);
   readonly audioActif = signal(true);
   readonly microDisponible: Signal<boolean> = computed(() => this.moteurReconnaissance() !== null);
 
@@ -65,6 +66,7 @@ export class RuntimeWeb implements CourseRuntime {
   private minuterieEcoute: ReturnType<typeof setTimeout> | null = null;
 
   private kmAnnonces = 0;
+  private objectifAnnonce = false;
   private ecartDepuis: number | null = null;
   private derniereAnnonceEcart = 0;
 
@@ -205,8 +207,29 @@ export class RuntimeWeb implements CourseRuntime {
     this.tracker.rafraichir(Date.now());
     if (this.survie) this.audioActif.set(this.survie.audioEnLecture());
     if (!this.enCours()) return;
+    this.annoncerLObjectif();
     this.annoncerKilometres();
     this.surveillerAllure();
+  }
+
+  // WHY: l'objectif est dit une fois et la course ne s'arrête pas. L'athlète a demandé dix
+  // kilomètres, il veut savoir en combien il les a bouclés — et rester libre d'en courir deux
+  // de plus sans que l'application décide à sa place que c'est fini.
+  private annoncerLObjectif(): void {
+    const objectif = this.options?.objectifDistanceM ?? 0;
+    if (this.objectifAnnonce || objectif <= 0) return;
+    const atteint = tempsALaDistanceS(this.points(), objectif);
+    if (atteint === null) return;
+
+    this.objectifAnnonce = true;
+    this.objectifDureeS.set(atteint);
+    this.dire(
+      interpoler(this.phrase('goalReached'), {
+        km: formaterDistance(objectif),
+        temps: this.dureeParlee(atteint),
+      }),
+      true,
+    );
   }
 
   // WHY: après un retour d'arrière-plan plusieurs kilomètres ont pu tomber d'un tick au

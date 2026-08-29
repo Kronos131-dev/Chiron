@@ -123,6 +123,41 @@ public class MesureTest {
     }
 
     @Test
+    public void instantObjectifMs_objectifAuMilieuDUnSegment_interpoleLInstant() {
+        Mesure mesure = new Mesure();
+        mesure.fixerObjectif(1000);
+        mesure.ajouter(apres(0, 0));
+        mesure.ajouter(apres(2000, 600));
+
+        assertEquals(300_000, mesure.instantObjectifMs().longValue(), 1000);
+    }
+
+    @Test
+    public void instantObjectifMs_objectifJamaisAtteint_resteNul() {
+        Mesure mesure = new Mesure();
+        mesure.fixerObjectif(5000);
+        mesure.ajouter(apres(0, 0));
+        mesure.ajouter(apres(2000, 600));
+
+        assertTrue(mesure.instantObjectifMs() == null);
+    }
+
+    // WHY: l'objectif ne borne pas la course. Les points qui suivent doivent continuer à
+    // compter, et l'instant relevé ne doit plus bouger.
+    @Test
+    public void instantObjectifMs_pointsApresLObjectif_neDeplacentPasLInstant() {
+        Mesure mesure = new Mesure();
+        mesure.fixerObjectif(1000);
+        mesure.ajouter(apres(0, 0));
+        mesure.ajouter(apres(2000, 600));
+        long releve = mesure.instantObjectifMs();
+        mesure.ajouter(apres(3000, 900));
+
+        assertEquals(releve, mesure.instantObjectifMs().longValue());
+        assertEquals(3000, mesure.distanceM(), 1);
+    }
+
+    @Test
     public void formaterAllure_douzeKmh_donneCinqMinutes() {
         assertEquals("5:00", Phrases.formaterAllure(12));
     }

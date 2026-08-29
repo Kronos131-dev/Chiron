@@ -105,6 +105,41 @@ export function mesurer(points: CoursePointDto[]): MesuresCourse {
   return { distanceM: cumulM, splits, parcours };
 }
 
+// WHY: jumeau de CourseGeometrieServiceImpl.tempsALaDistanceS. L'objectif tombe au milieu
+// d'un segment GPS, et c'est l'interpolation qui fait coïncider le temps annoncé pendant
+// l'effort avec celui que le serveur conservera dans le journal.
+export function tempsALaDistanceS(points: CoursePointDto[], objectifM: number): number | null {
+  if (points.length < 2 || objectifM <= 0) return null;
+
+  let cumulM = 0;
+  let pauseCumuleeMs = 0;
+  const depart = points[0].t;
+
+  for (let i = 1; i < points.length; i++) {
+    const precedent = points[i - 1];
+    const courant = points[i];
+
+    if (courant.coupure) {
+      pauseCumuleeMs += courant.t - precedent.t;
+      continue;
+    }
+
+    const segmentM = distanceHaversineM(precedent, courant);
+    if (segmentM <= 0) continue;
+
+    const debutSegmentM = cumulM;
+    cumulM += segmentM;
+    if (cumulM < objectifM) continue;
+
+    const debutSegmentMs = precedent.t - depart - pauseCumuleeMs;
+    const finSegmentMs = courant.t - depart - pauseCumuleeMs;
+    const fraction = (objectifM - debutSegmentM) / segmentM;
+    const instantMs = debutSegmentMs + Math.round(fraction * (finSegmentMs - debutSegmentMs));
+    return Math.max(0, Math.round(instantMs / MS_PAR_SECONDE));
+  }
+  return null;
+}
+
 export class CourseTracker {
   readonly etat = signal<EtatCourse>('pret');
   readonly points = signal<CoursePointDto[]>([]);

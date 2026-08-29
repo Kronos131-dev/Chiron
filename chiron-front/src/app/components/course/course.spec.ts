@@ -435,6 +435,70 @@ describe('Course', () => {
     });
   });
 
+  describe('objectif de distance', () => {
+    it('annonce l’objectif atteint sans arrêter la course', async () => {
+      await boot([exoCourse('a')], 'a');
+      component.objectifKm.set('1');
+      component.validerObjectif();
+      component.demarrer();
+
+      emettrePosition(position(0, 0));
+      emettrePosition(position(2000, 600));
+      vi.advanceTimersByTime(1000);
+
+      expect(component.objectifAtteint()).toBe(true);
+      expect(component.objectifDureeS()).toBeCloseTo(300, -1);
+      expect(paroles.join(' ')).toContain('Objectif atteint');
+      expect(component.enCours()).toBe(true);
+    });
+
+    it('ne l’annonce qu’une fois', async () => {
+      await boot([exoCourse('a')], 'a');
+      component.objectifKm.set('1');
+      component.validerObjectif();
+      component.demarrer();
+
+      emettrePosition(position(0, 0));
+      emettrePosition(position(2000, 600));
+      vi.advanceTimersByTime(1000);
+      paroles.length = 0;
+
+      emettrePosition(position(3000, 900));
+      vi.advanceTimersByTime(1000);
+
+      expect(paroles.join(' ')).not.toContain('Objectif atteint');
+    });
+
+    it('reste muet tant que la distance visée n’est pas couverte', async () => {
+      await boot([exoCourse('a')], 'a');
+      component.objectifKm.set('5');
+      component.validerObjectif();
+      component.demarrer();
+
+      emettrePosition(position(0, 0));
+      emettrePosition(position(2000, 600));
+      vi.advanceTimersByTime(1000);
+
+      expect(component.objectifAtteint()).toBe(false);
+      expect(paroles.join(' ')).not.toContain('Objectif atteint');
+    });
+
+    it('refuse une saisie illisible et retient une saisie valide', async () => {
+      await boot([exoCourse('a')], 'a');
+      component.objectifKm.set('nawak');
+      component.validerObjectif();
+      expect(component.objectifM()).toBe(0);
+
+      component.objectifKm.set('10,5');
+      component.validerObjectif();
+      expect(component.objectifM()).toBe(10500);
+
+      TestBed.resetTestingModule();
+      await boot([exoCourse('a')], 'a');
+      expect(component.objectifM()).toBe(10500);
+    });
+  });
+
   describe('unité d’allure', () => {
     it('convertit la cible affichée en km/h sans changer la cible réelle', async () => {
       await boot([exoCourse('a')], 'a');

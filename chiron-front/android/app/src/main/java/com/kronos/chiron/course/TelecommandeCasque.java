@@ -1,5 +1,6 @@
 package com.kronos.chiron.course;
 
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.os.SystemClock;
@@ -7,6 +8,7 @@ import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.view.KeyEvent;
+import androidx.media.session.MediaButtonReceiver;
 import java.util.HashMap;
 import java.util.Map;
 import org.json.JSONObject;
@@ -30,7 +32,12 @@ public final class TelecommandeCasque {
 
     public TelecommandeCasque(Context context, Ecouteur ecouteur) {
         this.ecouteur = ecouteur;
-        this.session = new MediaSessionCompat(context, "chiron-course");
+        this.session = new MediaSessionCompat(
+            context,
+            "chiron-course",
+            new ComponentName(context, MediaButtonReceiver.class),
+            null
+        );
         this.session.setFlags(
                 MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS |
                 MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS
@@ -64,6 +71,10 @@ public final class TelecommandeCasque {
     // WHY: c'est le seul endroit d'Android qui livre le KeyEvent brut d'un bouton de casque,
     // avec son ACTION_DOWN et son ACTION_UP. mediaSession côté web ne transmettait qu'une
     // impulsion sémantique : ni durée, ni relâchement, donc pas d'appui long possible.
+    public MediaSessionCompat session() {
+        return session;
+    }
+
     private boolean traiter(Intent intent) {
         KeyEvent evenement = intent.getParcelableExtra(Intent.EXTRA_KEY_EVENT);
         if (evenement == null) return false;
