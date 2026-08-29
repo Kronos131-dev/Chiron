@@ -185,6 +185,8 @@ export const en: Record<string, string> = {
   'login.forgotSent': 'If an account is linked to this email, a link has been sent.',
   'login.emailRequired': 'Email is required to sign up.',
   'login.passwordMismatch': 'Passwords do not match.',
+  'login.networkError': 'The server is unreachable. Check your connection and try again.',
+  'login.serverError': 'The server answered {{statut}}. Try again in a moment.',
   'login.badCreds': 'Incorrect credentials or server unreachable.',
   'login.registerError': 'Error creating the account (username may already be taken).',
 

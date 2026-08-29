@@ -5,24 +5,24 @@
   <div class="login-container bg-surface w-full max-w-md">
 
     <!-- Mode : Mot de passe oublié -->
-    @if (isForgotMode) {
+    @if (isForgotMode()) {
       <h2>{{ 'login.forgotTitle' | t }}</h2>
       <p class="text-white/50 text-sm mb-4">{{ 'login.forgotDesc' | t }}</p>
 
-      @if (forgotMessage) {
+      @if (forgotMessage()) {
         <div class="error-message" style="background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.3); color: #34d399;">
-          {{ forgotMessage }}
+          {{ forgotMessage() }}
         </div>
       }
 
-      @if (!forgotMessage) {
+      @if (!forgotMessage()) {
         <div class="form-group">
           <label for="forgotEmail">{{ 'login.emailLabel' | t }}</label>
-          <input type="email" id="forgotEmail" [(ngModel)]="forgotEmail" name="forgotEmail" autocomplete="email">
+          <input type="email" id="forgotEmail" [ngModel]="forgotEmail()" (ngModelChange)="forgotEmail.set($event)" name="forgotEmail" autocomplete="email">
         </div>
-        <button type="button" (click)="onForgotPassword()" [disabled]="!forgotEmail || isLoading">
-          <span *ngIf="isLoading">{{ 'login.loading' | t }}</span>
-          <span *ngIf="!isLoading">{{ 'login.sendLink' | t }}</span>
+        <button type="button" (click)="onForgotPassword()" [disabled]="!forgotEmail() || isLoading()">
+          <span *ngIf="isLoading()">{{ 'login.loading' | t }}</span>
+          <span *ngIf="!isLoading()">{{ 'login.sendLink' | t }}</span>
         </button>
       }
 
@@ -34,8 +34,8 @@
     }
 
     <!-- Mode : Connexion / Inscription -->
-    @if (!isForgotMode) {
-      <h2>{{ isLoginMode ? ('login.title.login' | t) : ('login.title.register' | t) }}</h2>
+    @if (!isForgotMode()) {
+      <h2>{{ isLoginMode() ? ('login.title.login' | t) : ('login.title.register' | t) }}</h2>
 
       <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
 
@@ -44,7 +44,7 @@
           <input type="text" id="username" formControlName="username" autocomplete="username">
         </div>
 
-        <div class="form-group" *ngIf="!isLoginMode">
+        <div class="form-group" *ngIf="!isLoginMode()">
           <label for="email">{{ 'login.emailLabel' | t }}</label>
           <input type="email" id="email" formControlName="email" autocomplete="email">
         </div>
@@ -54,27 +54,27 @@
           <input type="password" id="password" formControlName="password" autocomplete="current-password">
         </div>
 
-        <div class="form-group" *ngIf="!isLoginMode">
+        <div class="form-group" *ngIf="!isLoginMode()">
           <label for="confirmPassword">{{ 'login.confirmPassword' | t }}</label>
           <input type="password" id="confirmPassword" formControlName="confirmPassword" autocomplete="new-password">
         </div>
 
-        <div *ngIf="errorMessage" class="error-message">
-          {{ errorMessage }}
+        <div *ngIf="errorMessage()" class="error-message">
+          {{ errorMessage() }}
         </div>
 
-        <button type="submit" [disabled]="loginForm.invalid || isLoading">
-          <span *ngIf="isLoading">{{ 'login.loading' | t }}</span>
-          <span *ngIf="!isLoading">{{ isLoginMode ? ('login.signIn' | t) : ('login.forge' | t) }}</span>
+        <button type="submit" [disabled]="loginForm.invalid || isLoading()">
+          <span *ngIf="isLoading()">{{ 'login.loading' | t }}</span>
+          <span *ngIf="!isLoading()">{{ isLoginMode() ? ('login.signIn' | t) : ('login.forge' | t) }}</span>
         </button>
 
       </form>
 
       <div class="mt-6 text-center space-y-2">
         <button type="button" class="switch-mode-btn" (click)="switchMode()">
-          {{ isLoginMode ? ('login.switchToRegister' | t) : ('login.switchToLogin' | t) }}
+          {{ isLoginMode() ? ('login.switchToRegister' | t) : ('login.switchToLogin' | t) }}
         </button>
-        @if (isLoginMode) {
+        @if (isLoginMode()) {
           <div>
             <button type="button" class="switch-mode-btn text-xs opacity-60 hover:opacity-100" (click)="showForgot()">
               {{ 'login.forgotLink' | t }}

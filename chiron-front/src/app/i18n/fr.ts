@@ -188,6 +188,9 @@ export const fr: Record<string, string> = {
   'login.forgotSent': 'Si un compte est associé à cet email, un lien vous a été envoyé.',
   'login.emailRequired': "L'email est requis pour s'inscrire.",
   'login.passwordMismatch': 'Les mots de passe ne correspondent pas.',
+  'login.networkError':
+    "Le serveur est injoignable. Vérifie ta connexion, puis réessaie.",
+  'login.serverError': 'Le serveur a répondu {{statut}}. Réessaie dans un instant.',
   'login.badCreds': 'Identifiants incorrects ou serveur injoignable.',
   'login.registerError':
     "Erreur lors de la création du compte (nom d'utilisateur peut-être déjà pris).",
