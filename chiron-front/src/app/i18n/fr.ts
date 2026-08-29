@@ -397,9 +397,6 @@ export const fr: Record<string, string> = {
   'course.targetPlaceholderKmh': '11,0',
   'course.pushToTalkHint': 'Maintiens le micro, parle, relâche',
   'course.audioWarning': "Le son de fond ne tourne pas : l'app se fera geler écran éteint.",
-  'course.mixMusic': 'Laisser ma musique jouer',
-  'course.mixMusicHint':
-    "C'est le même son inaudible qui garde l'app vivante écran éteint et qui met ta musique en pause. Le mêler à ta musique la préserve, mais le téléphone peut alors geler la course écran verrouillé.",
   'course.headsetSettings': 'Boutons du casque',
   'course.settings': 'Réglages de la course',
   'course.paceUnit': "Unité d'allure",

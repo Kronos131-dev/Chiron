@@ -266,7 +266,11 @@ export class RuntimeWeb implements CourseRuntime {
   // resterait muet pour toute la sortie.
   private activerLeSon(): void {
     if (this.survie || !this.options) return;
-    this.survie = tenirEnVie(['audioElement', 'webLock'], this.options.melangerMusique);
+    // WHY: le flux inaudible qui empêche Chrome de geler la page prend le focus sonore, donc
+    // interrompt la musique. C'était un arbitrage offert en réglage tant que la PWA était la
+    // seule voie ; l'application Android n'a pas ce dilemme, et une sortie gelée en chemin est
+    // pire qu'une musique coupée.
+    this.survie = tenirEnVie(['audioElement', 'webLock'], false);
     this.audioActif.set(this.survie.audioEnLecture());
     if (!this.voix && voixDisponible()) {
       this.voix = creerVoix(

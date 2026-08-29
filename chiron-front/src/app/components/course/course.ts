@@ -52,7 +52,6 @@ const VOLUME_DEFAUT = 100;
 
 const CLE_MAPPING_CASQUE = 'chiron.course.casque';
 const CLE_MAPPING_CASQUE_LONG = 'chiron.course.casqueLong';
-const CLE_MELANGER_MUSIQUE = 'chiron.course.melangerMusique';
 const CLE_UNITE_ALLURE = 'chiron.course.uniteAllure';
 const CLE_VOLUME_VOIX = 'chiron.course.volumeVoix';
 const CLE_OBJECTIF = 'chiron.course.objectifKm';
@@ -83,7 +82,6 @@ export class Course implements OnInit, OnDestroy {
   readonly cibleMinParKm = signal<number | null>(null);
   readonly cibleSaisie = signal('');
   readonly reglagesOuverts = signal(false);
-  readonly melangerMusique = signal(false);
   readonly uniteAllure = signal<UniteAllure>('minParKm');
   readonly volumeVoix = signal(VOLUME_DEFAUT);
   readonly objectifKm = signal('');
@@ -174,7 +172,6 @@ export class Course implements OnInit, OnDestroy {
     this.exercice = exo;
     this.mappingCasque.set(this.lireMapping(CLE_MAPPING_CASQUE, MAPPING_PAR_DEFAUT));
     this.mappingCasqueLong.set(this.lireMapping(CLE_MAPPING_CASQUE_LONG, MAPPING_LONG_PAR_DEFAUT));
-    this.melangerMusique.set(this.lireDrapeau(CLE_MELANGER_MUSIQUE));
     this.uniteAllure.set(this.lireUnite());
     this.volumeVoix.set(this.lireVolume());
     this.objectifKm.set(this.lire(CLE_OBJECTIF) ?? '');
@@ -204,7 +201,6 @@ export class Course implements OnInit, OnDestroy {
       phrases: this.construirePhrases(),
       appuiCourt: this.mappingCasque(),
       appuiLong: this.mappingCasqueLong(),
-      melangerMusique: this.melangerMusique(),
       uniteAllure: this.uniteAllure(),
       volumeVoix: this.volumeVoix(),
       objectifDistanceM: this.objectifM(),
@@ -394,17 +390,6 @@ export class Course implements OnInit, OnDestroy {
     return formaterChrono(secondes);
   }
 
-  // WHY: c'est un seul et même flux audio qui empêche le gel de la page et qui prend le focus
-  // sonore. Mêler Chiron à la musique le rend interruptible, donc la page regelable : le
-  // réglage est un arbitrage assumé, pas une préférence sans conséquence. Le service Android
-  // n'a pas ce dilemme, et le réglage n'y est pas montré.
-  basculerMelangerMusique(): void {
-    const suivant = !this.melangerMusique();
-    this.melangerMusique.set(suivant);
-    this.runtime.configurer(this.options());
-    this.ecrire(CLE_MELANGER_MUSIQUE, String(suivant));
-  }
-
   choisirUnite(unite: UniteAllure): void {
     if (this.uniteAllure() === unite) return;
     this.uniteAllure.set(unite);
@@ -462,10 +447,6 @@ export class Course implements OnInit, OnDestroy {
     const brut = Number.parseInt(this.lire(CLE_VOLUME_VOIX) ?? '', 10);
     if (!Number.isFinite(brut)) return VOLUME_DEFAUT;
     return Math.min(VOLUME_MAX, Math.max(VOLUME_MIN, brut));
-  }
-
-  private lireDrapeau(cle: string): boolean {
-    return this.lire(cle) === 'true';
   }
 
   private lire(cle: string): string | null {

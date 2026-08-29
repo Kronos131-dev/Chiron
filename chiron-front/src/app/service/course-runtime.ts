@@ -12,7 +12,6 @@ export interface OptionsCourse {
   phrases: Record<string, string>;
   appuiCourt: MappingCasque;
   appuiLong: MappingCasque;
-  melangerMusique: boolean;
   uniteAllure: UniteAllure;
   volumeVoix: number;
   objectifDistanceM: number;
