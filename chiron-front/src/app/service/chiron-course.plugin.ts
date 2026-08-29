@@ -1,6 +1,7 @@
 import { registerPlugin } from '@capacitor/core';
 import { CoursePointDto } from './chiron-api';
 import { MappingCasque } from '../util/telecommande-casque';
+import { UniteAllure } from '../util/allure';
 
 export interface ConfigurationCourse {
   cibleMinParKm: number | null;
@@ -9,6 +10,8 @@ export interface ConfigurationCourse {
   phrases: Record<string, string>;
   appuiCourt: MappingCasque;
   appuiLong: MappingCasque;
+  uniteAllure: UniteAllure;
+  volumeVoix: number;
 }
 
 export interface EtatNatif {
@@ -24,6 +27,9 @@ export interface EtatNatif {
   erreurGps: string | null;
   signalPerdu: boolean;
   ecoute: boolean;
+  microDisponible: boolean;
+  voixPrete: boolean;
+  derniereParoleA: number;
   cibleMinParKm: number | null;
   nouveauxPoints?: CoursePointDto[];
 }
@@ -47,6 +53,7 @@ export interface ChironCoursePlugin {
   annoncer(options: { texte: string; prioritaire: boolean }): Promise<void>;
   executerAction(options: { action: string }): Promise<EtatNatif>;
   ecouter(): Promise<void>;
+  essayerVoix(options: { texte: string; langue: string; volume: number }): Promise<void>;
   etat(): Promise<EtatNatif>;
   points(): Promise<{ points: CoursePointDto[] }>;
   exempterBatterie(): Promise<void>;
@@ -56,7 +63,7 @@ export interface ChironCoursePlugin {
   ): Promise<{ remove: () => Promise<void> }>;
   addListener(
     evenement: 'kilometre',
-    ecouteur: (donnees: { kilometre: number; dureeMs: number; allureMoyenneKmh: number }) => void,
+    ecouteur: (donnees: { kilometre: number; dureeSplitS: number; allureSplitKmh: number }) => void,
   ): Promise<{ remove: () => Promise<void> }>;
   addListener(
     evenement: 'commande',

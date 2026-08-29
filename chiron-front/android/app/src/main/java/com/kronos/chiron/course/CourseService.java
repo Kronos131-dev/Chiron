@@ -57,6 +57,7 @@ public final class CourseService extends Service {
     private static final long DUREE_ECART_MS = 15000;
     private static final long SILENCE_ENTRE_ANNONCES_MS = 60000;
     private static final long DUREE_VEILLE_MS = 6 * 60 * 60 * 1000L;
+    private static final long DELAI_MAX_AVANT_ECOUTE_MS = 2500;
 
     private final Handler boucle = new Handler(Looper.getMainLooper());
     private final Mesure mesure = new Mesure();
@@ -83,6 +84,8 @@ public final class CourseService extends Service {
     private int pointsPublies = 0;
     private String erreurGps = null;
     private String titre = "Course";
+    private int volumeVoix = 100;
+    private long demandeEcouteA = 0;
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -128,8 +131,10 @@ public final class CourseService extends Service {
     private void demarrer(String configuration) {
         JSONObject config = lireJson(configuration);
         phrases.charger(config.optJSONObject("phrases"));
+        phrases.fixerUnite(config.optString("uniteAllure", "minParKm"));
         titre = config.optString("titre", "Course");
         String langue = config.optString("langue", "fr");
+        volumeVoix = config.optInt("volumeVoix", volumeVoix);
         if (config.has("cibleMinParKm") && !config.isNull("cibleMinParKm")) {
             cibleMinParKm = config.optDouble("cibleMinParKm");
         }
@@ -138,6 +143,7 @@ public final class CourseService extends Service {
         tenirLaVeille();
 
         annonceur = new Annonceur(this, langue);
+        annonceur.fixerVolume(volumeVoix);
         ecoute = new Ecoute(this, langue, new EcouteurDeVoix());
         telecommande = new TelecommandeCasque(this, this::executerAction);
         telecommande.configurer(
@@ -159,6 +165,11 @@ public final class CourseService extends Service {
     public void configurer(String configuration) {
         JSONObject config = lireJson(configuration);
         if (config.has("phrases")) phrases.charger(config.optJSONObject("phrases"));
+        if (config.has("uniteAllure")) phrases.fixerUnite(config.optString("uniteAllure"));
+        if (config.has("volumeVoix")) {
+            volumeVoix = config.optInt("volumeVoix", volumeVoix);
+            if (annonceur != null) annonceur.fixerVolume(volumeVoix);
+        }
         titre = config.optString("titre", titre);
         if (telecommande != null) {
             telecommande.configurer(
@@ -224,21 +235,63 @@ public final class CourseService extends Service {
         publierEtat();
     }
 
+    public void essayerVoix(String texte, int volume) {
+        volumeVoix = volume;
+        if (annonceur == null) return;
+        annonceur.fixerVolume(volume);
+        annonceur.interrompreEtParler(texte);
+    }
+
     public void dire(String texte, boolean prioritaire) {
         if (annonceur == null) return;
         if (prioritaire) annonceur.interrompreEtParler(texte);
         else annonceur.parler(texte);
     }
 
+    // WHY: le moteur de reconnaissance et le moteur de synthèse se disputent le micro. Ouvrir
+    // l'écoute pendant que « J'écoute » se prononce faisait entendre à Chiron sa propre voix,
+    // ou renvoyait ERROR_RECOGNIZER_BUSY : l'écoute part quand la phrase est finie, et le délai
+    // de garde couvre le cas où le moteur ne rend jamais la main.
     public void ouvrirEcoute() {
-        if (ecoute == null) return;
+        if (ecoute == null) {
+            PontCourse.publier("echecEcoute", raison("indisponible"));
+            return;
+        }
         if (ecoute.active()) {
             ecoute.cloturer();
             return;
         }
-        if (annonceur != null) annonceur.taire();
-        dire(phrases.t("listening"), true);
-        boucle.postDelayed(() -> ecoute.demarrer(), 900);
+        if (!ecoute.disponible()) {
+            PontCourse.publier("echecEcoute", raison(ecoute.raisonIndisponible()));
+            return;
+        }
+        if (annonceur == null) {
+            ecoute.demarrer();
+            publierEtat();
+            return;
+        }
+        // WHY: la fin de la phrase et le délai de garde mènent au même appel, et le garde peut
+        // arriver après que l'écoute se soit déjà ouverte puis refermée. Le jeton est ce qui
+        // empêche le retardataire de rouvrir le micro tout seul dans la poche de l'athlète.
+        demandeEcouteA = System.currentTimeMillis();
+        final long jeton = demandeEcouteA;
+        annonceur.parlerPuis(phrases.t("listening"), () -> lancerLEcoute(jeton));
+        boucle.postDelayed(() -> lancerLEcoute(jeton), DELAI_MAX_AVANT_ECOUTE_MS);
+    }
+
+    private void lancerLEcoute(long jeton) {
+        if (ecoute == null || jeton != demandeEcouteA) return;
+        demandeEcouteA = 0;
+        ecoute.demarrer();
+        publierEtat();
+    }
+
+    private JSONObject raison(String valeur) {
+        JSONObject donnees = new JSONObject();
+        try {
+            donnees.put("raison", valeur);
+        } catch (JSONException ignore) {}
+        return donnees;
     }
 
     // WHY: ces actions doivent aboutir écran verrouillé, quand la WebView peut être bridée.
@@ -317,17 +370,22 @@ public final class CourseService extends Service {
         int franchis = mesure.kilometresFranchis();
         if (franchis <= kmAnnonces) return;
         kmAnnonces = franchis;
+        // WHY: c'est l'allure du kilomètre qui vient d'être bouclé qui apprend quelque chose,
+        // pas la moyenne depuis le départ — celle-ci se lisse et cesse de réagir au bout d'une
+        // demi-heure, alors que l'athlète veut savoir s'il tient ou s'il s'écroule.
+        double allureDuKm = mesure.allureDuKilometreKmh(franchis);
+        long dureeDuKmS = (long) Math.floor(mesure.dureeDuKilometreMs(franchis) / MS_PAR_SECONDE);
         JSONObject franchissement = new JSONObject();
         try {
             franchissement.put("kilometre", franchis);
-            franchissement.put("dureeMs", dureeMs());
-            franchissement.put("allureMoyenneKmh", mesure.allureMoyenneKmh(dureeMs()));
+            franchissement.put("dureeSplitS", dureeDuKmS);
+            franchissement.put("allureSplitKmh", allureDuKm);
         } catch (JSONException ignore) {}
         PontCourse.publier("kilometre", franchissement);
         Map<String, String> valeurs = new HashMap<>();
         valeurs.put("km", String.valueOf(franchis));
         valeurs.put("temps", phrases.dureeParlee(dureeS()));
-        valeurs.put("allure", phrases.allureParlee(mesure.allureMoyenneKmh(dureeMs())));
+        valeurs.put("allure", phrases.allureParlee(allureDuKm));
         dire(phrases.t("km", valeurs), false);
     }
 
@@ -465,6 +523,9 @@ public final class CourseService extends Service {
                 System.currentTimeMillis() - derniereReception > SILENCE_GPS_MS
             );
             etat.put("ecoute", ecoute != null && ecoute.active());
+            etat.put("microDisponible", ecoute == null || ecoute.moteurPresent());
+            etat.put("voixPrete", annonceur != null && annonceur.pret());
+            etat.put("derniereParoleA", annonceur == null ? 0 : annonceur.derniereParoleA());
             etat.put(
                 "cibleMinParKm",
                 cibleMinParKm == null ? JSONObject.NULL : (double) cibleMinParKm
@@ -559,7 +620,8 @@ public final class CourseService extends Service {
         Map<String, String> valeurs = new HashMap<>();
         valeurs.put("km", Phrases.formaterDistance(mesure.distanceM()));
         valeurs.put("temps", Phrases.formaterChrono(dureeS()));
-        valeurs.put("allure", Phrases.formaterAllure(mesure.allureCouranteKmh()));
+        valeurs.put("allure", phrases.affichageAllure(mesure.allureCouranteKmh()));
+        valeurs.put("unite", phrases.t("uniteAllure"));
         String resume = phrases.t("notification", valeurs);
 
         Intent ouvrir = new Intent(this, MainActivity.class);
@@ -647,7 +709,13 @@ public final class CourseService extends Service {
                 donnees.put("raison", raison);
             } catch (JSONException ignore) {}
             PontCourse.publier("echecEcoute", donnees);
-            dire(phrases.t("notUnderstood"), true);
+            // WHY: « Répète » n'a de sens que si le moteur a écouté sans comprendre. Le dire
+            // quand la permission manque ou qu'aucun moteur n'est installé enverrait l'athlète
+            // répéter dans le vide pour le reste de la sortie.
+            if (raison != null && raison.startsWith("erreur-")) {
+                dire(phrases.t("notUnderstood"), true);
+            }
+            publierEtat();
         }
     }
 }

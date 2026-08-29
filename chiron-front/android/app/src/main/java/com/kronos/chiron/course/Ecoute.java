@@ -39,12 +39,27 @@ public final class Ecoute {
         this.ecouteur = ecouteur;
     }
 
+    public boolean moteurPresent() {
+        return SpeechRecognizer.isRecognitionAvailable(context);
+    }
+
     public boolean disponible() {
         return (
-            SpeechRecognizer.isRecognitionAvailable(context) &&
+            moteurPresent() &&
             ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) ==
             PackageManager.PERMISSION_GRANTED
         );
+    }
+
+    public String raisonIndisponible() {
+        if (
+            ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) !=
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            return "permission";
+        }
+        if (!SpeechRecognizer.isRecognitionAvailable(context)) return "moteur";
+        return "";
     }
 
     public boolean active() {
@@ -59,8 +74,9 @@ public final class Ecoute {
     // porter foregroundServiceType="microphone" — sans ce type Android 12+ coupe le micro dès
     // que l'écran se verrouille, ce qui est précisément le moment où on en a besoin.
     private void demarrerSurLePrincipal() {
-        if (active || !disponible()) {
-            if (!disponible()) ecouteur.echec("indisponible");
+        if (active) return;
+        if (!disponible()) {
+            ecouteur.echec(raisonIndisponible());
             return;
         }
         dernierTexte = "";

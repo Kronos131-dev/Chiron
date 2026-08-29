@@ -7,6 +7,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.PowerManager;
 import android.provider.Settings;
+import android.speech.SpeechRecognizer;
 import androidx.core.content.ContextCompat;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.PermissionState;
@@ -43,6 +44,9 @@ public class ChironCoursePlugin extends Plugin {
     static final String MICRO = "micro";
     static final String NOTIFICATIONS = "notifications";
 
+    private Annonceur essai;
+    private String langueDEssai;
+
     @Override
     public void load() {
         PontCourse.brancher((nom, donnees) -> notifyListeners(nom, enJsObject(donnees)));
@@ -51,6 +55,8 @@ public class ChironCoursePlugin extends Plugin {
     @Override
     protected void handleOnDestroy() {
         PontCourse.debrancher();
+        if (essai != null) essai.relacher();
+        essai = null;
         super.handleOnDestroy();
     }
 
@@ -191,8 +197,28 @@ public class ChironCoursePlugin extends Plugin {
         appel.resolve(enJsObject(service.etat()));
     }
 
+    // WHY: le micro se demande ici, au moment de l'appui, et pas seulement au départ. Un refus
+    // au lancement condamnait autrement le bouton pour toute la sortie, sans aucun moyen de
+    // revenir dessus depuis l'application.
     @PluginMethod
     public void ecouter(PluginCall appel) {
+        if (getPermissionState(MICRO) != PermissionState.GRANTED) {
+            requestPermissionForAlias(MICRO, appel, "microRendu");
+            return;
+        }
+        ouvrirLEcoute(appel);
+    }
+
+    @PermissionCallback
+    private void microRendu(PluginCall appel) {
+        if (getPermissionState(MICRO) != PermissionState.GRANTED) {
+            appel.reject("permission");
+            return;
+        }
+        ouvrirLEcoute(appel);
+    }
+
+    private void ouvrirLEcoute(PluginCall appel) {
         CourseService service = PontCourse.service();
         if (service == null) {
             appel.reject("course-absente");
@@ -202,12 +228,37 @@ public class ChironCoursePlugin extends Plugin {
         appel.resolve();
     }
 
+    // WHY: le curseur de volume vit dans les réglages, avant qu'aucun service ne tourne. Un
+    // annonceur de courte vie appartenant au plugin est ce qui permet d'entendre le réglage au
+    // moment où on le fait, plutôt que de le découvrir en pleine côte.
+    @PluginMethod
+    public void essayerVoix(PluginCall appel) {
+        String texte = appel.getString("texte", "");
+        String langue = appel.getString("langue", "fr");
+        int volume = appel.getInt("volume", 100);
+        CourseService service = PontCourse.service();
+        if (service != null) {
+            service.essayerVoix(texte, volume);
+            appel.resolve();
+            return;
+        }
+        if (essai == null || !langue.equals(langueDEssai)) {
+            if (essai != null) essai.relacher();
+            essai = new Annonceur(getContext(), langue);
+            langueDEssai = langue;
+        }
+        essai.fixerVolume(volume);
+        essai.interrompreEtParler(texte);
+        appel.resolve();
+    }
+
     @PluginMethod
     public void etat(PluginCall appel) {
         CourseService service = PontCourse.service();
         if (service == null) {
             JSObject reponse = new JSObject();
             reponse.put("demarree", false);
+            reponse.put("microDisponible", SpeechRecognizer.isRecognitionAvailable(getContext()));
             appel.resolve(reponse);
             return;
         }

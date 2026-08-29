@@ -3,6 +3,7 @@ import { CoursePointDto, CourseSplitDto } from './chiron-api';
 import { EtatCourse } from './course-tracker';
 import { Commande } from '../util/commandes-vocales';
 import { MappingCasque } from '../util/telecommande-casque';
+import { UniteAllure } from '../util/allure';
 
 export interface OptionsCourse {
   langue: string;
@@ -12,6 +13,8 @@ export interface OptionsCourse {
   appuiCourt: MappingCasque;
   appuiLong: MappingCasque;
   melangerMusique: boolean;
+  uniteAllure: UniteAllure;
+  volumeVoix: number;
 }
 
 export interface CourseRuntime {
@@ -32,6 +35,8 @@ export interface CourseRuntime {
   readonly audioActif: Signal<boolean>;
   readonly microDisponible: Signal<boolean>;
   readonly commandeComprise: Signal<boolean | null>;
+  readonly erreurMicro: Signal<string | null>;
+  readonly voixMuette: Signal<boolean>;
 
   attacher(routineId: string, exoId: string): void;
   reprendreCourseEnCours(): Promise<boolean>;
@@ -42,6 +47,7 @@ export interface CourseRuntime {
   arreter(): Promise<void>;
   fixerCible(minParKm: number | null): void;
   dire(texte: string, prioritaire: boolean): void;
+  essayerVoix(texte: string): void;
   commencerEcoute(): void;
   terminerEcoute(): void;
   executer(commande: Commande): void;
@@ -58,6 +64,8 @@ export const CLES_PHRASES: Record<string, string> = {
   resumed: 'course.say.resumed',
   finished: 'course.say.finished',
   km: 'course.say.km',
+  speed: 'course.say.speed',
+  volumeTest: 'course.say.volumeTest',
   speedUp: 'course.say.speedUp',
   speedUpABit: 'course.say.speedUpABit',
   slowDown: 'course.say.slowDown',

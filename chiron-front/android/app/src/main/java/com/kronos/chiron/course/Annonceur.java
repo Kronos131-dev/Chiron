@@ -29,8 +29,12 @@ public final class Annonceur {
     private final AtomicInteger compteur = new AtomicInteger(0);
 
     private TextToSpeech tts;
-    private boolean pret = false;
+    private volatile boolean pret = false;
     private boolean libere = false;
+    private int volumePourcent = 100;
+    private volatile int volumeSauvegarde = -1;
+    private Runnable apresSilence;
+    private volatile long derniereParoleA = 0;
     private AudioFocusRequest demandeFocus;
     private final AudioManager.OnAudioFocusChangeListener focusListener = changement -> {};
 
@@ -43,13 +47,31 @@ public final class Annonceur {
     private void preparer(int statut, String langue) {
         if (libere || statut != TextToSpeech.SUCCESS) return;
         Locale locale = "en".equals(langue) ? Locale.US : Locale.FRANCE;
-        tts.setLanguage(locale);
-        // WHY: USAGE_ASSISTANCE_NAVIGATION_GUIDANCE est ce qui fait baisser la musique des
-        // autres applications le temps de la phrase, puis la remonte — le comportement d'un
-        // GPS de voiture. Le web n'avait aucune prise équivalente sur le focus audio.
+        // WHY: setLanguage échoue en silence quand les données de la langue ne sont pas
+        // installées, et speak() ne rend alors plus un son — un coach muet pour toute la
+        // sortie. La langue générique puis la langue du système sont les deux replis.
+        int retour = tts.setLanguage(locale);
+        if (
+            retour == TextToSpeech.LANG_MISSING_DATA ||
+            retour == TextToSpeech.LANG_NOT_SUPPORTED
+        ) {
+            retour = tts.setLanguage(new Locale(locale.getLanguage()));
+        }
+        if (
+            retour == TextToSpeech.LANG_MISSING_DATA ||
+            retour == TextToSpeech.LANG_NOT_SUPPORTED
+        ) {
+            tts.setLanguage(Locale.getDefault());
+        }
+        // WHY: USAGE_MEDIA et non USAGE_ASSISTANCE_NAVIGATION_GUIDANCE. Le guidage est un
+        // canal à part, que plusieurs surcouches atténuent fortement et que certains casques
+        // Bluetooth n'ouvrent pas du tout écran verrouillé — c'est la voix faible puis muette
+        // constatée sur le terrain. Le canal média est celui où la musique s'entend déjà,
+        // donc celui où le coach s'entend forcément ; l'atténuation de la musique est alors
+        // obtenue par la demande de focus, pas par l'attribut.
         tts.setAudioAttributes(
             new AudioAttributes.Builder()
-                .setUsage(AudioAttributes.USAGE_ASSISTANCE_NAVIGATION_GUIDANCE)
+                .setUsage(AudioAttributes.USAGE_MEDIA)
                 .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
                 .build()
         );
@@ -58,7 +80,9 @@ public final class Annonceur {
         tts.setOnUtteranceProgressListener(
             new UtteranceProgressListener() {
                 @Override
-                public void onStart(String id) {}
+                public void onStart(String id) {
+                    derniereParoleA = System.currentTimeMillis();
+                }
 
                 @Override
                 public void onDone(String id) {
@@ -99,13 +123,16 @@ public final class Annonceur {
         return estMasculine(meilleure.getName());
     }
 
+    // WHY: une voix réseau se tait dès que le signal tombe — c'est-à-dire en forêt, en montée,
+    // exactement là où l'athlète attend le coach. Elle n'est retenue que si l'appareil n'a
+    // strictement rien d'autre dans la langue demandée.
     private int noter(Voice voix, Locale locale) {
         int score = 0;
         if (voix.getLocale().getCountry().equalsIgnoreCase(locale.getCountry())) score += 40;
         if (estMasculine(voix.getName())) score += 100;
         else if (contientMot(voix.getName(), "female")) score -= 100;
         score += voix.getQuality();
-        if (voix.isNetworkConnectionRequired()) score -= 30;
+        if (voix.isNetworkConnectionRequired()) score -= 500;
         return score;
     }
 
@@ -119,20 +146,47 @@ public final class Annonceur {
     }
 
     public void parler(String texte) {
-        deposer(texte, false);
+        deposer(texte, false, null);
     }
 
     public void interrompreEtParler(String texte) {
-        deposer(texte, true);
+        deposer(texte, true, null);
     }
 
-    private void deposer(String texte, boolean prioritaire) {
+    // WHY: le pourcentage est celui du volume média maximal de l'appareil, pas une atténuation.
+    // Le paramètre de volume du moteur ne sait que descendre sous le niveau déjà réglé sur le
+    // téléphone, et c'est ce niveau que l'athlète trouve trop bas : monter au-dessus n'est
+    // possible qu'en poussant le flux média lui-même, rendu tel qu'il était dès la phrase finie.
+    public boolean pret() {
+        return pret;
+    }
+
+    // WHY: horodaté sur onStart, pas sur speak(). C'est la seule preuve que le moteur a
+    // réellement ouvert la bouche : une file qui s'empile sans jamais sortir un son est
+    // exactement le symptôme rapporté écran verrouillé, et speak() ne le distingue pas.
+    public long derniereParoleA() {
+        return derniereParoleA;
+    }
+
+    public void fixerVolume(int pourcentage) {
+        volumePourcent = Math.min(100, Math.max(0, pourcentage));
+    }
+
+    public void parlerPuis(String texte, Runnable suite) {
+        deposer(texte, true, suite);
+    }
+
+    // WHY: la suite appartient à l'énoncé qui la porte. La laisser en place quand une autre
+    // phrase la remplace la ferait courir à la fin de celle-là — c'est-à-dire ouvrir le micro
+    // à l'arrivée, sur le « C'est fini » qui coupe l'annonce d'écoute.
+    private void deposer(String texte, boolean prioritaire, Runnable suite) {
         if (libere || texte == null || texte.trim().isEmpty()) return;
         if (prioritaire) {
             attente.clear();
             if (pret) tts.stop();
             enCours.set(0);
         }
+        apresSilence = suite;
         if (!pret) {
             attente.add(texte);
             return;
@@ -148,6 +202,7 @@ public final class Annonceur {
             String propre = morceau.trim();
             if (propre.isEmpty()) continue;
             prendreLeFocus();
+            monterLeVolume();
             enCours.incrementAndGet();
             String id = "chiron-" + compteur.incrementAndGet();
             tts.speak(propre, TextToSpeech.QUEUE_ADD, new Bundle(), id);
@@ -158,14 +213,42 @@ public final class Annonceur {
     private void terminer() {
         if (enCours.decrementAndGet() > 0) return;
         enCours.set(0);
+        rendreLeVolume();
         rendreLeFocus();
+        Runnable suite = apresSilence;
+        apresSilence = null;
+        if (suite != null) suite.run();
     }
 
     public void taire() {
         attente.clear();
+        apresSilence = null;
         if (pret) tts.stop();
         enCours.set(0);
+        rendreLeVolume();
         rendreLeFocus();
+    }
+
+    private void monterLeVolume() {
+        if (audioManager == null || volumeSauvegarde >= 0) return;
+        try {
+            int maximum = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+            int cible = Math.round((volumePourcent / 100f) * maximum);
+            int courant = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+            if (cible == courant) return;
+            volumeSauvegarde = courant;
+            audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, cible, 0);
+        } catch (Exception ignore) {
+            volumeSauvegarde = -1;
+        }
+    }
+
+    private void rendreLeVolume() {
+        if (audioManager == null || volumeSauvegarde < 0) return;
+        try {
+            audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, volumeSauvegarde, 0);
+        } catch (Exception ignore) {}
+        volumeSauvegarde = -1;
     }
 
     private void prendreLeFocus() {
@@ -174,7 +257,7 @@ public final class Annonceur {
             demandeFocus = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK)
                 .setAudioAttributes(
                     new AudioAttributes.Builder()
-                        .setUsage(AudioAttributes.USAGE_ASSISTANCE_NAVIGATION_GUIDANCE)
+                        .setUsage(AudioAttributes.USAGE_MEDIA)
                         .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
                         .build()
                 )
@@ -204,6 +287,8 @@ public final class Annonceur {
     public void relacher() {
         libere = true;
         attente.clear();
+        apresSilence = null;
+        rendreLeVolume();
         rendreLeFocus();
         if (tts == null) return;
         tts.stop();

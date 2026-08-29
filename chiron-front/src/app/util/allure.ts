@@ -1,3 +1,5 @@
+import { lireAllure } from './commandes-vocales';
+
 const SECONDES_PAR_HEURE = 3600;
 const SECONDES_PAR_MINUTE = 60;
 const ALLURE_MIN_PAR_KM_MAX = 99;
@@ -34,4 +36,23 @@ export function formaterChrono(totalSecondes: number): string {
 
 export function formaterDistance(metres: number): string {
   return (metres / 1000).toFixed(2);
+}
+
+export type UniteAllure = 'minParKm' | 'kmh';
+
+export const UNITES_ALLURE: UniteAllure[] = ['minParKm', 'kmh'];
+
+export function formaterAllureSelon(kmh: number, unite: UniteAllure): string {
+  if (unite !== 'kmh') return formaterAllure(kmh);
+  return kmh > 0 ? kmh.toFixed(1) : '—';
+}
+
+// WHY: en min/km l'athlète tape « 5:30 » ou « 530 », en km/h il tape « 11,2 ». Les deux
+// saisies désignent une cible que le reste de l'application ne connaît qu'en minutes par
+// kilomètre : la conversion se fait ici, une seule fois, à la frontière du clavier.
+export function lireCible(brut: string, unite: UniteAllure): number | null {
+  if (unite !== 'kmh') return lireAllure(brut);
+  const kmh = Number.parseFloat(brut.replace(',', '.'));
+  if (!Number.isFinite(kmh) || kmh <= 0) return null;
+  return kmhVersMinParKm(kmh);
 }

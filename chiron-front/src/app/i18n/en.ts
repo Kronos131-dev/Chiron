@@ -367,8 +367,8 @@ export const en: Record<string, string> = {
   'course.finish': 'Finish the run',
   'course.duration': 'Duration',
   'course.pace': 'Pace',
-  'course.avgPace': 'Average {{allure}} /km',
-  'course.target': 'Target /km',
+  'course.avgPace': 'Average {{allure}} {{unite}}',
+  'course.target': 'Target {{unite}}',
   'course.clearTarget': 'Clear',
   'course.targetFaster': 'Faster target',
   'course.targetSlower': 'Slower target',
@@ -388,6 +388,7 @@ export const en: Record<string, string> = {
   'course.confirmLeave':
     'The run is in progress. Leaving now will save the distance covered. Continue?',
   'course.targetPlaceholder': '5:30',
+  'course.targetPlaceholderKmh': '11.0',
   'course.pushToTalkHint': 'Hold the mic, speak, release',
   'course.audioWarning':
     'The background sound is not running: the app will freeze once the screen is off.',
@@ -395,13 +396,33 @@ export const en: Record<string, string> = {
   'course.mixMusicHint':
     'The same inaudible sound that keeps the app alive with the screen off is what pauses your music. Mixing it with your music preserves it, but the phone may then freeze the run while locked.',
   'course.headsetSettings': 'Headset buttons',
+  'course.settings': 'Run settings',
+  'course.paceUnit': 'Pace unit',
+  'course.paceUnit.minParKm': 'Minutes per kilometre',
+  'course.paceUnit.kmh': 'Kilometres per hour',
+  'course.paceUnitShort.minParKm': '/km',
+  'course.paceUnitShort.kmh': 'km/h',
+  'course.voiceVolume': 'Voice volume',
+  'course.voiceVolumeHint':
+    'Share of the phone maximum media volume. Chiron raises it for the length of a sentence, then puts it back where it was. Move the slider to hear it.',
+  'course.testVoice': 'Play',
+  'course.micTalkHint':
+    'The mic also opens from your headset: pick the button and the press that trigger it below.',
+  'course.micError.permission': 'Chiron is not allowed to use the microphone.',
+  'course.micError.moteur': 'No speech recognition is installed on this phone.',
+  'course.micError.autre': 'The mic did not open. Try again.',
+  'course.voiceSilent':
+    'The coach has not said a word yet. Check that the media volume is not muted, then let Chiron run unrestricted from the settings.',
+  'course.paceChart': 'Pace along the run',
+  'course.chartFaster': 'Faster',
+  'course.chartSlower': 'Slower',
   'settings.battery.title': 'Long runs',
   'settings.battery.desc':
     'Android kills background apps to save battery. Without an exemption, an hour-long run can be cut short mid-way, notification included.',
   'settings.battery.action': 'Let Chiron run unrestricted',
   'settings.battery.oemHint':
     'On Xiaomi, Huawei, Oppo or Samsung you also have to go through the manufacturer settings: lock Chiron in the task manager and remove it from battery optimisation.',
-  'course.notification': '{{km}} km · {{temps}} · {{allure}} /km',
+  'course.notification': '{{km}} km · {{temps}} · {{allure}} {{unite}}',
   'course.notificationPause': 'Pause',
   'course.notificationResume': 'Resume',
   'course.notificationListen': 'Mic',
@@ -435,7 +456,9 @@ export const en: Record<string, string> = {
   'course.say.paused': 'Rest. | I am keeping count.',
   'course.say.resumed': 'Move. | The road is waiting.',
   'course.say.finished': 'It is done. | You held.',
-  'course.say.km': 'Kilometre {{km}}. | {{temps}}. | Pace {{allure}}.',
+  'course.say.km': 'Kilometre {{km}}. | Pace {{allure}} on that kilometre. | {{temps}} in total.',
+  'course.say.speed': '{{vitesse}} kilometres per hour',
+  'course.say.volumeTest': 'This is how I will speak to you. | Hold your pace.',
   'course.say.tooSlow': 'Your pace is fading. | {{allure}} per kilometre. | Aim for {{cible}}.',
   'course.say.tooFast':
     'You are burning your strength. | {{allure}} per kilometre. | Aim for {{cible}}.',

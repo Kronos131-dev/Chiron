@@ -31,6 +31,7 @@ describe('Course', () => {
   };
   let emettrePosition: (position: any) => void;
   let paroles: string[];
+  let volumes: number[];
 
   function exoCourse(id: string): ExerciceForm {
     return {
@@ -114,6 +115,7 @@ describe('Course', () => {
     localStorage.clear();
     localStorage.setItem('chiron_lang', 'fr');
     paroles = [];
+    volumes = [];
     emettrePosition = () => {};
 
     Object.defineProperty(navigator, 'geolocation', {
@@ -127,7 +129,10 @@ describe('Course', () => {
       },
     });
     vi.stubGlobal('speechSynthesis', {
-      speak: (message: any) => paroles.push(message.text),
+      speak: (message: any) => {
+        paroles.push(message.text);
+        volumes.push(message.volume);
+      },
       cancel: vi.fn(),
       paused: false,
     });
@@ -247,6 +252,26 @@ describe('Course', () => {
       const annonces = paroles.filter((p) => p.includes('Kilomètre'));
       expect(annonces).toHaveLength(1);
       expect(annonces[0]).toContain('Kilomètre 3');
+    });
+
+    // WHY: c'est le cœur du changement — la moyenne depuis le départ aurait annoncé 7:00 sur
+    // ce scénario, ce qui aurait laissé croire à un kilomètre correct alors qu'il a été couru
+    // en dix minutes.
+    it('annonce l’allure du kilomètre qui vient d’être bouclé, pas la moyenne', async () => {
+      await boot([exoCourse('a')], 'a');
+      component.demarrer();
+      emettrePosition(position(0, 0));
+      emettrePosition(position(1000, 240));
+      vi.advanceTimersByTime(1000);
+      paroles.length = 0;
+
+      emettrePosition(position(2000, 840));
+      vi.advanceTimersByTime(1000);
+
+      const annonce = paroles.join(' ');
+      expect(annonce).toContain('Kilomètre 2');
+      expect(annonce).toContain('10 minutes 0');
+      expect(annonce).not.toContain('7 minutes 0');
     });
 
     it('se tait sur l’écart d’allure tant qu’il n’a pas duré quinze secondes', async () => {
@@ -403,6 +428,76 @@ describe('Course', () => {
       component.cibleSaisie.set('');
       component.validerCibleSaisie();
       expect(component.cibleMinParKm()).toBeNull();
+    });
+  });
+
+  describe('unité d’allure', () => {
+    it('convertit la cible affichée en km/h sans changer la cible réelle', async () => {
+      await boot([exoCourse('a')], 'a');
+      component.fixerCible(5);
+      component.choisirUnite('kmh');
+
+      expect(component.uniteLibelle()).toBe('km/h');
+      expect(component.cibleSaisie()).toBe('12,0');
+      expect(component.cibleMinParKm()).toBeCloseTo(5, 4);
+    });
+
+    it('lit une cible tapée en km/h', async () => {
+      await boot([exoCourse('a')], 'a');
+      component.choisirUnite('kmh');
+      component.cibleSaisie.set('10');
+      component.validerCibleSaisie();
+
+      expect(component.cibleMinParKm()).toBeCloseTo(6, 4);
+    });
+
+    it('dicte l’allure en kilomètres heure', async () => {
+      await boot([exoCourse('a')], 'a');
+      component.choisirUnite('kmh');
+      component.demarrer();
+      emettrePosition(position(0, 0));
+      emettrePosition(position(1200, 360));
+      vi.advanceTimersByTime(1000);
+
+      const annonce = paroles.join(' ');
+      expect(annonce).toContain('Kilomètre 1');
+      expect(annonce).toContain('kilomètres heure');
+    });
+
+    it('retient l’unité entre deux visites', async () => {
+      await boot([exoCourse('a')], 'a');
+      component.choisirUnite('kmh');
+
+      TestBed.resetTestingModule();
+      await boot([exoCourse('a')], 'a');
+      expect(component.uniteAllure()).toBe('kmh');
+    });
+  });
+
+  describe('volume de la voix', () => {
+    it('fait parler la voix au niveau qui vient d’être choisi', async () => {
+      await boot([exoCourse('a')], 'a');
+      component.changerVolume('40');
+      volumes.length = 0;
+      component.essayerLaVoix();
+
+      expect(component.volumeVoix()).toBe(40);
+      expect(volumes.every((v) => Math.abs(v - 0.4) < 1e-6)).toBe(true);
+      expect(volumes.length).toBeGreaterThan(0);
+    });
+
+    it('borne le curseur et retient le niveau entre deux visites', async () => {
+      await boot([exoCourse('a')], 'a');
+      component.changerVolume('500');
+      component.essayerLaVoix();
+      expect(component.volumeVoix()).toBe(100);
+
+      component.changerVolume('0');
+      component.essayerLaVoix();
+
+      TestBed.resetTestingModule();
+      await boot([exoCourse('a')], 'a');
+      expect(component.volumeVoix()).toBe(10);
     });
   });
 

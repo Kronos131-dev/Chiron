@@ -6,6 +6,7 @@ import { CourseRuntime, OptionsCourse } from './course-runtime';
 import { Commande, interpreter } from '../util/commandes-vocales';
 
 const MS_PAR_SECONDE = 1000;
+const DELAI_AVANT_SOUPCON_MS = 90000;
 
 const ETAT_INITIAL: EtatNatif = {
   demarree: false,
@@ -20,6 +21,9 @@ const ETAT_INITIAL: EtatNatif = {
   erreurGps: null,
   signalPerdu: false,
   ecoute: false,
+  microDisponible: true,
+  voixPrete: true,
+  derniereParoleA: 0,
   cibleMinParKm: null,
 };
 
@@ -32,8 +36,9 @@ export class RuntimeNatif implements CourseRuntime {
   readonly points = signal<CoursePointDto[]>([]);
   readonly transcript = signal('');
   readonly commandeComprise = signal<boolean | null>(null);
+  readonly erreurMicro = signal<string | null>(null);
   readonly audioActif = signal(true);
-  readonly microDisponible = signal(true);
+  readonly microDisponible = computed(() => this.natifEtat().microDisponible);
 
   readonly etat: Signal<EtatCourse> = computed(() => {
     if (this.termine()) return 'termine';
@@ -56,6 +61,14 @@ export class RuntimeNatif implements CourseRuntime {
   readonly signalPerdu = computed(() => this.natifEtat().signalPerdu);
   readonly ecoute = computed(() => this.natifEtat().ecoute);
 
+  // WHY: le service énonce « La route est ouverte » dès le départ. Une minute et demie de
+  // course sans qu'aucun énoncé n'ait jamais commencé signifie que rien ne sortira de la
+  // sortie entière — c'est le seul moment où l'écran peut encore le dire à l'athlète.
+  readonly voixMuette = computed(() => {
+    const etat = this.natifEtat();
+    return etat.demarree && etat.dureeMs > DELAI_AVANT_SOUPCON_MS && !etat.derniereParoleA;
+  });
+
   private options: OptionsCourse | null = null;
   private abonnements: { remove: () => Promise<void> }[] = [];
 
@@ -68,7 +81,7 @@ export class RuntimeNatif implements CourseRuntime {
     this.abonnements.push(
       await ChironCourse.addListener('etat', (etat) => this.recevoirEtat(etat)),
       await ChironCourse.addListener('commande', (donnees) => this.recevoirCommande(donnees)),
-      await ChironCourse.addListener('echecEcoute', () => this.commandeComprise.set(false)),
+      await ChironCourse.addListener('echecEcoute', (donnees) => this.recevoirEchec(donnees)),
       await ChironCourse.addListener('casque', () => this.rafraichir()),
     );
   }
@@ -77,6 +90,15 @@ export class RuntimeNatif implements CourseRuntime {
     const nouveaux = etat.nouveauxPoints ?? [];
     if (nouveaux.length) this.points.update((points) => [...points, ...nouveaux]);
     this.natifEtat.set({ ...etat, nouveauxPoints: undefined });
+  }
+
+  // WHY: un micro qui ne s'ouvre pas est indiscernable d'un micro qui n'entend rien. La raison
+  // remontée par le service — permission, moteur absent, erreur du moteur — est la seule chose
+  // qui distingue les deux, et sans elle le bouton passe pour mort.
+  private recevoirEchec(donnees: { raison: string }): void {
+    this.commandeComprise.set(false);
+    this.erreurMicro.set(donnees?.raison ?? 'autre');
+    this.rafraichir();
   }
 
   private recevoirCommande(donnees: { texte: string; definitif: boolean }): void {
@@ -117,6 +139,8 @@ export class RuntimeNatif implements CourseRuntime {
       phrases: options.phrases,
       appuiCourt: options.appuiCourt,
       appuiLong: options.appuiLong,
+      uniteAllure: options.uniteAllure,
+      volumeVoix: options.volumeVoix,
     }).catch(() => {});
   }
 
@@ -136,6 +160,8 @@ export class RuntimeNatif implements CourseRuntime {
         phrases: options.phrases,
         appuiCourt: options.appuiCourt,
         appuiLong: options.appuiLong,
+        uniteAllure: options.uniteAllure,
+        volumeVoix: options.volumeVoix,
       });
     } catch (erreur) {
       // WHY: sans localisation le service refuse de démarrer. Rejeter en silence laisserait
@@ -174,7 +200,19 @@ export class RuntimeNatif implements CourseRuntime {
   }
 
   commencerEcoute(): void {
-    ChironCourse.ecouter().catch(() => {});
+    this.erreurMicro.set(null);
+    this.commandeComprise.set(null);
+    this.transcript.set('');
+    ChironCourse.ecouter().catch((erreur) => this.recevoirEchec({ raison: String(erreur) }));
+  }
+
+  essayerVoix(texte: string): void {
+    if (!texte) return;
+    ChironCourse.essayerVoix({
+      texte,
+      langue: this.options?.langue ?? 'fr',
+      volume: this.options?.volumeVoix ?? 100,
+    }).catch(() => {});
   }
 
   // WHY: le SpeechRecognizer d'Android se referme seul au silence ou au bout de son délai.

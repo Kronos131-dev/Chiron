@@ -45,6 +45,8 @@ export class RuntimeWeb implements CourseRuntime {
   readonly ecoute = signal(false);
   readonly transcript = signal('');
   readonly commandeComprise = signal<boolean | null>(null);
+  readonly erreurMicro = signal<string | null>(null);
+  readonly voixMuette = signal(false);
   readonly audioActif = signal(true);
   readonly microDisponible: Signal<boolean> = computed(() => this.moteurReconnaissance() !== null);
 
@@ -83,6 +85,7 @@ export class RuntimeWeb implements CourseRuntime {
 
   configurer(options: OptionsCourse): void {
     this.options = options;
+    this.voix?.fixerVolume(this.fractionDeVolume());
     if (!this.telecommande) return;
     this.telecommande.relacher();
     this.telecommande = brancherTelecommande(options.appuiCourt, (action) =>
@@ -140,6 +143,25 @@ export class RuntimeWeb implements CourseRuntime {
     else this.voix.parler(texte);
   }
 
+  // WHY: le réglage du volume vit avant le départ, quand aucune voix n'a encore été créée par
+  // le geste de démarrage. L'essai la fabrique donc à la demande, faute de quoi le curseur se
+  // réglerait à l'aveugle — précisément ce qu'il s'agit d'éviter.
+  essayerVoix(texte: string): void {
+    if (!texte) return;
+    if (!this.voix && voixDisponible()) {
+      this.voix = creerVoix(
+        this.options?.langue === 'en' ? 'en-US' : 'fr-FR',
+        baisserLaMusiquePendant,
+      );
+    }
+    this.voix?.fixerVolume(this.fractionDeVolume());
+    this.voix?.interrompreEtParler(texte);
+  }
+
+  private fractionDeVolume(): number {
+    return Math.min(1, Math.max(0, (this.options?.volumeVoix ?? 100) / 100));
+  }
+
   purger(): void {
     this.tracker.purgerSnapshot();
   }
@@ -171,11 +193,14 @@ export class RuntimeWeb implements CourseRuntime {
     if (franchis <= this.kmAnnonces) return;
     this.kmAnnonces = franchis;
     this.tracker.ecrireSnapshot({ kmAnnonces: franchis });
+    // WHY: c'est l'allure du kilomètre qui vient d'être bouclé qui apprend quelque chose, pas
+    // la moyenne depuis le départ — celle-ci se lisse et cesse de réagir après une demi-heure.
+    const split = this.splits().find((s) => s.kilometre === franchis);
     this.dire(
       interpoler(this.phrase('km'), {
         km: franchis,
         temps: this.dureeParlee(this.dureeS()),
-        allure: this.allureParlee(this.allureMoyenneKmh()),
+        allure: this.allureParlee(split?.allureKmh ?? this.allureMoyenneKmh()),
       }),
       false,
     );
@@ -220,9 +245,13 @@ export class RuntimeWeb implements CourseRuntime {
     if (this.survie || !this.options) return;
     this.survie = tenirEnVie(['audioElement', 'webLock'], this.options.melangerMusique);
     this.audioActif.set(this.survie.audioEnLecture());
-    this.voix = voixDisponible()
-      ? creerVoix(this.options.langue === 'en' ? 'en-US' : 'fr-FR', baisserLaMusiquePendant)
-      : null;
+    if (!this.voix && voixDisponible()) {
+      this.voix = creerVoix(
+        this.options.langue === 'en' ? 'en-US' : 'fr-FR',
+        baisserLaMusiquePendant,
+      );
+    }
+    this.voix?.fixerVolume(this.fractionDeVolume());
     this.telecommande = brancherTelecommande(this.options.appuiCourt, (action) =>
       this.executerAction(action),
     );
@@ -247,6 +276,9 @@ export class RuntimeWeb implements CourseRuntime {
   private allureParlee(kmh: number): string {
     const minParKm = kmhVersMinParKm(kmh);
     if (minParKm === null) return this.phrase('noPace');
+    if (this.options?.uniteAllure === 'kmh') {
+      return interpoler(this.phrase('speed'), { vitesse: kmh.toFixed(1).replace('.', ',') });
+    }
     const minutes = Math.floor(minParKm);
     return interpoler(this.phrase('pace'), {
       minutes,
@@ -272,6 +304,7 @@ export class RuntimeWeb implements CourseRuntime {
     this.voix?.taire();
     this.transcript.set('');
     this.commandeComprise.set(null);
+    this.erreurMicro.set(null);
 
     const moteur = new Moteur();
     moteur.lang = this.options?.langue === 'en' ? 'en-US' : 'fr-FR';

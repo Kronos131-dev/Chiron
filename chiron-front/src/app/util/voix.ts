@@ -1,6 +1,7 @@
 export interface Voix {
   parler(texte: string): void;
   interrompreEtParler(texte: string): void;
+  fixerVolume(fraction: number): void;
   taire(): void;
 }
 
@@ -95,8 +96,15 @@ export function choisirVoixGrave(
 export function creerVoix(langue: string, pendantLaParole?: (parle: boolean) => void): Voix {
   const moteur = synthese();
   if (!moteur || typeof SpeechSynthesisUtterance === 'undefined') {
-    return { parler: () => {}, interrompreEtParler: () => {}, taire: () => {} };
+    return {
+      parler: () => {},
+      interrompreEtParler: () => {},
+      fixerVolume: () => {},
+      taire: () => {},
+    };
   }
+
+  let volume = VOLUME;
 
   let choisie: SpeechSynthesisVoice | null = null;
 
@@ -135,7 +143,7 @@ export function creerVoix(langue: string, pendantLaParole?: (parle: boolean) => 
       for (const segment of segments) {
         const message = new SpeechSynthesisUtterance(segment);
         message.lang = langue;
-        message.volume = VOLUME;
+        message.volume = volume;
         message.rate = DEBIT;
         message.pitch = estMasculine(choisie) ? HAUTEUR_MASCULINE : HAUTEUR_A_DEFAUT;
         if (choisie) message.voice = choisie;
@@ -151,6 +159,11 @@ export function creerVoix(langue: string, pendantLaParole?: (parle: boolean) => 
   return {
     parler: (texte) => enoncer(texte, false),
     interrompreEtParler: (texte) => enoncer(texte, true),
+    // WHY: le navigateur plafonne à 1. Un réglage au-delà n'a nulle part où aller : seul
+    // Android peut pousser le volume du flux média, et c'est le service natif qui le fait.
+    fixerVolume: (fraction) => {
+      volume = Math.min(1, Math.max(0, fraction));
+    },
     taire: () => {
       try {
         moteur.cancel();

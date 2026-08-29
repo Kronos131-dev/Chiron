@@ -5,7 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Capacitor } from '@capacitor/core';
 import { ActiveSessionService } from '../../service/active-session.service';
 import { ChironApi, CourseTraceDto } from '../../service/chiron-api';
-import { CLES_PHRASES, CourseRuntime } from '../../service/course-runtime';
+import { CLES_PHRASES, CourseRuntime, OptionsCourse } from '../../service/course-runtime';
 import { RuntimeNatif } from '../../service/course-runtime-natif';
 import { RuntimeWeb } from '../../service/course-runtime-web';
 import { I18nService } from '../../service/i18n.service';
@@ -13,10 +13,14 @@ import { TranslatePipe } from '../../service/translate.pipe';
 import { HeaderComponent } from '../shared/header/header';
 import { ExerciceForm } from '../../shared/exercise-forms';
 import {
+  UNITES_ALLURE,
+  UniteAllure,
   formaterAllure,
+  formaterAllureSelon,
   formaterChrono,
   formaterDistance,
   kmhVersMinParKm,
+  lireCible,
   minParKmVersKmh,
 } from '../../util/allure';
 import {
@@ -28,10 +32,12 @@ import {
   MAPPING_PAR_DEFAUT,
   MappingCasque,
 } from '../../util/telecommande-casque';
-import { lireAllure } from '../../util/commandes-vocales';
 import { TraceSvg, projeterTrace } from '../../util/trace-svg';
+import { GrapheAllure, construireGrapheAllure } from '../../util/graphe-allure';
 
 const COTE_TRACE = 320;
+const LARGEUR_GRAPHE = 320;
+const HAUTEUR_GRAPHE = 120;
 const SECONDES_PAR_MINUTE = 60;
 
 const CIBLE_DEFAUT_MIN_PAR_KM = 6;
@@ -40,9 +46,15 @@ const CIBLE_MAX = 15;
 const PAS_CIBLE_MIN_PAR_KM = 5 / SECONDES_PAR_MINUTE;
 const ECART_TOLERE_MIN_PAR_KM = 0.25;
 
+const VOLUME_MIN = 10;
+const VOLUME_MAX = 100;
+const VOLUME_DEFAUT = 100;
+
 const CLE_MAPPING_CASQUE = 'chiron.course.casque';
 const CLE_MAPPING_CASQUE_LONG = 'chiron.course.casqueLong';
 const CLE_MELANGER_MUSIQUE = 'chiron.course.melangerMusique';
+const CLE_UNITE_ALLURE = 'chiron.course.uniteAllure';
+const CLE_VOLUME_VOIX = 'chiron.course.volumeVoix';
 
 @Component({
   selector: 'app-course',
@@ -70,10 +82,15 @@ export class Course implements OnInit, OnDestroy {
   readonly cibleSaisie = signal('');
   readonly reglagesOuverts = signal(false);
   readonly melangerMusique = signal(false);
+  readonly uniteAllure = signal<UniteAllure>('minParKm');
+  readonly volumeVoix = signal(VOLUME_DEFAUT);
   readonly mappingCasque = signal<MappingCasque>({ ...MAPPING_PAR_DEFAUT });
   readonly mappingCasqueLong = signal<MappingCasque>({ ...MAPPING_LONG_PAR_DEFAUT });
   readonly boutonsCasque = BOUTONS_CASQUE;
+  readonly unites = UNITES_ALLURE;
   readonly actionsCasque = ACTIONS_CASQUE;
+  readonly volumeMin = VOLUME_MIN;
+  readonly volumeMax = VOLUME_MAX;
   readonly enregistrement = signal(false);
   readonly erreurEnregistrement = signal(false);
   readonly resume = signal<CourseTraceDto | null>(null);
@@ -82,7 +99,9 @@ export class Course implements OnInit, OnDestroy {
   readonly ecoute = this.runtime.ecoute;
   readonly transcript = this.runtime.transcript;
   readonly commandeComprise = this.runtime.commandeComprise;
+  readonly erreurMicro = this.runtime.erreurMicro;
   readonly audioActif = this.runtime.audioActif;
+  readonly voixMuette = this.runtime.voixMuette;
   readonly microDisponible = this.runtime.microDisponible;
   readonly natif = this.runtime.natif;
 
@@ -93,15 +112,32 @@ export class Course implements OnInit, OnDestroy {
 
   readonly chrono = computed(() => formaterChrono(this.runtime.dureeS()));
   readonly distanceKm = computed(() => formaterDistance(this.runtime.distanceM()));
-  readonly allureCourante = computed(() => formaterAllure(this.runtime.allureCouranteKmh()));
-  readonly allureMoyenne = computed(() => formaterAllure(this.runtime.allureMoyenneKmh()));
+  readonly allureCourante = computed(() => this.allureAffichee(this.runtime.allureCouranteKmh()));
+  readonly allureMoyenne = computed(() => this.allureAffichee(this.runtime.allureMoyenneKmh()));
   readonly splits = computed(() => this.runtime.splits());
   readonly precisionM = computed(() => this.runtime.precisionM());
   readonly erreurGps = computed(() => this.runtime.erreurGps());
   readonly signalPerdu = computed(() => this.runtime.signalPerdu());
 
-  readonly trace = computed<TraceSvg>(() =>
-    projeterTrace(this.resume()?.points ?? this.runtime.points(), COTE_TRACE),
+  readonly uniteLibelle = computed(() => this.i18n.t('course.paceUnitShort.' + this.uniteAllure()));
+  readonly placeholderCible = computed(() =>
+    this.i18n.t(
+      this.uniteAllure() === 'kmh' ? 'course.targetPlaceholderKmh' : 'course.targetPlaceholder',
+    ),
+  );
+  readonly messageMicro = computed(() => {
+    const raison = this.erreurMicro();
+    if (!raison) return '';
+    const connue = raison === 'permission' || raison === 'moteur';
+    return this.i18n.t('course.micError.' + (connue ? raison : 'autre'));
+  });
+
+  private readonly pointsTraces = computed(() => this.resume()?.points ?? this.runtime.points());
+
+  readonly trace = computed<TraceSvg>(() => projeterTrace(this.pointsTraces(), COTE_TRACE));
+
+  readonly graphe = computed<GrapheAllure | null>(() =>
+    construireGrapheAllure(this.pointsTraces(), LARGEUR_GRAPHE, HAUTEUR_GRAPHE),
   );
 
   readonly ecartAllure = computed(() => {
@@ -127,7 +163,9 @@ export class Course implements OnInit, OnDestroy {
     this.exercice = exo;
     this.mappingCasque.set(this.lireMapping(CLE_MAPPING_CASQUE, MAPPING_PAR_DEFAUT));
     this.mappingCasqueLong.set(this.lireMapping(CLE_MAPPING_CASQUE_LONG, MAPPING_LONG_PAR_DEFAUT));
-    this.melangerMusique.set(this.lireMelangerMusique());
+    this.melangerMusique.set(this.lireDrapeau(CLE_MELANGER_MUSIQUE));
+    this.uniteAllure.set(this.lireUnite());
+    this.volumeVoix.set(this.lireVolume());
     this.runtime.attacher(this.routineId, this.exoId);
     this.runtime.configurer(this.options());
     this.reprendre();
@@ -137,7 +175,7 @@ export class Course implements OnInit, OnDestroy {
     const reprise = await this.runtime.reprendreCourseEnCours();
     const cible = this.runtime.cibleRetenue();
     this.cibleMinParKm.set(cible);
-    this.cibleSaisie.set(cible === null ? '' : formaterAllure(minParKmVersKmh(cible)));
+    this.cibleSaisie.set(cible === null ? '' : this.saisiePourCible(cible));
     this.runtime.configurer(this.options());
     if (reprise) await this.runtime.demarrer();
   }
@@ -146,7 +184,7 @@ export class Course implements OnInit, OnDestroy {
     this.runtime.liberer();
   }
 
-  private options() {
+  private options(): OptionsCourse {
     return {
       langue: this.i18n.lang(),
       titre: this.i18n.t('course.title'),
@@ -155,13 +193,30 @@ export class Course implements OnInit, OnDestroy {
       appuiCourt: this.mappingCasque(),
       appuiLong: this.mappingCasqueLong(),
       melangerMusique: this.melangerMusique(),
+      uniteAllure: this.uniteAllure(),
+      volumeVoix: this.volumeVoix(),
     };
   }
 
+  // WHY: le service Android énonce et notifie sans repasser par le JS. Le libellé de l'unité
+  // voyage donc avec les phrases, sinon la notification afficherait « /km » à un athlète qui a
+  // choisi les km/h.
   private construirePhrases(): Record<string, string> {
     const phrases: Record<string, string> = {};
     for (const [court, cle] of Object.entries(CLES_PHRASES)) phrases[court] = this.i18n.t(cle);
+    phrases['uniteAllure'] = this.uniteLibelle();
     return phrases;
+  }
+
+  allureAffichee(kmh: number): string {
+    return formaterAllureSelon(kmh, this.uniteAllure());
+  }
+
+  private saisiePourCible(minParKm: number): string {
+    if (this.uniteAllure() === 'kmh') {
+      return minParKmVersKmh(minParKm).toFixed(1).replace('.', ',');
+    }
+    return formaterAllure(minParKmVersKmh(minParKm));
   }
 
   demarrer(): void {
@@ -200,23 +255,23 @@ export class Course implements OnInit, OnDestroy {
   fixerCible(minParKm: number): void {
     const bornee = Math.min(CIBLE_MAX, Math.max(CIBLE_MIN, minParKm));
     this.cibleMinParKm.set(bornee);
-    this.cibleSaisie.set(formaterAllure(minParKmVersKmh(bornee)));
+    this.cibleSaisie.set(this.saisiePourCible(bornee));
     this.runtime.fixerCible(bornee);
   }
 
   // WHY: l'athlète tape « 5:30 », « 530 » ou « 5.5 » selon le clavier que son téléphone lui
-  // ouvre. Les trois désignent la même allure et doivent toutes être acceptées, sinon le champ
-  // rejette une saisie manifestement juste.
+  // ouvre, et « 11,2 » quand il raisonne en km/h. Toutes ces saisies désignent une allure juste
+  // et doivent être acceptées, sinon le champ rejette une valeur manifestement bonne.
   validerCibleSaisie(): void {
     const brut = this.cibleSaisie().trim();
     if (!brut) {
       this.effacerCible();
       return;
     }
-    const cible = lireAllure(brut);
+    const cible = lireCible(brut, this.uniteAllure());
     if (cible === null) {
       const actuelle = this.cibleMinParKm();
-      this.cibleSaisie.set(actuelle === null ? '' : formaterAllure(minParKmVersKmh(actuelle)));
+      this.cibleSaisie.set(actuelle === null ? '' : this.saisiePourCible(actuelle));
       return;
     }
     this.fixerCible(cible);
@@ -299,7 +354,7 @@ export class Course implements OnInit, OnDestroy {
   }
 
   allureSplit(kmh: number): string {
-    return formaterAllure(kmh);
+    return this.allureAffichee(kmh);
   }
 
   dureeSplit(secondes: number): string {
@@ -314,17 +369,30 @@ export class Course implements OnInit, OnDestroy {
     const suivant = !this.melangerMusique();
     this.melangerMusique.set(suivant);
     this.runtime.configurer(this.options());
-    try {
-      localStorage.setItem(CLE_MELANGER_MUSIQUE, String(suivant));
-    } catch {}
+    this.ecrire(CLE_MELANGER_MUSIQUE, String(suivant));
   }
 
-  private lireMelangerMusique(): boolean {
-    try {
-      return localStorage.getItem(CLE_MELANGER_MUSIQUE) === 'true';
-    } catch {
-      return false;
-    }
+  choisirUnite(unite: UniteAllure): void {
+    if (this.uniteAllure() === unite) return;
+    this.uniteAllure.set(unite);
+    this.ecrire(CLE_UNITE_ALLURE, unite);
+    const cible = this.cibleMinParKm();
+    this.cibleSaisie.set(cible === null ? '' : this.saisiePourCible(cible));
+    this.runtime.configurer(this.options());
+  }
+
+  changerVolume(valeur: string): void {
+    const brut = Number.parseInt(valeur, 10);
+    if (!Number.isFinite(brut)) return;
+    this.volumeVoix.set(Math.min(VOLUME_MAX, Math.max(VOLUME_MIN, brut)));
+  }
+
+  // WHY: régler un volume sans l'entendre revient à le régler au hasard. La voix parle donc à
+  // chaque relâchement du curseur, au niveau exact qui vient d'être choisi.
+  essayerLaVoix(): void {
+    this.ecrire(CLE_VOLUME_VOIX, String(this.volumeVoix()));
+    this.runtime.configurer(this.options());
+    this.runtime.essayerVoix(this.i18n.t('course.say.volumeTest'));
   }
 
   basculerReglages(): void {
@@ -333,13 +401,13 @@ export class Course implements OnInit, OnDestroy {
 
   changerMappingCasque(bouton: BoutonCasque, action: ActionCasque): void {
     this.mappingCasque.set({ ...this.mappingCasque(), [bouton]: action });
-    this.ecrireMapping(CLE_MAPPING_CASQUE, this.mappingCasque());
+    this.ecrire(CLE_MAPPING_CASQUE, JSON.stringify(this.mappingCasque()));
     this.runtime.configurer(this.options());
   }
 
   changerMappingCasqueLong(bouton: BoutonCasque, action: ActionCasque): void {
     this.mappingCasqueLong.set({ ...this.mappingCasqueLong(), [bouton]: action });
-    this.ecrireMapping(CLE_MAPPING_CASQUE_LONG, this.mappingCasqueLong());
+    this.ecrire(CLE_MAPPING_CASQUE_LONG, JSON.stringify(this.mappingCasqueLong()));
     this.runtime.configurer(this.options());
   }
 
@@ -353,9 +421,31 @@ export class Course implements OnInit, OnDestroy {
     }
   }
 
-  private ecrireMapping(cle: string, mapping: MappingCasque): void {
+  private lireUnite(): UniteAllure {
+    return this.lire(CLE_UNITE_ALLURE) === 'kmh' ? 'kmh' : 'minParKm';
+  }
+
+  private lireVolume(): number {
+    const brut = Number.parseInt(this.lire(CLE_VOLUME_VOIX) ?? '', 10);
+    if (!Number.isFinite(brut)) return VOLUME_DEFAUT;
+    return Math.min(VOLUME_MAX, Math.max(VOLUME_MIN, brut));
+  }
+
+  private lireDrapeau(cle: string): boolean {
+    return this.lire(cle) === 'true';
+  }
+
+  private lire(cle: string): string | null {
     try {
-      localStorage.setItem(cle, JSON.stringify(mapping));
+      return localStorage.getItem(cle);
+    } catch {
+      return null;
+    }
+  }
+
+  private ecrire(cle: string, valeur: string): void {
+    try {
+      localStorage.setItem(cle, valeur);
     } catch {}
   }
 }

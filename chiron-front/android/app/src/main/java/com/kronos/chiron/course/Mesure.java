@@ -18,10 +18,12 @@ public final class Mesure {
 
     private final List<Point> points = new ArrayList<>();
     private final List<double[]> parcours = new ArrayList<>();
+    private final List<Long> franchissementsMs = new ArrayList<>();
 
     private double cumulM = 0;
     private long pauseCumuleeMs = 0;
     private long depart = 0;
+    private int prochainKm = 1;
 
     public static double distanceHaversineM(Point a, Point b) {
         double lat1 = Math.toRadians(a.lat);
@@ -56,13 +58,49 @@ public final class Mesure {
             return;
         }
         Point precedent = points.get(points.size() - 1);
+        double debutSegmentM = cumulM;
+        double debutSegmentMs = parcours.get(parcours.size() - 1)[1];
+        double segmentM = 0;
         if (courant.coupure) {
             pauseCumuleeMs += courant.t - precedent.t;
         } else {
-            cumulM += distanceHaversineM(precedent, courant);
+            segmentM = distanceHaversineM(precedent, courant);
+            cumulM += segmentM;
         }
         points.add(courant);
-        parcours.add(new double[] { cumulM, courant.t - depart - pauseCumuleeMs });
+        double finSegmentMs = courant.t - depart - pauseCumuleeMs;
+        parcours.add(new double[] { cumulM, finSegmentMs });
+        releverLesFranchissements(debutSegmentM, segmentM, debutSegmentMs, finSegmentMs);
+    }
+
+    // WHY: l'instant exact d'un kilomètre tombe au milieu d'un segment GPS, jamais sur un
+    // point. L'interpolation est ce qui rend le temps au kilomètre comparable à celui du
+    // serveur ; l'attribuer au point suivant décalerait chaque split de la durée d'un segment.
+    private void releverLesFranchissements(
+        double debutSegmentM,
+        double segmentM,
+        double debutSegmentMs,
+        double finSegmentMs
+    ) {
+        while (segmentM > 0 && cumulM >= prochainKm * KM_EN_METRES) {
+            double fraction = (prochainKm * KM_EN_METRES - debutSegmentM) / segmentM;
+            long instant = Math.round(debutSegmentMs + fraction * (finSegmentMs - debutSegmentMs));
+            franchissementsMs.add(instant);
+            prochainKm++;
+        }
+    }
+
+    public long dureeDuKilometreMs(int kilometre) {
+        if (kilometre < 1 || kilometre > franchissementsMs.size()) return 0;
+        long fin = franchissementsMs.get(kilometre - 1);
+        long debut = kilometre == 1 ? 0 : franchissementsMs.get(kilometre - 2);
+        return Math.max(0, fin - debut);
+    }
+
+    public double allureDuKilometreKmh(int kilometre) {
+        long dureeMs = dureeDuKilometreMs(kilometre);
+        if (dureeMs <= 0) return 0;
+        return allureKmh(KM_EN_METRES, Math.floor(dureeMs / MS_PAR_SECONDE));
     }
 
     public boolean tropProche(Point candidat) {
@@ -75,7 +113,7 @@ public final class Mesure {
     }
 
     public int kilometresFranchis() {
-        return (int) Math.floor(cumulM / KM_EN_METRES);
+        return franchissementsMs.size();
     }
 
     public int nbPoints() {

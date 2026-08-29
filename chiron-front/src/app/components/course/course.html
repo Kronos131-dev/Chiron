@@ -1,6 +1,6 @@
 <app-header [title]="'course.title' | t" [showBack]="false"></app-header>
 
-<main class="min-h-screen pt-20 pb-10 bg-slate-950 heroic-texture flex flex-col items-center px-5">
+<main class="min-h-screen pt-20 pb-32 bg-slate-950 heroic-texture flex flex-col items-center px-5">
   <p class="text-secondary text-[10px] font-bold tracking-[0.25em] uppercase">
     {{ exercice?.nom }}
   </p>
@@ -26,7 +26,7 @@
         [class.border-sky-400/50]="tropRapide()"
       >
         <p class="text-on-surface-variant text-[9px] font-bold tracking-[0.2em] uppercase">
-          {{ 'course.pace' | t }}
+          {{ 'course.pace' | t }} · {{ uniteLibelle() }}
         </p>
         <p
           class="font-headline text-3xl font-black tabular-nums mt-1"
@@ -40,7 +40,7 @@
     </div>
 
     <p class="text-on-surface-variant text-[10px] font-bold tracking-[0.2em] uppercase mt-3">
-      {{ 'course.avgPace' | t: { allure: allureMoyenne() } }}
+      {{ 'course.avgPace' | t: { allure: allureMoyenne(), unite: uniteLibelle() } }}
     </p>
 
     <div
@@ -57,17 +57,17 @@
 
       <div class="text-center">
         <p class="text-secondary text-[9px] font-bold tracking-[0.2em] uppercase">
-          {{ 'course.target' | t }}
+          {{ 'course.target' | t: { unite: uniteLibelle() } }}
         </p>
         <input
           type="text"
-          inputmode="numeric"
+          inputmode="decimal"
           [ngModel]="cibleSaisie()"
           (ngModelChange)="cibleSaisie.set($event)"
           (blur)="validerCibleSaisie()"
           (keyup.enter)="validerCibleSaisie()"
-          [placeholder]="'course.targetPlaceholder' | t"
-          [attr.aria-label]="'course.target' | t"
+          [placeholder]="placeholderCible()"
+          [attr.aria-label]="'course.target' | t: { unite: uniteLibelle() }"
           class="course-cible-saisie font-headline text-2xl font-black text-secondary tabular-nums leading-tight bg-transparent border-b border-secondary/30 focus:border-secondary outline-none text-center w-24"
         />
         @if (cibleMinParKm() !== null) {
@@ -120,96 +120,6 @@
     <p class="text-on-surface-variant text-[10px] leading-relaxed text-center max-w-xs mt-6">
       {{ 'course.startHint' | t }}
     </p>
-
-    <button
-      type="button"
-      (click)="basculerReglages()"
-      class="mt-6 text-secondary text-[10px] font-bold tracking-[0.2em] uppercase hover:text-white transition-colors flex items-center gap-1"
-    >
-      <span class="material-symbols-outlined text-base">headphones</span>
-      {{ 'course.headsetSettings' | t }}
-    </button>
-
-    @if (reglagesOuverts()) {
-      <div
-        class="w-full max-w-sm mt-4 bg-slate-950/50 border border-white/5 rounded-xl p-4 space-y-3"
-      >
-        @if (!natif) {
-          <button
-            type="button"
-            (click)="basculerMelangerMusique()"
-            class="w-full flex items-start justify-between gap-3 text-left"
-          >
-            <span>
-              <span class="text-on-surface text-xs font-bold block">
-                {{ 'course.mixMusic' | t }}
-              </span>
-              <span class="text-on-surface-variant text-[10px] leading-relaxed block mt-1">
-                {{ 'course.mixMusicHint' | t }}
-              </span>
-            </span>
-            <span
-              class="material-symbols-outlined text-2xl flex-shrink-0"
-              [class.text-secondary]="melangerMusique()"
-              [class.text-on-surface-variant]="!melangerMusique()"
-            >
-              {{ melangerMusique() ? 'toggle_on' : 'toggle_off' }}
-            </span>
-          </button>
-        }
-
-        <p class="text-on-surface-variant text-[10px] leading-relaxed">
-          {{ natif ? ('course.headsetLongHint' | t) : ('course.headsetHint' | t) }}
-        </p>
-
-        @if (natif) {
-          <div class="flex items-center justify-end gap-2">
-            <span
-              class="text-on-surface-variant text-[9px] font-bold tracking-widest uppercase w-32 text-center"
-            >
-              {{ 'course.headsetShort' | t }}
-            </span>
-            <span
-              class="text-on-surface-variant text-[9px] font-bold tracking-widest uppercase w-32 text-center"
-            >
-              {{ 'course.headsetLong' | t }}
-            </span>
-          </div>
-        }
-
-        @for (bouton of boutonsCasque; track bouton) {
-          <div class="flex items-center justify-between gap-2">
-            <span class="text-on-surface text-xs font-bold">
-              {{ 'course.button.' + bouton | t }}
-            </span>
-            <div class="flex items-center gap-2">
-              <select
-                [ngModel]="mappingCasque()[bouton]"
-                (ngModelChange)="changerMappingCasque(bouton, $event)"
-                [attr.aria-label]="'course.headsetShort' | t"
-                class="bg-slate-950/80 border border-white/10 rounded p-2 text-white text-xs outline-none focus:border-secondary/50 transition-colors w-32"
-              >
-                @for (action of actionsCasque; track action) {
-                  <option [value]="action">{{ 'course.action.' + action | t }}</option>
-                }
-              </select>
-              @if (natif) {
-                <select
-                  [ngModel]="mappingCasqueLong()[bouton]"
-                  (ngModelChange)="changerMappingCasqueLong(bouton, $event)"
-                  [attr.aria-label]="'course.headsetLong' | t"
-                  class="bg-slate-950/80 border border-white/10 rounded p-2 text-white text-xs outline-none focus:border-secondary/50 transition-colors w-32"
-                >
-                  @for (action of actionsCasque; track action) {
-                    <option [value]="action">{{ 'course.action.' + action | t }}</option>
-                  }
-                </select>
-              }
-            </div>
-          </div>
-        }
-      </div>
-    }
   } @else if (!termine()) {
     <div class="flex items-center gap-4 mt-8">
       <button
@@ -250,6 +160,22 @@
     @if (microDisponible()) {
       <p class="text-on-surface-variant text-[10px] font-bold tracking-[0.15em] uppercase mt-3">
         {{ 'course.pushToTalkHint' | t }}
+      </p>
+    }
+
+    @if (messageMicro()) {
+      <p
+        class="w-full max-w-sm mt-3 bg-amber-500/10 border border-amber-500/40 rounded-xl p-3 text-amber-300 text-[11px] leading-relaxed text-center"
+      >
+        {{ messageMicro() }}
+      </p>
+    }
+
+    @if (voixMuette()) {
+      <p
+        class="w-full max-w-sm mt-4 bg-red-500/10 border border-red-500/40 rounded-xl p-3 text-red-300 text-[11px] leading-relaxed text-center"
+      >
+        {{ 'course.voiceSilent' | t }}
       </p>
     }
 
@@ -301,7 +227,7 @@
       </div>
       <div class="bg-slate-950/50 border border-white/5 rounded-xl p-3 text-center">
         <p class="text-on-surface-variant text-[9px] font-bold tracking-[0.15em] uppercase">
-          {{ 'course.pace' | t }}
+          {{ 'course.pace' | t }} · {{ uniteLibelle() }}
         </p>
         <p class="font-headline text-xl font-black text-white tabular-nums mt-1">
           {{ allureMoyenne() }}
@@ -359,6 +285,66 @@
       </div>
     }
 
+    @if (graphe(); as courbe) {
+      <div class="w-full max-w-sm mt-4 bg-slate-950/50 border border-white/5 rounded-xl p-4">
+        <p class="text-secondary text-[9px] font-bold tracking-[0.2em] uppercase mb-3">
+          {{ 'course.paceChart' | t }} · {{ uniteLibelle() }}
+        </p>
+        <div class="flex items-stretch gap-2">
+          <div
+            class="flex flex-col justify-between text-on-surface-variant text-[9px] font-bold tabular-nums"
+          >
+            <span [attr.title]="'course.chartFaster' | t">
+              {{ allureAffichee(courbe.allureRapideKmh) }}
+            </span>
+            <span [attr.title]="'course.chartSlower' | t">
+              {{ allureAffichee(courbe.allureLenteKmh) }}
+            </span>
+          </div>
+          <svg
+            class="flex-1 h-28"
+            [attr.viewBox]="'0 0 ' + courbe.largeur + ' ' + courbe.hauteur"
+            preserveAspectRatio="none"
+            [attr.aria-label]="'course.paceChart' | t"
+          >
+            <defs>
+              <linearGradient id="courseAllureFond" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="rgb(56 189 248)" stop-opacity="0.35" />
+                <stop offset="100%" stop-color="rgb(56 189 248)" stop-opacity="0" />
+              </linearGradient>
+            </defs>
+            @for (repere of courbe.reperes; track repere.km) {
+              <line
+                [attr.x1]="repere.x"
+                y1="0"
+                [attr.x2]="repere.x"
+                [attr.y2]="courbe.hauteur"
+                stroke="rgba(255,255,255,0.09)"
+                stroke-width="1"
+                vector-effect="non-scaling-stroke"
+              />
+            }
+            <path [attr.d]="courbe.aire" fill="url(#courseAllureFond)" />
+            <path
+              [attr.d]="courbe.chemin"
+              fill="none"
+              stroke="rgb(56 189 248)"
+              stroke-width="2"
+              stroke-linejoin="round"
+              stroke-linecap="round"
+              vector-effect="non-scaling-stroke"
+            />
+          </svg>
+        </div>
+        <div
+          class="flex justify-between text-on-surface-variant text-[9px] font-bold tabular-nums mt-1 pl-9"
+        >
+          <span>0</span>
+          <span>{{ courbe.distanceM / 1000 | number: '1.1-1' }} km</span>
+        </div>
+      </div>
+    }
+
     @if (splits().length) {
       <div class="w-full max-w-sm mt-4 bg-slate-950/50 border border-white/5 rounded-xl p-4">
         <p class="text-secondary text-[9px] font-bold tracking-[0.2em] uppercase mb-3">
@@ -390,5 +376,163 @@
       <span class="material-symbols-outlined text-lg">arrow_back</span>
       {{ 'course.backToSession' | t }}
     </button>
+  }
+
+  @if (!termine()) {
+    <button
+      type="button"
+      (click)="basculerReglages()"
+      class="mt-6 text-secondary text-[10px] font-bold tracking-[0.2em] uppercase hover:text-white transition-colors flex items-center gap-1"
+    >
+      <span class="material-symbols-outlined text-base">tune</span>
+      {{ 'course.settings' | t }}
+    </button>
+
+    @if (reglagesOuverts()) {
+      <div
+        class="w-full max-w-sm mt-4 bg-slate-950/50 border border-white/5 rounded-xl p-4 space-y-5"
+      >
+        <div>
+          <div class="flex items-baseline justify-between gap-3">
+            <span class="text-on-surface text-xs font-bold">{{ 'course.voiceVolume' | t }}</span>
+            <span class="text-secondary text-xs font-black tabular-nums">{{ volumeVoix() }} %</span>
+          </div>
+          <div class="flex items-center gap-3 mt-2">
+            <input
+              type="range"
+              step="5"
+              [attr.min]="volumeMin"
+              [attr.max]="volumeMax"
+              [value]="volumeVoix()"
+              (input)="changerVolume($any($event.target).value)"
+              (change)="essayerLaVoix()"
+              [attr.aria-label]="'course.voiceVolume' | t"
+              class="course-curseur flex-1"
+            />
+            <button
+              type="button"
+              (click)="essayerLaVoix()"
+              class="flex items-center gap-1 rounded-full border border-secondary/40 text-secondary text-[10px] font-bold tracking-widest uppercase px-3 py-2 hover:border-secondary transition-colors flex-shrink-0"
+            >
+              <span class="material-symbols-outlined text-base leading-none">volume_up</span>
+              {{ 'course.testVoice' | t }}
+            </button>
+          </div>
+          <p class="text-on-surface-variant text-[10px] leading-relaxed mt-2">
+            {{ 'course.voiceVolumeHint' | t }}
+          </p>
+        </div>
+
+        <div>
+          <span class="text-on-surface text-xs font-bold">{{ 'course.paceUnit' | t }}</span>
+          <div class="grid grid-cols-2 gap-2 mt-2">
+            @for (unite of unites; track unite) {
+              <button
+                type="button"
+                (click)="choisirUnite(unite)"
+                class="rounded-lg border p-2 text-center transition-colors"
+                [class.border-secondary]="uniteAllure() === unite"
+                [class.bg-secondary/10]="uniteAllure() === unite"
+                [class.border-white/10]="uniteAllure() !== unite"
+              >
+                <span
+                  class="font-headline text-sm font-black block"
+                  [class.text-secondary]="uniteAllure() === unite"
+                  [class.text-on-surface-variant]="uniteAllure() !== unite"
+                >
+                  {{ 'course.paceUnitShort.' + unite | t }}
+                </span>
+                <span class="text-on-surface-variant text-[9px] leading-tight block mt-0.5">
+                  {{ 'course.paceUnit.' + unite | t }}
+                </span>
+              </button>
+            }
+          </div>
+        </div>
+
+        @if (!natif) {
+          <button
+            type="button"
+            (click)="basculerMelangerMusique()"
+            class="w-full flex items-start justify-between gap-3 text-left"
+          >
+            <span>
+              <span class="text-on-surface text-xs font-bold block">
+                {{ 'course.mixMusic' | t }}
+              </span>
+              <span class="text-on-surface-variant text-[10px] leading-relaxed block mt-1">
+                {{ 'course.mixMusicHint' | t }}
+              </span>
+            </span>
+            <span
+              class="material-symbols-outlined text-2xl flex-shrink-0"
+              [class.text-secondary]="melangerMusique()"
+              [class.text-on-surface-variant]="!melangerMusique()"
+            >
+              {{ melangerMusique() ? 'toggle_on' : 'toggle_off' }}
+            </span>
+          </button>
+        }
+
+        <div class="space-y-3">
+          <span class="text-on-surface text-xs font-bold block">
+            {{ 'course.headsetSettings' | t }}
+          </span>
+          <p class="text-on-surface-variant text-[10px] leading-relaxed">
+            {{ 'course.micTalkHint' | t }}
+          </p>
+          <p class="text-on-surface-variant text-[10px] leading-relaxed">
+            {{ natif ? ('course.headsetLongHint' | t) : ('course.headsetHint' | t) }}
+          </p>
+
+          @if (natif) {
+            <div class="flex items-center justify-end gap-2">
+              <span
+                class="text-on-surface-variant text-[9px] font-bold tracking-widest uppercase w-32 text-center"
+              >
+                {{ 'course.headsetShort' | t }}
+              </span>
+              <span
+                class="text-on-surface-variant text-[9px] font-bold tracking-widest uppercase w-32 text-center"
+              >
+                {{ 'course.headsetLong' | t }}
+              </span>
+            </div>
+          }
+
+          @for (bouton of boutonsCasque; track bouton) {
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-on-surface text-xs font-bold">
+                {{ 'course.button.' + bouton | t }}
+              </span>
+              <div class="flex items-center gap-2">
+                <select
+                  [ngModel]="mappingCasque()[bouton]"
+                  (ngModelChange)="changerMappingCasque(bouton, $event)"
+                  [attr.aria-label]="'course.headsetShort' | t"
+                  class="bg-slate-950/80 border border-white/10 rounded p-2 text-white text-xs outline-none focus:border-secondary/50 transition-colors w-32"
+                >
+                  @for (action of actionsCasque; track action) {
+                    <option [value]="action">{{ 'course.action.' + action | t }}</option>
+                  }
+                </select>
+                @if (natif) {
+                  <select
+                    [ngModel]="mappingCasqueLong()[bouton]"
+                    (ngModelChange)="changerMappingCasqueLong(bouton, $event)"
+                    [attr.aria-label]="'course.headsetLong' | t"
+                    class="bg-slate-950/80 border border-white/10 rounded p-2 text-white text-xs outline-none focus:border-secondary/50 transition-colors w-32"
+                  >
+                    @for (action of actionsCasque; track action) {
+                      <option [value]="action">{{ 'course.action.' + action | t }}</option>
+                    }
+                  </select>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
   }
 </main>

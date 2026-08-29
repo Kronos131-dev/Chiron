@@ -77,6 +77,52 @@ public class MesureTest {
     }
 
     @Test
+    public void allureDuKilometreKmh_deuxKilometresInegaux_rendLAllureDeChacun() {
+        Mesure mesure = new Mesure();
+        mesure.ajouter(apres(0, 0));
+        mesure.ajouter(apres(1000, 240));
+        mesure.ajouter(apres(2000, 840));
+
+        assertEquals(2, mesure.kilometresFranchis());
+        assertEquals(15, mesure.allureDuKilometreKmh(1), 0.1);
+        assertEquals(6, mesure.allureDuKilometreKmh(2), 0.1);
+    }
+
+    @Test
+    public void dureeDuKilometreMs_franchissementAuMilieuDUnSegment_interpoleLInstant() {
+        Mesure mesure = new Mesure();
+        mesure.ajouter(apres(0, 0));
+        mesure.ajouter(apres(2000, 600));
+
+        assertEquals(2, mesure.kilometresFranchis());
+        assertEquals(300_000, mesure.dureeDuKilometreMs(1), 1000);
+        assertEquals(300_000, mesure.dureeDuKilometreMs(2), 1000);
+    }
+
+    @Test
+    public void dureeDuKilometreMs_pauseEntreDeuxKilometres_neGonflePasLeSplit() {
+        Mesure mesure = new Mesure();
+        mesure.ajouter(apres(0, 0));
+        mesure.ajouter(apres(1000, 300));
+        mesure.ajouter(repriseApres(1000, 1200));
+        mesure.ajouter(apres(2000, 1500));
+
+        assertEquals(2, mesure.kilometresFranchis());
+        assertEquals(300_000, mesure.dureeDuKilometreMs(2), 1000);
+    }
+
+    @Test
+    public void dureeDuKilometreMs_kilometreNonFranchi_rendZero() {
+        Mesure mesure = new Mesure();
+        mesure.ajouter(apres(0, 0));
+        mesure.ajouter(apres(500, 150));
+
+        assertEquals(0, mesure.kilometresFranchis());
+        assertEquals(0, mesure.dureeDuKilometreMs(1));
+        assertEquals(0, mesure.allureDuKilometreKmh(1), 0.001);
+    }
+
+    @Test
     public void formaterAllure_douzeKmh_donneCinqMinutes() {
         assertEquals("5:00", Phrases.formaterAllure(12));
     }

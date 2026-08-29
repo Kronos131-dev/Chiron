@@ -16,3 +16,9 @@
 .course-cible:active {
   transform: scale(0.97);
 }
+
+.course-curseur {
+  accent-color: var(--color-secondary, #d4b86a);
+  height: 1.75rem;
+  touch-action: pan-y;
+}

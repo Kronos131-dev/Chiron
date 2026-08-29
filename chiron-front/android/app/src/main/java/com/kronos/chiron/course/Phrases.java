@@ -14,6 +14,16 @@ public final class Phrases {
 
     private final Map<String, String> modeles = new HashMap<>();
 
+    private String unite = "minParKm";
+
+    public void fixerUnite(String unite) {
+        this.unite = "kmh".equals(unite) ? "kmh" : "minParKm";
+    }
+
+    public boolean enKmh() {
+        return "kmh".equals(unite);
+    }
+
     public void charger(JSONObject source) {
         if (source == null) return;
         Iterator<String> cles = source.keys();
@@ -74,9 +84,19 @@ public final class Phrases {
         return String.format(Locale.US, "%.2f", metres / Mesure.KM_EN_METRES);
     }
 
+    public String affichageAllure(double kmh) {
+        if (!enKmh()) return formaterAllure(kmh);
+        return kmh > 0 ? String.format(Locale.US, "%.1f", kmh) : "—";
+    }
+
     public String allureParlee(double kmh) {
         Double minParKm = minParKm(kmh);
         if (minParKm == null) return t("noPace");
+        if (enKmh()) {
+            Map<String, String> vitesse = new HashMap<>();
+            vitesse.put("vitesse", String.format(Locale.FRANCE, "%.1f", kmh));
+            return t("speed", vitesse);
+        }
         long minutes = (long) Math.floor(minParKm);
         long secondes = Math.round((minParKm - minutes) * SECONDES_PAR_MINUTE);
         Map<String, String> valeurs = new HashMap<>();
