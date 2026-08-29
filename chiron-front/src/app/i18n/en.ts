@@ -393,6 +393,14 @@ export const en: Record<string, string> = {
   'course.mixMusicHint':
     'The same inaudible sound that keeps the app alive with the screen off is what pauses your music. Mixing it with your music preserves it, but the phone may then freeze the run while locked.',
   'course.headsetSettings': 'Headset buttons',
+  'course.notification': '{{km}} km · {{temps}} · {{allure}} /km',
+  'course.notificationPause': 'Pause',
+  'course.notificationResume': 'Resume',
+  'course.notificationListen': 'Mic',
+  'course.headsetShort': 'Short press',
+  'course.headsetLong': 'Long press',
+  'course.headsetLongHint':
+    "Choose what each headset button does while running, short press and long press separately. If your earbud's long press opens the phone's voice assistant, map it to a media command in the headset app: Android intercepts it before Chiron.",
   'course.headsetHint':
     'Choose what each button on your headset does while running. Not every headset exposes all five.',
   'course.button.play': 'Play / Pause',

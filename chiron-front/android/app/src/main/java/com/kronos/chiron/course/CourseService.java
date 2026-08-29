@@ -156,6 +156,19 @@ public final class CourseService extends Service {
         publierEtat();
     }
 
+    public void configurer(String configuration) {
+        JSONObject config = lireJson(configuration);
+        if (config.has("phrases")) phrases.charger(config.optJSONObject("phrases"));
+        titre = config.optString("titre", titre);
+        if (telecommande != null) {
+            telecommande.configurer(
+                config.optJSONObject("appuiCourt"),
+                config.optJSONObject("appuiLong")
+            );
+        }
+        rafraichirLaNotification();
+    }
+
     public void arreter() {
         if (!demarree) {
             stopSelf();

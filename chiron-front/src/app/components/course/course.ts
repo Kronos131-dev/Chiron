@@ -2,9 +2,12 @@ import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Capacitor } from '@capacitor/core';
 import { ActiveSessionService } from '../../service/active-session.service';
-import { ChironApi, CoursePointDto, CourseTraceDto } from '../../service/chiron-api';
-import { CourseTracker } from '../../service/course-tracker';
+import { ChironApi, CourseTraceDto } from '../../service/chiron-api';
+import { CLES_PHRASES, CourseRuntime } from '../../service/course-runtime';
+import { RuntimeNatif } from '../../service/course-runtime-natif';
+import { RuntimeWeb } from '../../service/course-runtime-web';
 import { I18nService } from '../../service/i18n.service';
 import { TranslatePipe } from '../../service/translate.pipe';
 import { HeaderComponent } from '../shared/header/header';
@@ -16,39 +19,30 @@ import {
   kmhVersMinParKm,
   minParKmVersKmh,
 } from '../../util/allure';
-import { Survie, tenirEnVie } from '../../util/survie-arriere-plan';
-import { Voix, creerVoix, voixDisponible } from '../../util/voix';
 import {
   ACTIONS_CASQUE,
   ActionCasque,
   BOUTONS_CASQUE,
   BoutonCasque,
+  MAPPING_LONG_PAR_DEFAUT,
   MAPPING_PAR_DEFAUT,
   MappingCasque,
-  Telecommande,
-  brancherTelecommande,
 } from '../../util/telecommande-casque';
-import { Commande, interpreter, lireAllure } from '../../util/commandes-vocales';
-import { baisserLaMusiquePendant } from '../../util/session-audio';
+import { lireAllure } from '../../util/commandes-vocales';
 import { TraceSvg, projeterTrace } from '../../util/trace-svg';
 
-const TICK_MS = 1000;
 const COTE_TRACE = 320;
-const KM_EN_METRES = 1000;
 const SECONDES_PAR_MINUTE = 60;
 
 const CIBLE_DEFAUT_MIN_PAR_KM = 6;
 const CIBLE_MIN = 2.5;
 const CIBLE_MAX = 15;
 const PAS_CIBLE_MIN_PAR_KM = 5 / SECONDES_PAR_MINUTE;
-
 const ECART_TOLERE_MIN_PAR_KM = 0.25;
-const DUREE_ECART_MS = 15000;
-const SILENCE_ENTRE_ANNONCES_MS = 60000;
+
 const CLE_MAPPING_CASQUE = 'chiron.course.casque';
+const CLE_MAPPING_CASQUE_LONG = 'chiron.course.casqueLong';
 const CLE_MELANGER_MUSIQUE = 'chiron.course.melangerMusique';
-const ECART_FRANC_MIN_PAR_KM = 0.6;
-const ECOUTE_MAINS_LIBRES_MS = 7000;
 
 @Component({
   selector: 'app-course',
@@ -64,7 +58,9 @@ export class Course implements OnInit, OnDestroy {
   private chironApi = inject(ChironApi);
   private i18n = inject(I18nService);
 
-  readonly tracker = new CourseTracker();
+  readonly runtime: CourseRuntime = Capacitor.isNativePlatform()
+    ? new RuntimeNatif()
+    : new RuntimeWeb();
 
   routineId = '';
   exoId = '';
@@ -72,56 +68,45 @@ export class Course implements OnInit, OnDestroy {
 
   readonly cibleMinParKm = signal<number | null>(null);
   readonly cibleSaisie = signal('');
-  readonly ecoute = signal(false);
-  readonly transcript = signal('');
-  readonly commandeComprise = signal<boolean | null>(null);
   readonly reglagesOuverts = signal(false);
   readonly melangerMusique = signal(false);
-  readonly audioActif = signal(true);
   readonly mappingCasque = signal<MappingCasque>({ ...MAPPING_PAR_DEFAUT });
+  readonly mappingCasqueLong = signal<MappingCasque>({ ...MAPPING_LONG_PAR_DEFAUT });
   readonly boutonsCasque = BOUTONS_CASQUE;
   readonly actionsCasque = ACTIONS_CASQUE;
   readonly enregistrement = signal(false);
   readonly erreurEnregistrement = signal(false);
   readonly resume = signal<CourseTraceDto | null>(null);
-  readonly microDisponible = signal(false);
 
-  private survie: Survie | null = null;
-  private voix: Voix | null = null;
-  private telecommande: Telecommande | null = null;
-  private reconnaissance: any = null;
-  private ticker: ReturnType<typeof setInterval> | null = null;
-  private minuterieEcoute: ReturnType<typeof setTimeout> | null = null;
+  readonly etat = this.runtime.etat;
+  readonly ecoute = this.runtime.ecoute;
+  readonly transcript = this.runtime.transcript;
+  readonly commandeComprise = this.runtime.commandeComprise;
+  readonly audioActif = this.runtime.audioActif;
+  readonly microDisponible = this.runtime.microDisponible;
+  readonly natif = this.runtime.natif;
 
-  private kmAnnonces = 0;
-  private ecartDepuis: number | null = null;
-  private derniereAnnonceEcart = 0;
-
-  readonly etat = this.tracker.etat;
   readonly enCours = computed(() => this.etat() === 'enCours');
   readonly enPause = computed(() => this.etat() === 'enPause');
   readonly demarree = computed(() => this.etat() !== 'pret');
   readonly termine = computed(() => this.etat() === 'termine');
 
-  readonly chrono = computed(() => formaterChrono(this.tracker.dureeS()));
-  readonly distanceKm = computed(() => formaterDistance(this.tracker.distanceM()));
-  readonly allureCourante = computed(() => formaterAllure(this.tracker.allureCouranteKmh()));
-  readonly allureMoyenne = computed(() => formaterAllure(this.tracker.allureMoyenneKmh()));
-  readonly splits = computed(() => this.tracker.splits());
-
-  readonly cibleFormatee = computed(() => {
-    const cible = this.cibleMinParKm();
-    if (cible === null) return '—';
-    return formaterAllure(minParKmVersKmh(cible));
-  });
+  readonly chrono = computed(() => formaterChrono(this.runtime.dureeS()));
+  readonly distanceKm = computed(() => formaterDistance(this.runtime.distanceM()));
+  readonly allureCourante = computed(() => formaterAllure(this.runtime.allureCouranteKmh()));
+  readonly allureMoyenne = computed(() => formaterAllure(this.runtime.allureMoyenneKmh()));
+  readonly splits = computed(() => this.runtime.splits());
+  readonly precisionM = computed(() => this.runtime.precisionM());
+  readonly erreurGps = computed(() => this.runtime.erreurGps());
+  readonly signalPerdu = computed(() => this.runtime.signalPerdu());
 
   readonly trace = computed<TraceSvg>(() =>
-    projeterTrace(this.resume()?.points ?? this.tracker.points(), COTE_TRACE),
+    projeterTrace(this.resume()?.points ?? this.runtime.points(), COTE_TRACE),
   );
 
   readonly ecartAllure = computed(() => {
     const cible = this.cibleMinParKm();
-    const courante = kmhVersMinParKm(this.tracker.allureCouranteKmh());
+    const courante = kmhVersMinParKm(this.runtime.allureCouranteKmh());
     if (cible === null || courante === null || !this.enCours()) return 0;
     return courante - cible;
   });
@@ -140,141 +125,111 @@ export class Course implements OnInit, OnDestroy {
     }
 
     this.exercice = exo;
-    this.tracker.attacher(this.routineId, this.exoId);
-    this.microDisponible.set(this.moteurReconnaissance() !== null);
-
-    this.mappingCasque.set(this.lireMappingCasque());
+    this.mappingCasque.set(this.lireMapping(CLE_MAPPING_CASQUE, MAPPING_PAR_DEFAUT));
+    this.mappingCasqueLong.set(this.lireMapping(CLE_MAPPING_CASQUE_LONG, MAPPING_LONG_PAR_DEFAUT));
     this.melangerMusique.set(this.lireMelangerMusique());
+    this.runtime.attacher(this.routineId, this.exoId);
+    this.runtime.configurer(this.options());
+    this.reprendre();
+  }
 
-    const reprise = this.tracker.restaurer();
-    const snapshot = this.tracker.lireSnapshot();
-    const cible = snapshot?.cibleMinParKm ?? null;
+  private async reprendre(): Promise<void> {
+    const reprise = await this.runtime.reprendreCourseEnCours();
+    const cible = this.runtime.cibleRetenue();
     this.cibleMinParKm.set(cible);
     this.cibleSaisie.set(cible === null ? '' : formaterAllure(minParKmVersKmh(cible)));
-    this.kmAnnonces = snapshot?.kmAnnonces ?? 0;
-
-    if (reprise && this.enCours()) this.activerLeSon();
-    this.ticker = setInterval(() => this.tick(), TICK_MS);
+    this.runtime.configurer(this.options());
+    if (reprise) await this.runtime.demarrer();
   }
 
   ngOnDestroy(): void {
-    if (this.ticker) clearInterval(this.ticker);
-    if (this.minuterieEcoute) clearTimeout(this.minuterieEcoute);
-    this.tracker.liberer();
-    this.arreterEcoute();
-    this.telecommande?.relacher();
-    this.voix?.taire();
-    this.survie?.relacher();
+    this.runtime.liberer();
   }
 
-  private tick(): void {
-    this.tracker.rafraichir(Date.now());
-    if (this.survie) this.audioActif.set(this.survie.audioEnLecture());
-    if (!this.enCours()) return;
-    this.annoncerKilometres();
-    this.surveillerAllure();
+  private options() {
+    return {
+      langue: this.i18n.lang(),
+      titre: this.i18n.t('course.title'),
+      cibleMinParKm: this.cibleMinParKm(),
+      phrases: this.construirePhrases(),
+      appuiCourt: this.mappingCasque(),
+      appuiLong: this.mappingCasqueLong(),
+      melangerMusique: this.melangerMusique(),
+    };
   }
 
-  // WHY: après un retour d'arrière-plan plusieurs kilomètres ont pu tomber d'un tick au
-  // suivant. Seul le dernier est annoncé : entendre « kilomètre 3 » puis « kilomètre 4 » à une
-  // seconde d'intervalle n'apprend rien et couvre le kilomètre en cours.
-  private annoncerKilometres(): void {
-    const franchis = Math.floor(this.tracker.distanceM() / KM_EN_METRES);
-    if (franchis <= this.kmAnnonces) return;
-    this.kmAnnonces = franchis;
-    this.tracker.ecrireSnapshot({ kmAnnonces: franchis });
-    this.dire(
-      this.i18n.t('course.say.km', {
-        km: franchis,
-        temps: this.chronoParle(this.tracker.dureeS()),
-        allure: this.allureParlee(this.tracker.allureMoyenneKmh()),
-      }),
-    );
-  }
-
-  // WHY: une annonce déclenchée au premier écart mesuré se répéterait à chaque tick sous un
-  // pont ou dans une côte. L'écart doit tenir quinze secondes, et le coach se tait une minute
-  // après avoir parlé — sinon l'athlète coupe le son et n'entend plus rien du tout.
-  private surveillerAllure(): void {
-    const derive = this.tropLent() || this.tropRapide();
-    const maintenant = Date.now();
-
-    if (!derive) {
-      this.ecartDepuis = null;
-      return;
-    }
-    if (this.ecartDepuis === null) {
-      this.ecartDepuis = maintenant;
-      return;
-    }
-    if (maintenant - this.ecartDepuis < DUREE_ECART_MS) return;
-    if (maintenant - this.derniereAnnonceEcart < SILENCE_ENTRE_ANNONCES_MS) return;
-
-    this.derniereAnnonceEcart = maintenant;
-    this.ecartDepuis = null;
-    this.dire(this.i18n.t(this.consigneAllure()));
-  }
-
-  // WHY: un chiffre ne se corrige pas en courant. « Accélère un peu » se traduit tout de suite
-  // en foulée, « 5:40 au kilomètre, vise 5:15 » demande un calcul que personne ne fait à
-  // l'effort. Le chiffre reste disponible à la demande, par la commande « allure ».
-  private consigneAllure(): string {
-    const franc = Math.abs(this.ecartAllure()) >= ECART_FRANC_MIN_PAR_KM;
-    if (this.tropLent()) return franc ? 'course.say.speedUp' : 'course.say.speedUpABit';
-    return franc ? 'course.say.slowDown' : 'course.say.slowDownABit';
+  private construirePhrases(): Record<string, string> {
+    const phrases: Record<string, string> = {};
+    for (const [court, cle] of Object.entries(CLES_PHRASES)) phrases[court] = this.i18n.t(cle);
+    return phrases;
   }
 
   demarrer(): void {
     if (this.demarree()) return;
-    this.activerLeSon();
-    this.tracker.demarrer();
-    this.tracker.ecrireSnapshot({ cibleMinParKm: this.cibleMinParKm(), kmAnnonces: 0 });
-    this.dire(this.i18n.t('course.say.started'));
+    this.runtime.configurer(this.options());
+    this.runtime.demarrer();
   }
 
   basculerPause(): void {
     if (!this.demarree() || this.termine()) return;
-    // WHY: une page rechargée sur une course en pause n'a plus ni boucle de survie ni voix.
-    // La reprise est un geste utilisateur : c'est la seule occasion de les rétablir.
-    this.activerLeSon();
-    this.tracker.basculerPause();
-    this.telecommande?.annoncerEnCours(
-      this.i18n.t('course.title'),
-      this.enCours() ? 'playing' : 'paused',
-    );
-    this.dire(this.i18n.t(this.enCours() ? 'course.say.resumed' : 'course.say.paused'));
+    this.runtime.basculerPause();
+  }
+
+  commencerEcoute(): void {
+    this.runtime.commencerEcoute();
+  }
+
+  terminerEcoute(): void {
+    this.runtime.terminerEcoute();
   }
 
   accelererCible(): void {
-    this.deplacerCible(-PAS_CIBLE_MIN_PAR_KM);
+    this.fixerCible((this.cibleMinParKm() ?? CIBLE_DEFAUT_MIN_PAR_KM) - PAS_CIBLE_MIN_PAR_KM);
   }
 
   ralentirCible(): void {
-    this.deplacerCible(PAS_CIBLE_MIN_PAR_KM);
-  }
-
-  private deplacerCible(delta: number): void {
-    this.fixerCible((this.cibleMinParKm() ?? CIBLE_DEFAUT_MIN_PAR_KM) + delta);
+    this.fixerCible((this.cibleMinParKm() ?? CIBLE_DEFAUT_MIN_PAR_KM) + PAS_CIBLE_MIN_PAR_KM);
   }
 
   effacerCible(): void {
     this.cibleMinParKm.set(null);
     this.cibleSaisie.set('');
-    this.tracker.ecrireSnapshot({ cibleMinParKm: null });
+    this.runtime.fixerCible(null);
   }
 
-  terminer(): void {
+  fixerCible(minParKm: number): void {
+    const bornee = Math.min(CIBLE_MAX, Math.max(CIBLE_MIN, minParKm));
+    this.cibleMinParKm.set(bornee);
+    this.cibleSaisie.set(formaterAllure(minParKmVersKmh(bornee)));
+    this.runtime.fixerCible(bornee);
+  }
+
+  // WHY: l'athlète tape « 5:30 », « 530 » ou « 5.5 » selon le clavier que son téléphone lui
+  // ouvre. Les trois désignent la même allure et doivent toutes être acceptées, sinon le champ
+  // rejette une saisie manifestement juste.
+  validerCibleSaisie(): void {
+    const brut = this.cibleSaisie().trim();
+    if (!brut) {
+      this.effacerCible();
+      return;
+    }
+    const cible = lireAllure(brut);
+    if (cible === null) {
+      const actuelle = this.cibleMinParKm();
+      this.cibleSaisie.set(actuelle === null ? '' : formaterAllure(minParKmVersKmh(actuelle)));
+      return;
+    }
+    this.fixerCible(cible);
+  }
+
+  async terminer(): Promise<void> {
     if (this.termine() || this.enregistrement()) return;
-    this.tracker.arreter();
-    this.survie?.relacher();
-    this.survie = null;
-    this.arreterEcoute();
-    this.dire(this.i18n.t('course.say.finished'), true);
+    await this.runtime.arreter();
     this.televerserTrace();
   }
 
   private televerserTrace(): void {
-    const points = this.tracker.points();
+    const points = this.runtime.points();
     if (points.length < 2) {
       this.appliquerAuJournal(null);
       return;
@@ -308,26 +263,26 @@ export class Course implements OnInit, OnDestroy {
     const serie = this.exercice?.series[0];
     if (!serie) return;
 
-    const distanceM = trace?.distanceM ?? this.tracker.distanceM();
-    const dureeS = trace?.dureeS ?? this.tracker.dureeS();
+    const distanceM = trace?.distanceM ?? this.runtime.distanceM();
+    const dureeS = trace?.dureeS ?? this.runtime.dureeS();
 
     serie.distanceM = Math.round(distanceM);
     serie.dureeMin = Math.round((dureeS / SECONDES_PAR_MINUTE) * 100) / 100;
     serie.allureKmh =
-      Math.round((trace?.allureMoyenneKmh ?? this.tracker.allureMoyenneKmh()) * 100) / 100;
+      Math.round((trace?.allureMoyenneKmh ?? this.runtime.allureMoyenneKmh()) * 100) / 100;
     serie.courseTraceId = trace?.id ?? null;
     this.activeSession.snapshot();
   }
 
   retourSeance(): void {
-    this.tracker.purgerSnapshot();
+    this.runtime.purger();
     this.router.navigate(['/session', this.routineId]);
   }
 
-  quitter(): void {
+  async quitter(): Promise<void> {
     if (this.demarree() && !this.termine() && !confirm(this.i18n.t('course.confirmLeave'))) return;
     if (this.demarree() && !this.termine()) {
-      this.tracker.arreter();
+      await this.runtime.arreter();
       this.appliquerAuJournal(null);
     }
     this.retourSeance();
@@ -351,226 +306,14 @@ export class Course implements OnInit, OnDestroy {
     return formaterChrono(secondes);
   }
 
-  // WHY: le contexte audio et la boucle de survie doivent naître dans le geste utilisateur.
-  // Créés plus tard, Chrome les refuse : la page se ferait geler écran éteint et le coach
-  // resterait muet pour toute la sortie.
-  private activerLeSon(): void {
-    if (this.survie) return;
-    this.survie = tenirEnVie(['audioElement', 'webLock'], this.melangerMusique());
-    this.audioActif.set(this.survie.audioEnLecture());
-    this.voix = voixDisponible()
-      ? creerVoix(this.i18n.lang() === 'en' ? 'en-US' : 'fr-FR', baisserLaMusiquePendant)
-      : null;
-    this.telecommande = brancherTelecommande(this.mappingCasque(), (action) =>
-      this.executerActionCasque(action),
-    );
-    this.telecommande.annoncerEnCours(this.i18n.t('course.title'), 'playing');
-  }
-
-  private dire(texte: string, prioritaire = false): void {
-    if (!this.voix) return;
-    if (prioritaire) this.voix.interrompreEtParler(texte);
-    else this.voix.parler(texte);
-  }
-
-  private chronoParle(secondes: number): string {
-    const minutes = Math.floor(secondes / SECONDES_PAR_MINUTE);
-    const reste = secondes % SECONDES_PAR_MINUTE;
-    return this.i18n.t('course.say.duration', { minutes, secondes: reste });
-  }
-
-  private allureParlee(kmh: number): string {
-    const minParKm = kmhVersMinParKm(kmh);
-    if (minParKm === null) return this.i18n.t('course.say.noPace');
-    const minutes = Math.floor(minParKm);
-    const secondes = Math.round((minParKm - minutes) * SECONDES_PAR_MINUTE);
-    return this.i18n.t('course.say.pace', { minutes, secondes });
-  }
-
-  private moteurReconnaissance(): any | null {
-    const global = window as any;
-    return global.SpeechRecognition ?? global.webkitSpeechRecognition ?? null;
-  }
-
-  // WHY: un appui-parle, pas une bascule. Avec continuous=false le moteur coupe l'écoute dès
-  // le premier blanc, donc avant même que l'athlète essoufflé n'ait commencé sa phrase ; et
-  // les résultats intermédiaires sont conservés parce que le résultat final n'arrive jamais
-  // quand on relâche au milieu d'un mot.
-  commencerEcoute(): void {
-    if (this.ecoute()) return;
-    const Moteur = this.moteurReconnaissance();
-    if (!Moteur) return;
-
-    this.voix?.taire();
-    this.transcript.set('');
-    this.commandeComprise.set(null);
-
-    const moteur = new Moteur();
-    moteur.lang = this.i18n.lang() === 'en' ? 'en-US' : 'fr-FR';
-    moteur.continuous = true;
-    moteur.interimResults = true;
-    moteur.maxAlternatives = 3;
-
-    moteur.onresult = (evenement: any) => {
-      let entendu = '';
-      for (let i = 0; i < evenement.results.length; i++) {
-        entendu += ' ' + String(evenement.results[i][0].transcript);
-      }
-      this.transcript.set(entendu.trim());
-    };
-    moteur.onerror = () => this.terminerEcoute();
-    moteur.onend = () => {
-      if (this.ecoute()) this.terminerEcoute();
-    };
-
-    this.reconnaissance = moteur;
-    this.ecoute.set(true);
-    try {
-      moteur.start();
-    } catch {
-      this.ecoute.set(false);
-    }
-  }
-
-  terminerEcoute(): void {
-    if (!this.ecoute()) return;
-    if (this.minuterieEcoute) {
-      clearTimeout(this.minuterieEcoute);
-      this.minuterieEcoute = null;
-    }
-    this.ecoute.set(false);
-    if (this.reconnaissance) {
-      try {
-        this.reconnaissance.stop();
-      } catch {}
-      this.reconnaissance = null;
-    }
-    this.interpreterCommande(this.transcript());
-  }
-
-  private arreterEcoute(): void {
-    if (this.reconnaissance) {
-      try {
-        this.reconnaissance.stop();
-      } catch {}
-      this.reconnaissance = null;
-    }
-    this.ecoute.set(false);
-  }
-
-  private interpreterCommande(transcript: string): void {
-    const commande = interpreter(transcript);
-    if (!commande) {
-      this.commandeComprise.set(false);
-      this.dire(this.i18n.t('course.say.notUnderstood'), true);
-      return;
-    }
-    this.commandeComprise.set(true);
-    this.executer(commande);
-  }
-
-  executer(commande: Commande): void {
-    switch (commande.nom) {
-      case 'pause':
-        if (this.enCours()) this.basculerPause();
-        return;
-      case 'reprendre':
-        if (this.enPause()) this.basculerPause();
-        return;
-      case 'plusVite':
-        this.accelererCible();
-        return;
-      case 'moinsVite':
-        this.ralentirCible();
-        return;
-      case 'cible':
-        if (commande.cibleMinParKm !== undefined) this.fixerCible(commande.cibleMinParKm);
-        return;
-      case 'allure':
-        this.dire(this.allureParlee(this.tracker.allureCouranteKmh()), true);
-        return;
-      case 'distance':
-        this.dire(this.i18n.t('course.say.distance', { km: this.distanceKm() }), true);
-        return;
-      case 'duree':
-        this.dire(this.chronoParle(this.tracker.dureeS()), true);
-        return;
-      case 'bilan':
-        this.dire(
-          this.i18n.t('course.say.summary', {
-            km: this.distanceKm(),
-            temps: this.chronoParle(this.tracker.dureeS()),
-            allure: this.allureParlee(this.tracker.allureCouranteKmh()),
-          }),
-          true,
-        );
-        return;
-    }
-  }
-
-  private executerActionCasque(action: ActionCasque): void {
-    if (action === 'rien') return;
-    if (action === 'ecouter') {
-      this.ecouterMainsLibres();
-      return;
-    }
-    if (action === 'pause') {
-      this.basculerPause();
-      return;
-    }
-    this.executer({ nom: action });
-  }
-
-  // WHY: un bouton de casque n'envoie qu'une impulsion — mediaSession ne dit ni si l'appui a
-  // duré, ni quand il cesse. Impossible d'en faire un vrai maintiens-et-parle : l'écoute
-  // s'ouvre donc à l'impulsion et se referme d'elle-même, au silence ou au bout du délai.
-  ecouterMainsLibres(): void {
-    if (this.ecoute()) {
-      this.terminerEcoute();
-      return;
-    }
-    this.dire(this.i18n.t('course.say.listening'), true);
-    this.commencerEcoute();
-    if (this.minuterieEcoute) clearTimeout(this.minuterieEcoute);
-    this.minuterieEcoute = setTimeout(() => this.terminerEcoute(), ECOUTE_MAINS_LIBRES_MS);
-  }
-
-  fixerCible(minParKm: number): void {
-    const bornee = Math.min(CIBLE_MAX, Math.max(CIBLE_MIN, minParKm));
-    this.cibleMinParKm.set(bornee);
-    this.cibleSaisie.set(formaterAllure(minParKmVersKmh(bornee)));
-    this.tracker.ecrireSnapshot({ cibleMinParKm: bornee });
-    this.ecartDepuis = null;
-    this.dire(
-      this.i18n.t('course.say.target', { cible: this.allureParlee(minParKmVersKmh(bornee)) }),
-      true,
-    );
-  }
-
-  // WHY: l'athlète tape « 5:30 », « 530 » ou « 5.5 » selon le clavier que son téléphone lui
-  // ouvre. Les trois désignent la même allure et doivent toutes être acceptées, sinon le champ
-  // rejette une saisie manifestement juste.
-  validerCibleSaisie(): void {
-    const brut = this.cibleSaisie().trim();
-    if (!brut) {
-      this.effacerCible();
-      return;
-    }
-    const cible = lireAllure(brut);
-    if (cible === null) {
-      const actuelle = this.cibleMinParKm();
-      this.cibleSaisie.set(actuelle === null ? '' : formaterAllure(minParKmVersKmh(actuelle)));
-      return;
-    }
-    this.fixerCible(cible);
-  }
-
   // WHY: c'est un seul et même flux audio qui empêche le gel de la page et qui prend le focus
   // sonore. Mêler Chiron à la musique le rend interruptible, donc la page regelable : le
-  // réglage est un arbitrage assumé, pas une préférence sans conséquence.
+  // réglage est un arbitrage assumé, pas une préférence sans conséquence. Le service Android
+  // n'a pas ce dilemme, et le réglage n'y est pas montré.
   basculerMelangerMusique(): void {
     const suivant = !this.melangerMusique();
     this.melangerMusique.set(suivant);
+    this.runtime.configurer(this.options());
     try {
       localStorage.setItem(CLE_MELANGER_MUSIQUE, String(suivant));
     } catch {}
@@ -589,33 +332,30 @@ export class Course implements OnInit, OnDestroy {
   }
 
   changerMappingCasque(bouton: BoutonCasque, action: ActionCasque): void {
-    const suivant: MappingCasque = { ...this.mappingCasque(), [bouton]: action };
-    this.mappingCasque.set(suivant);
-    try {
-      localStorage.setItem(CLE_MAPPING_CASQUE, JSON.stringify(suivant));
-    } catch {}
-    this.rebrancherTelecommande();
+    this.mappingCasque.set({ ...this.mappingCasque(), [bouton]: action });
+    this.ecrireMapping(CLE_MAPPING_CASQUE, this.mappingCasque());
+    this.runtime.configurer(this.options());
   }
 
-  private lireMappingCasque(): MappingCasque {
+  changerMappingCasqueLong(bouton: BoutonCasque, action: ActionCasque): void {
+    this.mappingCasqueLong.set({ ...this.mappingCasqueLong(), [bouton]: action });
+    this.ecrireMapping(CLE_MAPPING_CASQUE_LONG, this.mappingCasqueLong());
+    this.runtime.configurer(this.options());
+  }
+
+  private lireMapping(cle: string, defaut: MappingCasque): MappingCasque {
     try {
-      const brut = localStorage.getItem(CLE_MAPPING_CASQUE);
-      if (!brut) return { ...MAPPING_PAR_DEFAUT };
-      return { ...MAPPING_PAR_DEFAUT, ...(JSON.parse(brut) as Partial<MappingCasque>) };
+      const brut = localStorage.getItem(cle);
+      if (!brut) return { ...defaut };
+      return { ...defaut, ...(JSON.parse(brut) as Partial<MappingCasque>) };
     } catch {
-      return { ...MAPPING_PAR_DEFAUT };
+      return { ...defaut };
     }
   }
 
-  private rebrancherTelecommande(): void {
-    if (!this.telecommande) return;
-    this.telecommande.relacher();
-    this.telecommande = brancherTelecommande(this.mappingCasque(), (action) =>
-      this.executerActionCasque(action),
-    );
-    this.telecommande.annoncerEnCours(
-      this.i18n.t('course.title'),
-      this.enCours() ? 'playing' : 'paused',
-    );
+  private ecrireMapping(cle: string, mapping: MappingCasque): void {
+    try {
+      localStorage.setItem(cle, JSON.stringify(mapping));
+    } catch {}
   }
 }

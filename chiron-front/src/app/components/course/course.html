@@ -92,14 +92,14 @@
     </div>
 
     <p class="text-on-surface-variant text-[10px] font-bold tracking-[0.15em] uppercase mt-4">
-      @if (tracker.erreurGps()) {
+      @if (erreurGps()) {
         <span class="text-red-400">{{ 'course.gpsError' | t }}</span>
-      } @else if (tracker.signalPerdu()) {
+      } @else if (signalPerdu()) {
         <span class="text-amber-400">{{ 'course.gpsLost' | t }}</span>
-      } @else if (tracker.precisionM() === null) {
+      } @else if (precisionM() === null) {
         {{ 'course.gpsSearching' | t }}
       } @else {
-        {{ 'course.gpsAccuracy' | t: { metres: tracker.precisionM()! } }}
+        {{ 'course.gpsAccuracy' | t: { metres: precisionM()! } }}
       }
     </p>
   }
@@ -134,43 +134,78 @@
       <div
         class="w-full max-w-sm mt-4 bg-slate-950/50 border border-white/5 rounded-xl p-4 space-y-3"
       >
-        <button
-          type="button"
-          (click)="basculerMelangerMusique()"
-          class="w-full flex items-start justify-between gap-3 text-left"
-        >
-          <span>
-            <span class="text-on-surface text-xs font-bold block">{{ 'course.mixMusic' | t }}</span>
-            <span class="text-on-surface-variant text-[10px] leading-relaxed block mt-1">
-              {{ 'course.mixMusicHint' | t }}
-            </span>
-          </span>
-          <span
-            class="material-symbols-outlined text-2xl flex-shrink-0"
-            [class.text-secondary]="melangerMusique()"
-            [class.text-on-surface-variant]="!melangerMusique()"
+        @if (!natif) {
+          <button
+            type="button"
+            (click)="basculerMelangerMusique()"
+            class="w-full flex items-start justify-between gap-3 text-left"
           >
-            {{ melangerMusique() ? 'toggle_on' : 'toggle_off' }}
-          </span>
-        </button>
+            <span>
+              <span class="text-on-surface text-xs font-bold block">
+                {{ 'course.mixMusic' | t }}
+              </span>
+              <span class="text-on-surface-variant text-[10px] leading-relaxed block mt-1">
+                {{ 'course.mixMusicHint' | t }}
+              </span>
+            </span>
+            <span
+              class="material-symbols-outlined text-2xl flex-shrink-0"
+              [class.text-secondary]="melangerMusique()"
+              [class.text-on-surface-variant]="!melangerMusique()"
+            >
+              {{ melangerMusique() ? 'toggle_on' : 'toggle_off' }}
+            </span>
+          </button>
+        }
 
         <p class="text-on-surface-variant text-[10px] leading-relaxed">
-          {{ 'course.headsetHint' | t }}
+          {{ natif ? ('course.headsetLongHint' | t) : ('course.headsetHint' | t) }}
         </p>
+
+        @if (natif) {
+          <div class="flex items-center justify-end gap-2">
+            <span
+              class="text-on-surface-variant text-[9px] font-bold tracking-widest uppercase w-32 text-center"
+            >
+              {{ 'course.headsetShort' | t }}
+            </span>
+            <span
+              class="text-on-surface-variant text-[9px] font-bold tracking-widest uppercase w-32 text-center"
+            >
+              {{ 'course.headsetLong' | t }}
+            </span>
+          </div>
+        }
+
         @for (bouton of boutonsCasque; track bouton) {
-          <div class="flex items-center justify-between gap-3">
+          <div class="flex items-center justify-between gap-2">
             <span class="text-on-surface text-xs font-bold">
               {{ 'course.button.' + bouton | t }}
             </span>
-            <select
-              [ngModel]="mappingCasque()[bouton]"
-              (ngModelChange)="changerMappingCasque(bouton, $event)"
-              class="bg-slate-950/80 border border-white/10 rounded p-2 text-white text-xs outline-none focus:border-secondary/50 transition-colors"
-            >
-              @for (action of actionsCasque; track action) {
-                <option [value]="action">{{ 'course.action.' + action | t }}</option>
+            <div class="flex items-center gap-2">
+              <select
+                [ngModel]="mappingCasque()[bouton]"
+                (ngModelChange)="changerMappingCasque(bouton, $event)"
+                [attr.aria-label]="'course.headsetShort' | t"
+                class="bg-slate-950/80 border border-white/10 rounded p-2 text-white text-xs outline-none focus:border-secondary/50 transition-colors w-32"
+              >
+                @for (action of actionsCasque; track action) {
+                  <option [value]="action">{{ 'course.action.' + action | t }}</option>
+                }
+              </select>
+              @if (natif) {
+                <select
+                  [ngModel]="mappingCasqueLong()[bouton]"
+                  (ngModelChange)="changerMappingCasqueLong(bouton, $event)"
+                  [attr.aria-label]="'course.headsetLong' | t"
+                  class="bg-slate-950/80 border border-white/10 rounded p-2 text-white text-xs outline-none focus:border-secondary/50 transition-colors w-32"
+                >
+                  @for (action of actionsCasque; track action) {
+                    <option [value]="action">{{ 'course.action.' + action | t }}</option>
+                  }
+                </select>
               }
-            </select>
+            </div>
           </div>
         }
       </div>
@@ -218,7 +253,7 @@
       </p>
     }
 
-    @if (!audioActif()) {
+    @if (!audioActif() && !natif) {
       <p
         class="w-full max-w-sm mt-4 bg-red-500/10 border border-red-500/40 rounded-xl p-3 text-red-300 text-[11px] leading-relaxed text-center"
       >

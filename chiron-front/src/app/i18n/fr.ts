@@ -397,6 +397,14 @@ export const fr: Record<string, string> = {
   'course.mixMusicHint':
     "C'est le même son inaudible qui garde l'app vivante écran éteint et qui met ta musique en pause. Le mêler à ta musique la préserve, mais le téléphone peut alors geler la course écran verrouillé.",
   'course.headsetSettings': 'Boutons du casque',
+  'course.notification': '{{km}} km · {{temps}} · {{allure}} /km',
+  'course.notificationPause': 'Pause',
+  'course.notificationResume': 'Reprendre',
+  'course.notificationListen': 'Micro',
+  'course.headsetShort': 'Appui court',
+  'course.headsetLong': 'Appui long',
+  'course.headsetLongHint':
+    "Choisis ce que fait chaque bouton du casque pendant la course, appui court et appui long séparément. Si l'appui long de ton écouteur ouvre l'assistant vocal du téléphone, règle-le sur une commande média dans l'application du casque : Android l'intercepte avant Chiron.",
   'course.headsetHint':
     "Choisis ce que fait chaque bouton de ton casque pendant la course. Tous les casques n'exposent pas les cinq.",
   'course.button.play': 'Play / Pause',

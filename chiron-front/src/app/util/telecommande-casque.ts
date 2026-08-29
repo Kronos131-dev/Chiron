@@ -46,6 +46,17 @@ export const MAPPING_PAR_DEFAUT: MappingCasque = {
   seekbackward: 'bilan',
 };
 
+// WHY: sur Android l'appui long est distingué de l'appui court, et c'est le geste que
+// l'athlète trouve sans regarder : tous les boutons ouvrent donc le micro quand on les tient.
+// Le navigateur, lui, ne voit jamais la durée d'un appui et ignore cette table.
+export const MAPPING_LONG_PAR_DEFAUT: MappingCasque = {
+  play: 'ecouter',
+  nexttrack: 'ecouter',
+  previoustrack: 'ecouter',
+  seekforward: 'ecouter',
+  seekbackward: 'ecouter',
+};
+
 const ACTIONS_INERTES: Telecommande = { annoncerEnCours: () => {}, relacher: () => {} };
 
 function sessionMedia(): any | null {

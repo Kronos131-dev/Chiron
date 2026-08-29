@@ -10,6 +10,7 @@ import { ChironApi } from '../../service/chiron-api';
 import { AuthService } from '../../service/auth.service';
 import { ExerciceForm } from '../../shared/exercise-forms';
 import { CLE_STOCKAGE_COURSE } from '../../service/course-tracker';
+import { RuntimeWeb } from '../../service/course-runtime-web';
 
 const LAT_DEPART = 48.8566;
 const LON_DEPART = 2.3522;
@@ -50,6 +51,10 @@ describe('Course', () => {
         },
       ],
     };
+  }
+
+  function web(): RuntimeWeb {
+    return component.runtime as RuntimeWeb;
   }
 
   function position(metres: number, secondes: number, precision = 5) {
@@ -98,6 +103,8 @@ describe('Course', () => {
 
     fixture = TestBed.createComponent(Course);
     component = fixture.componentInstance;
+    fixture.detectChanges();
+    for (let i = 0; i < 5; i++) await Promise.resolve();
     fixture.detectChanges();
   }
 
@@ -190,7 +197,7 @@ describe('Course', () => {
       emettrePosition(position(400, 120));
 
       expect(component.etat()).toBe('enCours');
-      expect(component.tracker.distanceM()).toBeCloseTo(400, -1);
+      expect(component.runtime.distanceM()).toBeCloseTo(400, -1);
     });
 
     it('met en pause et reprend sur le bouton du casque', async () => {
@@ -245,7 +252,7 @@ describe('Course', () => {
     it('se tait sur l’écart d’allure tant qu’il n’a pas duré quinze secondes', async () => {
       await boot([exoCourse('a')], 'a');
       component.demarrer();
-      component.cibleMinParKm.set(4);
+      component.fixerCible(4);
       emettrePosition(position(0, 0));
       emettrePosition(position(100, 60));
       paroles.length = 0;
@@ -260,7 +267,7 @@ describe('Course', () => {
     it('impose une minute de silence entre deux annonces d’allure', async () => {
       await boot([exoCourse('a')], 'a');
       component.demarrer();
-      component.cibleMinParKm.set(4);
+      component.fixerCible(4);
       emettrePosition(position(0, 0));
       emettrePosition(position(100, 60));
 
@@ -271,16 +278,16 @@ describe('Course', () => {
   });
 
   describe('fin de course', () => {
-    function courirPuisTerminer() {
+    async function courirPuisTerminer() {
       component.demarrer();
       emettrePosition(position(0, 0));
       emettrePosition(position(1000, 300));
-      component.terminer();
+      await component.terminer();
     }
 
     it('téléverse la trace et retient les mesures du serveur', async () => {
       await boot([exoCourse('a')], 'a');
-      courirPuisTerminer();
+      await courirPuisTerminer();
 
       expect(chironApi.enregistrerTraceCourse).toHaveBeenCalledOnce();
       const serie = component.exercice!.series[0];
@@ -299,7 +306,7 @@ describe('Course', () => {
       component.demarrer();
       emettrePosition(position(0, 0));
       emettrePosition(position(1000, 300));
-      component.terminer();
+      await component.terminer();
 
       expect(component.erreurEnregistrement()).toBe(true);
       const serie = component.exercice!.series[0];
@@ -311,7 +318,7 @@ describe('Course', () => {
       await boot([exoCourse('a')], 'a');
       component.demarrer();
       emettrePosition(position(0, 0));
-      component.terminer();
+      await component.terminer();
 
       expect(chironApi.enregistrerTraceCourse).not.toHaveBeenCalled();
       expect(component.termine()).toBe(true);
@@ -319,7 +326,7 @@ describe('Course', () => {
 
     it('purge l’instantané au retour vers la séance', async () => {
       await boot([exoCourse('a')], 'a');
-      courirPuisTerminer();
+      await courirPuisTerminer();
       component.retourSeance();
 
       expect(localStorage.getItem(CLE_STOCKAGE_COURSE)).toBeNull();
@@ -334,17 +341,18 @@ describe('Course', () => {
     it('reprend la course, la cible et les kilomètres déjà annoncés', async () => {
       await boot([exoCourse('a')], 'a');
       component.demarrer();
-      component.cibleMinParKm.set(5);
-      component.tracker.ecrireSnapshot({ cibleMinParKm: 5, kmAnnonces: 2 });
+      component.fixerCible(5);
       emettrePosition(position(0, 0));
       emettrePosition(position(2400, 720));
+      const snapshot = JSON.parse(localStorage.getItem(CLE_STOCKAGE_COURSE)!);
+      localStorage.setItem(CLE_STOCKAGE_COURSE, JSON.stringify({ ...snapshot, kmAnnonces: 2 }));
 
       TestBed.resetTestingModule();
       await boot([exoCourse('a')], 'a');
 
       expect(component.etat()).toBe('enCours');
       expect(component.cibleMinParKm()).toBe(5);
-      expect(component.tracker.distanceM()).toBeCloseTo(2400, -1);
+      expect(component.runtime.distanceM()).toBeCloseTo(2400, -1);
 
       paroles.length = 0;
       vi.advanceTimersByTime(1000);
@@ -415,7 +423,7 @@ describe('Course', () => {
       emettrePosition(position(1000, 300));
       paroles.length = 0;
 
-      component.executer({ nom: 'distance' });
+      web().executer({ nom: 'distance' });
       expect(paroles.some((p) => p.includes('1.00'))).toBe(true);
     });
   });
@@ -455,7 +463,7 @@ describe('Course', () => {
       await boot([exoCourse('a')], 'a');
       component.demarrer();
 
-      component.ecouterMainsLibres();
+      web().ecouterMainsLibres();
       expect(component.ecoute()).toBe(true);
 
       vi.advanceTimersByTime(7000);
@@ -466,8 +474,8 @@ describe('Course', () => {
       await boot([exoCourse('a')], 'a');
       component.demarrer();
 
-      component.ecouterMainsLibres();
-      component.ecouterMainsLibres();
+      web().ecouterMainsLibres();
+      web().ecouterMainsLibres();
       expect(component.ecoute()).toBe(false);
     });
   });
@@ -476,7 +484,7 @@ describe('Course', () => {
     it('met la course en pause sur « pause »', async () => {
       await boot([exoCourse('a')], 'a');
       component.demarrer();
-      component['interpreterCommande']('pause');
+      web()['interpreterCommande']('pause');
       expect(component.enPause()).toBe(true);
     });
 
@@ -484,7 +492,7 @@ describe('Course', () => {
       await boot([exoCourse('a')], 'a');
       component.demarrer();
       component.basculerPause();
-      component['interpreterCommande']('allez reprends');
+      web()['interpreterCommande']('allez reprends');
       expect(component.enCours()).toBe(true);
     });
 
@@ -495,7 +503,7 @@ describe('Course', () => {
       emettrePosition(position(1000, 300));
       paroles.length = 0;
 
-      component['interpreterCommande']('quelle distance');
+      web()['interpreterCommande']('quelle distance');
       expect(paroles.some((p) => p.includes('1.00'))).toBe(true);
     });
 
@@ -504,7 +512,7 @@ describe('Course', () => {
       component.demarrer();
       paroles.length = 0;
 
-      component['interpreterCommande']('bonjour la lune');
+      web()['interpreterCommande']('bonjour la lune');
       expect(paroles.some((p) => p.includes('Répète'))).toBe(true);
     });
   });

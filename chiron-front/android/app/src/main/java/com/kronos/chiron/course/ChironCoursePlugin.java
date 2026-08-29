@@ -137,6 +137,17 @@ public class ChironCoursePlugin extends Plugin {
     }
 
     @PluginMethod
+    public void configurer(PluginCall appel) {
+        CourseService service = PontCourse.service();
+        if (service == null) {
+            appel.resolve();
+            return;
+        }
+        service.configurer(appel.getData().toString());
+        appel.resolve();
+    }
+
+    @PluginMethod
     public void basculerPause(PluginCall appel) {
         CourseService service = PontCourse.service();
         if (service == null) {
