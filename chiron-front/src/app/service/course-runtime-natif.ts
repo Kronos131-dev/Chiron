@@ -128,14 +128,23 @@ export class RuntimeNatif implements CourseRuntime {
     if (this.natifEtat().demarree) return;
     this.points.set([]);
     this.termine.set(false);
-    await ChironCourse.demarrer({
-      cibleMinParKm: options.cibleMinParKm,
-      langue: options.langue,
-      titre: options.titre,
-      phrases: options.phrases,
-      appuiCourt: options.appuiCourt,
-      appuiLong: options.appuiLong,
-    });
+    try {
+      await ChironCourse.demarrer({
+        cibleMinParKm: options.cibleMinParKm,
+        langue: options.langue,
+        titre: options.titre,
+        phrases: options.phrases,
+        appuiCourt: options.appuiCourt,
+        appuiLong: options.appuiLong,
+      });
+    } catch (erreur) {
+      // WHY: sans localisation le service refuse de démarrer. Rejeter en silence laisserait
+      // l'écran sur « Démarrer » sans rien dire, et l'athlète partirait courir pour rien.
+      this.natifEtat.set({
+        ...this.natifEtat(),
+        erreurGps: String((erreur as { message?: string })?.message ?? erreur),
+      });
+    }
   }
 
   basculerPause(): void {
