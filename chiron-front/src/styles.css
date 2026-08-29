@@ -1,11 +1,9 @@
 /* You can add global styles to this file, and also import other style files */
 
-
 /* Les imports de polices doivent être à la racine du fichier */
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;900&family=Manrope:wght@300;400;500;600;700;800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
 @import 'tailwindcss';
-
 
 @theme {
   /* Tes couleurs */
@@ -20,20 +18,30 @@
   --color-outline-variant: #334155;
 
   /* Tes polices */
-  --font-headline: "Space Grotesk", sans-serif;
-  --font-body: "Manrope", sans-serif;
+  --font-headline: 'Space Grotesk', sans-serif;
+  --font-body: 'Manrope', sans-serif;
 }
 
 /* Tes classes personnalisées */
 @layer utilities {
   .material-symbols-outlined {
-    font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+    font-variation-settings:
+      'FILL' 0,
+      'wght' 400,
+      'GRAD' 0,
+      'opsz' 24;
   }
 
   .heroic-texture {
     background-color: var(--color-background);
-    background-image: radial-gradient(circle at 50% 50%, rgba(255, 183, 121, 0.05) 0%, transparent 70%), linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px), linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-    background-size: 100% 100%, 40px 40px, 40px 40px;
+    background-image:
+      radial-gradient(circle at 50% 50%, rgba(255, 183, 121, 0.05) 0%, transparent 70%),
+      linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    background-size:
+      100% 100%,
+      40px 40px,
+      40px 40px;
   }
 
   .bronze-glow {
@@ -61,49 +69,70 @@
        --tier-accent   reflet clair du métal
   */
   .tier-1 {
-    --tier-color: #9c7c4f; --tier-bg: rgba(156,124,79,.12); --tier-border: rgba(156,124,79,.38);
+    --tier-color: #9c7c4f;
+    --tier-bg: rgba(156, 124, 79, 0.12);
+    --tier-border: rgba(156, 124, 79, 0.38);
     --tier-accent: #c2a06a;
     --tier-metal: linear-gradient(135deg, #4f3d22 0%, #8a6c42 46%, #b89360 54%, #6b5230 100%);
   }
   .tier-2 {
-    --tier-color: #9aa3ab; --tier-bg: rgba(154,163,171,.12); --tier-border: rgba(154,163,171,.40);
+    --tier-color: #9aa3ab;
+    --tier-bg: rgba(154, 163, 171, 0.12);
+    --tier-border: rgba(154, 163, 171, 0.4);
     --tier-accent: #cdd4da;
     --tier-metal: linear-gradient(135deg, #5b636b 0%, #98a1a9 46%, #cdd4da 54%, #717a82 100%);
   }
   .tier-3 {
-    --tier-color: #a86a55; --tier-bg: rgba(168,106,85,.13); --tier-border: rgba(168,106,85,.42);
+    --tier-color: #a86a55;
+    --tier-bg: rgba(168, 106, 85, 0.13);
+    --tier-border: rgba(168, 106, 85, 0.42);
     --tier-accent: #c98e76;
     --tier-metal: linear-gradient(135deg, #5a3026 0%, #93503e 46%, #be7259 54%, #6c3a2c 100%);
   }
   .tier-4 {
-    --tier-color: #a35260; --tier-bg: rgba(140,66,80,.15); --tier-border: rgba(140,66,80,.44);
+    --tier-color: #a35260;
+    --tier-bg: rgba(140, 66, 80, 0.15);
+    --tier-border: rgba(140, 66, 80, 0.44);
     --tier-accent: #c47e8c;
     --tier-metal: linear-gradient(135deg, #4d222c 0%, #82394a 46%, #ab5a6c 54%, #5d2935 100%);
   }
   .tier-5 {
-    --tier-color: #8472a6; --tier-bg: rgba(132,114,166,.15); --tier-border: rgba(132,114,166,.46);
+    --tier-color: #8472a6;
+    --tier-bg: rgba(132, 114, 166, 0.15);
+    --tier-border: rgba(132, 114, 166, 0.46);
     --tier-accent: #a99cc4;
     --tier-metal: linear-gradient(135deg, #3c3055 0%, #6e5f93 46%, #9384b4 54%, #463a63 100%);
-    text-shadow: 0 0 8px rgba(132,114,166,.35);
+    text-shadow: 0 0 8px rgba(132, 114, 166, 0.35);
   }
   .tier-6 {
-    --tier-color: #b0904a; --tier-bg: rgba(176,144,74,.14); --tier-border: rgba(176,144,74,.44);
+    --tier-color: #b0904a;
+    --tier-bg: rgba(176, 144, 74, 0.14);
+    --tier-border: rgba(176, 144, 74, 0.44);
     --tier-accent: #d0b06a;
     --tier-metal: linear-gradient(135deg, #5f4716 0%, #9a7a36 46%, #c4a25a 54%, #6f5420 100%);
   }
   .tier-7 {
-    --tier-color: #c6a24e; --tier-bg: rgba(198,162,78,.16); --tier-border: rgba(198,162,78,.50);
+    --tier-color: #c6a24e;
+    --tier-bg: rgba(198, 162, 78, 0.16);
+    --tier-border: rgba(198, 162, 78, 0.5);
     --tier-accent: #e2c277;
     --tier-metal: linear-gradient(135deg, #6f521a 0%, #b08e3c 46%, #d8b765 54%, #7e5f22 100%);
-    text-shadow: 0 0 9px rgba(198,162,78,.40);
+    text-shadow: 0 0 9px rgba(198, 162, 78, 0.4);
   }
   .tier-8 {
     --tier-color: #d4b86a;
-    --tier-bg: rgba(212,184,106,.18);
-    --tier-border: rgba(212,184,106,.56);
+    --tier-bg: rgba(212, 184, 106, 0.18);
+    --tier-border: rgba(212, 184, 106, 0.56);
     --tier-accent: #efe6cf;
-    --tier-metal: linear-gradient(135deg, #7c5f24 0%, #c4a455 42%, #e8d59a 54%, #efe6cf 62%, #8a6c2c 100%);
-    text-shadow: 0 0 10px rgba(212,184,106,.50);
+    --tier-metal: linear-gradient(
+      135deg,
+      #7c5f24 0%,
+      #c4a455 42%,
+      #e8d59a 54%,
+      #efe6cf 62%,
+      #8a6c2c 100%
+    );
+    text-shadow: 0 0 10px rgba(212, 184, 106, 0.5);
   }
 }
 
@@ -112,7 +141,18 @@
    gestuelle (viewport-fit=cover). On décale header et contenu pour que
    rien d'important ne soit masqué. Additif aux paddings Tailwind.
    ══════════════════════════════════════════════════════════════════ */
+/* WHY: l'en-tête est en position fixe et grandit de la hauteur de l'encoche. Tout élément
+   lui aussi fixe qui se place dessous doit connaître cette hauteur, sinon il passe sous
+   l'en-tête dès que l'appareil impose l'edge-to-edge — ce qui n'arrive sur aucun navigateur
+   de bureau, donc jamais pendant le développement. */
+:root {
+  --hauteur-entete: 4rem;
+}
+
 @supports (padding: env(safe-area-inset-top)) {
+  :root {
+    --hauteur-entete: calc(4rem + env(safe-area-inset-top));
+  }
   header.fixed {
     padding-top: calc(1rem + env(safe-area-inset-top));
     padding-left: calc(1.5rem + env(safe-area-inset-left));
