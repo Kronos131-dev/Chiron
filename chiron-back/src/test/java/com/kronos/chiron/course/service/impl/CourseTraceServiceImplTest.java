@@ -75,7 +75,7 @@ class CourseTraceServiceImplTest {
         });
 
         // When
-        CourseTraceDto resultat = service.enregistrer(athlete, new CourseTraceRequestDto(points));
+        CourseTraceDto resultat = service.enregistrer(athlete, new CourseTraceRequestDto(points, null));
 
         // Then
         ArgumentCaptor<CourseTrace> capture = ArgumentCaptor.forClass(CourseTrace.class);
@@ -100,7 +100,7 @@ class CourseTraceServiceImplTest {
         when(courseTraceRepository.save(any(CourseTrace.class))).thenAnswer(i -> i.getArgument(0));
 
         // When
-        CourseTraceDto resultat = service.enregistrer(athlete, new CourseTraceRequestDto(points));
+        CourseTraceDto resultat = service.enregistrer(athlete, new CourseTraceRequestDto(points, null));
 
         // Then
         assertThat(resultat.distanceM()).isCloseTo(1000.0, within(1.0));
@@ -111,7 +111,7 @@ class CourseTraceServiceImplTest {
     void enregistrer_moinsDeDeuxPoints_refuse() {
         // Given
         CourseTraceRequestDto requete = new CourseTraceRequestDto(
-                List.of(new CoursePointDto(LAT_DEPART, LON_DEPART, T_DEPART, null)));
+                List.of(new CoursePointDto(LAT_DEPART, LON_DEPART, T_DEPART, null)), null);
 
         // When / Then
         assertThatThrownBy(() -> service.enregistrer(athlete, requete))
@@ -122,7 +122,7 @@ class CourseTraceServiceImplTest {
     @Test
     void enregistrer_listeNulle_refuse() {
         // When / Then
-        assertThatThrownBy(() -> service.enregistrer(athlete, new CourseTraceRequestDto(null)))
+        assertThatThrownBy(() -> service.enregistrer(athlete, new CourseTraceRequestDto(null, null)))
                 .isInstanceOf(ErrorResponseException.class);
         verify(courseTraceRepository, never()).save(any());
     }
@@ -130,7 +130,7 @@ class CourseTraceServiceImplTest {
     @Test
     void enregistrer_tropDePoints_refuse() {
         // Given
-        CourseTraceRequestDto requete = new CourseTraceRequestDto(ligneDroite(60000.0, 50001, 18000));
+        CourseTraceRequestDto requete = new CourseTraceRequestDto(ligneDroite(60000.0, 50001, 18000), null);
 
         // When / Then
         assertThatThrownBy(() -> service.enregistrer(athlete, requete))
@@ -143,7 +143,7 @@ class CourseTraceServiceImplTest {
         // Given
         List<CoursePointDto> points = ligneDroite(1000.0, 11, 300);
         when(courseTraceRepository.save(any(CourseTrace.class))).thenAnswer(i -> i.getArgument(0));
-        service.enregistrer(athlete, new CourseTraceRequestDto(points));
+        service.enregistrer(athlete, new CourseTraceRequestDto(points, null));
 
         ArgumentCaptor<CourseTrace> capture = ArgumentCaptor.forClass(CourseTrace.class);
         verify(courseTraceRepository).save(capture.capture());
@@ -168,5 +168,43 @@ class CourseTraceServiceImplTest {
         // When / Then
         assertThatThrownBy(() -> service.lire(athlete, 42L))
                 .isInstanceOf(ErrorResponseException.class);
+    }
+
+    // WHY: l'objectif est annoncé pendant l'effort par le client, mais c'est le temps calculé
+    // ici qui atteint le journal. Les deux doivent coïncider, sinon l'athlète entend un chiffre
+    // et en relit un autre le soir.
+    @Test
+    void enregistrer_avecObjectifAtteint_persisteLeTempsInterpole() {
+        // Given une sortie de 2 km en 600 s, objectif à 1 km
+        List<CoursePointDto> points = ligneDroite(2000.0, 21, 600);
+        when(courseTraceRepository.save(any(CourseTrace.class))).thenAnswer(i -> i.getArgument(0));
+
+        // When
+        CourseTraceDto resultat = service.enregistrer(
+                athlete, new CourseTraceRequestDto(points, 1000.0));
+
+        // Then
+        ArgumentCaptor<CourseTrace> capture = ArgumentCaptor.forClass(CourseTrace.class);
+        verify(courseTraceRepository).save(capture.capture());
+
+        assertThat(capture.getValue().getObjectifDistanceM()).isEqualTo(1000.0);
+        assertThat(capture.getValue().getObjectifDureeS()).isCloseTo(300, within(3));
+        assertThat(resultat.objectifDureeS()).isCloseTo(300, within(3));
+        assertThat(resultat.distanceM()).isCloseTo(2000.0, within(2.0));
+    }
+
+    @Test
+    void enregistrer_objectifJamaisAtteint_neRetientAucunTemps() {
+        // Given une sortie de 2 km et un objectif de 5 km
+        List<CoursePointDto> points = ligneDroite(2000.0, 21, 600);
+        when(courseTraceRepository.save(any(CourseTrace.class))).thenAnswer(i -> i.getArgument(0));
+
+        // When
+        CourseTraceDto resultat = service.enregistrer(
+                athlete, new CourseTraceRequestDto(points, 5000.0));
+
+        // Then
+        assertThat(resultat.objectifDistanceM()).isEqualTo(5000.0);
+        assertThat(resultat.objectifDureeS()).isNull();
     }
 }

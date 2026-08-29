@@ -42,6 +42,12 @@ public class CourseTrace {
     @Column(name = "splits", columnDefinition = "TEXT")
     private String splits;
 
+    @Column(name = "objectif_distance_m")
+    private Double objectifDistanceM;
+
+    @Column(name = "objectif_duree_s")
+    private Integer objectifDureeS;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 }

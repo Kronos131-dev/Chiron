@@ -218,4 +218,36 @@ class CourseGeometrieServiceImplTest {
     void allureKmh_dureeNulle_donneZero() {
         assertThat(service.allureKmh(1000.0, 0)).isZero();
     }
+
+    @Test
+    void tempsALaDistanceS_objectifAtteintAuMilieuDUnSegment_interpoleLInstant() {
+        // Given une ligne droite de 2 km parcourue en 600 s à allure constante
+        List<CoursePointDto> points = ligneDroite(2000, 3, 600);
+
+        // When on demande le temps au kilomètre visé
+        Integer temps = service.tempsALaDistanceS(points, 1000);
+
+        // Then il vaut la moitié de la durée totale
+        assertThat(temps).isNotNull();
+        assertThat(temps).isCloseTo(300, within(2));
+    }
+
+    @Test
+    void tempsALaDistanceS_objectifJamaisAtteint_rendNull() {
+        // Given une sortie de 2 km
+        List<CoursePointDto> points = ligneDroite(2000, 3, 600);
+
+        // When l'objectif dépasse la distance parcourue
+        Integer temps = service.tempsALaDistanceS(points, 5000);
+
+        // Then rien n'est rendu
+        assertThat(temps).isNull();
+    }
+
+    @Test
+    void tempsALaDistanceS_objectifNulOuTraceVide_rendNull() {
+        // Given / When / Then
+        assertThat(service.tempsALaDistanceS(ligneDroite(2000, 3, 600), 0)).isNull();
+        assertThat(service.tempsALaDistanceS(List.of(), 1000)).isNull();
+    }
 }

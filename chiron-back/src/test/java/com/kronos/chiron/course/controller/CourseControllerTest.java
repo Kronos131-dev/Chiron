@@ -52,7 +52,7 @@ class CourseControllerTest {
     private final Utilisateur user = Utilisateur.builder().id(1L).username("athlete").build();
 
     private CourseTraceDto traceEnregistree() {
-        return new CourseTraceDto(42L, 5000.0, 1500, 12.0, 30.0,
+        return new CourseTraceDto(42L, 5000.0, 1500, 12.0, 30.0, 5000.0, 1500,
                 List.of(new CourseSplitDto(1, 300, 12.0)),
                 List.of(new CoursePointDto(48.8566, 2.3522, 1_700_000_000_000L, 35.0)));
     }
@@ -65,7 +65,7 @@ class CourseControllerTest {
 
         CourseTraceRequestDto requete = new CourseTraceRequestDto(List.of(
                 new CoursePointDto(48.8566, 2.3522, 1_700_000_000_000L, 35.0),
-                new CoursePointDto(48.8576, 2.3522, 1_700_000_300_000L, 36.0)));
+                new CoursePointDto(48.8576, 2.3522, 1_700_000_300_000L, 36.0)), null);
 
         mockMvc.perform(post("/api/courses/traces")
                 .contentType(MediaType.APPLICATION_JSON)

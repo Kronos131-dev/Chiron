@@ -47,6 +47,10 @@ public class CourseTraceServiceImpl implements CourseTraceService {
         }
 
         CourseMesuresDto mesures = courseGeometrieService.mesurer(points);
+        Double objectifM = requete.objectifDistanceM();
+        Integer objectifDureeS = objectifM == null
+                ? null
+                : courseGeometrieService.tempsALaDistanceS(points, objectifM);
 
         CourseTrace trace = courseTraceRepository.save(CourseTrace.builder()
                 .utilisateur(utilisateur)
@@ -56,6 +60,8 @@ public class CourseTraceServiceImpl implements CourseTraceService {
                 .dureeS(mesures.dureeS())
                 .denivelePositifM(mesures.denivelePositifM())
                 .splits(JSON.writeValueAsString(mesures.splits()))
+                .objectifDistanceM(objectifM)
+                .objectifDureeS(objectifDureeS)
                 .createdAt(LocalDateTime.now(clock))
                 .build());
 
@@ -77,6 +83,8 @@ public class CourseTraceServiceImpl implements CourseTraceService {
                 trace.getDureeS(),
                 courseGeometrieService.allureKmh(trace.getDistanceM(), trace.getDureeS()),
                 trace.getDenivelePositifM(),
+                trace.getObjectifDistanceM(),
+                trace.getObjectifDureeS(),
                 splits,
                 points);
     }

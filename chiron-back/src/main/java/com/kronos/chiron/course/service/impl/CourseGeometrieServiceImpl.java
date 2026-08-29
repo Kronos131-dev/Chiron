@@ -71,6 +71,41 @@ public class CourseGeometrieServiceImpl implements CourseGeometrieService {
         return new CourseMesuresDto(cumulM, dureeS, denivelePositifM(points), List.copyOf(splits));
     }
 
+    // WHY: l'objectif tombe au milieu d'un segment GPS, jamais sur un point. La meme
+    // interpolation que les splits kilometriques est ce qui rend le temps annonce dans les
+    // oreilles identique a celui que le journal conservera.
+    @Override
+    public Integer tempsALaDistanceS(List<CoursePointDto> points, double objectifM) {
+        if (points == null || points.size() < 2 || objectifM <= 0) return null;
+
+        double cumulM = 0.0;
+        long pauseCumuleeMs = 0;
+
+        for (int i = 1; i < points.size(); i++) {
+            CoursePointDto precedent = points.get(i - 1);
+            CoursePointDto courant = points.get(i);
+
+            if (courant.ouvreUneReprise()) {
+                pauseCumuleeMs += courant.t() - precedent.t();
+                continue;
+            }
+
+            double segmentM = distanceHaversineM(precedent, courant);
+            if (segmentM <= 0) continue;
+
+            double debutSegmentM = cumulM;
+            cumulM += segmentM;
+            if (cumulM < objectifM) continue;
+
+            long debutSegmentMs = tempsDeCourseMs(precedent, points.get(0), pauseCumuleeMs);
+            long finSegmentMs = tempsDeCourseMs(courant, points.get(0), pauseCumuleeMs);
+            double fraction = (objectifM - debutSegmentM) / segmentM;
+            long instantMs = debutSegmentMs + Math.round(fraction * (finSegmentMs - debutSegmentMs));
+            return (int) Math.max(0, Math.round(instantMs / MS_PAR_SECONDE));
+        }
+        return null;
+    }
+
     @Override
     public double allureKmh(double distanceM, int dureeS) {
         if (dureeS <= 0 || distanceM <= 0) return 0.0;

@@ -8,6 +8,8 @@ public record CourseTraceDto(
         int dureeS,
         double allureMoyenneKmh,
         double denivelePositifM,
+        Double objectifDistanceM,
+        Integer objectifDureeS,
         List<CourseSplitDto> splits,
         List<CoursePointDto> points) {
 }

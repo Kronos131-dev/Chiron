@@ -10,4 +10,6 @@ public interface CourseGeometrieService {
     CourseMesuresDto mesurer(List<CoursePointDto> points);
 
     double allureKmh(double distanceM, int dureeS);
+
+    Integer tempsALaDistanceS(List<CoursePointDto> points, double objectifM);
 }
