@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Le fond d'une icone adaptative doit remplir les 108dp du gabarit : c'est lui que le
+     masque du lanceur decoupe. L'encadrer de 16,7 % laissait paraitre la couleur par defaut
+     autour, blanche, que l'on voyait comme une bordure. Seul l'avant-plan reste en retrait,
+     pour tenir dans la zone sure quelle que soit la forme imposee par le lanceur. -->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <background>
-        <inset android:drawable="@mipmap/ic_launcher_background" android:inset="16.7%" />
-    </background>
+    <background android:drawable="@mipmap/ic_launcher_background" />
     <foreground>
         <inset android:drawable="@mipmap/ic_launcher_foreground" android:inset="16.7%" />
     </foreground>
