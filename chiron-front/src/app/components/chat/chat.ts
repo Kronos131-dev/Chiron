@@ -8,6 +8,8 @@ import { I18nService } from '../../service/i18n.service';
 import { HeaderComponent } from '../shared/header/header';
 import { MarkdownPipe } from './markdown.pipe';
 import { TranslatePipe } from '../../service/translate.pipe';
+import { ReconnaissanceVocale, creerReconnaissance } from '../../service/reconnaissance-vocale';
+import { corrigerVocabulaire } from '../../util/vocabulaire-vocal';
 
 /**
  * Interface defining the structure of a chat message.
@@ -16,9 +18,6 @@ export interface ChatMessage {
   role: 'user' | 'ai';
   content: string;
 }
-
-declare var webkitSpeechRecognition: any;
-declare var SpeechRecognition: any;
 
 /**
  * Main AI Chat component (Chiron Interface).
@@ -53,8 +52,8 @@ export class Chat implements OnInit {
   /** Ouverture du panneau d'historique des conversations. */
   showHistory = signal(false);
 
-  /** Web Speech API recognition instance. */
-  recognition: any;
+  /** Reconnaissance vocale, web ou native selon la plateforme. */
+  recognition: ReconnaissanceVocale = creerReconnaissance();
 
   /** The username of the currently authenticated user. */
   currentUsername: string = '';
@@ -75,10 +74,9 @@ export class Chat implements OnInit {
 
   /**
    * Lifecycle hook to initialize the component.
-   * Sets up speech recognition and fetches the user's profile to determine admin rights.
+   * Fetches the user's profile to determine admin rights.
    */
   ngOnInit() {
-    this.initSpeechRecognition();
 
     this.currentUsername = this.authService.getUsername() || 'Guerrier';
 
@@ -145,78 +143,32 @@ export class Chat implements OnInit {
   }
 
   /**
-   * Initializes the Web Speech API recognition engine with specific grammar replacements.
-   */
-  initSpeechRecognition() {
-    // @ts-ignore
-    const SpeechRecognitionAPI = window['SpeechRecognition'] || window['webkitSpeechRecognition'];
-
-    if (SpeechRecognitionAPI) {
-      this.recognition = new SpeechRecognitionAPI();
-      this.recognition.lang = this.i18n.lang() === 'en' ? 'en-US' : 'fr-FR';
-      this.recognition.continuous = false;
-      this.recognition.interimResults = false;
-
-      this.recognition.onresult = (event: any) => {
-        let transcript = event.results[0][0].transcript.toLowerCase();
-
-        transcript = transcript
-          .replace(/\b(crêpe|crêpes|crepe|crepes|rêve|rêves|bref|brefs)\b/g, 'reps')
-          .replace(/\b(pêche|pèche|peche|puch|bouche|touche)\b/g, 'push')
-          .replace(/\b(poule|poules|pull|pool)\b/g, 'pull')
-          .replace(/\b(lex|l'ex|l'est|lait)\b/g, 'legs')
-          .replace(/\b(chest press|juste presse|geste presse|chaise presse)\b/g, 'chest press')
-          .replace(/\b(bench|bench press|banche|bain tu presses|bain de presse)\b/g, 'développé couché')
-          .replace(/\b(incline bench|incline|un clean|un clin)\b/g, 'développé incliné')
-          .replace(/\b(pec deck|pack deck|bec dec|pique nique)\b/g, 'pec deck')
-          .replace(/\b(dips|chips|dix|gips)\b/g, 'dips')
-          .replace(/\b(deadlift|dès de lift|tête lift)\b/g, 'soulevé de terre')
-          .replace(/\b(rowing|héroïne|ruine|robin)\b/g, 'rowing')
-          .replace(/\b(lat pulldown|la poule donne|la poule down)\b/g, 'tirage vertical')
-          .replace(/\b(pull up|pull ups|poule up|poulpe)\b/g, 'tractions')
-          .replace(/\b(squat|squatt|scoot|scot)\b/g, 'squat')
-          .replace(/\b(leg press|l'express|l'ex presse|lait presse)\b/g, 'presse à cuisses')
-          .replace(/\b(leg extension|l'ex tension|les extensions)\b/g, 'leg extension')
-          .replace(/\b(leg curl|le girl|les girls)\b/g, 'leg curl')
-          .replace(/\b(ohp|o a h p|eau h p)\b/g, 'développé militaire')
-          .replace(/\b(élévations latérales|la téral|latérales)\b/g, 'élévations latérales')
-          .replace(/\b(curl|coeur le|girl|gueule)\b/g, 'curl')
-          .replace(/\b(triceps|triceps|tricepse)\b/g, 'triceps');
-
-        this.userInput.set(transcript);
-        this.onSend();
-      };
-
-      this.recognition.onend = () => {
-        this.isRecording.set(false);
-      };
-
-      this.recognition.onerror = (event: any) => {
-        console.error("Erreur micro:", event.error);
-        this.isRecording.set(false);
-        this.addMessage('ai', this.i18n.t('chat.micError', { error: event.error }));
-      };
-    } else {
-      console.error("La reconnaissance vocale n'est pas supportée.");
-    }
-  }
-
-  /**
    * Toggles the voice recording state to capture user speech.
    */
   toggleRecording() {
-    if (!this.recognition) {
+    if (!this.recognition.disponible()) {
       alert(this.i18n.t('chat.noSpeech'));
       return;
     }
 
     if (this.isRecording()) {
-      this.recognition.stop();
+      this.recognition.arreter();
       this.isRecording.set(false);
-    } else {
-      this.recognition.start();
-      this.isRecording.set(true);
+      return;
     }
+
+    this.isRecording.set(true);
+    this.recognition.demarrer(this.i18n.lang() === 'en' ? 'en-US' : 'fr-FR', {
+      final: (texte) => {
+        this.isRecording.set(false);
+        this.userInput.set(corrigerVocabulaire(texte));
+        this.onSend();
+      },
+      erreur: (raison) => {
+        this.isRecording.set(false);
+        this.addMessage('ai', this.i18n.t('chat.micError', { error: raison }));
+      },
+    });
   }
 
   /**

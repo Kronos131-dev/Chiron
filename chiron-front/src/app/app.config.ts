@@ -6,6 +6,7 @@ import localeFr from '@angular/common/locales/fr';
 import localeEn from '@angular/common/locales/en';
 import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 import { provideServiceWorker } from '@angular/service-worker';
+import { Capacitor } from '@capacitor/core';
 import { authInterceptor } from './security/auth.interceptor';
 
 import { routes } from './app.routes';
@@ -31,9 +32,10 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withInterceptors([authInterceptor])),
     provideCharts(withDefaultRegisterables()),
     // PWA : enregistre le service worker (offline + installabilité WebAPK).
-    // Désactivé en dev ; actif uniquement sur build de production.
+    // Désactivé en dev, et dans l'app native où PwaUpdateService bouclerait sur des
+    // rechargements : les assets y sont déjà locaux, servis par la WebView.
     provideServiceWorker('ngsw-worker.js', {
-      enabled: !isDevMode(),
+      enabled: !isDevMode() && !Capacitor.isNativePlatform(),
       registrationStrategy: 'registerWhenStable:30000',
     })
   ],

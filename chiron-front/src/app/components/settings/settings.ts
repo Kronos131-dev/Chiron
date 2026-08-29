@@ -5,6 +5,8 @@ import { Router } from '@angular/router';
 import { ChironApi, NutritionLinkStatus, FitbitLinkStatus, TrainingPrefs, AiProvider } from '../../service/chiron-api';
 import { AuthService } from '../../service/auth.service';
 import { I18nService, Lang } from '../../service/i18n.service';
+import { estNatif, ouvrirDansUnOnglet } from '../../service/plateforme';
+import { ChironCourse } from '../../service/chiron-course.plugin';
 import { HeaderComponent } from '../shared/header/header';
 import { TranslatePipe } from '../../service/translate.pipe';
 
@@ -322,6 +324,12 @@ export class Settings implements OnInit, OnDestroy {
 
   // --- Liaison Fitbit ---
 
+  readonly natif = estNatif();
+
+  exempterBatterie() {
+    ChironCourse.exempterBatterie().catch(() => {});
+  }
+
   loadFitbitStatus() {
     this.chironApi.getFitbitStatus().subscribe({
       next: (status) => this.fitbitStatus.set(status),
@@ -334,7 +342,7 @@ export class Settings implements OnInit, OnDestroy {
     this.isFitbitConnecting.set(true);
     this.chironApi.getFitbitAuthorizeUrl().subscribe({
       next: ({ authorizeUrl }) => {
-        window.open(authorizeUrl, '_blank');
+        ouvrirDansUnOnglet(authorizeUrl);
         this.startFitbitPolling();
       },
       error: () => {

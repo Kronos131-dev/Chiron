@@ -6,6 +6,7 @@ import { ChironApi } from '../../../service/chiron-api';
 import { I18nService } from '../../../service/i18n.service';
 import { TranslatePipe } from '../../../service/translate.pipe';
 import { environment } from '../../../../environments/environment';
+import { ouvrirALExterieur } from '../../../service/plateforme';
 import { APP_PRESENTATION_FR, APP_PRESENTATION_EN } from '../../../shared/app-presentation';
 
 @Component({
@@ -85,11 +86,11 @@ export class HeaderComponent implements OnInit {
     // Le fragment #ctk est lu par la PWA Olympus puis retiré de l'URL.
     this.chironApi.getOlympusHandoff().subscribe({
       next: ({ token }) => {
-        window.location.href = `${environment.olympusUrl}#ctk=${encodeURIComponent(token)}`;
+        ouvrirALExterieur(`${environment.olympusUrl}#ctk=${encodeURIComponent(token)}`);
       },
       error: () => {
         // Compte non lié (409) ou Olympus indisponible : on laisse la PWA gérer le login.
-        window.location.href = environment.olympusUrl;
+        ouvrirALExterieur(environment.olympusUrl);
       },
     });
   }
@@ -97,9 +98,9 @@ export class HeaderComponent implements OnInit {
   openGlaux() {
     this.showSettings.set(false);
     const token = this.authService.getToken();
-    window.location.href = token
-      ? `${environment.glauxUrl}#ctk=${encodeURIComponent(token)}`
-      : environment.glauxUrl;
+    ouvrirALExterieur(
+      token ? `${environment.glauxUrl}#ctk=${encodeURIComponent(token)}` : environment.glauxUrl,
+    );
   }
 
   logout() {

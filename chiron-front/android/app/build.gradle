@@ -1,5 +1,13 @@
 apply plugin: 'com.android.application'
 
+// WHY: la CI dérive la version du numéro de run, et signe avec un keystore décodé depuis un
+// secret. Les deux retombent sur des valeurs locales quand les variables sont absentes, pour
+// qu'un assembleDebug sur un poste de développement continue de marcher sans rien configurer.
+def codeVersion = (System.getenv("ANDROID_VERSION_CODE") ?: "1") as Integer
+def nomVersion = System.getenv("ANDROID_VERSION_NAME") ?: "1.0"
+def keystoreEncode = System.getenv("ANDROID_KEYSTORE_BASE64")
+def keystorePresent = keystoreEncode != null && !keystoreEncode.isEmpty()
+
 android {
     namespace = "com.kronos.chiron"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -7,8 +15,8 @@ android {
         applicationId "com.kronos.chiron"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode codeVersion
+        versionName nomVersion
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,10 +24,26 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        release {
+            if (keystorePresent) {
+                def magasin = new File(rootProject.buildDir, "chiron.keystore")
+                magasin.parentFile.mkdirs()
+                magasin.bytes = keystoreEncode.decodeBase64()
+                storeFile magasin
+                storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                keyAlias System.getenv("ANDROID_KEY_ALIAS")
+                keyPassword System.getenv("ANDROID_KEY_PASSWORD")
+            }
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            if (keystorePresent) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 }

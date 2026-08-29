@@ -2,6 +2,7 @@ import { Component, signal, inject } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs';
 import { PwaUpdateService } from './service/pwa-update.service';
+import { preparerCoquilleNative, quitterApplication } from './service/plateforme';
 import { TranslatePipe } from './service/translate.pipe';
 
 @Component({
@@ -30,6 +31,7 @@ export class App {
       .subscribe((e) => this.showNav.set(this.computeShowNav(e.urlAfterRedirects)));
     // Active automatiquement les nouvelles versions de la PWA (plus de réinstallation).
     this.pwaUpdate.init();
+    preparerCoquilleNative(quitterApplication);
   }
 
   private computeShowNav(url: string): boolean {

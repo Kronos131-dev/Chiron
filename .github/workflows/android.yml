@@ -1,0 +1,86 @@
+name: Build Android
+
+# WHY: workflow séparé de deploy.yml. Un build d'APK ne doit jamais pouvoir toucher au serveur
+# de production, et une erreur de signature ne doit jamais empêcher un déploiement web.
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'chiron-front/**'
+      - '.github/workflows/android.yml'
+  workflow_dispatch:
+
+env:
+  JAVA_VERSION: '21'
+  NODE_VERSION: '22'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
+jobs:
+
+  build-android:
+    name: Build APK
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: chiron-front
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: chiron-front/package-lock.json
+
+      # WHY: l'Android Gradle Plugin refuse un JDK plus récent que celui pour lequel il est
+      # compilé. Le backend tourne en 25, l'application Android en 21.
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Frontend unit tests
+        run: npm test
+
+      - name: Build production bundle
+        run: npm run build
+
+      - name: Sync Capacitor
+        run: npx cap sync android
+
+      - name: Android unit tests
+        working-directory: chiron-front/android
+        run: ./gradlew testDebugUnitTest --no-daemon
+
+      - name: Assemble release APK
+        working-directory: chiron-front/android
+        env:
+          ANDROID_VERSION_CODE: ${{ github.run_number }}
+          ANDROID_VERSION_NAME: 1.${{ github.run_number }}
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: Signature status
+        working-directory: chiron-front/android
+        run: |
+          if [ -z "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
+            echo "::warning::Aucun keystore configuré — l'APK produit n'est pas signé et ne s'installe pas."
+          fi
+          ls -l app/build/outputs/apk/release/
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: chiron-apk
+          path: chiron-front/android/app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
+          retention-days: 30

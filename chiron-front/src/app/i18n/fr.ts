@@ -397,6 +397,12 @@ export const fr: Record<string, string> = {
   'course.mixMusicHint':
     "C'est le même son inaudible qui garde l'app vivante écran éteint et qui met ta musique en pause. Le mêler à ta musique la préserve, mais le téléphone peut alors geler la course écran verrouillé.",
   'course.headsetSettings': 'Boutons du casque',
+  'settings.battery.title': 'Sorties longues',
+  'settings.battery.desc':
+    "Android coupe les applications en arrière-plan pour économiser la batterie. Sans exemption, une sortie d'une heure peut être interrompue en chemin, notification comprise.",
+  'settings.battery.action': "Autoriser Chiron à tourner sans limite",
+  'settings.battery.oemHint':
+    "Sur Xiaomi, Huawei, Oppo ou Samsung, il faut en plus passer par les réglages du constructeur : verrouille Chiron dans le gestionnaire de tâches et retire-le de l'optimisation de batterie.",
   'course.notification': '{{km}} km · {{temps}} · {{allure}} /km',
   'course.notificationPause': 'Pause',
   'course.notificationResume': 'Reprendre',
