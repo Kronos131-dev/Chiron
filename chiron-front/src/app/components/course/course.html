@@ -424,6 +424,55 @@
         </div>
 
         <div>
+          <span class="text-on-surface text-xs font-bold">{{ 'course.voice' | t }}</span>
+          <p class="text-on-surface-variant text-[10px] leading-relaxed mt-1">
+            {{ 'course.voiceHint' | t }}
+          </p>
+          <div class="grid grid-cols-2 gap-2 mt-2">
+            <button
+              type="button"
+              (click)="choisirVoix(null)"
+              class="rounded-lg border p-2 text-left transition-colors"
+              [class.border-secondary]="voix() === null"
+              [class.bg-secondary/10]="voix() === null"
+              [class.border-white/10]="voix() !== null"
+            >
+              <span
+                class="text-xs font-bold block"
+                [class.text-secondary]="voix() === null"
+                [class.text-on-surface-variant]="voix() !== null"
+              >
+                {{ 'course.voiceAuto' | t }}
+              </span>
+            </button>
+
+            @for (candidate of voixDisponibles(); track candidate.nom; let i = $index) {
+              <button
+                type="button"
+                (click)="choisirVoix(candidate.nom)"
+                class="rounded-lg border p-2 text-left transition-colors"
+                [class.border-secondary]="voix() === candidate.nom"
+                [class.bg-secondary/10]="voix() === candidate.nom"
+                [class.border-white/10]="voix() !== candidate.nom"
+              >
+                <span
+                  class="text-xs font-bold block"
+                  [class.text-secondary]="voix() === candidate.nom"
+                  [class.text-on-surface-variant]="voix() !== candidate.nom"
+                >
+                  {{ 'course.voiceNumbered' | t: { n: i + 1 } }}
+                </span>
+                @if (candidate.reseau) {
+                  <span class="text-on-surface-variant text-[9px] block mt-0.5">
+                    {{ 'course.voiceOnline' | t }}
+                  </span>
+                }
+              </button>
+            }
+          </div>
+        </div>
+
+        <div>
           <span class="text-on-surface text-xs font-bold">{{ 'course.paceUnit' | t }}</span>
           <div class="grid grid-cols-2 gap-2 mt-2">
             @for (unite of unites; track unite) {

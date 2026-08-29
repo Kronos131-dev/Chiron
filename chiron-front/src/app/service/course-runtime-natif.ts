@@ -1,7 +1,7 @@
 import { Signal, computed, signal } from '@angular/core';
 import { CoursePointDto, CourseSplitDto } from './chiron-api';
 import { EtatCourse, mesurer } from './course-tracker';
-import { ChironCourse, EtatNatif } from './chiron-course.plugin';
+import { ChironCourse, EtatNatif, VoixDisponible } from './chiron-course.plugin';
 import { CourseRuntime, OptionsCourse } from './course-runtime';
 import { Commande, interpreter } from '../util/commandes-vocales';
 
@@ -37,6 +37,7 @@ export class RuntimeNatif implements CourseRuntime {
   readonly transcript = signal('');
   readonly commandeComprise = signal<boolean | null>(null);
   readonly erreurMicro = signal<string | null>(null);
+  readonly voixDisponibles = signal<VoixDisponible[]>([]);
   readonly audioActif = signal(true);
   readonly microDisponible = computed(() => this.natifEtat().microDisponible);
 
@@ -141,6 +142,7 @@ export class RuntimeNatif implements CourseRuntime {
       appuiLong: options.appuiLong,
       uniteAllure: options.uniteAllure,
       volumeVoix: options.volumeVoix,
+      voix: options.voix,
     }).catch(() => {});
   }
 
@@ -162,6 +164,7 @@ export class RuntimeNatif implements CourseRuntime {
         appuiLong: options.appuiLong,
         uniteAllure: options.uniteAllure,
         volumeVoix: options.volumeVoix,
+        voix: options.voix,
       });
     } catch (erreur) {
       // WHY: sans localisation le service refuse de démarrer. Rejeter en silence laisserait
@@ -212,7 +215,14 @@ export class RuntimeNatif implements CourseRuntime {
       texte,
       langue: this.options?.langue ?? 'fr',
       volume: this.options?.volumeVoix ?? 100,
+      voix: this.options?.voix ?? null,
     }).catch(() => {});
+  }
+
+  chargerLesVoix(): void {
+    ChironCourse.voixDisponibles({ langue: this.options?.langue ?? 'fr' })
+      .then((reponse) => this.voixDisponibles.set(reponse.voix ?? []))
+      .catch(() => this.voixDisponibles.set([]));
   }
 
   // WHY: le SpeechRecognizer d'Android se referme seul au silence ou au bout de son délai.

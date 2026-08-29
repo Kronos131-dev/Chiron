@@ -12,6 +12,12 @@ export interface ConfigurationCourse {
   appuiLong: MappingCasque;
   uniteAllure: UniteAllure;
   volumeVoix: number;
+  voix: string | null;
+}
+
+export interface VoixDisponible {
+  nom: string;
+  reseau: boolean;
 }
 
 export interface EtatNatif {
@@ -53,7 +59,15 @@ export interface ChironCoursePlugin {
   annoncer(options: { texte: string; prioritaire: boolean }): Promise<void>;
   executerAction(options: { action: string }): Promise<EtatNatif>;
   ecouter(): Promise<void>;
-  essayerVoix(options: { texte: string; langue: string; volume: number }): Promise<void>;
+  essayerVoix(options: {
+    texte: string;
+    langue: string;
+    volume: number;
+    voix: string | null;
+  }): Promise<void>;
+  voixDisponibles(options: {
+    langue: string;
+  }): Promise<{ voix: VoixDisponible[]; courante: string }>;
   etat(): Promise<EtatNatif>;
   points(): Promise<{ points: CoursePointDto[] }>;
   exempterBatterie(): Promise<void>;

@@ -11,6 +11,7 @@ import { AuthService } from '../../service/auth.service';
 import { ExerciceForm } from '../../shared/exercise-forms';
 import { CLE_STOCKAGE_COURSE } from '../../service/course-tracker';
 import { RuntimeWeb } from '../../service/course-runtime-web';
+import { fr } from '../../i18n/fr';
 
 const LAT_DEPART = 48.8566;
 const LON_DEPART = 2.3522;
@@ -401,7 +402,10 @@ describe('Course', () => {
       component.basculerPause();
 
       expect(component.enCours()).toBe(true);
-      expect(paroles.some((p) => p.includes('Reprends'))).toBe(true);
+      // WHY: l'assertion vient du dictionnaire et non d'une chaîne recopiée — c'est le retour
+      // de la voix qui est vérifié ici, pas la formulation, qui peut être réécrite.
+      const reprise = fr['course.say.resumed'].split('|')[0].trim();
+      expect(paroles.join(' ')).toContain(reprise);
     });
   });
 

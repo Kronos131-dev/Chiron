@@ -10,7 +10,9 @@ import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
 import android.speech.tts.Voice;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
+import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -21,6 +23,10 @@ public final class Annonceur {
     private static final float DEBIT = 0.92f;
     private static final String RESPIRATION = "\\|";
     private static final long SILENCE_MS = 180;
+    private static final int POIDS_GENRE = 10000;
+    private static final int POIDS_HORS_LIGNE = 1000;
+    private static final int POIDS_PAYS = 500;
+    private static final int VOIX_MAX_LISTEES = 12;
 
     private final Context context;
     private final AudioManager audioManager;
@@ -32,8 +38,10 @@ public final class Annonceur {
     private volatile boolean pret = false;
     private boolean libere = false;
     private int volumePourcent = 100;
-    private volatile int volumeSauvegarde = -1;
     private Runnable apresSilence;
+    private String voixChoisie;
+    private Locale locale = Locale.FRANCE;
+    private final Deque<Runnable> aLaPreparation = new ArrayDeque<>();
     private volatile long derniereParoleA = 0;
     private AudioFocusRequest demandeFocus;
     private final AudioManager.OnAudioFocusChangeListener focusListener = changement -> {};
@@ -46,7 +54,7 @@ public final class Annonceur {
 
     private void preparer(int statut, String langue) {
         if (libere || statut != TextToSpeech.SUCCESS) return;
-        Locale locale = "en".equals(langue) ? Locale.US : Locale.FRANCE;
+        locale = "en".equals(langue) ? Locale.US : Locale.FRANCE;
         // WHY: setLanguage échoue en silence quand les données de la langue ne sont pas
         // installées, et speak() ne rend alors plus un son — un coach muet pour toute la
         // sortie. La langue générique puis la langue du système sont les deux replis.
@@ -76,7 +84,7 @@ public final class Annonceur {
                 .build()
         );
         tts.setSpeechRate(DEBIT);
-        tts.setPitch(choisirVoix(locale) ? HAUTEUR_MASCULINE : HAUTEUR_A_DEFAUT);
+        appliquerLaVoix();
         tts.setOnUtteranceProgressListener(
             new UtteranceProgressListener() {
                 @Override
@@ -96,7 +104,73 @@ public final class Annonceur {
             }
         );
         pret = true;
+        while (!aLaPreparation.isEmpty()) aLaPreparation.poll().run();
         while (!attente.isEmpty()) enoncer(attente.poll());
+    }
+
+    // WHY: lister ou choisir une voix n'a de sens qu'une fois le moteur lié, ce qui prend
+    // plusieurs centaines de millisecondes après la construction. La demande est donc mise en
+    // attente plutôt que rendue sur un catalogue vide.
+    public void quandPret(Runnable suite) {
+        if (pret) {
+            suite.run();
+            return;
+        }
+        aLaPreparation.add(suite);
+    }
+
+    public void fixerVoix(String nom) {
+        voixChoisie = nom == null || nom.isEmpty() ? null : nom;
+        if (pret) appliquerLaVoix();
+    }
+
+    private void appliquerLaVoix() {
+        Voice retenue = voixChoisie == null ? null : parNom(voixChoisie);
+        if (retenue != null) {
+            tts.setVoice(retenue);
+            tts.setPitch(estMasculine(retenue.getName()) ? HAUTEUR_MASCULINE : HAUTEUR_A_DEFAUT);
+            return;
+        }
+        tts.setPitch(choisirVoix(locale) ? HAUTEUR_MASCULINE : HAUTEUR_A_DEFAUT);
+    }
+
+    private Voice parNom(String nom) {
+        try {
+            for (Voice voix : tts.getVoices()) {
+                if (voix != null && nom.equals(voix.getName())) return voix;
+            }
+        } catch (Exception ignore) {}
+        return null;
+    }
+
+    // WHY: aucun moteur n'expose le genre d'une voix autrement que dans son nom, et les voix
+    // françaises de Google s'appellent « fr-fr-x-vlf-local » — le nom ne révèle rien. Le choix
+    // automatique reste donc un pari, et cette liste est ce qui permet à l'athlète de trancher
+    // à l'oreille plutôt que de subir le pari.
+    public List<Voice> catalogue() {
+        List<Voice> retenues = new ArrayList<>();
+        try {
+            for (Voice voix : tts.getVoices()) {
+                if (voix == null || voix.getLocale() == null) continue;
+                if (!voix.getLocale().getLanguage().equals(locale.getLanguage())) continue;
+                retenues.add(voix);
+            }
+        } catch (Exception ignore) {
+            return retenues;
+        }
+        retenues.sort((a, b) -> noter(b, locale) - noter(a, locale));
+        return retenues.size() > VOIX_MAX_LISTEES
+            ? retenues.subList(0, VOIX_MAX_LISTEES)
+            : retenues;
+    }
+
+    public String nomDeLaVoixCourante() {
+        try {
+            Voice courante = tts.getVoice();
+            return courante == null ? "" : courante.getName();
+        } catch (Exception ignore) {
+            return "";
+        }
     }
 
     // WHY: aucun moteur Android n'expose le genre d'une voix. Le nom est le seul indice —
@@ -128,11 +202,11 @@ public final class Annonceur {
     // strictement rien d'autre dans la langue demandée.
     private int noter(Voice voix, Locale locale) {
         int score = 0;
-        if (voix.getLocale().getCountry().equalsIgnoreCase(locale.getCountry())) score += 40;
-        if (estMasculine(voix.getName())) score += 100;
-        else if (contientMot(voix.getName(), "female")) score -= 100;
+        if (voix.getLocale().getCountry().equalsIgnoreCase(locale.getCountry())) score += POIDS_PAYS;
+        if (estMasculine(voix.getName())) score += POIDS_GENRE;
+        else if (contientMot(voix.getName(), "female")) score -= POIDS_GENRE;
+        if (voix.isNetworkConnectionRequired()) score -= POIDS_HORS_LIGNE;
         score += voix.getQuality();
-        if (voix.isNetworkConnectionRequired()) score -= 500;
         return score;
     }
 
@@ -202,10 +276,11 @@ public final class Annonceur {
             String propre = morceau.trim();
             if (propre.isEmpty()) continue;
             prendreLeFocus();
-            monterLeVolume();
             enCours.incrementAndGet();
             String id = "chiron-" + compteur.incrementAndGet();
-            tts.speak(propre, TextToSpeech.QUEUE_ADD, new Bundle(), id);
+            Bundle parametres = new Bundle();
+            parametres.putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, volumePourcent / 100f);
+            tts.speak(propre, TextToSpeech.QUEUE_ADD, parametres, id);
             tts.playSilentUtterance(SILENCE_MS, TextToSpeech.QUEUE_ADD, id + "-silence");
         }
     }
@@ -213,7 +288,6 @@ public final class Annonceur {
     private void terminer() {
         if (enCours.decrementAndGet() > 0) return;
         enCours.set(0);
-        rendreLeVolume();
         rendreLeFocus();
         Runnable suite = apresSilence;
         apresSilence = null;
@@ -225,30 +299,7 @@ public final class Annonceur {
         apresSilence = null;
         if (pret) tts.stop();
         enCours.set(0);
-        rendreLeVolume();
         rendreLeFocus();
-    }
-
-    private void monterLeVolume() {
-        if (audioManager == null || volumeSauvegarde >= 0) return;
-        try {
-            int maximum = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-            int cible = Math.round((volumePourcent / 100f) * maximum);
-            int courant = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
-            if (cible == courant) return;
-            volumeSauvegarde = courant;
-            audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, cible, 0);
-        } catch (Exception ignore) {
-            volumeSauvegarde = -1;
-        }
-    }
-
-    private void rendreLeVolume() {
-        if (audioManager == null || volumeSauvegarde < 0) return;
-        try {
-            audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, volumeSauvegarde, 0);
-        } catch (Exception ignore) {}
-        volumeSauvegarde = -1;
     }
 
     private void prendreLeFocus() {
@@ -288,7 +339,6 @@ public final class Annonceur {
         libere = true;
         attente.clear();
         apresSilence = null;
-        rendreLeVolume();
         rendreLeFocus();
         if (tts == null) return;
         tts.stop();

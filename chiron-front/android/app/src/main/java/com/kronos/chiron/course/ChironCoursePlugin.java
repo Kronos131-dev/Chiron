@@ -8,6 +8,7 @@ import android.os.Build;
 import android.os.PowerManager;
 import android.provider.Settings;
 import android.speech.SpeechRecognizer;
+import android.speech.tts.Voice;
 import androidx.core.content.ContextCompat;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.PermissionState;
@@ -236,20 +237,60 @@ public class ChironCoursePlugin extends Plugin {
         String texte = appel.getString("texte", "");
         String langue = appel.getString("langue", "fr");
         int volume = appel.getInt("volume", 100);
+        String voix = appel.getString("voix", null);
         CourseService service = PontCourse.service();
         if (service != null) {
-            service.essayerVoix(texte, volume);
+            service.essayerVoix(texte, volume, voix);
             appel.resolve();
             return;
         }
+        Annonceur annonceur = annonceurDEssai(langue);
+        annonceur.fixerVolume(volume);
+        annonceur.fixerVoix(voix);
+        annonceur.interrompreEtParler(texte);
+        appel.resolve();
+    }
+
+    // WHY: la liste ne veut rien dire tant que le moteur n'est pas lié. L'appel est donc
+    // résolu depuis quandPret, pas dans la foulée, faute de quoi les réglages s'ouvriraient
+    // toujours sur un catalogue vide.
+    @PluginMethod
+    public void voixDisponibles(PluginCall appel) {
+        String langue = appel.getString("langue", "fr");
+        CourseService service = PontCourse.service();
+        Annonceur annonceur = service != null && service.annonceur() != null
+            ? service.annonceur()
+            : annonceurDEssai(langue);
+        annonceur.quandPret(() -> appel.resolve(catalogueEnJson(annonceur)));
+    }
+
+    private Annonceur annonceurDEssai(String langue) {
         if (essai == null || !langue.equals(langueDEssai)) {
             if (essai != null) essai.relacher();
             essai = new Annonceur(getContext(), langue);
             langueDEssai = langue;
         }
-        essai.fixerVolume(volume);
-        essai.interrompreEtParler(texte);
-        appel.resolve();
+        return essai;
+    }
+
+    private JSObject catalogueEnJson(Annonceur annonceur) {
+        JSONArray liste = new JSONArray();
+        for (Voice voix : annonceur.catalogue()) {
+            JSONObject entree = new JSONObject();
+            try {
+                entree.put("nom", voix.getName());
+                entree.put("reseau", voix.isNetworkConnectionRequired());
+            } catch (JSONException ignore) {
+                continue;
+            }
+            liste.put(entree);
+        }
+        JSONObject reponse = new JSONObject();
+        try {
+            reponse.put("voix", liste);
+            reponse.put("courante", annonceur.nomDeLaVoixCourante());
+        } catch (JSONException ignore) {}
+        return enJsObject(reponse);
     }
 
     @PluginMethod

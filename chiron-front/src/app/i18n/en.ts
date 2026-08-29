@@ -404,7 +404,13 @@ export const en: Record<string, string> = {
   'course.paceUnitShort.kmh': 'km/h',
   'course.voiceVolume': 'Voice volume',
   'course.voiceVolumeHint':
-    'Share of the phone maximum media volume. Chiron raises it for the length of a sentence, then puts it back where it was. Move the slider to hear it.',
+    'How loud the voice is next to your music. Chiron never changes your phone volume. Move the slider to hear it.',
+  'course.voice': 'Coach voice',
+  'course.voiceHint':
+    'Android never says whether a voice is male or female. Tap them to hear each one, and keep the one you want.',
+  'course.voiceAuto': 'Automatic',
+  'course.voiceNumbered': 'Voice {{n}}',
+  'course.voiceOnline': 'needs a connection',
   'course.testVoice': 'Play',
   'course.micTalkHint':
     'The mic also opens from your headset: pick the button and the press that trigger it below.',
@@ -452,13 +458,13 @@ export const en: Record<string, string> = {
   'course.say.speedUp': 'Pick it up.',
   'course.say.slowDownABit': 'Ease off a little.',
   'course.say.slowDown': 'Ease off.',
-  'course.say.started': 'The road is open. | Run.',
-  'course.say.paused': 'Rest. | I am keeping count.',
-  'course.say.resumed': 'Move. | The road is waiting.',
-  'course.say.finished': 'It is done. | You held.',
+  'course.say.started': 'Here we go. | Find your rhythm.',
+  'course.say.paused': 'Paused. | I am keeping count.',
+  'course.say.resumed': 'Back on.',
+  'course.say.finished': 'Done. | Good run.',
   'course.say.km': 'Kilometre {{km}}. | Pace {{allure}} on that kilometre. | {{temps}} in total.',
   'course.say.speed': '{{vitesse}} kilometres per hour',
-  'course.say.volumeTest': 'This is how I will speak to you. | Hold your pace.',
+  'course.say.volumeTest': 'This is how I will speak to you.',
   'course.say.tooSlow': 'Your pace is fading. | {{allure}} per kilometre. | Aim for {{cible}}.',
   'course.say.tooFast':
     'You are burning your strength. | {{allure}} per kilometre. | Aim for {{cible}}.',

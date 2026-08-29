@@ -144,6 +144,7 @@ public final class CourseService extends Service {
 
         annonceur = new Annonceur(this, langue);
         annonceur.fixerVolume(volumeVoix);
+        annonceur.fixerVoix(config.optString("voix", null));
         ecoute = new Ecoute(this, langue, new EcouteurDeVoix());
         telecommande = new TelecommandeCasque(this, this::executerAction);
         telecommande.configurer(
@@ -169,6 +170,9 @@ public final class CourseService extends Service {
         if (config.has("volumeVoix")) {
             volumeVoix = config.optInt("volumeVoix", volumeVoix);
             if (annonceur != null) annonceur.fixerVolume(volumeVoix);
+        }
+        if (config.has("voix") && annonceur != null) {
+            annonceur.fixerVoix(config.optString("voix", null));
         }
         titre = config.optString("titre", titre);
         if (telecommande != null) {
@@ -235,11 +239,16 @@ public final class CourseService extends Service {
         publierEtat();
     }
 
-    public void essayerVoix(String texte, int volume) {
+    public void essayerVoix(String texte, int volume, String voix) {
         volumeVoix = volume;
         if (annonceur == null) return;
         annonceur.fixerVolume(volume);
+        annonceur.fixerVoix(voix);
         annonceur.interrompreEtParler(texte);
+    }
+
+    public Annonceur annonceur() {
+        return annonceur;
     }
 
     public void dire(String texte, boolean prioritaire) {

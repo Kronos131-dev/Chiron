@@ -2,6 +2,7 @@ export interface Voix {
   parler(texte: string): void;
   interrompreEtParler(texte: string): void;
   fixerVolume(fraction: number): void;
+  fixerVoix(nom: string | null): void;
   taire(): void;
 }
 
@@ -100,17 +101,21 @@ export function creerVoix(langue: string, pendantLaParole?: (parle: boolean) => 
       parler: () => {},
       interrompreEtParler: () => {},
       fixerVolume: () => {},
+      fixerVoix: () => {},
       taire: () => {},
     };
   }
 
   let volume = VOLUME;
+  let nomImpose: string | null = null;
 
   let choisie: SpeechSynthesisVoice | null = null;
 
   const rafraichirLaVoix = () => {
     try {
-      choisie = choisirVoixGrave(moteur.getVoices() ?? [], langue);
+      const catalogue = moteur.getVoices() ?? [];
+      const imposee = nomImpose ? catalogue.find((v) => v.name === nomImpose) : undefined;
+      choisie = imposee ?? choisirVoixGrave(catalogue, langue);
     } catch {}
   };
   rafraichirLaVoix();
@@ -163,6 +168,10 @@ export function creerVoix(langue: string, pendantLaParole?: (parle: boolean) => 
     // Android peut pousser le volume du flux média, et c'est le service natif qui le fait.
     fixerVolume: (fraction) => {
       volume = Math.min(1, Math.max(0, fraction));
+    },
+    fixerVoix: (nom) => {
+      nomImpose = nom;
+      rafraichirLaVoix();
     },
     taire: () => {
       try {
