@@ -43,11 +43,15 @@ export function projeterTrace(points: CoursePointDto[], cote: number): TraceSvg 
 
   const utile = cote - 2 * MARGE;
   const echelle = Math.min(utile / etendueX, utile / etendueY);
-  const largeur = etendueX * echelle + 2 * MARGE;
-  const hauteur = etendueY * echelle + 2 * MARGE;
 
-  const x = (lon: number) => MARGE + (lon - lonMin) * cosLat * echelle;
-  const y = (lat: number) => hauteur - MARGE - (lat - latMin) * echelle;
+  // WHY: le cadre reste carré et le tracé est centré dedans. Épouser les proportions du
+  // parcours donnait un viewBox de 12 sur 320 pour un aller-retour en ligne droite, que le
+  // `w-full` de la page étirait ensuite sur plusieurs écrans de haut.
+  const decalageX = (cote - etendueX * echelle) / 2;
+  const decalageY = (cote - etendueY * echelle) / 2;
+
+  const x = (lon: number) => decalageX + (lon - lonMin) * cosLat * echelle;
+  const y = (lat: number) => cote - decalageY - (lat - latMin) * echelle;
 
   const segments: SegmentTrace[] = [];
   let allureMinKmh = Number.POSITIVE_INFINITY;
@@ -75,8 +79,8 @@ export function projeterTrace(points: CoursePointDto[], cote: number): TraceSvg 
 
   return {
     segments,
-    largeur,
-    hauteur,
+    largeur: cote,
+    hauteur: cote,
     allureMinKmh: Number.isFinite(allureMinKmh) ? allureMinKmh : 0,
     allureMaxKmh,
   };
