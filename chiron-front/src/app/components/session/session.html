@@ -6,8 +6,12 @@
   <!-- Live session timer: thin pill just under the header, stays on scroll.
        pointer-events-none on the bar lets taps pass through to the page; only
        the small pill itself is opaque so it never blocks data entry. -->
+  <!-- WHY: l'en-tête est fixe et grandit de la hauteur de l'encoche sur un Android
+       edge-to-edge. Un décalage écrit en dur à 4rem colle donc la pastille derrière
+       l'en-tête dès le premier défilement, sur le téléphone seulement — jamais sur
+       le navigateur de bureau où la variable vaut exactement 4rem. -->
   @if (elapsed()) {
-    <div class="sticky top-16 z-40 flex justify-center px-4 pointer-events-none">
+    <div class="sticky top-[calc(var(--hauteur-entete)+0.5rem)] z-40 flex justify-center px-4 pointer-events-none">
       <div class="pointer-events-auto inline-flex items-center gap-1.5 bg-slate-900/85 backdrop-blur-md border border-secondary/25 rounded-full pl-3 pr-3.5 py-1 shadow-lg shadow-black/30">
         <span class="material-symbols-outlined text-secondary text-base leading-none">timer</span>
         <span class="font-headline text-sm font-bold text-white tabular-nums tracking-wider leading-none">{{ elapsed() }}</span>
