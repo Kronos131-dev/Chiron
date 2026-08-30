@@ -16,7 +16,7 @@ const ETAT_INITIAL: EtatNatif = {
   allureCouranteKmh: 0,
   allureMoyenneKmh: 0,
   nbPoints: 0,
-  kilometres: 0,
+  paliers: 0,
   precisionM: null,
   erreurGps: null,
   signalPerdu: false,
@@ -27,6 +27,9 @@ const ETAT_INITIAL: EtatNatif = {
   objectifDistanceM: 0,
   objectifDureeMs: 0,
   cibleMinParKm: null,
+  motCleActif: false,
+  motCleIndisponible: null,
+  terminee: false,
 };
 
 export class RuntimeNatif implements CourseRuntime {
@@ -44,6 +47,8 @@ export class RuntimeNatif implements CourseRuntime {
   );
   readonly audioActif = signal(true);
   readonly microDisponible = computed(() => this.natifEtat().microDisponible);
+  readonly motCleActif = computed(() => this.natifEtat().motCleActif);
+  readonly motCleIndisponible = computed(() => this.natifEtat().motCleIndisponible);
 
   readonly etat: Signal<EtatCourse> = computed(() => {
     if (this.termine()) return 'termine';
@@ -87,7 +92,6 @@ export class RuntimeNatif implements CourseRuntime {
       await ChironCourse.addListener('etat', (etat) => this.recevoirEtat(etat)),
       await ChironCourse.addListener('commande', (donnees) => this.recevoirCommande(donnees)),
       await ChironCourse.addListener('echecEcoute', (donnees) => this.recevoirEchec(donnees)),
-      await ChironCourse.addListener('casque', () => this.rafraichir()),
     );
   }
 
@@ -106,17 +110,13 @@ export class RuntimeNatif implements CourseRuntime {
     this.rafraichir();
   }
 
+  // WHY: l'écran suit, il ne décide plus. Le service a déjà interprété la phrase et exécuté
+  // l'ordre avant que cet évènement n'arrive : refaire le travail ici le jouerait deux fois, et
+  // le faire à sa place ne marchait pas — écran verrouillé, cette WebView peut être gelée.
   private recevoirCommande(donnees: { texte: string; definitif: boolean }): void {
     this.transcript.set(donnees.texte);
     if (!donnees.definitif) return;
-    const commande = interpreter(donnees.texte);
-    if (!commande) {
-      this.commandeComprise.set(false);
-      this.dire(this.phrase('notUnderstood'), true);
-      return;
-    }
-    this.commandeComprise.set(true);
-    this.executer(commande);
+    this.commandeComprise.set(interpreter(donnees.texte) !== null);
   }
 
   // WHY: le service Android survit à la page. Retrouver une course déjà en route est donc une
@@ -126,6 +126,20 @@ export class RuntimeNatif implements CourseRuntime {
     await this.brancherLesEvenements();
     const etat = await ChironCourse.etat();
     this.natifEtat.set({ ...ETAT_INITIAL, ...etat });
+    // WHY: « Hey Chiron, termine » clot la sortie sans que la page soit ouverte, et le service
+    // meurt dans la foulée. L'archive qu'il laisse derrière lui est ce qui permet de retrouver
+    // la course finie — et ses points — à la réouverture de l'écran.
+    if (etat.terminee) {
+      const { points } = await ChironCourse.points();
+      this.points.set(points ?? []);
+      this.termine.set(true);
+      // WHY: l'archive n'est rattachée à aucune sortie en particulier. La laisser derrière soi
+      // ferait rouvrir la course de la semaine dernière au départ de la suivante : elle se lit
+      // une fois. Les points sont déjà en main, et le téléversement les recopie aussitôt dans
+      // la trace en attente, qui prend le relais si le réseau manque.
+      ChironCourse.oublier().catch(() => {});
+      return false;
+    }
     if (!etat.demarree) return false;
     const { points } = await ChironCourse.points();
     this.points.set(points ?? []);
@@ -142,11 +156,11 @@ export class RuntimeNatif implements CourseRuntime {
     ChironCourse.configurer({
       titre: options.titre,
       phrases: options.phrases,
-      appuiCourt: options.appuiCourt,
-      appuiLong: options.appuiLong,
       uniteAllure: options.uniteAllure,
       volumeVoix: options.volumeVoix,
       objectifDistanceM: options.objectifDistanceM,
+      intervalleAnnonceM: options.intervalleAnnonceM,
+      motCle: options.motCle,
     }).catch(() => {});
   }
 
@@ -164,11 +178,11 @@ export class RuntimeNatif implements CourseRuntime {
         langue: options.langue,
         titre: options.titre,
         phrases: options.phrases,
-        appuiCourt: options.appuiCourt,
-        appuiLong: options.appuiLong,
         uniteAllure: options.uniteAllure,
         volumeVoix: options.volumeVoix,
         objectifDistanceM: options.objectifDistanceM,
+        intervalleAnnonceM: options.intervalleAnnonceM,
+        motCle: options.motCle,
       });
     } catch (erreur) {
       // WHY: sans localisation le service refuse de démarrer. Rejeter en silence laisserait
@@ -245,7 +259,9 @@ export class RuntimeNatif implements CourseRuntime {
     }
   }
 
-  purger(): void {}
+  purger(): void {
+    ChironCourse.oublier().catch(() => {});
+  }
 
   liberer(): void {
     for (const abonnement of this.abonnements) abonnement.remove().catch(() => {});

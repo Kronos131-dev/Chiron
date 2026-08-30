@@ -24,15 +24,6 @@ import {
   lireCible,
   minParKmVersKmh,
 } from '../../util/allure';
-import {
-  ACTIONS_CASQUE,
-  ActionCasque,
-  BOUTONS_CASQUE,
-  BoutonCasque,
-  MAPPING_LONG_PAR_DEFAUT,
-  MAPPING_PAR_DEFAUT,
-  MappingCasque,
-} from '../../util/telecommande-casque';
 import { TraceSvg, projeterTrace } from '../../util/trace-svg';
 import { GrapheAllure, construireGrapheAllure } from '../../util/graphe-allure';
 
@@ -47,15 +38,20 @@ const CIBLE_MAX = 15;
 const PAS_CIBLE_MIN_PAR_KM = 5 / SECONDES_PAR_MINUTE;
 const ECART_TOLERE_MIN_PAR_KM = 0.25;
 
+const INTERVALLE_MIN_M = 100;
+const INTERVALLE_MAX_M = 1000;
+const INTERVALLE_PAS_M = 100;
+const INTERVALLE_DEFAUT_M = 1000;
+
 const VOLUME_MIN = 10;
 const VOLUME_MAX = 100;
 const VOLUME_DEFAUT = 100;
 
-const CLE_MAPPING_CASQUE = 'chiron.course.casque';
-const CLE_MAPPING_CASQUE_LONG = 'chiron.course.casqueLong';
+const CLE_MOT_CLE = 'chiron.course.motCle';
 const CLE_UNITE_ALLURE = 'chiron.course.uniteAllure';
 const CLE_VOLUME_VOIX = 'chiron.course.volumeVoix';
 const CLE_OBJECTIF = 'chiron.course.objectifKm';
+const CLE_INTERVALLE = 'chiron.course.intervalleAnnonce';
 export const CLE_TRACE_EN_ATTENTE = 'chiron.course.traceEnAttente';
 const OBJECTIF_MAX_KM = 300;
 const TENTATIVES_TELEVERSEMENT = 3;
@@ -97,11 +93,13 @@ export class Course implements OnInit, OnDestroy {
   readonly uniteAllure = signal<UniteAllure>('minParKm');
   readonly volumeVoix = signal(VOLUME_DEFAUT);
   readonly objectifKm = signal('');
-  readonly mappingCasque = signal<MappingCasque>({ ...MAPPING_PAR_DEFAUT });
-  readonly mappingCasqueLong = signal<MappingCasque>({ ...MAPPING_LONG_PAR_DEFAUT });
-  readonly boutonsCasque = BOUTONS_CASQUE;
+  readonly motCle = signal(true);
+  readonly intervalleAnnonce = signal(INTERVALLE_DEFAUT_M);
+  readonly intervalleMin = INTERVALLE_MIN_M;
+  readonly intervalleMax = INTERVALLE_MAX_M;
+  readonly intervallePas = INTERVALLE_PAS_M;
+  readonly graduations = [100, 250, 500, 750, 1000];
   readonly unites = UNITES_ALLURE;
-  readonly actionsCasque = ACTIONS_CASQUE;
   readonly volumeMin = VOLUME_MIN;
   readonly volumeMax = VOLUME_MAX;
   readonly enregistrement = signal(false);
@@ -124,6 +122,8 @@ export class Course implements OnInit, OnDestroy {
     }),
   );
   readonly microDisponible = this.runtime.microDisponible;
+  readonly motCleActif = this.runtime.motCleActif;
+  readonly motCleIndisponible = this.runtime.motCleIndisponible;
   readonly natif = this.runtime.natif;
 
   readonly enCours = computed(() => this.etat() === 'enCours');
@@ -153,6 +153,8 @@ export class Course implements OnInit, OnDestroy {
   readonly precisionM = computed(() => this.runtime.precisionM());
   readonly erreurGps = computed(() => this.runtime.erreurGps());
   readonly signalPerdu = computed(() => this.runtime.signalPerdu());
+
+  readonly intervalleLibelle = computed(() => this.libelleDistance(this.intervalleAnnonce()));
 
   readonly uniteLibelle = computed(() => this.i18n.t('course.paceUnitShort.' + this.uniteAllure()));
   readonly placeholderCible = computed(() =>
@@ -196,8 +198,8 @@ export class Course implements OnInit, OnDestroy {
     }
 
     this.exercice = exo;
-    this.mappingCasque.set(this.lireMapping(CLE_MAPPING_CASQUE, MAPPING_PAR_DEFAUT));
-    this.mappingCasqueLong.set(this.lireMapping(CLE_MAPPING_CASQUE_LONG, MAPPING_LONG_PAR_DEFAUT));
+    this.motCle.set(this.lire(CLE_MOT_CLE) !== 'non');
+    this.intervalleAnnonce.set(this.lireIntervalle());
     this.uniteAllure.set(this.lireUnite());
     this.volumeVoix.set(this.lireVolume());
     this.objectifKm.set(this.lire(CLE_OBJECTIF) ?? '');
@@ -216,6 +218,12 @@ export class Course implements OnInit, OnDestroy {
       await this.runtime.demarrer();
       return;
     }
+    // WHY: la course a pu être close à la voix, écran verrouillé, sans que cette page existe.
+    // Le service en a laissé l'archive ; c'est ici qu'elle devient une trace téléversée.
+    if (this.termine()) {
+      this.televerserTrace();
+      return;
+    }
     this.reprendreTraceEnAttente();
   }
 
@@ -229,11 +237,11 @@ export class Course implements OnInit, OnDestroy {
       titre: this.i18n.t('course.title'),
       cibleMinParKm: this.cibleMinParKm(),
       phrases: this.construirePhrases(),
-      appuiCourt: this.mappingCasque(),
-      appuiLong: this.mappingCasqueLong(),
       uniteAllure: this.uniteAllure(),
       volumeVoix: this.volumeVoix(),
       objectifDistanceM: this.objectifM(),
+      intervalleAnnonceM: this.intervalleAnnonce(),
+      motCle: this.motCle(),
     };
   }
 
@@ -504,26 +512,39 @@ export class Course implements OnInit, OnDestroy {
     this.reglagesOuverts.update((ouvert) => !ouvert);
   }
 
-  changerMappingCasque(bouton: BoutonCasque, action: ActionCasque): void {
-    this.mappingCasque.set({ ...this.mappingCasque(), [bouton]: action });
-    this.ecrire(CLE_MAPPING_CASQUE, JSON.stringify(this.mappingCasque()));
+  // WHY: la droite graduée envoie une chaîne. Elle est bornée et alignée sur le pas ici, à la
+  // frontière du clavier, parce que rien en aval ne saura distinguer un réglage d'un accident.
+  changerIntervalle(valeur: string): void {
+    const brut = Number.parseInt(valeur, 10);
+    if (!Number.isFinite(brut)) return;
+    const borne = Math.min(INTERVALLE_MAX_M, Math.max(INTERVALLE_MIN_M, brut));
+    this.intervalleAnnonce.set(Math.round(borne / INTERVALLE_PAS_M) * INTERVALLE_PAS_M);
+  }
+
+  validerIntervalle(): void {
+    this.ecrire(CLE_INTERVALLE, String(this.intervalleAnnonce()));
     this.runtime.configurer(this.options());
   }
 
-  changerMappingCasqueLong(bouton: BoutonCasque, action: ActionCasque): void {
-    this.mappingCasqueLong.set({ ...this.mappingCasqueLong(), [bouton]: action });
-    this.ecrire(CLE_MAPPING_CASQUE_LONG, JSON.stringify(this.mappingCasqueLong()));
-    this.runtime.configurer(this.options());
+  positionGraduation(metres: number): number {
+    return ((metres - INTERVALLE_MIN_M) / (INTERVALLE_MAX_M - INTERVALLE_MIN_M)) * 100;
   }
 
-  private lireMapping(cle: string, defaut: MappingCasque): MappingCasque {
-    try {
-      const brut = localStorage.getItem(cle);
-      if (!brut) return { ...defaut };
-      return { ...defaut, ...(JSON.parse(brut) as Partial<MappingCasque>) };
-    } catch {
-      return { ...defaut };
-    }
+  libelleDistance(metres: number): string {
+    if (metres < 1000) return `${metres} m`;
+    return `${metres / 1000} km`;
+  }
+
+  private lireIntervalle(): number {
+    const brut = Number.parseInt(this.lire(CLE_INTERVALLE) ?? '', 10);
+    if (!Number.isFinite(brut)) return INTERVALLE_DEFAUT_M;
+    return Math.min(INTERVALLE_MAX_M, Math.max(INTERVALLE_MIN_M, brut));
+  }
+
+  basculerMotCle(): void {
+    this.motCle.update((actif) => !actif);
+    this.ecrire(CLE_MOT_CLE, this.motCle() ? 'oui' : 'non');
+    this.runtime.configurer(this.options());
   }
 
   private lireUnite(): UniteAllure {

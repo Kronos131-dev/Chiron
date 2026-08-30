@@ -2,7 +2,6 @@ import { Signal } from '@angular/core';
 import { CoursePointDto, CourseSplitDto } from './chiron-api';
 import { EtatCourse } from './course-tracker';
 import { Commande } from '../util/commandes-vocales';
-import { MappingCasque } from '../util/telecommande-casque';
 import { UniteAllure } from '../util/allure';
 
 export interface OptionsCourse {
@@ -10,11 +9,11 @@ export interface OptionsCourse {
   titre: string;
   cibleMinParKm: number | null;
   phrases: Record<string, string>;
-  appuiCourt: MappingCasque;
-  appuiLong: MappingCasque;
   uniteAllure: UniteAllure;
   volumeVoix: number;
   objectifDistanceM: number;
+  intervalleAnnonceM: number;
+  motCle: boolean;
 }
 
 export interface CourseRuntime {
@@ -38,6 +37,8 @@ export interface CourseRuntime {
   readonly erreurMicro: Signal<string | null>;
   readonly voixMuette: Signal<boolean>;
   readonly objectifDureeS: Signal<number>;
+  readonly motCleActif: Signal<boolean>;
+  readonly motCleIndisponible: Signal<string | null>;
 
   attacher(routineId: string, exoId: string): void;
   reprendreCourseEnCours(): Promise<boolean>;
@@ -61,10 +62,15 @@ export interface CourseRuntime {
 // ce qui garde i18n/fr.ts seule source des mots, natif comme web.
 export const CLES_PHRASES: Record<string, string> = {
   started: 'course.say.started',
+  confirmFinish: 'course.say.confirmFinish',
+  finishCancelled: 'course.say.finishCancelled',
   paused: 'course.say.paused',
   resumed: 'course.say.resumed',
   finished: 'course.say.finished',
   km: 'course.say.km',
+  metres: 'course.say.metres',
+  kilometre: 'course.say.kilometre',
+  kilometres: 'course.say.kilometres',
   goalReached: 'course.say.goalReached',
   speed: 'course.say.speed',
   volumeTest: 'course.say.volumeTest',

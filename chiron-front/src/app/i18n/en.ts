@@ -394,7 +394,6 @@ export const en: Record<string, string> = {
   'course.pushToTalkHint': 'Hold the mic, speak, release',
   'course.audioWarning':
     'The background sound is not running: the app will freeze once the screen is off.',
-  'course.headsetSettings': 'Headset buttons',
   'course.settings': 'Run settings',
   'course.paceUnit': 'Pace unit',
   'course.paceUnit.minParKm': 'Minutes per kilometre',
@@ -410,8 +409,27 @@ export const en: Record<string, string> = {
   'course.voiceVolumeHint':
     'How loud the voice is next to your music. Chiron never changes your phone volume. Move the slider to hear it.',
   'course.testVoice': 'Play',
+  'course.announceEvery': 'Voice update every',
+  'course.announceHint':
+    'At every step, Chiron calls out the distance, the pace over that step and the total time. The shorter the step, the more it talks.',
+  'course.wakeWord': 'Talking to Chiron',
+  'course.wakeWordToggle': 'Always listening',
+  'course.wakeWordHint':
+    'Chiron listens through the phone microphone, never the headset one: your music stays at full quality. Nothing leaves the device, recognition runs on board.',
+  'course.wakeWordUnavailable.modele':
+    'Offline recognition is not installed. Download the French language in the phone voice typing settings, or use the mic button.',
+  'course.wakeWordUnavailable.version':
+    'This phone is too old for offline recognition. The mic button is still there.',
+  'course.wakeWordUnavailable.permission':
+    'Chiron is not allowed to use the microphone. The wake word stays silent until it is.',
+  'course.wakeWordUnavailable.moteur':
+    'On-device recognition did not start on this phone. The mic button is still there.',
+  'course.wakeWordUnavailable.navigateur':
+    'The wake word needs the Android app: the browser recogniser dies with the screen.',
+  'course.commandList':
+    '"Hey Chiron" then: pause, resume, pace, distance, time, recap, faster, slower, set 5:30, finish.',
   'course.micTalkHint':
-    'The mic also opens from your headset: pick the button and the press that trigger it below.',
+    'The on-screen mic button stays there when you would rather press than speak.',
   'course.micError.permission': 'Chiron is not allowed to use the microphone.',
   'course.micError.moteur': 'No speech recognition is installed on this phone.',
   'course.micError.autre': 'The mic did not open. Try again.',
@@ -430,26 +448,6 @@ export const en: Record<string, string> = {
   'course.notificationPause': 'Pause',
   'course.notificationResume': 'Resume',
   'course.notificationListen': 'Mic',
-  'course.headsetShort': 'Short press',
-  'course.headsetLong': 'Long press',
-  'course.headsetLongHint':
-    "Choose what each headset button does while running, short press and long press separately. If your earbud's long press opens the phone's voice assistant, map it to a media command in the headset app: Android intercepts it before Chiron.",
-  'course.headsetHint':
-    'Choose what each button on your headset does while running. Not every headset exposes all five.',
-  'course.button.play': 'Play / Pause',
-  'course.button.nexttrack': 'Next track',
-  'course.button.previoustrack': 'Previous track',
-  'course.button.seekforward': 'Seek forward',
-  'course.button.seekbackward': 'Seek backward',
-  'course.action.rien': 'Do nothing',
-  'course.action.ecouter': 'Open the mic',
-  'course.action.pause': 'Pause / Resume',
-  'course.action.allure': 'Announce pace',
-  'course.action.distance': 'Announce distance',
-  'course.action.duree': 'Announce duration',
-  'course.action.bilan': 'Announce summary',
-  'course.action.plusVite': 'Faster target',
-  'course.action.moinsVite': 'Slower target',
   'course.say.summary': '{{km}} kilometres. | {{temps}}. | Pace {{allure}}.',
   'course.say.listening': 'I am listening.',
   'course.say.speedUpABit': 'Pick it up a little.',
@@ -462,7 +460,10 @@ export const en: Record<string, string> = {
   'course.say.finished': 'Done. | Good run.',
   'course.say.goalReached':
     'Target reached. | {{km}} kilometres in {{temps}}. | Keep going if you want.',
-  'course.say.km': 'Kilometre {{km}}. | Pace {{allure}} on that kilometre. | {{temps}} in total.',
+  'course.say.metres': '{{m}} metres',
+  'course.say.kilometre': '{{km}} kilometre',
+  'course.say.kilometres': '{{km}} kilometres',
+  'course.say.km': '{{distance}}. | Pace {{allure}} on that step. | {{temps}} in total.',
   'course.say.speed': '{{vitesse}} kilometres per hour',
   'course.say.volumeTest': 'This is how I will speak to you.',
   'course.say.tooSlow': 'Your pace is fading. | {{allure}} per kilometre. | Aim for {{cible}}.',
@@ -473,6 +474,8 @@ export const en: Record<string, string> = {
   'course.say.duration': '{{minutes}} minutes {{secondes}}',
   'course.say.distance': '{{km}} kilometres behind you.',
   'course.say.noPace': 'pace unavailable',
+  'course.say.confirmFinish': 'Do you really want to finish? | Say yes to confirm.',
+  'course.say.finishCancelled': 'We keep going.',
   'course.say.notUnderstood': 'Say it again.',
   // Exercise picker
   'picker.add': 'Add',

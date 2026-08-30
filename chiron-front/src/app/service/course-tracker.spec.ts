@@ -197,7 +197,7 @@ describe('CourseTracker', () => {
       emettrePosition(position(0, 0));
       emettrePosition(position(400, 120));
       vi.setSystemTime(T_DEPART + 120_000);
-      tracker.ecrireSnapshot({ cibleMinParKm: 5.5, kmAnnonces: 0 });
+      tracker.ecrireSnapshot({ cibleMinParKm: 5.5, paliersAnnonces: 0 });
 
       const repris = new CourseTracker();
       repris.attacher('7', 'exo-1');

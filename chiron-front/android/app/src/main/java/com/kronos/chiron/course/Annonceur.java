@@ -38,6 +38,15 @@ public final class Annonceur {
     private final AtomicInteger enCours = new AtomicInteger(0);
     private final AtomicInteger compteur = new AtomicInteger(0);
 
+    // WHY: le guetteur et le moteur de synthèse se disputent le micro. Sans ce témoin, Chiron
+    // s'entend parler et cherche un ordre dans ses propres annonces — quand le moteur ne rend pas
+    // simplement ERROR_RECOGNIZER_BUSY, ce qui tue l'écoute pour le reste de la sortie.
+    public interface Temoin {
+        void parole(boolean enCours);
+    }
+
+    private volatile Temoin temoin;
+
     private TextToSpeech tts;
     private volatile boolean pret = false;
     private boolean libere = false;
@@ -92,6 +101,7 @@ public final class Annonceur {
                 @Override
                 public void onStart(String id) {
                     derniereParoleA = System.currentTimeMillis();
+                    signaler(true);
                 }
 
                 @Override
@@ -246,6 +256,7 @@ public final class Annonceur {
     private void terminer() {
         if (enCours.decrementAndGet() > 0) return;
         enCours.set(0);
+        signaler(false);
         rendreLeFocus();
         Runnable suite = apresSilence;
         apresSilence = null;
@@ -257,7 +268,17 @@ public final class Annonceur {
         apresSilence = null;
         if (pret) tts.stop();
         enCours.set(0);
+        signaler(false);
         rendreLeFocus();
+    }
+
+    public void fixerTemoin(Temoin temoin) {
+        this.temoin = temoin;
+    }
+
+    private void signaler(boolean parle) {
+        Temoin ecouteur = temoin;
+        if (ecouteur != null) ecouteur.parole(parle);
     }
 
     private void prendreLeFocus() {

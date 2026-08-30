@@ -1,14 +1,8 @@
 import { Signal, computed, signal } from '@angular/core';
-import { CourseTracker, tempsALaDistanceS } from './course-tracker';
+import { CourseTracker, allureKmh, tempsALaDistanceS } from './course-tracker';
 import { CourseRuntime, OptionsCourse, interpoler } from './course-runtime';
 import { formaterDistance, kmhVersMinParKm, minParKmVersKmh } from '../util/allure';
 import { Commande, interpreter } from '../util/commandes-vocales';
-import {
-  ActionCasque,
-  MappingCasque,
-  Telecommande,
-  brancherTelecommande,
-} from '../util/telecommande-casque';
 import { Voix, creerVoix, voixDisponible } from '../util/voix';
 import { Survie, tenirEnVie } from '../util/survie-arriere-plan';
 import { baisserLaMusiquePendant } from '../util/session-audio';
@@ -24,7 +18,6 @@ const ECART_TOLERE_MIN_PAR_KM = 0.25;
 const ECART_FRANC_MIN_PAR_KM = 0.6;
 const DUREE_ECART_MS = 15000;
 const SILENCE_ENTRE_ANNONCES_MS = 60000;
-const ECOUTE_MAINS_LIBRES_MS = 7000;
 
 export class RuntimeWeb implements CourseRuntime {
   readonly natif = false;
@@ -49,6 +42,11 @@ export class RuntimeWeb implements CourseRuntime {
   readonly voixMuette = signal(false);
   readonly objectifDureeS = signal(0);
   readonly audioActif = signal(true);
+  // WHY: le mot-clé demande une reconnaissance embarquée qui tourne écran verrouillé. Le
+  // navigateur n'en a pas : le sien passe par le réseau et s'éteint avec l'écran. La PWA garde
+  // donc l'appui-pour-parler, et le dit plutôt que de laisser croire à une panne.
+  readonly motCleActif = signal(false);
+  readonly motCleIndisponible = signal<string | null>('navigateur');
   readonly microDisponible: Signal<boolean> = computed(() => this.moteurReconnaissance() !== null);
 
   private readonly enCours = computed(() => this.etat() === 'enCours');
@@ -58,12 +56,10 @@ export class RuntimeWeb implements CourseRuntime {
   private cible: number | null = null;
   private survie: Survie | null = null;
   private voix: Voix | null = null;
-  private telecommande: Telecommande | null = null;
   private reconnaissance: any = null;
   private ticker: ReturnType<typeof setInterval> | null = null;
-  private minuterieEcoute: ReturnType<typeof setTimeout> | null = null;
 
-  private kmAnnonces = 0;
+  private paliersAnnonces = 0;
   private objectifAnnonce = false;
   private ecartDepuis: number | null = null;
   private derniereAnnonceEcart = 0;
@@ -77,7 +73,7 @@ export class RuntimeWeb implements CourseRuntime {
     const reprise = this.tracker.restaurer();
     const snapshot = this.tracker.lireSnapshot();
     this.cible = snapshot?.cibleMinParKm ?? null;
-    this.kmAnnonces = snapshot?.kmAnnonces ?? 0;
+    this.paliersAnnonces = snapshot?.paliersAnnonces ?? 0;
     return reprise && this.enCours();
   }
 
@@ -88,12 +84,6 @@ export class RuntimeWeb implements CourseRuntime {
   configurer(options: OptionsCourse): void {
     this.options = options;
     this.voix?.fixerVolume(this.fractionDeVolume());
-    if (!this.telecommande) return;
-    this.telecommande.relacher();
-    this.telecommande = brancherTelecommande(options.appuiCourt, (action) =>
-      this.executerAction(action),
-    );
-    this.telecommande.annoncerEnCours(this.titre(), this.enCours() ? 'playing' : 'paused');
   }
 
   async demarrer(): Promise<void> {
@@ -101,7 +91,7 @@ export class RuntimeWeb implements CourseRuntime {
     if (this.etat() !== 'pret') return;
     this.cible = this.options?.cibleMinParKm ?? null;
     this.tracker.demarrer();
-    this.tracker.ecrireSnapshot({ cibleMinParKm: this.cible, kmAnnonces: 0 });
+    this.tracker.ecrireSnapshot({ cibleMinParKm: this.cible, paliersAnnonces: 0 });
     this.dire(this.phrase('started'), false);
   }
 
@@ -109,7 +99,6 @@ export class RuntimeWeb implements CourseRuntime {
     if (this.etat() === 'termine' || this.etat() === 'pret') return;
     this.activerLeSon();
     this.tracker.basculerPause();
-    this.telecommande?.annoncerEnCours(this.titre(), this.enCours() ? 'playing' : 'paused');
     this.dire(this.phrase(this.enCours() ? 'resumed' : 'paused'), false);
   }
 
@@ -171,10 +160,8 @@ export class RuntimeWeb implements CourseRuntime {
   liberer(): void {
     if (this.ticker !== null) clearInterval(this.ticker);
     this.ticker = null;
-    if (this.minuterieEcoute) clearTimeout(this.minuterieEcoute);
     this.tracker.liberer();
     this.arreterEcoute();
-    this.telecommande?.relacher();
     this.voix?.taire();
     this.survie?.relacher();
   }
@@ -184,7 +171,7 @@ export class RuntimeWeb implements CourseRuntime {
     if (this.survie) this.audioActif.set(this.survie.audioEnLecture());
     if (!this.enCours()) return;
     this.annoncerLObjectif();
-    this.annoncerKilometres();
+    this.annoncerLesPaliers();
     this.surveillerAllure();
   }
 
@@ -208,25 +195,55 @@ export class RuntimeWeb implements CourseRuntime {
     );
   }
 
-  // WHY: après un retour d'arrière-plan plusieurs kilomètres ont pu tomber d'un tick au
-  // suivant. Seul le dernier est annoncé : entendre « kilomètre 3 » puis « kilomètre 4 » à une
-  // seconde d'intervalle n'apprend rien et couvre le kilomètre en cours.
-  private annoncerKilometres(): void {
-    const franchis = Math.floor(this.distanceM() / KM_EN_METRES);
-    if (franchis <= this.kmAnnonces) return;
-    this.kmAnnonces = franchis;
-    this.tracker.ecrireSnapshot({ kmAnnonces: franchis });
-    // WHY: c'est l'allure du kilomètre qui vient d'être bouclé qui apprend quelque chose, pas
-    // la moyenne depuis le départ — celle-ci se lisse et cesse de réagir après une demi-heure.
-    const split = this.splits().find((s) => s.kilometre === franchis);
+  // WHY: après un retour d'arrière-plan plusieurs paliers ont pu tomber d'un tick au suivant.
+  // Seul le dernier est annoncé : les enchaîner à une seconde d'intervalle n'apprend rien et
+  // couvre le palier en cours.
+  private annoncerLesPaliers(): void {
+    const intervalle = this.intervalleAnnonceM();
+    const franchis = Math.floor(this.distanceM() / intervalle);
+    if (franchis <= this.paliersAnnonces) return;
+    this.paliersAnnonces = franchis;
+    this.tracker.ecrireSnapshot({ paliersAnnonces: franchis });
+
+    // WHY: c'est l'allure du palier qui vient d'être bouclé qui apprend quelque chose, pas la
+    // moyenne depuis le départ — celle-ci se lisse et cesse de réagir après une demi-heure.
+    // Les deux bornes sont recalculées sur la trace plutôt que retenues d'une annonce à
+    // l'autre : les coordonnées sont arrondies à cinq décimales, soit un mètre, et un palier
+    // frôlé par en dessous est sauté — la borne mémorisée serait alors celle d'un autre palier.
+    const instant = tempsALaDistanceS(this.points(), franchis * intervalle);
+    const precedent =
+      franchis > 1 ? tempsALaDistanceS(this.points(), (franchis - 1) * intervalle) : 0;
+    const dureePalier =
+      instant === null || precedent === null ? 0 : Math.max(0, instant - precedent);
+
     this.dire(
       interpoler(this.phrase('km'), {
-        km: franchis,
+        distance: this.distanceParlee(franchis * intervalle),
         temps: this.dureeParlee(this.dureeS()),
-        allure: this.allureParlee(split?.allureKmh ?? this.allureMoyenneKmh()),
+        allure: this.allureParlee(
+          dureePalier > 0 ? allureKmh(intervalle, dureePalier) : this.allureMoyenneKmh(),
+        ),
       }),
       false,
     );
+  }
+
+  private intervalleAnnonceM(): number {
+    const regle = this.options?.intervalleAnnonceM ?? KM_EN_METRES;
+    return regle > 0 ? regle : KM_EN_METRES;
+  }
+
+  // WHY: sous le kilomètre, « 0.60 kilomètres » est illisible à l'oreille. L'annonce se dit
+  // donc en mètres tant qu'on est en dessous, et le singulier existe parce que « 1 kilomètres »
+  // s'entend, même prononcé par une machine.
+  private distanceParlee(metres: number): string {
+    if (metres < KM_EN_METRES) {
+      return interpoler(this.phrase('metres'), { m: Math.round(metres) });
+    }
+    const km = metres / KM_EN_METRES;
+    return interpoler(this.phrase(km === 1 ? 'kilometre' : 'kilometres'), {
+      km: Number.isInteger(km) ? km : km.toFixed(1),
+    });
   }
 
   // WHY: une annonce déclenchée au premier écart mesuré se répéterait à chaque tick sous un
@@ -279,14 +296,6 @@ export class RuntimeWeb implements CourseRuntime {
       );
     }
     this.voix?.fixerVolume(this.fractionDeVolume());
-    this.telecommande = brancherTelecommande(this.options.appuiCourt, (action) =>
-      this.executerAction(action),
-    );
-    this.telecommande.annoncerEnCours(this.titre(), 'playing');
-  }
-
-  private titre(): string {
-    return this.options?.titre ?? 'Chiron';
   }
 
   private phrase(cle: string): string {
@@ -362,10 +371,6 @@ export class RuntimeWeb implements CourseRuntime {
 
   terminerEcoute(): void {
     if (!this.ecoute()) return;
-    if (this.minuterieEcoute) {
-      clearTimeout(this.minuterieEcoute);
-      this.minuterieEcoute = null;
-    }
     this.ecoute.set(false);
     if (this.reconnaissance) {
       try {
@@ -437,32 +442,5 @@ export class RuntimeWeb implements CourseRuntime {
         );
         return;
     }
-  }
-
-  private executerAction(action: ActionCasque): void {
-    if (action === 'rien') return;
-    if (action === 'ecouter') {
-      this.ecouterMainsLibres();
-      return;
-    }
-    if (action === 'pause') {
-      this.basculerPause();
-      return;
-    }
-    this.executer({ nom: action });
-  }
-
-  // WHY: un bouton de casque n'envoie qu'une impulsion — mediaSession ne dit ni si l'appui a
-  // duré, ni quand il cesse. Impossible d'en faire un vrai maintiens-et-parle : l'écoute
-  // s'ouvre donc à l'impulsion et se referme d'elle-même, au silence ou au bout du délai.
-  ecouterMainsLibres(): void {
-    if (this.ecoute()) {
-      this.terminerEcoute();
-      return;
-    }
-    this.dire(this.phrase('listening'), true);
-    this.commencerEcoute();
-    if (this.minuterieEcoute) clearTimeout(this.minuterieEcoute);
-    this.minuterieEcoute = setTimeout(() => this.terminerEcoute(), ECOUTE_MAINS_LIBRES_MS);
   }
 }

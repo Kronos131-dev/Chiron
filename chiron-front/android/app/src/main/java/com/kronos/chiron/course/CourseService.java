@@ -19,7 +19,6 @@ import android.os.PowerManager;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.ServiceCompat;
 import androidx.core.content.ContextCompat;
-import androidx.media.session.MediaButtonReceiver;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -59,14 +58,15 @@ public final class CourseService extends Service {
     private static final long SILENCE_ENTRE_ANNONCES_MS = 60000;
     private static final long DUREE_VEILLE_MS = 6 * 60 * 60 * 1000L;
     private static final long DELAI_MAX_AVANT_ECOUTE_MS = 2500;
+    private static final long FENETRE_COMMANDE_MS = 8000;
 
     private final Handler boucle = new Handler(Looper.getMainLooper());
     private final Mesure mesure = new Mesure();
     private final Phrases phrases = new Phrases();
 
     private Annonceur annonceur;
-    private TelecommandeCasque telecommande;
     private Ecoute ecoute;
+    private Guetteur guetteur;
     private FusedLocationProviderClient gps;
     private LocationCallback rappelGps;
     private PowerManager.WakeLock veille;
@@ -77,7 +77,7 @@ public final class CourseService extends Service {
     private long msAccumules = 0;
     private Long repriseA = null;
     private Double cibleMinParKm = null;
-    private int kmAnnonces = 0;
+    private int paliersAnnonces = 0;
     private Long ecartDepuis = null;
     private long derniereAnnonceEcart = 0;
     private long derniereReception = 0;
@@ -89,6 +89,11 @@ public final class CourseService extends Service {
     private double objectifM = 0;
     private boolean objectifAnnonce = false;
     private long demandeEcouteA = 0;
+    private boolean motCleVoulu = true;
+    private String motCleIndisponible = null;
+    private volatile long fenetreJusquA = 0;
+    private volatile long confirmationJusquA = 0;
+    private boolean terminee = false;
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -105,14 +110,6 @@ public final class CourseService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         String action = intent == null ? null : intent.getAction();
-        // WHY: les touches du casque arrivent par ce chemin quand l'application n'est plus au
-        // premier plan. MediaButtonReceiver les relaie au service, qui les rend a la session.
-        if (Intent.ACTION_MEDIA_BUTTON.equals(action)) {
-            if (telecommande != null) {
-                MediaButtonReceiver.handleIntent(telecommande.session(), intent);
-            }
-            return START_STICKY;
-        }
         if (ACTION_DEMARRER.equals(action)) {
             demarrer(intent.getStringExtra(EXTRA_CONFIGURATION));
         } else if (ACTION_BASCULER_PAUSE.equals(action)) {
@@ -133,7 +130,7 @@ public final class CourseService extends Service {
         boucle.removeCallbacksAndMessages(null);
         couperGps();
         if (ecoute != null) ecoute.arreter();
-        if (telecommande != null) telecommande.relacher();
+        if (guetteur != null) guetteur.arreter();
         if (annonceur != null) annonceur.relacher();
         relacherLaVeille();
         super.onDestroy();
@@ -148,14 +145,15 @@ public final class CourseService extends Service {
         boucle.removeCallbacksAndMessages(null);
         couperGps();
         if (ecoute != null) ecoute.arreter();
-        if (telecommande != null) telecommande.relacher();
+        if (guetteur != null) guetteur.arreter();
         if (annonceur != null) annonceur.relacher();
+        Archive.effacer(this);
         mesure.reinitialiser();
         enPause = false;
         ouvrirUneCoupure = false;
         msAccumules = 0;
         repriseA = null;
-        kmAnnonces = 0;
+        paliersAnnonces = 0;
         ecartDepuis = null;
         derniereAnnonceEcart = 0;
         derniereReception = 0;
@@ -164,6 +162,10 @@ public final class CourseService extends Service {
         erreurGps = null;
         objectifAnnonce = false;
         demandeEcouteA = 0;
+        fenetreJusquA = 0;
+        confirmationJusquA = 0;
+        motCleIndisponible = null;
+        terminee = false;
     }
 
     private void demarrer(String configuration) {
@@ -176,6 +178,7 @@ public final class CourseService extends Service {
         volumeVoix = config.optInt("volumeVoix", volumeVoix);
         objectifM = config.optDouble("objectifDistanceM", 0);
         mesure.fixerObjectif(objectifM);
+        reglerIntervalle(config.optDouble("intervalleAnnonceM", Mesure.KM_EN_METRES));
         cibleMinParKm = null;
         if (config.has("cibleMinParKm") && !config.isNull("cibleMinParKm")) {
             cibleMinParKm = config.optDouble("cibleMinParKm");
@@ -186,13 +189,11 @@ public final class CourseService extends Service {
 
         annonceur = new Annonceur(this, langue);
         annonceur.fixerVolume(volumeVoix);
+        annonceur.fixerTemoin(this::pendantLaParole);
         ecoute = new Ecoute(this, langue, new EcouteurDeVoix());
-        telecommande = new TelecommandeCasque(this, this::executerAction);
-        telecommande.configurer(
-            config.optJSONObject("appuiCourt"),
-            config.optJSONObject("appuiLong")
-        );
-        telecommande.annoncerEnCours(titre, true);
+        motCleVoulu = config.optBoolean("motCle", true);
+        guetteur = new Guetteur(this, langue, new EcouteurDuGuetteur());
+        if (motCleVoulu) guetteur.demarrer();
 
         demarree = true;
         repriseA = System.currentTimeMillis();
@@ -215,13 +216,11 @@ public final class CourseService extends Service {
             objectifM = config.optDouble("objectifDistanceM", 0);
             mesure.fixerObjectif(objectifM);
         }
-        titre = config.optString("titre", titre);
-        if (telecommande != null) {
-            telecommande.configurer(
-                config.optJSONObject("appuiCourt"),
-                config.optJSONObject("appuiLong")
-            );
+        if (config.has("intervalleAnnonceM")) {
+            reglerIntervalle(config.optDouble("intervalleAnnonceM", Mesure.KM_EN_METRES));
         }
+        titre = config.optString("titre", titre);
+        if (config.has("motCle")) reglerLeMotCle(config.optBoolean("motCle", true));
         rafraichirLaNotification();
     }
 
@@ -234,8 +233,10 @@ public final class CourseService extends Service {
         demarree = false;
         couperGps();
         if (ecoute != null) ecoute.arreter();
+        if (guetteur != null) guetteur.arreter();
         if (annonceur != null) annonceur.interrompreEtParler(phrases.t("finished"));
         boucle.removeCallbacksAndMessages(null);
+        archiver();
         publierEtat();
         ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE);
         boucle.postDelayed(this::stopSelf, 4000);
@@ -259,7 +260,6 @@ public final class CourseService extends Service {
             couperGps();
             dire(phrases.t("paused"), false);
         }
-        if (telecommande != null) telecommande.annoncerEnCours(titre, !enPause);
         publierEtat();
         rafraichirLaNotification();
     }
@@ -298,6 +298,15 @@ public final class CourseService extends Service {
     // ou renvoyait ERROR_RECOGNIZER_BUSY : l'écoute part quand la phrase est finie, et le délai
     // de garde couvre le cas où le moteur ne rend jamais la main.
     public void ouvrirEcoute() {
+        // WHY: le guetteur ecoute deja en permanence, et Android ne prete qu'un moteur de
+        // reconnaissance a la fois — en ouvrir un second rend ERROR_RECOGNIZER_BUSY et tue
+        // l'ecoute pour le reste de la sortie. Quand le guetteur veille, le bouton micro
+        // n'allume donc rien : il ouvre la fenetre d'ordre de celui qui entend deja.
+        if (guetteur != null && guetteur.actif()) {
+            ouvrirLaFenetre();
+            publierEtat();
+            return;
+        }
         if (ecoute == null) {
             PontCourse.publier("echecEcoute", raison("indisponible"));
             return;
@@ -311,6 +320,7 @@ public final class CourseService extends Service {
             return;
         }
         if (annonceur == null) {
+            fenetreJusquA = System.currentTimeMillis() + FENETRE_COMMANDE_MS;
             ecoute.demarrer();
             publierEtat();
             return;
@@ -327,6 +337,7 @@ public final class CourseService extends Service {
     private void lancerLEcoute(long jeton) {
         if (ecoute == null || jeton != demandeEcouteA) return;
         demandeEcouteA = 0;
+        fenetreJusquA = System.currentTimeMillis() + FENETRE_COMMANDE_MS;
         ecoute.demarrer();
         publierEtat();
     }
@@ -371,11 +382,6 @@ public final class CourseService extends Service {
             default:
                 return;
         }
-        JSONObject donnees = new JSONObject();
-        try {
-            donnees.put("action", action);
-        } catch (JSONException ignore) {}
-        PontCourse.publier("casque", donnees);
         publierEtat();
     }
 
@@ -405,7 +411,7 @@ public final class CourseService extends Service {
         rafraichirLaNotification();
         if (enPause) return;
         annoncerLObjectif();
-        annoncerKilometres();
+        annoncerLesPaliers();
         surveillerAllure();
     }
 
@@ -423,30 +429,29 @@ public final class CourseService extends Service {
         publierEtat();
     }
 
-    // WHY: seul le dernier kilomètre franchi est annoncé. Après une reprise de signal
-    // plusieurs peuvent tomber d'un tick au suivant, et les enchaîner couvrirait le kilomètre
-    // en cours sans rien apprendre.
-    private void annoncerKilometres() {
-        int franchis = mesure.kilometresFranchis();
-        if (franchis <= kmAnnonces) return;
-        kmAnnonces = franchis;
-        // WHY: c'est l'allure du kilomètre qui vient d'être bouclé qui apprend quelque chose,
-        // pas la moyenne depuis le départ — celle-ci se lisse et cesse de réagir au bout d'une
+    // WHY: seul le dernier palier franchi est annoncé. Après une reprise de signal plusieurs
+    // peuvent tomber d'un tick au suivant, et les enchaîner couvrirait le palier en cours sans
+    // rien apprendre.
+    private void annoncerLesPaliers() {
+        int franchis = mesure.paliersFranchis();
+        if (franchis <= paliersAnnonces) return;
+        paliersAnnonces = franchis;
+        // WHY: c'est l'allure du palier qui vient d'être bouclé qui apprend quelque chose, pas
+        // la moyenne depuis le départ — celle-ci se lisse et cesse de réagir au bout d'une
         // demi-heure, alors que l'athlète veut savoir s'il tient ou s'il s'écroule.
-        double allureDuKm = mesure.allureDuKilometreKmh(franchis);
-        long dureeDuKmS = (long) Math.floor(mesure.dureeDuKilometreMs(franchis) / MS_PAR_SECONDE);
-        JSONObject franchissement = new JSONObject();
-        try {
-            franchissement.put("kilometre", franchis);
-            franchissement.put("dureeSplitS", dureeDuKmS);
-            franchissement.put("allureSplitKmh", allureDuKm);
-        } catch (JSONException ignore) {}
-        PontCourse.publier("kilometre", franchissement);
         Map<String, String> valeurs = new HashMap<>();
-        valeurs.put("km", String.valueOf(franchis));
+        valeurs.put("distance", phrases.distanceParlee(mesure.distanceDesPaliersM()));
         valeurs.put("temps", phrases.dureeParlee(dureeS()));
-        valeurs.put("allure", phrases.allureParlee(allureDuKm));
+        valeurs.put("allure", phrases.allureParlee(mesure.allureDuDernierPalierKmh()));
         dire(phrases.t("km", valeurs), false);
+    }
+
+    // WHY: rebaser le compteur d'annonces sur ce que la mesure vient de recalculer evite qu'un
+    // resserrement de l'intervalle en pleine course ne declenche d'un coup toutes les annonces
+    // des paliers deja parcourus.
+    private void reglerIntervalle(double metres) {
+        mesure.fixerIntervalle(metres);
+        paliersAnnonces = mesure.paliersFranchis();
     }
 
     // WHY: l'écart doit tenir quinze secondes avant d'être dit, sinon une côte ou un pont
@@ -572,7 +577,7 @@ public final class CourseService extends Service {
             etat.put("allureCouranteKmh", mesure.allureCouranteKmh());
             etat.put("allureMoyenneKmh", mesure.allureMoyenneKmh(dureeMs()));
             etat.put("nbPoints", mesure.nbPoints());
-            etat.put("kilometres", mesure.kilometresFranchis());
+            etat.put("paliers", mesure.paliersFranchis());
             etat.put("precisionM", precisionM == null ? JSONObject.NULL : precisionM);
             etat.put("erreurGps", erreurGps == null ? JSONObject.NULL : erreurGps);
             etat.put(
@@ -595,6 +600,12 @@ public final class CourseService extends Service {
                 "cibleMinParKm",
                 cibleMinParKm == null ? JSONObject.NULL : (double) cibleMinParKm
             );
+            etat.put("motCleActif", guetteur != null && guetteur.actif());
+            etat.put(
+                "motCleIndisponible",
+                motCleIndisponible == null ? JSONObject.NULL : motCleIndisponible
+            );
+            etat.put("terminee", terminee);
         } catch (JSONException ignore) {}
         return etat;
     }
@@ -755,16 +766,170 @@ public final class CourseService extends Service {
         }
     }
 
-    private final class EcouteurDeVoix implements Ecoute.Ecouteur {
+    private void pendantLaParole(boolean parle) {
+        if (guetteur == null) return;
+        if (parle) guetteur.suspendre();
+        else guetteur.reprendre();
+    }
 
-        @Override
-        public void transcription(String texte, boolean definitif) {
+    private void reglerLeMotCle(boolean voulu) {
+        if (voulu == motCleVoulu || guetteur == null) return;
+        motCleVoulu = voulu;
+        if (voulu) {
+            motCleIndisponible = null;
+            guetteur.demarrer();
+        } else {
+            guetteur.arreter();
+        }
+        publierEtat();
+    }
+
+    // WHY: la fenetre ne s'ouvre qu'une fois « J'ecoute » prononce. La compter des la detection
+    // ferait courir son delai pendant que Chiron parle encore, et l'athlete parlerait dans une
+    // fenetre deja a moitie fermee.
+    private void ouvrirLaFenetre() {
+        if (annonceur == null) {
+            fenetreJusquA = System.currentTimeMillis() + FENETRE_COMMANDE_MS;
+            return;
+        }
+        annonceur.parlerPuis(
+            phrases.t("listening"),
+            () -> fenetreJusquA = System.currentTimeMillis() + FENETRE_COMMANDE_MS
+        );
+    }
+
+    private boolean fenetreOuverte() {
+        return System.currentTimeMillis() < fenetreJusquA;
+    }
+
+    private boolean attendUneConfirmation() {
+        return System.currentTimeMillis() < confirmationJusquA;
+    }
+
+    // WHY: un guetteur permanent voit passer chaque bribe de conversation et chaque parole
+    // chantee. Reveiller la WebView a chacune reviendrait a la tenir allumee toute la sortie :
+    // les partiels ne franchissent la passerelle que pendant un echange, les phrases achevees
+    // toujours — ce sont elles que l'ecran affiche pour dire ce que le moteur a vraiment entendu.
+    private void recevoirTranscript(String texte, boolean definitif) {
+        if (definitif || fenetreOuverte() || attendUneConfirmation()) {
             JSONObject donnees = new JSONObject();
             try {
                 donnees.put("texte", texte);
                 donnees.put("definitif", definitif);
             } catch (JSONException ignore) {}
             PontCourse.publier("commande", donnees);
+        }
+        if (!definitif || !demarree) return;
+
+        if (attendUneConfirmation()) {
+            repondreALaConfirmation(texte);
+            return;
+        }
+        if (fenetreOuverte()) {
+            executerLeTexte(texte, true);
+            return;
+        }
+        Commandes.Reveil reveil = Commandes.detecterMotCle(texte);
+        if (reveil == null) return;
+        if (!reveil.suite.isEmpty()) {
+            executerLeTexte(reveil.suite, false);
+            return;
+        }
+        if (reveil.avecInterjection) ouvrirLaFenetre();
+    }
+
+    // WHY: repondre « je n'ai pas compris » chaque fois que le nom a ete mal entendu changerait
+    // un faux positif en interruption. Chiron ne se justifie donc que lorsque l'athlete sait
+    // qu'il l'ecoute, c'est-a-dire apres le « J'ecoute » de la fenetre.
+    private void executerLeTexte(String texte, boolean repondreSiIncompris) {
+        fenetreJusquA = 0;
+        Commandes.Commande commande = Commandes.interpreter(texte);
+        if (commande == null) {
+            if (repondreSiIncompris) dire(phrases.t("notUnderstood"), true);
+            return;
+        }
+        executerCommande(commande);
+    }
+
+    private void executerCommande(Commandes.Commande commande) {
+        switch (commande.nom) {
+            case "pause":
+                if (!enPause) basculerPause();
+                return;
+            case "reprendre":
+                if (enPause) basculerPause();
+                return;
+            case "cible":
+                if (commande.cibleMinParKm != null) fixerCible(commande.cibleMinParKm);
+                return;
+            case "terminer":
+                demanderLaFinDeCourse();
+                return;
+            default:
+                executerAction(commande.nom);
+        }
+    }
+
+    // WHY: une sortie ne se clot pas sur un mot mal entendu. La demande de confirmation coute
+    // une seconde a l'arrivee, et elle est le seul rempart entre un bruit de rue et une course
+    // perdue au trente-cinquieme kilometre.
+    private void demanderLaFinDeCourse() {
+        if (annonceur == null) {
+            terminerLaCourse();
+            return;
+        }
+        annonceur.parlerPuis(
+            phrases.t("confirmFinish"),
+            () -> confirmationJusquA = System.currentTimeMillis() + FENETRE_COMMANDE_MS
+        );
+        publierEtat();
+    }
+
+    private void repondreALaConfirmation(String texte) {
+        confirmationJusquA = 0;
+        if (Commandes.estUneConfirmation(texte)) {
+            terminerLaCourse();
+            return;
+        }
+        dire(phrases.t("finishCancelled"), true);
+    }
+
+    private void terminerLaCourse() {
+        terminee = true;
+        arreter();
+    }
+
+    // WHY: l'etat final et les points partent sur le disque parce que la page peut n'etre
+    // rouverte que bien apres la mort du service. C'est la seule facon pour le journal de
+    // recuperer une sortie close a la voix ou depuis le bouton de la notification.
+    private void archiver() {
+        JSONObject contenu = etat();
+        try {
+            contenu.put("terminee", true);
+            contenu.put("points", pointsJson());
+        } catch (JSONException ignore) {}
+        Archive.ecrire(this, contenu);
+    }
+
+    private final class EcouteurDuGuetteur implements Guetteur.Ecouteur {
+
+        @Override
+        public void entendu(String texte, boolean definitif) {
+            recevoirTranscript(texte, definitif);
+        }
+
+        @Override
+        public void indisponible(String raison) {
+            motCleIndisponible = raison;
+            publierEtat();
+        }
+    }
+
+    private final class EcouteurDeVoix implements Ecoute.Ecouteur {
+
+        @Override
+        public void transcription(String texte, boolean definitif) {
+            recevoirTranscript(texte, definitif);
         }
 
         @Override

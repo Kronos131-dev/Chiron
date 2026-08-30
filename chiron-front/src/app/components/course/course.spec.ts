@@ -241,7 +241,7 @@ describe('Course', () => {
       emettrePosition(position(1200, 360));
       vi.advanceTimersByTime(1000);
 
-      expect(paroles.some((p) => p.includes('Kilomètre 1'))).toBe(true);
+      expect(paroles.some((p) => p.includes('1 kilomètre'))).toBe(true);
     });
 
     // WHY: c'est le cas qui casse au retour d'arrière-plan — plusieurs kilomètres tombent d'un
@@ -256,9 +256,9 @@ describe('Course', () => {
       emettrePosition(position(3400, 1020));
       vi.advanceTimersByTime(1000);
 
-      const annonces = paroles.filter((p) => p.includes('Kilomètre'));
+      const annonces = paroles.filter((p) => p.includes('kilomètres'));
       expect(annonces).toHaveLength(1);
-      expect(annonces[0]).toContain('Kilomètre 3');
+      expect(annonces[0]).toContain('3 kilomètres');
     });
 
     // WHY: c'est le cœur du changement — la moyenne depuis le départ aurait annoncé 7:00 sur
@@ -276,9 +276,25 @@ describe('Course', () => {
       vi.advanceTimersByTime(1000);
 
       const annonce = paroles.join(' ');
-      expect(annonce).toContain('Kilomètre 2');
+      expect(annonce).toContain('2 kilomètres');
       expect(annonce).toContain('10 minutes 0');
       expect(annonce).not.toContain('7 minutes 0');
+    });
+
+    // WHY: l'intervalle se règle de 100 m à 1 km. Sous le kilomètre l'annonce se dit en mètres,
+    // « 0.60 kilomètres » étant illisible à l'oreille.
+    it('annonce en mètres quand le palier est réglé sous le kilomètre', async () => {
+      await boot([exoCourse('a')], 'a');
+      component.changerIntervalle('200');
+      component.validerIntervalle();
+      component.demarrer();
+      emettrePosition(position(0, 0));
+      paroles.length = 0;
+
+      emettrePosition(position(250, 60));
+      vi.advanceTimersByTime(1000);
+
+      expect(paroles.some((p) => p.includes('200 mètres'))).toBe(true);
     });
 
     it('se tait sur l’écart d’allure tant qu’il n’a pas duré quinze secondes', async () => {
@@ -409,7 +425,10 @@ describe('Course', () => {
       emettrePosition(position(0, 0));
       emettrePosition(position(2400, 720));
       const snapshot = JSON.parse(localStorage.getItem(CLE_STOCKAGE_COURSE)!);
-      localStorage.setItem(CLE_STOCKAGE_COURSE, JSON.stringify({ ...snapshot, kmAnnonces: 2 }));
+      localStorage.setItem(
+        CLE_STOCKAGE_COURSE,
+        JSON.stringify({ ...snapshot, paliersAnnonces: 2 }),
+      );
 
       TestBed.resetTestingModule();
       await boot([exoCourse('a')], 'a');
@@ -566,7 +585,7 @@ describe('Course', () => {
       vi.advanceTimersByTime(1000);
 
       const annonce = paroles.join(' ');
-      expect(annonce).toContain('Kilomètre 1');
+      expect(annonce).toContain('1 kilomètre');
       expect(annonce).toContain('kilomètres heure');
     });
 
@@ -607,25 +626,26 @@ describe('Course', () => {
     });
   });
 
-  describe('boutons du casque', () => {
-    it('retient le mapping choisi entre deux visites', async () => {
+  describe('mot-clé', () => {
+    it('écoute en permanence par défaut', async () => {
       await boot([exoCourse('a')], 'a');
-      component.changerMappingCasque('nexttrack', 'distance');
-
-      TestBed.resetTestingModule();
-      await boot([exoCourse('a')], 'a');
-      expect(component.mappingCasque().nexttrack).toBe('distance');
+      expect(component.motCle()).toBe(true);
     });
 
-    it('exécute l’action câblée sur un bouton', async () => {
+    it('retient l’écoute coupée entre deux visites', async () => {
       await boot([exoCourse('a')], 'a');
-      component.demarrer();
-      emettrePosition(position(0, 0));
-      emettrePosition(position(1000, 300));
-      paroles.length = 0;
+      component.basculerMotCle();
 
-      web().executer({ nom: 'distance' });
-      expect(paroles.some((p) => p.includes('1.00'))).toBe(true);
+      await boot([exoCourse('a')], 'a');
+      expect(component.motCle()).toBe(false);
+    });
+
+    // WHY: le navigateur ne sait pas tenir un mot-clé — sa reconnaissance passe par le réseau
+    // et s'éteint avec l'écran. L'écran doit le dire plutôt que de laisser croire à une panne.
+    it('se déclare indisponible hors de l’application Android', async () => {
+      await boot([exoCourse('a')], 'a');
+      expect(component.motCleActif()).toBe(false);
+      expect(component.motCleIndisponible()).toBe('navigateur');
     });
   });
 
@@ -654,30 +674,6 @@ describe('Course', () => {
       component.basculerPause();
       vi.advanceTimersByTime(5000);
       expect(component.chrono()).toBe('00:15');
-    });
-  });
-
-  describe('micro depuis le casque', () => {
-    // WHY: mediaSession n'envoie qu'une impulsion, sans début ni fin d'appui. L'écoute doit
-    // donc se refermer seule, sinon le micro resterait ouvert jusqu'à la fin de la sortie.
-    it('ouvre le micro puis le referme au bout du délai', async () => {
-      await boot([exoCourse('a')], 'a');
-      component.demarrer();
-
-      web().ecouterMainsLibres();
-      expect(component.ecoute()).toBe(true);
-
-      vi.advanceTimersByTime(7000);
-      expect(component.ecoute()).toBe(false);
-    });
-
-    it('referme le micro sur une seconde impulsion', async () => {
-      await boot([exoCourse('a')], 'a');
-      component.demarrer();
-
-      web().ecouterMainsLibres();
-      web().ecouterMainsLibres();
-      expect(component.ecoute()).toBe(false);
     });
   });
 

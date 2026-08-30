@@ -18,12 +18,14 @@ public final class Mesure {
 
     private final List<Point> points = new ArrayList<>();
     private final List<double[]> parcours = new ArrayList<>();
-    private final List<Long> franchissementsMs = new ArrayList<>();
 
     private double cumulM = 0;
     private long pauseCumuleeMs = 0;
     private long depart = 0;
-    private int prochainKm = 1;
+    private double intervalleM = KM_EN_METRES;
+    private int paliers = 0;
+    private long dernierPalierMs = 0;
+    private long dureeDernierPalierMs = 0;
     private double objectifM = 0;
     private Long instantObjectifMs = null;
 
@@ -82,13 +84,28 @@ public final class Mesure {
     public void reinitialiser() {
         points.clear();
         parcours.clear();
-        franchissementsMs.clear();
         cumulM = 0;
         pauseCumuleeMs = 0;
         depart = 0;
-        prochainKm = 1;
+        intervalleM = KM_EN_METRES;
+        paliers = 0;
+        dernierPalierMs = 0;
+        dureeDernierPalierMs = 0;
         objectifM = 0;
         instantObjectifMs = null;
+    }
+
+    // WHY: l'athlete peut resserrer ou elargir l'intervalle en pleine sortie. Le compteur de
+    // paliers est donc rebase sur la distance deja parcourue, et le segment en cours repart de
+    // l'instant du changement — sinon la premiere annonce du nouveau reglage porterait la duree
+    // depuis le depart et annoncerait une allure absurde.
+    public void fixerIntervalle(double metres) {
+        double neuf = metres > 0 ? metres : KM_EN_METRES;
+        if (neuf == intervalleM) return;
+        intervalleM = neuf;
+        paliers = (int) Math.floor(cumulM / intervalleM);
+        dernierPalierMs = parcours.isEmpty() ? 0 : (long) parcours.get(parcours.size() - 1)[1];
+        dureeDernierPalierMs = 0;
     }
 
     public void fixerObjectif(double metres) {
@@ -113,34 +130,35 @@ public final class Mesure {
         instantObjectifMs = Math.round(debutSegmentMs + fraction * (finSegmentMs - debutSegmentMs));
     }
 
-    // WHY: l'instant exact d'un kilomètre tombe au milieu d'un segment GPS, jamais sur un
-    // point. L'interpolation est ce qui rend le temps au kilomètre comparable à celui du
-    // serveur ; l'attribuer au point suivant décalerait chaque split de la durée d'un segment.
+    // WHY: l'instant exact d'un palier tombe au milieu d'un segment GPS, jamais sur un point.
+    // L'interpolation est ce qui rend le temps annonce comparable a celui du serveur ;
+    // l'attribuer au point suivant decalerait chaque annonce de la duree d'un segment.
     private void releverLesFranchissements(
         double debutSegmentM,
         double segmentM,
         double debutSegmentMs,
         double finSegmentMs
     ) {
-        while (segmentM > 0 && cumulM >= prochainKm * KM_EN_METRES) {
-            double fraction = (prochainKm * KM_EN_METRES - debutSegmentM) / segmentM;
+        while (segmentM > 0 && cumulM >= (paliers + 1) * intervalleM) {
+            double fraction = ((paliers + 1) * intervalleM - debutSegmentM) / segmentM;
             long instant = Math.round(debutSegmentMs + fraction * (finSegmentMs - debutSegmentMs));
-            franchissementsMs.add(instant);
-            prochainKm++;
+            dureeDernierPalierMs = Math.max(0, instant - dernierPalierMs);
+            dernierPalierMs = instant;
+            paliers++;
         }
     }
 
-    public long dureeDuKilometreMs(int kilometre) {
-        if (kilometre < 1 || kilometre > franchissementsMs.size()) return 0;
-        long fin = franchissementsMs.get(kilometre - 1);
-        long debut = kilometre == 1 ? 0 : franchissementsMs.get(kilometre - 2);
-        return Math.max(0, fin - debut);
+    public long dureeDuDernierPalierMs() {
+        return dureeDernierPalierMs;
     }
 
-    public double allureDuKilometreKmh(int kilometre) {
-        long dureeMs = dureeDuKilometreMs(kilometre);
-        if (dureeMs <= 0) return 0;
-        return allureKmh(KM_EN_METRES, Math.floor(dureeMs / MS_PAR_SECONDE));
+    public double allureDuDernierPalierKmh() {
+        if (dureeDernierPalierMs <= 0) return 0;
+        return allureKmh(intervalleM, Math.floor(dureeDernierPalierMs / MS_PAR_SECONDE));
+    }
+
+    public double distanceDesPaliersM() {
+        return paliers * intervalleM;
     }
 
     public boolean tropProche(Point candidat) {
@@ -152,8 +170,8 @@ public final class Mesure {
         return cumulM;
     }
 
-    public int kilometresFranchis() {
-        return franchissementsMs.size();
+    public int paliersFranchis() {
+        return paliers;
     }
 
     public int nbPoints() {

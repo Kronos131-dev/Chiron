@@ -398,7 +398,6 @@ export const fr: Record<string, string> = {
   'course.targetPlaceholderKmh': '11,0',
   'course.pushToTalkHint': 'Maintiens le micro, parle, relâche',
   'course.audioWarning': "Le son de fond ne tourne pas : l'app se fera geler écran éteint.",
-  'course.headsetSettings': 'Boutons du casque',
   'course.settings': 'Réglages de la course',
   'course.paceUnit': "Unité d'allure",
   'course.paceUnit.minParKm': 'Minutes par kilomètre',
@@ -414,8 +413,27 @@ export const fr: Record<string, string> = {
   'course.voiceVolumeHint':
     "Niveau de la voix par rapport à ta musique. Chiron ne touche jamais au volume de ton téléphone. Déplace le curseur pour l'entendre.",
   'course.testVoice': 'Écouter',
+  'course.announceEvery': 'Annonce vocale tous les',
+  'course.announceHint':
+    "À chaque palier franchi, Chiron annonce la distance, l'allure du segment et le temps total. Plus le pas est court, plus il parle.",
+  'course.wakeWord': 'Parler à Chiron',
+  'course.wakeWordToggle': 'Écoute permanente',
+  'course.wakeWordHint':
+    "Chiron écoute par le micro du téléphone, jamais par celui du casque : ta musique reste en qualité pleine. Rien ne quitte l'appareil, la reconnaissance est embarquée.",
+  'course.wakeWordUnavailable.modele':
+    "La reconnaissance hors-ligne n'est pas installée. Télécharge la langue française dans les réglages de saisie vocale du téléphone, ou sers-toi du bouton micro.",
+  'course.wakeWordUnavailable.version':
+    'Ce téléphone est trop ancien pour la reconnaissance hors-ligne. Le bouton micro reste disponible.',
+  'course.wakeWordUnavailable.permission':
+    "Chiron n'a pas l'autorisation d'utiliser le micro. Le mot-clé reste muet tant qu'elle manque.",
+  'course.wakeWordUnavailable.moteur':
+    "La reconnaissance embarquée n'a pas démarré sur ce téléphone. Le bouton micro reste disponible.",
+  'course.wakeWordUnavailable.navigateur':
+    "Le mot-clé demande l'application Android : la reconnaissance du navigateur s'éteint avec l'écran.",
+  'course.commandList':
+    '« Hey Chiron » puis : pause, reprends, allure, distance, durée, bilan, plus vite, moins vite, passe à 5:30, termine.',
   'course.micTalkHint':
-    "Le micro s'ouvre aussi depuis le casque : choisis le bouton et l'appui qui le déclenchent ci-dessous.",
+    "Le bouton micro de l'écran reste là quand tu préfères appuyer plutôt que parler.",
   'course.micError.permission': "Chiron n'a pas l'autorisation d'utiliser le micro.",
   'course.micError.moteur': "Aucune reconnaissance vocale n'est installée sur ce téléphone.",
   'course.micError.autre': "Le micro ne s'est pas ouvert. Réessaie.",
@@ -434,26 +452,6 @@ export const fr: Record<string, string> = {
   'course.notificationPause': 'Pause',
   'course.notificationResume': 'Reprendre',
   'course.notificationListen': 'Micro',
-  'course.headsetShort': 'Appui court',
-  'course.headsetLong': 'Appui long',
-  'course.headsetLongHint':
-    "Choisis ce que fait chaque bouton du casque pendant la course, appui court et appui long séparément. Si l'appui long de ton écouteur ouvre l'assistant vocal du téléphone, règle-le sur une commande média dans l'application du casque : Android l'intercepte avant Chiron.",
-  'course.headsetHint':
-    "Choisis ce que fait chaque bouton de ton casque pendant la course. Tous les casques n'exposent pas les cinq.",
-  'course.button.play': 'Play / Pause',
-  'course.button.nexttrack': 'Piste suivante',
-  'course.button.previoustrack': 'Piste précédente',
-  'course.button.seekforward': 'Avance rapide',
-  'course.button.seekbackward': 'Retour rapide',
-  'course.action.rien': 'Ne rien faire',
-  'course.action.ecouter': 'Ouvrir le micro',
-  'course.action.pause': 'Pause / Reprendre',
-  'course.action.allure': "Annoncer l'allure",
-  'course.action.distance': 'Annoncer la distance',
-  'course.action.duree': 'Annoncer la durée',
-  'course.action.bilan': 'Annoncer le bilan',
-  'course.action.plusVite': 'Cible plus rapide',
-  'course.action.moinsVite': 'Cible plus lente',
   'course.say.summary': '{{km}} kilomètres. | {{temps}}. | Allure {{allure}}.',
   'course.say.listening': "J'écoute.",
   'course.say.speedUpABit': 'Accélère un peu.',
@@ -466,7 +464,10 @@ export const fr: Record<string, string> = {
   'course.say.finished': 'Terminé. | Bien couru.',
   'course.say.goalReached':
     'Objectif atteint. | {{km}} kilomètres en {{temps}}. | Continue si tu veux.',
-  'course.say.km': 'Kilomètre {{km}}. | Allure {{allure}} sur ce kilomètre. | {{temps}} au total.',
+  'course.say.metres': '{{m}} mètres',
+  'course.say.kilometre': '{{km}} kilomètre',
+  'course.say.kilometres': '{{km}} kilomètres',
+  'course.say.km': '{{distance}}. | Allure {{allure}} sur ce segment. | {{temps}} au total.',
   'course.say.speed': '{{vitesse}} kilomètres heure',
   'course.say.volumeTest': 'Voilà comment je te parlerai.',
   'course.say.tooSlow': 'Ton allure faiblit. | {{allure}} au kilomètre. | Vise {{cible}}.',
@@ -476,6 +477,8 @@ export const fr: Record<string, string> = {
   'course.say.duration': '{{minutes}} minutes {{secondes}}',
   'course.say.distance': '{{km}} kilomètres derrière toi.',
   'course.say.noPace': 'allure indisponible',
+  'course.say.confirmFinish': 'Tu veux vraiment terminer ? | Dis oui pour confirmer.',
+  'course.say.finishCancelled': 'On continue.',
   'course.say.notUnderstood': 'Répète.',
   // Exercise picker
   'picker.add': 'Ajouter',

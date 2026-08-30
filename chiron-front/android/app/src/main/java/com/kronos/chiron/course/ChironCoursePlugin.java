@@ -257,17 +257,26 @@ public class ChironCoursePlugin extends Plugin {
         return essai;
     }
 
+    // WHY: le service meurt quelques secondes apres la fin de course. Une sortie close a la voix
+    // ou depuis la notification n'a donc plus personne pour la rendre quand la page rouvre : c'est
+    // l'archive posee sur le disque qui la porte jusque-la.
     @PluginMethod
     public void etat(PluginCall appel) {
         CourseService service = PontCourse.service();
-        if (service == null) {
-            JSObject reponse = new JSObject();
-            reponse.put("demarree", false);
-            reponse.put("microDisponible", SpeechRecognizer.isRecognitionAvailable(getContext()));
-            appel.resolve(reponse);
+        if (service != null) {
+            appel.resolve(enJsObject(service.etat()));
             return;
         }
-        appel.resolve(enJsObject(service.etat()));
+        JSONObject archive = Archive.lire(getContext());
+        if (archive != null) {
+            archive.remove("points");
+            appel.resolve(enJsObject(archive));
+            return;
+        }
+        JSObject reponse = new JSObject();
+        reponse.put("demarree", false);
+        reponse.put("microDisponible", SpeechRecognizer.isRecognitionAvailable(getContext()));
+        appel.resolve(reponse);
     }
 
     @PluginMethod
@@ -275,9 +284,30 @@ public class ChironCoursePlugin extends Plugin {
         CourseService service = PontCourse.service();
         JSONObject reponse = new JSONObject();
         try {
-            reponse.put("points", service == null ? new JSONArray() : service.pointsJson());
+            if (service != null) {
+                reponse.put("points", service.pointsJson());
+            } else {
+                JSONObject archive = Archive.lire(getContext());
+                reponse.put(
+                    "points",
+                    archive == null ? new JSONArray() : archive.optJSONArray("points")
+                );
+            }
         } catch (JSONException ignore) {}
         appel.resolve(enJsObject(reponse));
+    }
+
+    @PluginMethod
+    public void oublier(PluginCall appel) {
+        Archive.effacer(getContext());
+        appel.resolve();
+    }
+
+    @PluginMethod
+    public void motCleDisponible(PluginCall appel) {
+        JSObject reponse = new JSObject();
+        reponse.put("disponible", Guetteur.possible(getContext()));
+        appel.resolve(reponse);
     }
 
     // WHY: un service au premier plan ne survit pas à l'optimisation de batterie agressive des

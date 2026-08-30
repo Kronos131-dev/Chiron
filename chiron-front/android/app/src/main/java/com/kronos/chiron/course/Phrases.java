@@ -84,6 +84,25 @@ public final class Phrases {
         return String.format(Locale.US, "%.2f", metres / Mesure.KM_EN_METRES);
     }
 
+    // WHY: sous le kilometre, « 0.60 kilometres » est illisible a l'oreille. L'annonce se dit
+    // donc en metres tant qu'on est en dessous, et le singulier existe parce que « 1 kilometres »
+    // s'entend, meme prononce par une machine.
+    public String distanceParlee(double metres) {
+        Map<String, String> valeurs = new HashMap<>();
+        if (metres < Mesure.KM_EN_METRES) {
+            valeurs.put("m", String.valueOf(Math.round(metres)));
+            return t("metres", valeurs);
+        }
+        double km = metres / Mesure.KM_EN_METRES;
+        valeurs.put(
+            "km",
+            km == Math.rint(km)
+                ? String.valueOf((long) km)
+                : String.format(Locale.US, "%.1f", km)
+        );
+        return t(km == 1 ? "kilometre" : "kilometres", valeurs);
+    }
+
     public String affichageAllure(double kmh) {
         if (!enKmh()) return formaterAllure(kmh);
         return kmh > 0 ? String.format(Locale.US, "%.1f", kmh) : "—";

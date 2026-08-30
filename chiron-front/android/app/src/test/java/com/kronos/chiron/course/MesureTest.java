@@ -51,12 +51,12 @@ public class MesureTest {
     }
 
     @Test
-    public void kilometresFranchis_justeAvantLeKilometre_resteAZero() {
+    public void paliersFranchis_justeAvantLeKilometre_resteAZero() {
         Mesure mesure = new Mesure();
         mesure.ajouter(apres(0, 0));
         mesure.ajouter(apres(999, 300));
 
-        assertEquals(0, mesure.kilometresFranchis());
+        assertEquals(0, mesure.paliersFranchis());
     }
 
     @Test
@@ -77,49 +77,83 @@ public class MesureTest {
     }
 
     @Test
-    public void allureDuKilometreKmh_deuxKilometresInegaux_rendLAllureDeChacun() {
+    public void allureDuDernierPalierKmh_deuxKilometresInegaux_rendCelleDuDernier() {
         Mesure mesure = new Mesure();
         mesure.ajouter(apres(0, 0));
         mesure.ajouter(apres(1000, 240));
-        mesure.ajouter(apres(2000, 840));
+        assertEquals(15, mesure.allureDuDernierPalierKmh(), 0.1);
 
-        assertEquals(2, mesure.kilometresFranchis());
-        assertEquals(15, mesure.allureDuKilometreKmh(1), 0.1);
-        assertEquals(6, mesure.allureDuKilometreKmh(2), 0.1);
+        mesure.ajouter(apres(2000, 840));
+        assertEquals(2, mesure.paliersFranchis());
+        assertEquals(6, mesure.allureDuDernierPalierKmh(), 0.1);
     }
 
     @Test
-    public void dureeDuKilometreMs_franchissementAuMilieuDUnSegment_interpoleLInstant() {
+    public void dureeDuDernierPalierMs_franchissementAuMilieuDUnSegment_interpoleLInstant() {
         Mesure mesure = new Mesure();
         mesure.ajouter(apres(0, 0));
         mesure.ajouter(apres(2000, 600));
 
-        assertEquals(2, mesure.kilometresFranchis());
-        assertEquals(300_000, mesure.dureeDuKilometreMs(1), 1000);
-        assertEquals(300_000, mesure.dureeDuKilometreMs(2), 1000);
+        assertEquals(2, mesure.paliersFranchis());
+        assertEquals(300_000, mesure.dureeDuDernierPalierMs(), 1000);
     }
 
     @Test
-    public void dureeDuKilometreMs_pauseEntreDeuxKilometres_neGonflePasLeSplit() {
+    public void dureeDuDernierPalierMs_pauseEntreDeuxKilometres_neGonflePasLeSplit() {
         Mesure mesure = new Mesure();
         mesure.ajouter(apres(0, 0));
         mesure.ajouter(apres(1000, 300));
         mesure.ajouter(repriseApres(1000, 1200));
         mesure.ajouter(apres(2000, 1500));
 
-        assertEquals(2, mesure.kilometresFranchis());
-        assertEquals(300_000, mesure.dureeDuKilometreMs(2), 1000);
+        assertEquals(2, mesure.paliersFranchis());
+        assertEquals(300_000, mesure.dureeDuDernierPalierMs(), 1000);
     }
 
     @Test
-    public void dureeDuKilometreMs_kilometreNonFranchi_rendZero() {
+    public void dureeDuDernierPalierMs_palierNonFranchi_rendZero() {
         Mesure mesure = new Mesure();
         mesure.ajouter(apres(0, 0));
         mesure.ajouter(apres(500, 150));
 
-        assertEquals(0, mesure.kilometresFranchis());
-        assertEquals(0, mesure.dureeDuKilometreMs(1));
-        assertEquals(0, mesure.allureDuKilometreKmh(1), 0.001);
+        assertEquals(0, mesure.paliersFranchis());
+        assertEquals(0, mesure.dureeDuDernierPalierMs());
+        assertEquals(0, mesure.allureDuDernierPalierKmh(), 0.001);
+    }
+
+    // WHY: l'intervalle d'annonce se regle de 100 m a 1 km. Sous le kilometre, chaque palier
+    // doit tomber a sa distance et porter l'allure du segment qui vient d'etre couru.
+    @Test
+    public void fixerIntervalle_troisCentsMetres_compteLesPaliersEtLeurAllure() {
+        Mesure mesure = new Mesure();
+        mesure.fixerIntervalle(300);
+        mesure.ajouter(apres(0, 0));
+        // WHY: le point tombe au-dela du palier, jamais dessus. Le haversine rend 899,9998 m
+        // pour une latitude calculee a 900 m, et une assertion posee sur la borne exacte
+        // echouerait sur l'arrondi plutot que sur le comportement.
+        mesure.ajouter(apres(950, 285));
+
+        assertEquals(3, mesure.paliersFranchis());
+        assertEquals(900, mesure.distanceDesPaliersM(), 0.001);
+        assertEquals(90_000, mesure.dureeDuDernierPalierMs(), 1000);
+        assertEquals(12, mesure.allureDuDernierPalierKmh(), 0.2);
+    }
+
+    // WHY: resserrer l'intervalle en pleine course ne doit pas rejouer d'un coup toutes les
+    // annonces des paliers deja parcourus.
+    @Test
+    public void fixerIntervalle_changeEnPleineCourse_rebaseLeCompteur() {
+        Mesure mesure = new Mesure();
+        mesure.ajouter(apres(0, 0));
+        mesure.ajouter(apres(1000, 300));
+        assertEquals(1, mesure.paliersFranchis());
+
+        mesure.fixerIntervalle(200);
+        assertEquals(5, mesure.paliersFranchis());
+
+        mesure.ajouter(apres(1250, 375));
+        assertEquals(6, mesure.paliersFranchis());
+        assertEquals(60_000, mesure.dureeDuDernierPalierMs(), 1000);
     }
 
     @Test
@@ -173,7 +207,7 @@ public class MesureTest {
 
         assertEquals(500, mesure.distanceM(), 1);
         assertEquals(2, mesure.nbPoints());
-        assertEquals(0, mesure.kilometresFranchis());
+        assertEquals(0, mesure.paliersFranchis());
         assertTrue(mesure.instantObjectifMs() == null);
     }
 

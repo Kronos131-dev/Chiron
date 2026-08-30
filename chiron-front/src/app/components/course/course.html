@@ -484,63 +484,98 @@
           </div>
         </div>
 
+        <div>
+          <div class="flex items-baseline justify-between gap-3">
+            <span class="text-on-surface text-xs font-bold">{{ 'course.announceEvery' | t }}</span>
+            <span class="text-secondary text-xs font-black tabular-nums">
+              {{ intervalleLibelle() }}
+            </span>
+          </div>
+
+          <input
+            type="range"
+            [attr.min]="intervalleMin"
+            [attr.max]="intervalleMax"
+            [attr.step]="intervallePas"
+            [value]="intervalleAnnonce()"
+            (input)="changerIntervalle($any($event.target).value)"
+            (change)="validerIntervalle()"
+            [attr.aria-label]="'course.announceEvery' | t"
+            [attr.aria-valuetext]="intervalleLibelle()"
+            class="course-curseur w-full mt-2"
+          />
+
+          <!-- WHY: chaque repère est posé à sa vraie position sur l'échelle, pas réparti à
+               intervalles égaux. Les valeurs choisies — 100, 250, 500, 750, 1000 — ne sont pas
+               équidistantes, et les espacer uniformément ferait mentir la droite sur ce que le
+               curseur désigne. -->
+          <div class="relative h-6 mt-0.5" aria-hidden="true">
+            @for (
+              graduation of graduations;
+              track graduation;
+              let premier = $first, dernier = $last
+            ) {
+              <span
+                class="absolute top-0 flex flex-col items-center gap-1"
+                [style.left.%]="positionGraduation(graduation)"
+                [class.-translate-x-1/2]="!premier && !dernier"
+                [class.-translate-x-full]="dernier"
+              >
+                <span class="w-px h-1.5 bg-white/20"></span>
+                <span class="text-on-surface-variant text-[9px] font-bold tabular-nums">
+                  {{ libelleDistance(graduation) }}
+                </span>
+              </span>
+            }
+          </div>
+
+          <p class="text-on-surface-variant text-[10px] leading-relaxed mt-2">
+            {{ 'course.announceHint' | t }}
+          </p>
+        </div>
+
         <div class="space-y-3">
           <span class="text-on-surface text-xs font-bold block">
-            {{ 'course.headsetSettings' | t }}
+            {{ 'course.wakeWord' | t }}
           </span>
+
+          @if (natif && !motCleIndisponible()) {
+            <button
+              type="button"
+              (click)="basculerMotCle()"
+              class="w-full flex items-center justify-between gap-3 bg-slate-950/80 border rounded p-3 transition-colors"
+              [class.border-secondary]="motCle()"
+              [class.border-white/10]="!motCle()"
+              [attr.aria-pressed]="motCle()"
+            >
+              <span class="text-on-surface text-xs font-bold">
+                {{ 'course.wakeWordToggle' | t }}
+              </span>
+              <span
+                class="material-symbols-outlined text-2xl leading-none"
+                [class.text-secondary]="motCle()"
+                [class.text-on-surface-variant]="!motCle()"
+              >
+                {{ motCle() ? 'toggle_on' : 'toggle_off' }}
+              </span>
+            </button>
+            <p class="text-on-surface-variant text-[10px] leading-relaxed">
+              {{ 'course.wakeWordHint' | t }}
+            </p>
+          } @else if (natif) {
+            <p
+              class="bg-amber-500/10 border border-amber-500/40 rounded p-3 text-amber-300 text-[10px] leading-relaxed"
+            >
+              {{ 'course.wakeWordUnavailable.' + motCleIndisponible() | t }}
+            </p>
+          }
+
+          <p class="text-on-surface-variant text-[10px] leading-relaxed">
+            {{ 'course.commandList' | t }}
+          </p>
           <p class="text-on-surface-variant text-[10px] leading-relaxed">
             {{ 'course.micTalkHint' | t }}
           </p>
-          <p class="text-on-surface-variant text-[10px] leading-relaxed">
-            {{ natif ? ('course.headsetLongHint' | t) : ('course.headsetHint' | t) }}
-          </p>
-
-          @if (natif) {
-            <div class="flex items-center justify-end gap-2">
-              <span
-                class="text-on-surface-variant text-[9px] font-bold tracking-widest uppercase w-32 text-center"
-              >
-                {{ 'course.headsetShort' | t }}
-              </span>
-              <span
-                class="text-on-surface-variant text-[9px] font-bold tracking-widest uppercase w-32 text-center"
-              >
-                {{ 'course.headsetLong' | t }}
-              </span>
-            </div>
-          }
-
-          @for (bouton of boutonsCasque; track bouton) {
-            <div class="flex items-center justify-between gap-2">
-              <span class="text-on-surface text-xs font-bold">
-                {{ 'course.button.' + bouton | t }}
-              </span>
-              <div class="flex items-center gap-2">
-                <select
-                  [ngModel]="mappingCasque()[bouton]"
-                  (ngModelChange)="changerMappingCasque(bouton, $event)"
-                  [attr.aria-label]="'course.headsetShort' | t"
-                  class="bg-slate-950/80 border border-white/10 rounded p-2 text-white text-xs outline-none focus:border-secondary/50 transition-colors w-32"
-                >
-                  @for (action of actionsCasque; track action) {
-                    <option [value]="action">{{ 'course.action.' + action | t }}</option>
-                  }
-                </select>
-                @if (natif) {
-                  <select
-                    [ngModel]="mappingCasqueLong()[bouton]"
-                    (ngModelChange)="changerMappingCasqueLong(bouton, $event)"
-                    [attr.aria-label]="'course.headsetLong' | t"
-                    class="bg-slate-950/80 border border-white/10 rounded p-2 text-white text-xs outline-none focus:border-secondary/50 transition-colors w-32"
-                  >
-                    @for (action of actionsCasque; track action) {
-                      <option [value]="action">{{ 'course.action.' + action | t }}</option>
-                    }
-                  </select>
-                }
-              </div>
-            </div>
-          }
         </div>
       </div>
     }

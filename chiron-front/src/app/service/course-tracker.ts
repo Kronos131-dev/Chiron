@@ -21,7 +21,7 @@ export interface SnapshotCourse {
   msAccumules: number;
   repriseA: number | null;
   cibleMinParKm: number | null;
-  kmAnnonces: number;
+  paliersAnnonces: number;
 }
 
 const RAYON_TERRE_M = 6371008.8;
@@ -160,7 +160,7 @@ export class CourseTracker {
   private routineId = '';
   private exoId = '';
   private cibleMinParKm: number | null = null;
-  private kmAnnonces = 0;
+  private paliersAnnonces = 0;
 
   readonly distanceM = computed(() => this.mesures().distanceM);
   readonly splits = computed(() => this.mesures().splits);
@@ -327,7 +327,7 @@ export class CourseTracker {
       this.msAccumules.set(data.msAccumules ?? 0);
       this.repriseA.set(data.repriseA ?? null);
       this.cibleMinParKm = data.cibleMinParKm ?? null;
-      this.kmAnnonces = data.kmAnnonces ?? 0;
+      this.paliersAnnonces = data.paliersAnnonces ?? 0;
       this.maintenant.set(Date.now());
       this.derniereReception.set(Date.now());
 
@@ -356,11 +356,11 @@ export class CourseTracker {
   }
 
   // WHY: appelée à chaque position reçue, donc environ une fois par seconde pendant une heure.
-  // La cible et les kilomètres annoncés sont tenus en mémoire plutôt que relus du stockage :
+  // La cible et les paliers annoncés sont tenus en mémoire plutôt que relus du stockage :
   // relire imposerait deux analyses JSON de toute la trace à chaque point capté.
   ecrireSnapshot(extras?: Partial<SnapshotCourse>): void {
     if (extras?.cibleMinParKm !== undefined) this.cibleMinParKm = extras.cibleMinParKm;
-    if (extras?.kmAnnonces !== undefined) this.kmAnnonces = extras.kmAnnonces;
+    if (extras?.paliersAnnonces !== undefined) this.paliersAnnonces = extras.paliersAnnonces;
 
     const data: SnapshotCourse = {
       routineId: this.routineId,
@@ -369,7 +369,7 @@ export class CourseTracker {
       msAccumules: this.msAccumules(),
       repriseA: this.repriseA(),
       cibleMinParKm: this.cibleMinParKm,
-      kmAnnonces: this.kmAnnonces,
+      paliersAnnonces: this.paliersAnnonces,
     };
     try {
       localStorage.setItem(CLE_STOCKAGE_COURSE, JSON.stringify(data));

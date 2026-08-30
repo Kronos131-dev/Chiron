@@ -1,6 +1,5 @@
 import { registerPlugin } from '@capacitor/core';
 import { CoursePointDto } from './chiron-api';
-import { MappingCasque } from '../util/telecommande-casque';
 import { UniteAllure } from '../util/allure';
 
 export interface ConfigurationCourse {
@@ -8,11 +7,11 @@ export interface ConfigurationCourse {
   langue: string;
   titre: string;
   phrases: Record<string, string>;
-  appuiCourt: MappingCasque;
-  appuiLong: MappingCasque;
   uniteAllure: UniteAllure;
   volumeVoix: number;
   objectifDistanceM: number;
+  intervalleAnnonceM: number;
+  motCle: boolean;
 }
 
 export interface EtatNatif {
@@ -23,7 +22,7 @@ export interface EtatNatif {
   allureCouranteKmh: number;
   allureMoyenneKmh: number;
   nbPoints: number;
-  kilometres: number;
+  paliers: number;
   precisionM: number | null;
   erreurGps: string | null;
   signalPerdu: boolean;
@@ -34,6 +33,9 @@ export interface EtatNatif {
   objectifDistanceM: number;
   objectifDureeMs: number;
   cibleMinParKm: number | null;
+  motCleActif: boolean;
+  motCleIndisponible: string | null;
+  terminee: boolean;
   nouveauxPoints?: CoursePointDto[];
 }
 
@@ -59,22 +61,16 @@ export interface ChironCoursePlugin {
   essayerVoix(options: { texte: string; langue: string; volume: number }): Promise<void>;
   etat(): Promise<EtatNatif>;
   points(): Promise<{ points: CoursePointDto[] }>;
+  oublier(): Promise<void>;
+  motCleDisponible(): Promise<{ disponible: boolean }>;
   exempterBatterie(): Promise<void>;
   addListener(
     evenement: 'etat',
     ecouteur: (etat: EtatNatif) => void,
   ): Promise<{ remove: () => Promise<void> }>;
   addListener(
-    evenement: 'kilometre',
-    ecouteur: (donnees: { kilometre: number; dureeSplitS: number; allureSplitKmh: number }) => void,
-  ): Promise<{ remove: () => Promise<void> }>;
-  addListener(
     evenement: 'commande',
     ecouteur: (donnees: { texte: string; definitif: boolean }) => void,
-  ): Promise<{ remove: () => Promise<void> }>;
-  addListener(
-    evenement: 'casque',
-    ecouteur: (donnees: { action: string }) => void,
   ): Promise<{ remove: () => Promise<void> }>;
   addListener(
     evenement: 'echecEcoute',

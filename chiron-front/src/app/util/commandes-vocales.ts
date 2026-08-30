@@ -61,14 +61,16 @@ const NOMBRES: Record<string, number> = {
 
 // WHY: le moteur de Chrome rend « cinq minutes trente », « 5 minutes 30 » ou « 5:30 » selon
 // l'humeur du micro et le bruit ambiant. Tout est ramené à une même chaîne sans accent ni
-// ponctuation avant d'être reconnu, sinon la moitié des formulations tombe à côté.
+// ponctuation avant d'être reconnu, sinon la moitié des formulations tombe à côté. Le trait
+// d'union tombe avec l'apostrophe : le moteur écrit « mets-moi » et « vas-y », que les motifs
+// attendent en deux mots.
 export function normaliser(transcript: string): string {
   return transcript
     .toLowerCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/[.,!?;:]/g, ' ')
-    .replace(/['\u2019]/g, ' ')
+    .replace(/[-'\u2019]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 }
