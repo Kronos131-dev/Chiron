@@ -3,8 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Capacitor } from '@capacitor/core';
+import { retry } from 'rxjs';
 import { ActiveSessionService } from '../../service/active-session.service';
-import { ChironApi, CourseTraceDto } from '../../service/chiron-api';
+import { ChironApi, CoursePointDto, CourseTraceDto } from '../../service/chiron-api';
 import { CLES_PHRASES, CourseRuntime, OptionsCourse } from '../../service/course-runtime';
 import { RuntimeNatif } from '../../service/course-runtime-natif';
 import { RuntimeWeb } from '../../service/course-runtime-web';
@@ -55,7 +56,18 @@ const CLE_MAPPING_CASQUE_LONG = 'chiron.course.casqueLong';
 const CLE_UNITE_ALLURE = 'chiron.course.uniteAllure';
 const CLE_VOLUME_VOIX = 'chiron.course.volumeVoix';
 const CLE_OBJECTIF = 'chiron.course.objectifKm';
+export const CLE_TRACE_EN_ATTENTE = 'chiron.course.traceEnAttente';
 const OBJECTIF_MAX_KM = 300;
+const TENTATIVES_TELEVERSEMENT = 3;
+const DELAI_ENTRE_TENTATIVES_MS = 3000;
+
+interface TraceEnAttente {
+  routineId: string;
+  exoId: string;
+  debutSeance: string | null;
+  objectifM: number | null;
+  points: CoursePointDto[];
+}
 
 @Component({
   selector: 'app-course',
@@ -119,10 +131,24 @@ export class Course implements OnInit, OnDestroy {
   readonly demarree = computed(() => this.etat() !== 'pret');
   readonly termine = computed(() => this.etat() === 'termine');
 
-  readonly chrono = computed(() => formaterChrono(this.runtime.dureeS()));
-  readonly distanceKm = computed(() => formaterDistance(this.runtime.distanceM()));
+  // WHY: le journal ne garde que les mesures du serveur, recalculees sur les points recus. Le
+  // chronometre, lui, court du bouton Demarrer au bouton Terminer — la minute passee a attendre
+  // le premier point GPS comprise. Afficher les deux, c'est promettre a l'arrivee un chiffre que
+  // le journal contredira ensuite : des que la trace est enregistree, l'ecran adopte le sien.
+  private readonly mesuresConservees = computed(() => (this.termine() ? this.resume() : null));
+
+  readonly chrono = computed(() =>
+    formaterChrono(this.mesuresConservees()?.dureeS ?? this.runtime.dureeS()),
+  );
+  readonly distanceKm = computed(() =>
+    formaterDistance(this.mesuresConservees()?.distanceM ?? this.runtime.distanceM()),
+  );
   readonly allureCourante = computed(() => this.allureAffichee(this.runtime.allureCouranteKmh()));
-  readonly allureMoyenne = computed(() => this.allureAffichee(this.runtime.allureMoyenneKmh()));
+  readonly allureMoyenne = computed(() =>
+    this.allureAffichee(
+      this.mesuresConservees()?.allureMoyenneKmh ?? this.runtime.allureMoyenneKmh(),
+    ),
+  );
   readonly splits = computed(() => this.runtime.splits());
   readonly precisionM = computed(() => this.runtime.precisionM());
   readonly erreurGps = computed(() => this.runtime.erreurGps());
@@ -186,7 +212,11 @@ export class Course implements OnInit, OnDestroy {
     this.cibleMinParKm.set(cible);
     this.cibleSaisie.set(cible === null ? '' : this.saisiePourCible(cible));
     this.runtime.configurer(this.options());
-    if (reprise) await this.runtime.demarrer();
+    if (reprise) {
+      await this.runtime.demarrer();
+      return;
+    }
+    this.reprendreTraceEnAttente();
   }
 
   ngOnDestroy(): void {
@@ -318,26 +348,83 @@ export class Course implements OnInit, OnDestroy {
       this.appliquerAuJournal(null);
       return;
     }
+    const objectifM = this.objectifM() || null;
+    this.retenirTraceEnAttente(points, objectifM);
+    this.televerser(points, objectifM);
+  }
 
+  private televerser(points: CoursePointDto[], objectifM: number | null): void {
     this.enregistrement.set(true);
     this.erreurEnregistrement.set(false);
-    this.chironApi.enregistrerTraceCourse(points, this.objectifM() || null).subscribe({
-      next: (trace) => {
-        this.enregistrement.set(false);
-        this.resume.set(trace);
-        this.appliquerAuJournal(trace);
-      },
-      error: () => {
-        this.enregistrement.set(false);
-        this.erreurEnregistrement.set(true);
-        this.appliquerAuJournal(null);
-      },
-    });
+    this.chironApi
+      .enregistrerTraceCourse(points, objectifM)
+      .pipe(retry({ count: TENTATIVES_TELEVERSEMENT, delay: DELAI_ENTRE_TENTATIVES_MS }))
+      .subscribe({
+        next: (trace) => {
+          this.enregistrement.set(false);
+          this.oublierTraceEnAttente();
+          if (this.termine()) this.resume.set(trace);
+          this.appliquerAuJournal(trace);
+        },
+        error: () => {
+          this.enregistrement.set(false);
+          this.erreurEnregistrement.set(true);
+          // WHY: la reprise d'une trace en attente se joue avant le départ, chronomètre à zéro.
+          // Retomber ici sur les mesures du runtime effacerait la distance déjà inscrite dans
+          // la séance ; il n'y a rien à réécrire tant que la sortie n'est pas celle de l'écran.
+          if (this.termine()) this.appliquerAuJournal(null);
+        },
+      });
   }
 
   reessayerEnregistrement(): void {
     if (this.enregistrement()) return;
     this.televerserTrace();
+  }
+
+  // WHY: l'athlète termine sa sortie loin de tout réseau. Une fois le téléversement échoué et
+  // l'écran quitté, les points n'existaient plus nulle part : le service natif est arrêté, le
+  // journal gardait une course sans parcours et rien ne permettait plus de la retrouver.
+  private retenirTraceEnAttente(points: CoursePointDto[], objectifM: number | null): void {
+    const attente: TraceEnAttente = {
+      routineId: this.routineId,
+      exoId: this.exoId,
+      debutSeance: this.activeSession.startedAt(),
+      objectifM,
+      points,
+    };
+    this.ecrire(CLE_TRACE_EN_ATTENTE, JSON.stringify(attente));
+  }
+
+  private oublierTraceEnAttente(): void {
+    this.effacer(CLE_TRACE_EN_ATTENTE);
+  }
+
+  // WHY: la trace en attente n'appartient qu'à la séance qui l'a produite. Le début de séance
+  // la distingue d'une sortie faite hier sur la même routine, qu'il ne faut surtout pas
+  // rattacher à la course du jour.
+  private reprendreTraceEnAttente(): void {
+    const brut = this.lire(CLE_TRACE_EN_ATTENTE);
+    if (!brut) return;
+
+    let attente: TraceEnAttente;
+    try {
+      attente = JSON.parse(brut) as TraceEnAttente;
+    } catch {
+      this.oublierTraceEnAttente();
+      return;
+    }
+
+    if (attente?.routineId !== this.routineId || attente?.exoId !== this.exoId) return;
+    if (attente.debutSeance !== this.activeSession.startedAt()) {
+      this.oublierTraceEnAttente();
+      return;
+    }
+    if (!Array.isArray(attente.points) || attente.points.length < 2) {
+      this.oublierTraceEnAttente();
+      return;
+    }
+    this.televerser(attente.points, attente.objectifM ?? null);
   }
 
   // WHY: la trace est téléversée seule, avant la séance. Seul son identifiant voyage ensuite

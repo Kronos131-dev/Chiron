@@ -57,6 +57,7 @@ export class Journal implements OnInit {
   isSaving = signal(false);
 
   tracesChargees = signal<Map<number, CourseTraceDto>>(new Map());
+  erreurTrace = signal<number | null>(null);
 
   traceDepliee = signal<number | null>(null);
 
@@ -340,11 +341,15 @@ export class Journal implements OnInit {
     this.traceDepliee.set(courseTraceId);
     if (this.tracesChargees().has(courseTraceId)) return;
 
+    this.erreurTrace.set(null);
     this.chironApi.getTraceCourse(courseTraceId).subscribe({
       next: (trace) => {
         this.tracesChargees.update((cache) => new Map(cache).set(courseTraceId, trace));
       },
-      error: () => this.traceDepliee.set(null),
+      // WHY: refermer le volet en silence rendait le bouton mort — l'athlète appuie sur
+      // « Voir le tracé » et rien ne bouge, sans jamais apprendre que c'est la requête qui
+      // a échoué et non sa sortie qui a été perdue.
+      error: () => this.erreurTrace.set(courseTraceId),
     });
   }
 

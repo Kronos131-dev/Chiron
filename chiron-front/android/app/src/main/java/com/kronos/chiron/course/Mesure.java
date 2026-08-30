@@ -76,6 +76,21 @@ public final class Mesure {
         releverLObjectif(debutSegmentM, segmentM, debutSegmentMs, finSegmentMs);
     }
 
+    // WHY: le service Android survit a la course qu'il vient de mesurer — il ne s'arrete que
+    // quelques secondes plus tard. Une seconde sortie lancee dans cet intervalle repartait sur
+    // le cumul de la premiere, et le journal recevait la somme des deux.
+    public void reinitialiser() {
+        points.clear();
+        parcours.clear();
+        franchissementsMs.clear();
+        cumulM = 0;
+        pauseCumuleeMs = 0;
+        depart = 0;
+        prochainKm = 1;
+        objectifM = 0;
+        instantObjectifMs = null;
+    }
+
     public void fixerObjectif(double metres) {
         objectifM = metres > 0 ? metres : 0;
     }

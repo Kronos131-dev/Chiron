@@ -4,7 +4,7 @@ import { signal } from '@angular/core';
 import { of, throwError } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { Course } from './course';
+import { CLE_TRACE_EN_ATTENTE, Course } from './course';
 import { ActiveSessionService } from '../../service/active-session.service';
 import { ChironApi } from '../../service/chiron-api';
 import { AuthService } from '../../service/auth.service';
@@ -24,6 +24,7 @@ describe('Course', () => {
   let router: { navigate: ReturnType<typeof vi.fn> };
   let activeSession: {
     exercices: ReturnType<typeof signal<ExerciceForm[]>>;
+    startedAt: ReturnType<typeof signal<string | null>>;
     snapshot: ReturnType<typeof vi.fn>;
   };
   let chironApi: {
@@ -72,7 +73,12 @@ describe('Course', () => {
   }
 
   async function boot(exercices: ExerciceForm[], exoId: string) {
-    activeSession = { exercices: signal<ExerciceForm[]>(exercices), snapshot: vi.fn() };
+    TestBed.resetTestingModule();
+    activeSession = {
+      exercices: signal<ExerciceForm[]>(exercices),
+      startedAt: signal<string | null>('2026-08-30T10:00:00'),
+      snapshot: vi.fn(),
+    };
     router = { navigate: vi.fn() };
     chironApi = {
       getProfile: vi.fn().mockReturnValue({ subscribe: () => {} }),
@@ -324,6 +330,13 @@ describe('Course', () => {
       expect(activeSession.snapshot).toHaveBeenCalled();
     });
 
+    async function epuiserLesTentatives() {
+      for (let i = 0; i < 5; i++) {
+        vi.advanceTimersByTime(3000);
+        await Promise.resolve();
+      }
+    }
+
     // WHY: perdre le réseau à l'arrivée ne doit pas effacer la sortie. Les mesures du client
     // partent alors dans le journal, sans identifiant de trace.
     it('retombe sur les mesures du client quand le téléversement échoue', async () => {
@@ -333,11 +346,36 @@ describe('Course', () => {
       emettrePosition(position(0, 0));
       emettrePosition(position(1000, 300));
       await component.terminer();
+      await epuiserLesTentatives();
 
       expect(component.erreurEnregistrement()).toBe(true);
       const serie = component.exercice!.series[0];
       expect(serie.courseTraceId).toBeNull();
       expect(serie.distanceM).toBeCloseTo(1000, -1);
+    });
+
+    it('garde les points quand le téléversement échoue et les renvoie à la réouverture', async () => {
+      await boot([exoCourse('a')], 'a');
+      chironApi.enregistrerTraceCourse.mockReturnValue(throwError(() => new Error('hors ligne')));
+      await courirPuisTerminer();
+      await epuiserLesTentatives();
+
+      const attente = JSON.parse(localStorage.getItem(CLE_TRACE_EN_ATTENTE)!);
+      expect(attente.exoId).toBe('a');
+      expect(attente.points.length).toBeGreaterThanOrEqual(2);
+
+      await boot([exoCourse('a')], 'a');
+
+      expect(chironApi.enregistrerTraceCourse).toHaveBeenCalledOnce();
+      expect(component.exercice!.series[0].courseTraceId).toBe(77);
+      expect(localStorage.getItem(CLE_TRACE_EN_ATTENTE)).toBeNull();
+    });
+
+    it('oublie les points une fois la trace acceptée', async () => {
+      await boot([exoCourse('a')], 'a');
+      await courirPuisTerminer();
+
+      expect(localStorage.getItem(CLE_TRACE_EN_ATTENTE)).toBeNull();
     });
 
     it('ne téléverse rien sous deux points', async () => {

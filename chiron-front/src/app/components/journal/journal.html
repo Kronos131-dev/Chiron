@@ -538,6 +538,12 @@
                                           </div>
                                         }
                                       </div>
+                                    } @else if (erreurTrace() === serie.courseTraceId) {
+                                      <p
+                                        class="text-red-400 text-[10px] font-bold tracking-[0.2em] uppercase"
+                                      >
+                                        {{ 'journal.traceError' | t }}
+                                      </p>
                                     } @else {
                                       <p
                                         class="text-on-surface-variant text-[10px] font-bold tracking-[0.2em] uppercase"

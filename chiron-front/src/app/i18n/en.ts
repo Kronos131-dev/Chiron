@@ -284,6 +284,7 @@ export const en: Record<string, string> = {
   'journal.distance': 'Distance',
   'journal.showTrace': 'Show the track',
   'journal.hideTrace': 'Hide the track',
+  'journal.traceError': 'Track unavailable right now.',
   'journal.loadingTrace': 'Loading the track…',
   'journal.trace': 'Route of the run',
   'journal.goal': 'Target',

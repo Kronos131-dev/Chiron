@@ -157,6 +157,26 @@ public class MesureTest {
         assertEquals(3000, mesure.distanceM(), 1);
     }
 
+    // WHY: le service Android n'est detruit que quelques secondes apres l'arret. Une seconde
+    // sortie lancee entre-temps retombe sur la meme instance, et sans remise a zero le journal
+    // recevait la somme des deux courses.
+    @Test
+    public void reinitialiser_secondeSortie_repartDeZero() {
+        Mesure mesure = new Mesure();
+        mesure.fixerObjectif(1000);
+        mesure.ajouter(apres(0, 0));
+        mesure.ajouter(apres(2000, 600));
+
+        mesure.reinitialiser();
+        mesure.ajouter(apres(0, 3600));
+        mesure.ajouter(apres(500, 3750));
+
+        assertEquals(500, mesure.distanceM(), 1);
+        assertEquals(2, mesure.nbPoints());
+        assertEquals(0, mesure.kilometresFranchis());
+        assertTrue(mesure.instantObjectifMs() == null);
+    }
+
     @Test
     public void formaterAllure_douzeKmh_donneCinqMinutes() {
         assertEquals("5:00", Phrases.formaterAllure(12));

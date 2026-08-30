@@ -139,7 +139,35 @@ public final class CourseService extends Service {
         super.onDestroy();
     }
 
+    // WHY: l'arret ne detruit pas le service tout de suite — il se donne quelques secondes pour
+    // que la voix finisse sa phrase. Une sortie relancee dans cet intervalle tombait sur la meme
+    // instance, donc sur la distance, le chrono et les points de la precedente ; et l'arret
+    // differe la tuait en pleine course. Le depart efface donc tout et annule ce qui est en
+    // attente, plutot que de compter sur un objet neuf.
+    private void repartirDeZero() {
+        boucle.removeCallbacksAndMessages(null);
+        couperGps();
+        if (ecoute != null) ecoute.arreter();
+        if (telecommande != null) telecommande.relacher();
+        if (annonceur != null) annonceur.relacher();
+        mesure.reinitialiser();
+        enPause = false;
+        ouvrirUneCoupure = false;
+        msAccumules = 0;
+        repriseA = null;
+        kmAnnonces = 0;
+        ecartDepuis = null;
+        derniereAnnonceEcart = 0;
+        derniereReception = 0;
+        precisionM = null;
+        pointsPublies = 0;
+        erreurGps = null;
+        objectifAnnonce = false;
+        demandeEcouteA = 0;
+    }
+
     private void demarrer(String configuration) {
+        repartirDeZero();
         JSONObject config = lireJson(configuration);
         phrases.charger(config.optJSONObject("phrases"));
         phrases.fixerUnite(config.optString("uniteAllure", "minParKm"));
@@ -148,6 +176,7 @@ public final class CourseService extends Service {
         volumeVoix = config.optInt("volumeVoix", volumeVoix);
         objectifM = config.optDouble("objectifDistanceM", 0);
         mesure.fixerObjectif(objectifM);
+        cibleMinParKm = null;
         if (config.has("cibleMinParKm") && !config.isNull("cibleMinParKm")) {
             cibleMinParKm = config.optDouble("cibleMinParKm");
         }
@@ -166,7 +195,6 @@ public final class CourseService extends Service {
         telecommande.annoncerEnCours(titre, true);
 
         demarree = true;
-        enPause = false;
         repriseA = System.currentTimeMillis();
         derniereReception = repriseA;
         ecouterGps();
@@ -181,9 +209,11 @@ public final class CourseService extends Service {
         if (config.has("uniteAllure")) phrases.fixerUnite(config.optString("uniteAllure"));
         if (config.has("volumeVoix")) {
             volumeVoix = config.optInt("volumeVoix", volumeVoix);
-        objectifM = config.optDouble("objectifDistanceM", 0);
-        mesure.fixerObjectif(objectifM);
             if (annonceur != null) annonceur.fixerVolume(volumeVoix);
+        }
+        if (config.has("objectifDistanceM")) {
+            objectifM = config.optDouble("objectifDistanceM", 0);
+            mesure.fixerObjectif(objectifM);
         }
         titre = config.optString("titre", titre);
         if (telecommande != null) {
