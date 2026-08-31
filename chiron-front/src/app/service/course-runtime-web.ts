@@ -337,6 +337,7 @@ export class RuntimeWeb implements CourseRuntime {
     const Moteur = this.moteurReconnaissance();
     if (!Moteur) return;
 
+    this.activerLeSon();
     this.voix?.taire();
     this.transcript.set('');
     this.commandeComprise.set(null);

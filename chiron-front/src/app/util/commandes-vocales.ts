@@ -65,7 +65,7 @@ const NOMBRES: Record<string, number> = {
 // d'union tombe avec l'apostrophe : le moteur écrit « mets-moi » et « vas-y », que les motifs
 // attendent en deux mots.
 export function normaliser(transcript: string): string {
-  return transcript
+  let texte = transcript
     .toLowerCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
@@ -73,6 +73,10 @@ export function normaliser(transcript: string): string {
     .replace(/[-'\u2019]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+
+  texte = texte.replace(/\bh([aeiouy])/g, '$1');
+
+  return texte;
 }
 
 function motsEnNombres(texte: string): string {
@@ -119,15 +123,16 @@ function borner(minParKm: number): number | null {
   return Math.round(minParKm * SECONDES_PAR_MINUTE) / SECONDES_PAR_MINUTE;
 }
 
-const PLUS_VITE = /(plus vite|accelere|acceler|augmente|monte le rythme|faster|speed up)/;
-const MOINS_VITE = /(moins vite|ralenti|ralentis|baisse le rythme|calme|slower|slow down|ease)/;
-const PAUSE = /(pause|arrete|arret|stoppe|stop|attends|halte)/;
-const REPRENDRE = /(repren|reprend|repart|c est reparti|on y va|continue|resume|go|restart)/;
-const CIBLE = /(cible|objectif|vise|passe a|mets? moi a|regle|target|set)/;
-const ALLURE = /(allure|rythme|vitesse|pace|tempo)/;
-const DISTANCE = /(distance|combien.*(parcouru|fait|km|kilometre)|how far)/;
-const DUREE = /(duree|depuis combien|temps|chrono|time|how long)/;
-const BILAN = /(bilan|resume|ou j en suis|status|recap)/;
+const PLUS_VITE =
+  /(plus\s+vite|plus\s+rapide|accelere|acceler|augmente|monte\s+le|faster|speed\s+up|go\s+faster)/;
+const MOINS_VITE = /(moins\s+vite|ralenti|ralentis|baisse|ralentir|slower|slow\s+down|ease\s+up)/;
+const PAUSE = /(pause|arret|arrete|stopp|stop|attends|halte|freeze)/;
+const REPRENDRE = /(repren|reprend|repart|c\s+est|on\s+y\s+va|continu|resum|go|restart|reprend)/;
+const CIBLE = /(cible|objectif|vise|passe|mets?\s+moi|regle|target|set|at\s+pace)/;
+const ALLURE = /(allur|rythm|vitess|pace|tempo)/;
+const DISTANCE = /(dist|combien.*(parcouru|fait|km|kilom|k|km)|how\s+far|far)/;
+const DUREE = /(dur|depuis|temps|chrono|time|how\s+long|long)/;
+const BILAN = /(bilan|resum|ou\s+j|status|recap|summary)/;
 
 // WHY: l'ordre compte. « passe à cinq minutes trente » contient « allure » dans certaines
 // formulations, et « reprends l'allure » contient les deux : la commande la plus spécifique
