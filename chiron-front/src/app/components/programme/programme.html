@@ -28,6 +28,15 @@
       />
     </div>
 
+    <!-- Interactive Session Button -->
+    <button
+      (click)="commencerSeanceInteractive()"
+      class="w-full bg-gradient-to-r from-secondary to-[#c77a30] text-slate-950 font-bold text-xs px-6 py-4 rounded-lg uppercase tracking-widest hover:scale-105 active:scale-95 transition-transform shadow-lg shadow-secondary/20 flex items-center justify-center gap-3"
+    >
+      <span class="material-symbols-outlined text-lg">mic</span>
+      <span>{{ 'programme.interactiveSession' | t }}</span>
+    </button>
+
     <!-- Resume banner — shown while a session is in progress -->
     @if (activeSession.hasActiveSession()) {
       <div
@@ -169,15 +178,6 @@
         </article>
       }
     </div>
-
-    <!-- Interactive Session -->
-    <button
-      (click)="commencerSeanceInteractive()"
-      class="w-full mt-6 bg-gradient-to-r from-secondary to-[#c77a30] text-slate-950 font-bold text-xs px-6 py-4 rounded-lg uppercase tracking-widest hover:scale-105 active:scale-95 transition-transform shadow-lg shadow-secondary/20 flex items-center justify-center gap-3"
-    >
-      <span class="material-symbols-outlined text-lg">mic</span>
-      <span>{{ 'programme.interactiveSession' | t }}</span>
-    </button>
 
     <!-- Add Program -->
     <button
