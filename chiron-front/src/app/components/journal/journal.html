@@ -50,7 +50,7 @@
 
     <!-- Weekly Grouped Workout History -->
     <div class="space-y-12">
-      @for (weekGroup of historiqueGrouped(); track weekGroup.weekNumber) {
+      @for (weekGroup of visibleHistory(); track weekGroup.weekNumber) {
         <div class="space-y-6">
           <!-- Week Header Separator -->
           <div class="flex items-center gap-4">

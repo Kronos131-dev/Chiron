@@ -40,6 +40,7 @@ function getIsoWeekNumber(d: Date): number {
 export class Journal implements OnInit {
   historique = signal<any[]>([]);
   historiqueGrouped = signal<any[]>([]);
+  weeksToShow = signal(4);
   isLoading = signal(true);
   activiteParSeance = signal<Map<number, SanteActiviteDto>>(new Map());
 
@@ -134,6 +135,18 @@ export class Journal implements OnInit {
       }));
 
     this.historiqueGrouped.set(result);
+  }
+
+  loadMoreWeeks() {
+    this.weeksToShow.update((v) => v + 4);
+  }
+
+  visibleHistory() {
+    return this.historiqueGrouped().slice(0, this.weeksToShow());
+  }
+
+  hasMoreWeeks() {
+    return this.historiqueGrouped().length > this.weeksToShow();
   }
 
   toggleSeanceDetails(id: number) {
