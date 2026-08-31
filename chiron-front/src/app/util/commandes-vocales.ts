@@ -127,7 +127,7 @@ const PLUS_VITE =
   /(plus\s+vite|plus\s+rapide|accelere|acceler|augmente|monte\s+le|faster|speed\s+up|go\s+faster)/;
 const MOINS_VITE = /(moins\s+vite|ralenti|ralentis|baisse|ralentir|slower|slow\s+down|ease\s+up)/;
 const PAUSE = /(pause|arret|arrete|stopp|stop|attends|halte|freeze)/;
-const REPRENDRE = /(repren|reprend|repart|c\s+est|on\s+y\s+va|continu|resum|go|restart|reprend)/;
+const REPRENDRE = /(repren|reprend|repart|on\s+y\s+va|continu|resum|go|restart)/;
 const CIBLE = /(cible|objectif|vise|passe|mets?\s+moi|regle|target|set|at\s+pace)/;
 const ALLURE = /(allur|rythm|vitess|pace|tempo)/;
 const DISTANCE = /(dist|combien.*(parcouru|fait|km|kilom|k|km)|how\s+far|far)/;
