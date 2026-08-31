@@ -15,6 +15,7 @@ describe('ProgrammeBuilder', () => {
     getProgrammeById: ReturnType<typeof vi.fn>;
     sauvegarderProgramme: ReturnType<typeof vi.fn>;
     searchExercices: ReturnType<typeof vi.fn>;
+    getLastPerformance: ReturnType<typeof vi.fn>;
   };
   let auth: { getUsername: ReturnType<typeof vi.fn> };
   let router: { navigate: ReturnType<typeof vi.fn> };
