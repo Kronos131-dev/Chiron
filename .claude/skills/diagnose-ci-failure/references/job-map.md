@@ -6,6 +6,7 @@
 ```
 build-backend ─┐
 build-frontend ┴─> test-unit ────────┐
+build-android      (isolé)
                    test-integration ─┴─> deploy ─┐
                                                  │
 build-olympus-backend ─┐                         │
@@ -18,6 +19,7 @@ build-olympus-frontend ┴─> test-olympus ─────────┴─> d
 |-----|-----------|-------------------|
 | `build-backend` | **this one** | `cd chiron-back && mvn package -DskipTests --no-transfer-progress` |
 | `build-frontend` | **this one** | `cd chiron-front && npm ci && npm run build -- --configuration production` |
+| `build-android` | **this one** | `cd chiron-front && npm test && npm run build && npx cap sync android && cd android && ./gradlew testDebugUnitTest assembleRelease` (JDK 21, pas 25) |
 | `test-unit` | **this one** | `cd chiron-back && mvn test --no-transfer-progress` |
 | `test-integration` | **this one** | `cd chiron-back && mvn verify -DskipUTs=true --no-transfer-progress` (Docker required) |
 | `deploy` | **this one** | not reproducible locally — it is an SSH deploy |
@@ -34,7 +36,7 @@ Chiron deploying successfully while Olympus fails is normal and leaves Chiron li
 
 | Failing job | Was production touched? |
 |-------------|-------------------------|
-| `build-backend`, `build-frontend` | No |
+| `build-backend`, `build-frontend`, `build-android` | No |
 | `test-unit`, `test-integration` | No — `deploy` needs both |
 | `deploy` | **Possibly**: artefacts were uploaded and containers recreated before the gate failed |
 | `test-olympus`, `build-olympus-*` | No, for either app |

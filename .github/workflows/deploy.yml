@@ -116,6 +116,106 @@ jobs:
           path: glaux-front/dist/glaux-front/browser/
           retention-days: 1
 
+  # ── 1d. Build Android ────────────────────────────────────────────────────────
+  # WHY: le job vit dans le pipeline principal pour qu'une seule page dise l'état de la
+  # livraison, mais rien ne dépend de lui et il ne reçoit aucun secret de serveur. Les deux
+  # propriétés qui justifiaient un workflow séparé tiennent donc toujours : un build d'APK ne
+  # peut pas toucher la production, et une erreur de signature ne peut pas retenir un
+  # déploiement web.
+  build-android:
+    name: Build APK
+    runs-on: ubuntu-latest
+    # WHY: publier une release demande d'écrire dans le dépôt. Le jeton reste cantonné à ça.
+    permissions:
+      contents: write
+    defaults:
+      run:
+        working-directory: chiron-front
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: chiron-front/package-lock.json
+
+      # WHY: l'Android Gradle Plugin refuse un JDK plus récent que celui pour lequel il est
+      # compilé. Le backend tourne en 25, l'application Android en 21.
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Install dependencies
+        run: npm ci
+
+      # WHY: c'est le seul endroit du pipeline qui exécute la suite Vitest. Les jobs de test
+      # backend ne couvrent que Maven ; sans cette étape, une suite front rouge atteint main
+      # sans que rien ne le signale.
+      - name: Frontend unit tests
+        run: npm test
+
+      - name: Build production bundle
+        run: npm run build
+
+      - name: Sync Capacitor
+        run: npx cap sync android
+
+      - name: Android unit tests
+        working-directory: chiron-front/android
+        run: ./gradlew testDebugUnitTest --no-daemon
+
+      - name: Assemble release APK
+        working-directory: chiron-front/android
+        env:
+          ANDROID_VERSION_CODE: ${{ github.run_number }}
+          ANDROID_VERSION_NAME: 1.${{ github.run_number }}
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: Signature status
+        working-directory: chiron-front/android
+        env:
+          KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$KEYSTORE" ]; then
+            echo "::warning::Aucun keystore configuré — l'APK produit n'est pas signé et ne s'installe pas."
+            echo "APK_SIGNE=false" >> $GITHUB_ENV
+          else
+            echo "APK_SIGNE=true" >> $GITHUB_ENV
+          fi
+          ls -l app/build/outputs/apk/release/
+
+      # WHY: un APK non signé ne s'installe sur aucun téléphone. Le publier donnerait un lien
+      # de téléchargement qui échoue au dernier moment, ce qui est pire que pas de lien.
+      - name: Publish the APK as a release
+        if: github.ref == 'refs/heads/main' && env.APK_SIGNE == 'true'
+        working-directory: chiron-front/android
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp app/build/outputs/apk/release/app-release.apk chiron.apk
+          TAG="android-v1.${{ github.run_number }}"
+          gh release create "$TAG" chiron.apk \
+            --title "Chiron Android 1.${{ github.run_number }}" \
+            --notes "Build automatique du commit ${{ github.sha }}." \
+            --latest \
+          || gh release upload "$TAG" chiron.apk --clobber
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: chiron-apk
+          path: chiron-front/android/app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
+          retention-days: 30
+
   # ── 3a. Unit tests ───────────────────────────────────────────────────────────
   test-unit:
     name: Unit Tests

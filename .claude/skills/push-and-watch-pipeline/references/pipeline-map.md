@@ -10,9 +10,15 @@ build-backend ─┐
 build-frontend ┴─> test-unit ────────┐
                    test-integration ─┴─> deploy ─┐
                                                  │
+build-android      (isolé, ne bloque rien)       │
+                                                 │
 build-olympus-backend ─┐                         │
 build-olympus-frontend ┴─> test-olympus ─────────┴─> deploy-olympus
 ```
+
+`build-android` n'a ni dépendance ni dépendant. C'est délibéré : il construit l'APK dans le même
+run pour qu'une seule page dise l'état de la livraison, mais une erreur de signature ne doit jamais
+retenir un déploiement web, et le job ne reçoit aucun secret de serveur.
 
 `deploy` needs `test-unit` and `test-integration`. `deploy-olympus` needs `deploy`,
 `build-olympus-backend`, `build-olympus-frontend` and `test-olympus` — so a broken Olympus never
@@ -26,6 +32,7 @@ blocks the Chiron deploy, but a broken Chiron deploy blocks Olympus.
 | `build-frontend` | `npm ci` then `npm run build -- --configuration production` | The Angular production build succeeds; produces `dist/chiron-front/browser/` |
 | `test-unit` | `mvn test` | Surefire: everything outside `controller/`, `persistence/` and `migration/` |
 | `test-integration` | `mvn verify -DskipUTs=true` | Failsafe: controllers, repositories, and the Flyway schema validation against a real PostgreSQL |
+| `build-android` | `npm test`, `npm run build`, `npx cap sync android`, `./gradlew testDebugUnitTest` puis `assembleRelease` | Le seul job qui exécute la suite Vitest, et le seul qui compile le code Java d'Android ; produit l'APK et le publie en release quand le keystore est configuré |
 | `build-olympus-*`, `test-olympus` | Build of `Kronos131-dev/olympus` on the same JDK as Chiron, against a `postgres:16-alpine` service | A repository that is **not** in this working tree |
 | `deploy` | scp + rsync + `docker compose up -d --force-recreate` over SSH | The artefacts reached the server and the containers were recreated |
 | `deploy-olympus` | same shape for Olympus | Olympus reached the server |

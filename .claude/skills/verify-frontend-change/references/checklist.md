@@ -1,10 +1,12 @@
 # Frontend verification checklist
 
 ## Sequence
-* [ ] `npx tsc --noEmit -p tsconfig.json` passes.
+* [ ] `npx tsc --noEmit -p tsconfig.app.json` **and** `-p tsconfig.spec.json` pass.
+      `tsconfig.json` is a solution file with `files: []` — it checks nothing.
 * [ ] `npx prettier --check` passes on the files that changed.
 * [ ] `npm run build` succeeds.
 * [ ] `npm test` was run and its result reported honestly.
+* [ ] When the change reached `android/`, `./gradlew testDebugUnitTest` was run on **JDK 21**.
 
 ## Honesty about the baseline
 * [ ] Lint was **not** claimed to pass — there is no ESLint in this project.
@@ -24,6 +26,7 @@
 * [ ] The narrow viewport was checked — the app is used on a phone.
 
 ## Hygiene
-* [ ] `git status` shows nothing unintended; no `dist/`, `android/` or `node_modules/`.
+* [ ] `git status` shows nothing unintended; no `dist/`, `android/app/build/`, `android/.gradle/`
+      or `node_modules/`.
 * [ ] No `console.log` was left behind.
 * [ ] No component calls `HttpClient` directly instead of going through `chiron-api.ts`.

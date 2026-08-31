@@ -40,7 +40,8 @@ nobody wrote. Everything else the build already catches.
    during editing, but a file edited outside the tooling escapes it.
 2. `console.log`, `System.out.println`, commented-out code, `TODO` and `FIXME`.
 3. Any key, token, password or connection string. `chiron-back/.env` must not be staged.
-4. Build output: `target/`, `dist/`, `node_modules/`, `android/`.
+4. Build output: `target/`, `dist/`, `node_modules/`, `android/app/build/`, `android/.gradle/`.
+   `android/app/src/` is source, not output — it is reviewed like the rest.
 5. A modified file under `db/migration/` that is not newly added.
 
 **Step 5: Report**

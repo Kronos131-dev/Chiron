@@ -11,6 +11,15 @@ it** — this file holds only what applies everywhere.
 |--------|-------|-------------|
 | `chiron-back/` | Spring Boot 4.0.6 · Java 25 · PostgreSQL 16 / Flyway · LangChain4j (Mistral + Gemini) | `.claude/conventions/chiron-back.md` |
 | `chiron-front/` | Angular 21 standalone · Signals · Tailwind 4 · Vitest · Capacitor (Android) | `.claude/conventions/chiron-front.md` |
+| `chiron-front/android/` | Java 21 · Gradle · service Android au premier plan (GPS, voix, mot-clé) | mêmes conventions, hors périmètre des hooks |
+
+`chiron-front/android/app/src/main/java/com/kronos/chiron/` n'est **pas** un dossier généré. Il
+tient le service qui mesure une sortie extérieure écran verrouillé — GPS, annonces vocales, écoute
+du mot-clé « Hey Chiron » — et le pipeline le compile et le teste. Seuls `android/app/build/` et
+`android/.gradle/` sont du bruit. Deux de ses classes sont des **jumeaux** déclarés d'un fichier
+TypeScript : `Mesure.java` de `service/course-tracker.ts`, `Commandes.java` de
+`util/commandes-vocales.ts`. Toucher l'un sans l'autre les fait diverger en silence ; `MesureTest`
+et `CommandesTest` sont ce qui l'attrape.
 
 Deployment artefacts live at the root: `docker-compose.yml`, `nginx.conf`,
 `.github/workflows/deploy.yml`.
@@ -75,6 +84,9 @@ environment.
 
 - **Work happens directly on `main`.** There is no ticket tracker, no review step, and no feature
   branches — commit on `main` and push. The procedure is the `push-and-watch-pipeline` skill.
+- Le même run construit l'**APK Android** (job `build-android`). Il ne dépend de rien et rien ne
+  dépend de lui : une erreur de signature ne retient pas un déploiement web, et le job ne reçoit
+  aucun secret de serveur. C'est aussi le **seul** endroit du pipeline qui exécute `npm test`.
 - Announce what is about to ship before pushing to `main`, and wait for the go-ahead.
 - The production server may be **read** — `docker ps`, `docker logs`, `journalctl`, `df`, health
   probes. It is never mutated: no `docker rm`, no `compose up`, no `scp` of an artefact. Deploying is
@@ -148,6 +160,10 @@ a red pipeline may point at a repository this working tree does not contain.
   Testcontainers. A test's phase follows the package you file it in, nothing else.
 - `npm run build` builds the **production** configuration by default — it swaps in
   `environment.prod.ts` and enables the service worker.
+- `npx tsc --noEmit -p tsconfig.json` **ne vérifie rien** : c'est un fichier solution avec
+  `files: []`. Viser `tsconfig.app.json` et `tsconfig.spec.json`.
+- Le module Android se compile en **JDK 21**, pas 25 : le plugin Gradle refuse un JDK plus récent
+  que celui pour lequel il est compilé, et rend `Unsupported class file major version 69`.
 - This is Spring Boot **4.x**, not 3.x: test slices come from the split starters
   (`org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest`), and Flyway needs the explicit
   `spring-boot-starter-flyway` or migrations silently never run.

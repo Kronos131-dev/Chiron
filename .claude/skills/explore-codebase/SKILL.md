@@ -6,15 +6,19 @@ description: Navigates the Chiron monorepo to answer how something works, where 
 # Find where something lives
 
 A repository-wide grep here returns hundreds of hits from `chiron-back/target/`,
-`chiron-front/node_modules/`, `chiron-front/dist/` and `chiron-front/android/`, and burns context
-without answering the question. Enter through a known door and follow the call path.
+`chiron-front/node_modules/`, `chiron-front/dist/` and `chiron-front/android/app/build/`, and burns
+context without answering the question. Enter through a known door and follow the call path.
 
 ## Procedures
 
 **Step 1: Exclude the noise**
 1. Never search `chiron-back/target/`, `chiron-front/node_modules/`, `chiron-front/dist/`,
-   `chiron-front/android/`, `.idea/` or `.git/`.
-2. Scope every search to `chiron-back/src/` or `chiron-front/src/`.
+   `chiron-front/android/app/build/`, `chiron-front/android/.gradle/`, `.idea/` or `.git/`.
+2. Scope every search to `chiron-back/src/`, `chiron-front/src/` or
+   `chiron-front/android/app/src/`.
+   `chiron-front/android/app/src/main/java/com/kronos/chiron/` holds the native Android service that
+   runs an outdoor run — GPS, voice announcements, the wake word. It is source, it is tested, and the
+   pipeline compiles it; only its `build/` and `.gradle/` subdirectories are noise.
 3. Prefer a scoped glob over a bare grep: the codebase is small enough that the right directory
    listing usually answers the question faster than a search.
 
