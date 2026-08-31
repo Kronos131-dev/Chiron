@@ -7,6 +7,7 @@ import com.kronos.chiron.coach.agent.ChironAgent;
 import com.kronos.chiron.coach.agent.ChironAgentRouter;
 import com.kronos.chiron.coach.agent.ConversationMemoryManager;
 import com.kronos.chiron.course.agent.CourseVoiceInterpreter;
+import com.kronos.chiron.course.dto.CommandeVoixDto;
 import com.kronos.chiron.coach.tools.FitbitTools;
 import com.kronos.chiron.coach.tools.MemoryTools;
 import com.kronos.chiron.coach.tools.NutritionTools;
@@ -18,7 +19,6 @@ import dev.langchain4j.model.googleai.GoogleAiGeminiChatModel;
 import dev.langchain4j.model.mistralai.MistralAiChatModel;
 import dev.langchain4j.service.AiServices;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -92,8 +92,10 @@ public class ChironConfig {
     }
 
     @Bean
-    @ConditionalOnProperty(name = "langchain4j.mistral-ai.chat-model.api-key")
     public CourseVoiceInterpreter courseVoiceInterpreter() {
+        if (mistralApiKey == null || mistralApiKey.isBlank()) {
+            return transcript -> new CommandeVoixDto("inconnu", null);
+        }
         ChatModel mistral = MistralAiChatModel.builder()
                 .apiKey(mistralApiKey)
                 .modelName(mistralModel)
