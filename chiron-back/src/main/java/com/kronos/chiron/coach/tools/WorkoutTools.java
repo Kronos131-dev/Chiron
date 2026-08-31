@@ -2,6 +2,7 @@ package com.kronos.chiron.coach.tools;
 
 import java.time.Clock;
 
+import com.kronos.chiron.coach.context.VoiceSessionContext;
 import com.kronos.chiron.exercice.dto.ExerciceDefinitionDto;
 import com.kronos.chiron.seance.dto.ExerciceDto;
 import com.kronos.chiron.seance.dto.SeanceDto;
@@ -61,6 +62,7 @@ public class WorkoutTools {
     private final ToolUserResolver toolUserResolver;
     private final ActiviteEnrichissementService activiteEnrichissementService;
     private final FitbitPushService fitbitPushService;
+    private final VoiceSessionContext voiceSessionContext;
 
     private final Clock clock;
     @Tool("Retourne la date et l'heure actuelles et le jour de la semaine.")
@@ -166,6 +168,10 @@ public class WorkoutTools {
 
     @Tool("Démarre une nouvelle séance d'entraînement dans l'historique de l'utilisateur.")
     public String startSession(@ToolMemoryId String memoryId, String titre) {
+        if (voiceSessionContext.getPinnedSeanceId() != null) {
+            return "La séance est déjà en cours, inutile de la redémarrer.";
+        }
+
         Utilisateur user = toolUserResolver.load(memoryId);
 
         seanceRepository.findFirstByUtilisateurIdAndEndTimeIsNullOrderByStartTimeDesc(user.getId())
@@ -248,7 +254,8 @@ public class WorkoutTools {
     }
 
     @Tool("Enregistre une série (poids, répétitions, commentaire) pour l'exercice en cours.")
-    public String addSet(@ToolMemoryId String memoryId, double poids, int reps, String commentaire) {
+    public String addSet(@ToolMemoryId String memoryId, double poids, int reps, String commentaire,
+            String nomExercice) {
         Seance activeSeance = getActiveSeance(memoryId);
 
         if (activeSeance == null) {
@@ -259,7 +266,7 @@ public class WorkoutTools {
             return "ERREUR SYSTEME : Aucun exercice n'est en cours. Tu dois appeler l'outil [startExercise] d'abord !";
         }
 
-        Exercice activeExercice = activeSeance.getExercices().get(activeSeance.getExercices().size() - 1);
+        Exercice activeExercice = resolveExercice(activeSeance, nomExercice);
 
         Serie serie = Serie.builder()
                 .poids(poids)
@@ -277,7 +284,7 @@ public class WorkoutTools {
     @Tool("Modifie une série déjà enregistrée de l'exercice en cours : change le poids et/ou le nombre "
             + "de répétitions. Cible la dernière série par défaut, ou une série précise via son numéro (1 = première).")
     public String modifySet(@ToolMemoryId String memoryId, Integer numeroSerie, Double nouveauPoids,
-            Integer nouvellesReps) {
+            Integer nouvellesReps, String nomExercice) {
         Seance activeSeance = getActiveSeance(memoryId);
 
         if (activeSeance == null) {
@@ -288,7 +295,7 @@ public class WorkoutTools {
             return "ERREUR SYSTEME : Aucun exercice n'est en cours. Tu dois appeler l'outil [startExercise] d'abord !";
         }
 
-        Exercice activeExercice = activeSeance.getExercices().get(activeSeance.getExercices().size() - 1);
+        Exercice activeExercice = resolveExercice(activeSeance, nomExercice);
 
         if (activeExercice.getSeries() == null || activeExercice.getSeries().isEmpty()) {
             return "ERREUR SYSTEME : Aucune série enregistrée. Tu dois appeler [addSet] d'abord !";
@@ -935,7 +942,24 @@ public class WorkoutTools {
         return d.name().toLowerCase();
     }
 
+    private Exercice resolveExercice(Seance seance, String nomExercice) {
+        if (nomExercice == null || nomExercice.isBlank()) {
+            return seance.getExercices().get(seance.getExercices().size() - 1);
+        }
+        String lower = nomExercice.toLowerCase();
+        for (int i = seance.getExercices().size() - 1; i >= 0; i--) {
+            if (seance.getExercices().get(i).getNom().toLowerCase().contains(lower)) {
+                return seance.getExercices().get(i);
+            }
+        }
+        return seance.getExercices().get(seance.getExercices().size() - 1);
+    }
+
     private Seance getActiveSeance(String memoryId) {
+        Long pinnedId = voiceSessionContext.getPinnedSeanceId();
+        if (pinnedId != null) {
+            return seanceRepository.findById(pinnedId).orElse(null);
+        }
         return seanceRepository
                 .findFirstByUtilisateurIdAndEndTimeIsNullOrderByStartTimeDesc(toolUserResolver.loadId(memoryId))
                 .orElse(null);

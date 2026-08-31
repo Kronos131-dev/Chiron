@@ -581,8 +581,10 @@ export class Session implements OnInit, OnDestroy {
   private sendVoiceCommand(message: string) {
     if (!message.trim() || !this.authService.getUsername()) return;
 
+    const seanceId =
+      this.isInteractive() && this.routineId ? parseInt(this.routineId, 10) : undefined;
     this.chironApi
-      .sendMessage(message, this.activeConversationId() || null, this.i18n.lang())
+      .sendMessage(message, this.activeConversationId() || null, this.i18n.lang(), seanceId)
       .subscribe({
         next: (response) => {
           if (response?.reply) {

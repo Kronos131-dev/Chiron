@@ -23,6 +23,7 @@ import com.kronos.chiron.exercice.service.ExerciceDefinitionService;
 import com.kronos.chiron.programme.service.ProgrammeService;
 import com.kronos.chiron.sante.service.ActiviteEnrichissementService;
 import com.kronos.chiron.fitbit.service.FitbitPushService;
+import com.kronos.chiron.coach.context.VoiceSessionContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -62,6 +63,8 @@ class WorkoutToolsTest {
     private ActiviteEnrichissementService activiteEnrichissementService;
     @Mock
     private FitbitPushService fitbitPushService;
+    @Mock
+    private VoiceSessionContext voiceSessionContext;
 
     @Spy
     private Clock clock = Clock.system(ZoneId.of("Europe/Paris"));
@@ -88,6 +91,7 @@ class WorkoutToolsTest {
         when(toolUserResolver.loadId(MEMORY_ID)).thenReturn(1L);
         when(utilisateurRepository.findByUsername("athlete")).thenReturn(Optional.of(user));
         when(seanceRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(voiceSessionContext.getPinnedSeanceId()).thenReturn(null);
     }
 
     // --- getCurrentDate ---
@@ -165,7 +169,7 @@ class WorkoutToolsTest {
         when(seanceRepository.findFirstByUtilisateurIdAndEndTimeIsNullOrderByStartTimeDesc(1L))
                 .thenReturn(Optional.of(activeSeance));
 
-        String result = workoutTools.addSet(MEMORY_ID, 100.0, 5, "good set");
+        String result = workoutTools.addSet(MEMORY_ID, 100.0, 5, "good set", null);
 
         assertThat(result).contains("5x100");
         assertThat(exercice.getSeries()).hasSize(1);
@@ -178,7 +182,7 @@ class WorkoutToolsTest {
         when(seanceRepository.findFirstByUtilisateurIdAndEndTimeIsNullOrderByStartTimeDesc(1L))
                 .thenReturn(Optional.empty());
 
-        String result = workoutTools.addSet(MEMORY_ID, 80.0, 8, null);
+        String result = workoutTools.addSet(MEMORY_ID, 80.0, 8, null, null);
 
         assertThat(result).containsIgnoringCase("ERREUR");
     }
@@ -189,7 +193,7 @@ class WorkoutToolsTest {
         when(seanceRepository.findFirstByUtilisateurIdAndEndTimeIsNullOrderByStartTimeDesc(1L))
                 .thenReturn(Optional.of(activeSeance));
 
-        String result = workoutTools.addSet(MEMORY_ID, 80.0, 8, null);
+        String result = workoutTools.addSet(MEMORY_ID, 80.0, 8, null, null);
 
         assertThat(result).containsIgnoringCase("ERREUR");
     }

@@ -4,6 +4,7 @@ import static com.kronos.chiron.core.exceptions.ErrorFactory.notFound;
 
 import com.kronos.chiron.coach.agent.ChironAgentRouter;
 import com.kronos.chiron.coach.agent.ConversationMemoryManager;
+import com.kronos.chiron.coach.context.VoiceSessionContext;
 import com.kronos.chiron.coach.dto.ChatResponse;
 import com.kronos.chiron.utilisateur.model.AiProvider;
 import com.kronos.chiron.coach.model.AgentType;
@@ -27,6 +28,7 @@ public class ChatController {
     private final ConversationService conversationService;
     private final ConversationMemoryManager memoryManager;
     private final AiUsageService aiUsageService;
+    private final VoiceSessionContext voiceSessionContext;
 
     private static final int MEMORY_INJECTION_LIMIT = 10;
 
@@ -35,19 +37,22 @@ public class ChatController {
             MemoryNoteService memoryNoteService,
             ConversationService conversationService,
             ConversationMemoryManager memoryManager,
-            AiUsageService aiUsageService) {
+            AiUsageService aiUsageService,
+            VoiceSessionContext voiceSessionContext) {
         this.chironAgentRouter = chironAgentRouter;
         this.utilisateurRepository = utilisateurRepository;
         this.memoryNoteService = memoryNoteService;
         this.conversationService = conversationService;
         this.memoryManager = memoryManager;
         this.aiUsageService = aiUsageService;
+        this.voiceSessionContext = voiceSessionContext;
     }
 
     public static class ChatRequest {
         private String message;
         private Long conversationId;
         private String language;
+        private Long seanceId;
 
         public String getMessage() {
             return message;
@@ -72,6 +77,14 @@ public class ChatController {
         public void setLanguage(String language) {
             this.language = language;
         }
+
+        public Long getSeanceId() {
+            return seanceId;
+        }
+
+        public void setSeanceId(Long seanceId) {
+            this.seanceId = seanceId;
+        }
     }
 
     private static String languageDirective(String language) {
@@ -85,6 +98,8 @@ public class ChatController {
     public ChatResponse chat(@AuthenticationPrincipal UserDetails principal, @RequestBody ChatRequest request) {
         Utilisateur user = utilisateurRepository.findByUsername(principal.getUsername())
                 .orElseThrow(() -> notFound("User not found"));
+
+        voiceSessionContext.setPinnedSeanceId(request.getSeanceId());
 
         Conversation conversation = conversationService.getOrCreate(user, request.getConversationId(),
                 AgentType.CHIRON);

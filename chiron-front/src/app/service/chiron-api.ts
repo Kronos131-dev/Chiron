@@ -116,18 +116,17 @@ export class ChironApi {
     return `${this.apiUrl}/images/${encodeURIComponent(iconName)}`;
   }
 
-  /**
-   * Sends a user message to the AI coach via the chat endpoint.
-   *
-   * @param message        The content of the message.
-   * @param conversationId The conversation to append to, or null to start a new one.
-   * @return An Observable emitting the AI's reply and its conversation id.
-   */
-  sendMessage(message: string, conversationId: number | null, language: string) {
+  sendMessage(
+    message: string,
+    conversationId: number | null,
+    language: string,
+    seanceId?: number | null,
+  ) {
     return this.http.post<ChatResponse>(`${this.apiUrl}/chat`, {
       message,
       conversationId,
       language,
+      ...(seanceId !== undefined && { seanceId }),
     });
   }
 
