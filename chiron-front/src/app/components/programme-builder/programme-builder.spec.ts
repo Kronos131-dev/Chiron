@@ -21,22 +21,40 @@ describe('ProgrammeBuilder', () => {
 
   function makeDef(id: number, nom: string): ExerciceDefinitionDto {
     return {
-      id, nomFr: nom, nomEn: nom, imageUrl: null, imageUrl2: null,
-      musclePrincipal: null, musclesSecondaires: [], typeEquipement: null,
-      difficulte: null, descriptionFr: null, descriptionEn: null, cardioType: null, wodType: null,
+      id,
+      nomFr: nom,
+      nomEn: nom,
+      imageUrl: null,
+      imageUrl2: null,
+      musclePrincipal: null,
+      musclesSecondaires: [],
+      typeEquipement: null,
+      difficulte: null,
+      descriptionFr: null,
+      descriptionEn: null,
+      cardioType: null,
+      wodType: null,
     };
   }
 
-  async function bootWith(params: Record<string, string> = {}, queryParams: Record<string, string> = {}) {
+  async function bootWith(
+    params: Record<string, string> = {},
+    queryParams: Record<string, string> = {},
+  ) {
     chironApi = {
-      getProgrammeById:     vi.fn().mockReturnValue(of({ titre: 'Push', modele: false, exercices: [], utilisateur: { username: 'alice' } })),
+      getProgrammeById: vi
+        .fn()
+        .mockReturnValue(
+          of({ titre: 'Push', modele: false, exercices: [], utilisateur: { username: 'alice' } }),
+        ),
       sauvegarderProgramme: vi.fn().mockReturnValue(of('Program saved with ID: 99')),
-      searchExercices:      vi.fn().mockReturnValue(of([])),
+      searchExercices: vi.fn().mockReturnValue(of([])),
+      getLastPerformance: vi.fn().mockReturnValue(of({ series: [] })),
     };
-    auth   = { getUsername: vi.fn().mockReturnValue('alice') };
+    auth = { getUsername: vi.fn().mockReturnValue('alice') };
     router = { navigate: vi.fn() };
     const route = {
-      paramMap:      of(convertToParamMap(params)),
+      paramMap: of(convertToParamMap(params)),
       queryParamMap: of(convertToParamMap(queryParams)),
     };
 
@@ -78,7 +96,7 @@ describe('ProgrammeBuilder', () => {
       component.addExerciceFromDefinition(makeDef(1, 'A'));
       component.addExerciceFromDefinition(makeDef(2, 'B'));
       component.addExerciceFromDefinition(makeDef(3, 'C'));
-      expect(component.addedExercises().map(e => e.nom)).toEqual(['A', 'B', 'C']);
+      expect(component.addedExercises().map((e) => e.nom)).toEqual(['A', 'B', 'C']);
     });
 
     it('removeAddedFromPicker drops the exo from both the programme and the picker list', () => {
@@ -89,8 +107,8 @@ describe('ProgrammeBuilder', () => {
 
       component.removeAddedFromPicker(toRemove);
 
-      expect(component.exercices().map(e => e.nom)).toEqual(['B']);
-      expect(component.addedExercises().map(e => e.nom)).toEqual(['B']);
+      expect(component.exercices().map((e) => e.nom)).toEqual(['B']);
+      expect(component.addedExercises().map((e) => e.nom)).toEqual(['B']);
     });
 
     it('adds a custom (free-text) exercise and closes the picker', () => {
@@ -141,9 +159,9 @@ describe('ProgrammeBuilder', () => {
       component.save();
 
       expect(chironApi.sauvegarderProgramme).toHaveBeenCalledWith(
-        'alice',                           // requester (logged-in coach)
+        'alice', // requester (logged-in coach)
         expect.objectContaining({ titre: 'Coach Plan' }),
-        'bob',                             // forUsername (athlete)
+        'bob', // forUsername (athlete)
       );
     });
   });
@@ -191,7 +209,7 @@ describe('ProgrammeBuilder', () => {
       component.onExoDragOver(fakeDragEvent(), 2);
       component.onExoDrop(fakeDragEvent(), 2);
 
-      expect(component.exercices().map(e => e.nom)).toEqual(['B', 'C', 'A']);
+      expect(component.exercices().map((e) => e.nom)).toEqual(['B', 'C', 'A']);
     });
   });
 });

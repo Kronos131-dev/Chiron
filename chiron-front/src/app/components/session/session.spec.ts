@@ -21,14 +21,15 @@ describe('Session', () => {
 
   beforeEach(async () => {
     const chironApi = {
-      getProgrammeById:     vi.fn().mockReturnValue(of({ titre: 'T', modele: false, exercices: [] })),
+      getProgrammeById: vi.fn().mockReturnValue(of({ titre: 'T', modele: false, exercices: [] })),
       sauvegarderProgramme: vi.fn().mockReturnValue(of('')),
-      searchExercices:      vi.fn().mockReturnValue(of([])),
+      searchExercices: vi.fn().mockReturnValue(of([])),
+      getLastPerformance: vi.fn().mockReturnValue(of({ series: [] })),
     };
-    const auth   = { getUsername: vi.fn().mockReturnValue('alice') };
+    const auth = { getUsername: vi.fn().mockReturnValue('alice') };
     const router = { navigate: vi.fn() };
-    const route  = {
-      paramMap:    of(convertToParamMap({})),
+    const route = {
+      paramMap: of(convertToParamMap({})),
       queryParams: of({}),
     };
 
@@ -54,9 +55,19 @@ describe('Session', () => {
   describe('library picker', () => {
     function makeDef(id: number, nom: string) {
       return {
-        id, nomFr: nom, nomEn: nom, imageUrl: null, imageUrl2: null,
-        musclePrincipal: null, musclesSecondaires: [], typeEquipement: null,
-        difficulte: null, descriptionFr: null, descriptionEn: null, cardioType: null, wodType: null,
+        id,
+        nomFr: nom,
+        nomEn: nom,
+        imageUrl: null,
+        imageUrl2: null,
+        musclePrincipal: null,
+        musclesSecondaires: [],
+        typeEquipement: null,
+        difficulte: null,
+        descriptionFr: null,
+        descriptionEn: null,
+        cardioType: null,
+        wodType: null,
       };
     }
 
@@ -81,8 +92,8 @@ describe('Session', () => {
       component.addExerciceFromDefinition(makeDef(2, 'B'));
       component.removeAddedFromPicker(component.addedExercises()[0]);
 
-      expect(component.exercices().map(e => e.nom)).toEqual(['B']);
-      expect(component.addedExercises().map(e => e.nom)).toEqual(['B']);
+      expect(component.exercices().map((e) => e.nom)).toEqual(['B']);
+      expect(component.addedExercises().map((e) => e.nom)).toEqual(['B']);
     });
 
     it('demarrerWod navigates to the WOD screen of that exercise', () => {
@@ -102,7 +113,12 @@ describe('Session', () => {
 
       component.demarrerWod(wod);
 
-      expect(TestBed.inject(Router).navigate).not.toHaveBeenCalledWith(['/session', '7', 'wod', 'w1']);
+      expect(TestBed.inject(Router).navigate).not.toHaveBeenCalledWith([
+        '/session',
+        '7',
+        'wod',
+        'w1',
+      ]);
     });
 
     it('closePicker clears the picker session list but keeps the session exos', () => {
@@ -132,7 +148,7 @@ describe('Session', () => {
       component.onExoDragOver(fakeDragEvent(), 2);
       component.onExoDrop(fakeDragEvent(), 2);
 
-      expect(component.exercices().map(e => e.nom)).toEqual(['Dips', 'OHP', 'Bench']);
+      expect(component.exercices().map((e) => e.nom)).toEqual(['Dips', 'OHP', 'Bench']);
     });
 
     it('is a no-op when source and target indices are equal', () => {
@@ -140,7 +156,7 @@ describe('Session', () => {
       component.onExoDragOver(fakeDragEvent(), 1);
       component.onExoDrop(fakeDragEvent(), 1);
 
-      expect(component.exercices().map(e => e.nom)).toEqual(['Bench', 'Dips', 'OHP']);
+      expect(component.exercices().map((e) => e.nom)).toEqual(['Bench', 'Dips', 'OHP']);
     });
 
     it('does not reorder when read-only', () => {
@@ -150,7 +166,7 @@ describe('Session', () => {
       component.onExoDragOver(fakeDragEvent(), 2);
       component.onExoDrop(fakeDragEvent(), 2);
 
-      expect(component.exercices().map(e => e.nom)).toEqual(['Bench', 'Dips', 'OHP']);
+      expect(component.exercices().map((e) => e.nom)).toEqual(['Bench', 'Dips', 'OHP']);
     });
 
     it('clears drag visual state after dragend', () => {
