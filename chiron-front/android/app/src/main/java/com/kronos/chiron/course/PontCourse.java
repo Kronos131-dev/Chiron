@@ -37,4 +37,10 @@ public final class PontCourse {
     public static CourseService service() {
         return service;
     }
+
+    public static void configurerApiCommandes(String baseUrl, String token) {
+        if (service != null) {
+            service.configurerApiCommandes(baseUrl, token);
+        }
+    }
 }

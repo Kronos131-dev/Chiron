@@ -44,6 +44,7 @@ export interface CourseRuntime {
   reprendreCourseEnCours(): Promise<boolean>;
   cibleRetenue(): number | null;
   configurer(options: OptionsCourse): void;
+  configurerApiCommandes(baseUrl: string, token: string): void;
   demarrer(): Promise<void>;
   basculerPause(): void;
   arreter(): Promise<void>;

@@ -63,6 +63,7 @@ public final class CourseService extends Service {
     private final Handler boucle = new Handler(Looper.getMainLooper());
     private final Mesure mesure = new Mesure();
     private final Phrases phrases = new Phrases();
+    private final CommandeInterpreter interpreterCommandes = new CommandeInterpreter();
 
     private Annonceur annonceur;
     private Ecoute ecoute;
@@ -222,6 +223,11 @@ public final class CourseService extends Service {
         titre = config.optString("titre", titre);
         if (config.has("motCle")) reglerLeMotCle(config.optBoolean("motCle", true));
         rafraichirLaNotification();
+    }
+
+    public void configurerApiCommandes(String baseUrl, String token) {
+        interpreterCommandes.configurerUrl(baseUrl);
+        interpreterCommandes.configurerToken(token);
     }
 
     public void arreter() {
@@ -843,7 +849,8 @@ public final class CourseService extends Service {
     // qu'il l'ecoute, c'est-a-dire apres le « J'ecoute » de la fenetre.
     private void executerLeTexte(String texte, boolean repondreSiIncompris) {
         fenetreJusquA = 0;
-        Commandes.Commande commande = Commandes.interpreter(texte);
+        String langue = "fr";
+        Commandes.Commande commande = interpreterCommandes.interpreter(texte, langue);
         if (commande == null) {
             if (repondreSiIncompris) dire(phrases.t("notUnderstood"), true);
             return;

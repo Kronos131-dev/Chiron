@@ -1,4 +1,5 @@
 import { Signal, computed, signal } from '@angular/core';
+import { timeout } from 'rxjs';
 import { CourseTracker, allureKmh, tempsALaDistanceS } from './course-tracker';
 import { CourseRuntime, OptionsCourse, interpoler } from './course-runtime';
 import { formaterDistance, kmhVersMinParKm, minParKmVersKmh } from '../util/allure';
@@ -6,6 +7,7 @@ import { Commande, interpreter } from '../util/commandes-vocales';
 import { Voix, creerVoix, voixDisponible } from '../util/voix';
 import { Survie, tenirEnVie } from '../util/survie-arriere-plan';
 import { baisserLaMusiquePendant } from '../util/session-audio';
+import { ChironApi } from './chiron-api';
 
 const TICK_MS = 1000;
 const KM_EN_METRES = 1000;
@@ -23,6 +25,7 @@ export class RuntimeWeb implements CourseRuntime {
   readonly natif = false;
 
   private readonly tracker = new CourseTracker();
+  private chironApi: ChironApi | null = null;
 
   readonly etat = this.tracker.etat;
   readonly points = this.tracker.points;
@@ -85,6 +88,12 @@ export class RuntimeWeb implements CourseRuntime {
     this.options = options;
     this.voix?.fixerVolume(this.fractionDeVolume());
   }
+
+  setChironApi(api: ChironApi): void {
+    this.chironApi = api;
+  }
+
+  configurerApiCommandes(baseUrl: string, token: string): void {}
 
   async demarrer(): Promise<void> {
     this.activerLeSon();
@@ -393,6 +402,32 @@ export class RuntimeWeb implements CourseRuntime {
   }
 
   private interpreterCommande(transcript: string): void {
+    if (!this.chironApi) {
+      this.interpreterLocalement(transcript);
+      return;
+    }
+
+    this.chironApi
+      .interpretVoiceCommand(transcript, this.options?.langue === 'en' ? 'en' : 'fr')
+      .pipe(timeout(3000))
+      .subscribe({
+        next: (response: any) => {
+          if (!response || !response.nom) {
+            this.interpreterLocalement(transcript);
+            return;
+          }
+          const commande: Commande = {
+            nom: response.nom as any,
+            cibleMinParKm: response.cibleMinParKm,
+          };
+          this.commandeComprise.set(true);
+          this.executer(commande);
+        },
+        error: () => this.interpreterLocalement(transcript),
+      });
+  }
+
+  private interpreterLocalement(transcript: string): void {
     const commande = interpreter(transcript);
     if (!commande) {
       this.commandeComprise.set(false);

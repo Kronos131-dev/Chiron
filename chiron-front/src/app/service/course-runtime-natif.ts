@@ -164,6 +164,10 @@ export class RuntimeNatif implements CourseRuntime {
     }).catch(() => {});
   }
 
+  configurerApiCommandes(baseUrl: string, token: string): void {
+    ChironCourse.configurerApiCommandes({ baseUrl, token }).catch(() => {});
+  }
+
   async demarrer(): Promise<void> {
     const options = this.options;
     if (!options) return;

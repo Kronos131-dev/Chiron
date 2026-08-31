@@ -145,6 +145,21 @@ public final class Commandes {
 
     private Commandes() {}
 
+    private static int levenshteinDistance(String a, String b) {
+        int[] dp = new int[b.length() + 1];
+        for (int i = 0; i <= b.length(); i++) dp[i] = i;
+        for (int i = 1; i <= a.length(); i++) {
+            int prev = i;
+            for (int j = 1; j <= b.length(); j++) {
+                int cost = a.charAt(i - 1) == b.charAt(j - 1) ? 0 : 1;
+                int temp = dp[j];
+                dp[j] = Math.min(Math.min(dp[j] + 1, prev + 1), dp[j - 1] + cost);
+                prev = temp;
+            }
+        }
+        return dp[b.length()];
+    }
+
     // WHY: le moteur rend « cinq minutes trente », « 5 minutes 30 » ou « 5:30 » selon l'humeur du
     // micro et le bruit ambiant. Tout est ramene a une meme chaine sans accent ni ponctuation
     // avant d'etre reconnu, sinon la moitie des formulations tombe a cote. Le trait d'union tombe
@@ -164,9 +179,25 @@ public final class Commandes {
     public static Reveil detecterMotCle(String transcript) {
         String texte = normaliser(transcript);
         if (texte.isEmpty()) return null;
+
         Matcher trouve = MOT_CLE.matcher(texte);
-        if (!trouve.find()) return null;
-        return new Reveil(trouve.group(1) != null, texte.substring(trouve.end()).trim());
+        if (trouve.find()) {
+            return new Reveil(trouve.group(1) != null, texte.substring(trouve.end()).trim());
+        }
+
+        String[] mots = texte.split("\\s+");
+        String[] variantes = {"chiron", "chirons", "chirone", "chiro", "chirot", "chiraud", "chirac", "kiron", "kyron", "shiron", "shiro", "siron"};
+        for (int i = 0; i < mots.length; i++) {
+            for (String variante : variantes) {
+                if (levenshteinDistance(mots[i], variante) <= 2) {
+                    boolean avecInterjection = i > 0 && (mots[i - 1].matches("(?:hey|eh|he|et|est|ok|okay|allo|hello|salut)"));
+                    String suite = i + 1 < mots.length ? texte.substring(texte.indexOf(mots[i + 1])).trim() : "";
+                    return new Reveil(avecInterjection, suite);
+                }
+            }
+        }
+
+        return null;
     }
 
     public static boolean estUneConfirmation(String transcript) {

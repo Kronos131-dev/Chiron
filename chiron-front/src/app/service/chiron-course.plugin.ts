@@ -52,6 +52,7 @@ export interface ChironCoursePlugin {
   demanderPermissions(): Promise<PermissionsCourse>;
   demarrer(configuration: ConfigurationCourse): Promise<void>;
   configurer(configuration: Partial<ConfigurationCourse>): Promise<void>;
+  configurerApiCommandes(options: { baseUrl: string; token: string }): Promise<void>;
   arreter(): Promise<EtatNatif & { points: CoursePointDto[] }>;
   basculerPause(): Promise<EtatNatif>;
   fixerCible(options: { cibleMinParKm: number | null }): Promise<EtatNatif>;

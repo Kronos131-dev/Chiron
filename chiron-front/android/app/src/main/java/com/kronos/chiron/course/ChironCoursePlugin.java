@@ -154,6 +154,19 @@ public class ChironCoursePlugin extends Plugin {
     }
 
     @PluginMethod
+    public void configurerApiCommandes(PluginCall appel) {
+        CourseService service = PontCourse.service();
+        if (service == null) {
+            appel.resolve();
+            return;
+        }
+        String baseUrl = appel.getString("baseUrl", "");
+        String token = appel.getString("token", "");
+        service.configurerApiCommandes(baseUrl, token);
+        appel.resolve();
+    }
+
+    @PluginMethod
     public void basculerPause(PluginCall appel) {
         CourseService service = PontCourse.service();
         if (service == null) {

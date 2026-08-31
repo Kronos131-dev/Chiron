@@ -5,6 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Capacitor } from '@capacitor/core';
 import { retry } from 'rxjs';
 import { ActiveSessionService } from '../../service/active-session.service';
+import { AuthService } from '../../service/auth.service';
 import { ChironApi, CoursePointDto, CourseTraceDto } from '../../service/chiron-api';
 import { CLES_PHRASES, CourseRuntime, OptionsCourse } from '../../service/course-runtime';
 import { RuntimeNatif } from '../../service/course-runtime-natif';
@@ -26,6 +27,7 @@ import {
 } from '../../util/allure';
 import { TraceSvg, projeterTrace } from '../../util/trace-svg';
 import { GrapheAllure, construireGrapheAllure } from '../../util/graphe-allure';
+import { environment } from '../../../environments/environment';
 
 const COTE_TRACE = 320;
 const LARGEUR_GRAPHE = 320;
@@ -78,6 +80,7 @@ export class Course implements OnInit, OnDestroy {
   private activeSession = inject(ActiveSessionService);
   private chironApi = inject(ChironApi);
   private i18n = inject(I18nService);
+  private auth = inject(AuthService);
 
   readonly runtime: CourseRuntime = Capacitor.isNativePlatform()
     ? new RuntimeNatif()
@@ -289,6 +292,11 @@ export class Course implements OnInit, OnDestroy {
   demarrer(): void {
     if (this.demarree()) return;
     this.runtime.configurer(this.options());
+    const token = this.auth.getToken();
+    if (token) {
+      const baseUrl = environment.apiUrl.replace(/\/api$/, '');
+      this.runtime.configurerApiCommandes(baseUrl, token);
+    }
     this.runtime.demarrer();
   }
 
