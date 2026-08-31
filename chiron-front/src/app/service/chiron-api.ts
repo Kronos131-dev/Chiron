@@ -439,6 +439,12 @@ export class ChironApi {
     return this.http.get<CourseTraceDto>(`${this.apiUrl}/courses/traces/${id}`);
   }
 
+  interpretVoiceCommand(transcript: string, language: string = 'fr'): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/courses/interpret-command`, {
+      params: { transcript, language },
+    });
+  }
+
   getExerciceGifUrl(id: number): string {
     return `${this.apiUrl}/exercices/${id}/gif`;
   }
