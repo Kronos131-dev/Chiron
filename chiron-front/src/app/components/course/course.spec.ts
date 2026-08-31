@@ -101,7 +101,13 @@ describe('Course', () => {
         { provide: Router, useValue: router },
         { provide: ActiveSessionService, useValue: activeSession },
         { provide: ChironApi, useValue: chironApi },
-        { provide: AuthService, useValue: { getUsername: vi.fn().mockReturnValue('alice') } },
+        {
+          provide: AuthService,
+          useValue: {
+            getUsername: vi.fn().mockReturnValue('alice'),
+            getToken: vi.fn().mockReturnValue('jeton-de-test'),
+          },
+        },
         {
           provide: ActivatedRoute,
           useValue: { snapshot: { paramMap: convertToParamMap({ id: '7', exoId }) } },
