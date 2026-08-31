@@ -310,6 +310,7 @@ export const en: Record<string, string> = {
   'journal.activite.zoneModerate': 'Moderate',
   'journal.activite.zoneIntense': 'Intense',
   'journal.activite.zoneMax': 'Maximum',
+  'journal.loadMore': 'Load more weeks',
 
   // ── Exercise card (shared) ──
   'exCard.dragTitle': 'Drag to reorder this exercise',

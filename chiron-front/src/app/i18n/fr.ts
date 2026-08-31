@@ -314,6 +314,7 @@ export const fr: Record<string, string> = {
   'journal.activite.zoneModerate': 'Modérée',
   'journal.activite.zoneIntense': 'Intense',
   'journal.activite.zoneMax': 'Maximum',
+  'journal.loadMore': 'Charger plus de semaines',
 
   // ── Carte d'exercice (partagée) ──
   'exCard.dragTitle': 'Glisser pour réordonner cet exercice',

@@ -709,6 +709,18 @@
           </div>
         </div>
       }
+
+      <!-- Load More Button -->
+      @if (hasMoreWeeks()) {
+        <div class="flex justify-center pt-6">
+          <button
+            (click)="loadMoreWeeks()"
+            class="px-8 py-3 rounded-lg bg-secondary text-slate-950 font-bold uppercase tracking-widest hover:scale-105 active:scale-95 transition-transform shadow-lg shadow-secondary/25"
+          >
+            {{ 'journal.loadMore' | t }}
+          </button>
+        </div>
+      }
     </div>
   </div>
 </main>
