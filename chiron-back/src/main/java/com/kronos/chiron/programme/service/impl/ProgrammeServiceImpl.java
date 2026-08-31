@@ -69,6 +69,7 @@ public class ProgrammeServiceImpl implements ProgrammeService {
         Seance seance = null;
         boolean isUpdate = false;
         Utilisateur targetUser = requestUser;
+        LocalDateTime previousEndTime = null;
 
         if (seanceDto.id() != null) {
             Seance existingSeance = seanceRepository.findById(seanceDto.id())
@@ -82,6 +83,7 @@ public class ProgrammeServiceImpl implements ProgrammeService {
             }
 
             targetUser = owner;
+            previousEndTime = existingSeance.getEndTime();
 
             boolean requestedHistorique = seanceDto.historique() != null ? seanceDto.historique() : false;
 
@@ -108,6 +110,8 @@ public class ProgrammeServiceImpl implements ProgrammeService {
         if (!isUpdate) {
             seance.setUtilisateur(targetUser);
             seance.setStartTime(seanceDto.startTime() != null ? seanceDto.startTime() : LocalDateTime.now(clock));
+            seance.setEndTime(seanceDto.endTime());
+        } else {
             seance.setEndTime(seanceDto.endTime());
         }
 
@@ -179,7 +183,9 @@ public class ProgrammeServiceImpl implements ProgrammeService {
 
         Seance saved = seanceRepository.save(seance);
 
-        if (!isUpdate && Boolean.TRUE.equals(seanceDto.historique()) && saved.getEndTime() != null) {
+        boolean isSessionJustClosed = previousEndTime == null && saved.getEndTime() != null;
+        if (Boolean.TRUE.equals(seanceDto.historique())
+                && ((!isUpdate && saved.getEndTime() != null) || isSessionJustClosed)) {
             activiteEnrichissementService.planifierEnrichissement(saved);
             fitbitPushService.pousserSeance(saved.getId());
         }

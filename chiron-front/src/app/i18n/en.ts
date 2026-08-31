@@ -567,6 +567,8 @@ export const en: Record<string, string> = {
   'programme.abandon': 'Abandon session',
   'programme.totalSeries': 'Total<br>Sets',
   'programme.add': 'Add a Programme',
+  'programme.searchPlaceholder': 'Search a programme…',
+  'programme.interactiveSession': 'Interactive session',
   'programme.confirmSwitch':
     'A session is already in progress on another programme. Unsaved progress will be lost. Continue?',
   'programme.confirmAbandon': 'Abandon the current session? Unsaved progress will be lost.',
@@ -599,11 +601,18 @@ export const en: Record<string, string> = {
   'session.notePlaceholder': 'Overall feeling, condition, things to remember for next time…',
   'session.noteTitle': 'Session note',
   'session.addToJournal': 'Add to journal',
+  'session.finishInteractive': 'Finish session',
   'session.newSession': 'New session',
+  'session.interactiveTitle': 'Interactive session',
   'session.loadError': 'Unable to load this programme.',
   'session.addedToJournal': 'Session added to journal.',
   'session.modelUpdateFailed': 'Journal OK, template update failed.',
   'session.saveError': 'Error while saving to the journal.',
+  'session.pushToTalkHint': 'Press to speak',
+  'session.listening': 'Listening…',
+  'session.noMic': 'Microphone not available on this browser.',
+  'session.micError': 'Mic error: {{error}}',
+  'session.coachError': 'Chiron could not respond. Try again.',
 
   // Profile
   'profile.title': 'PROFILE',

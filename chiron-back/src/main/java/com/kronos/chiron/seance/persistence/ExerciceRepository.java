@@ -41,4 +41,18 @@ public interface ExerciceRepository extends JpaRepository<Exercice, Long> {
         List<Exercice> results = findTopHistoricExercises(utilisateurId, nomExercice, PageRequest.of(0, 1));
         return results.isEmpty() ? Optional.empty() : Optional.of(results.get(0));
     }
+
+    @Query("SELECT e FROM Exercice e JOIN e.seance s WHERE s.utilisateur.id = :utilisateurId "
+            + "AND s.historique = true AND e.definition.id = :definitionId AND s.startTime >= :since "
+            + "ORDER BY e.startTime DESC")
+    List<Exercice> findRecentHistoricExercisesByDefinition(
+            @Param("utilisateurId") Long utilisateurId,
+            @Param("definitionId") Long definitionId,
+            @Param("since") java.time.LocalDateTime since);
+
+    default Optional<Exercice> findLastPerformance(Long utilisateurId, Long definitionId,
+            java.time.LocalDateTime since) {
+        List<Exercice> results = findRecentHistoricExercisesByDefinition(utilisateurId, definitionId, since);
+        return results.isEmpty() ? Optional.empty() : Optional.of(results.get(0));
+    }
 }

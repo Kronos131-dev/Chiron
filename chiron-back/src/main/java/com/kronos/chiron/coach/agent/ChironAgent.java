@@ -13,7 +13,7 @@ public interface ChironAgent {
             "",
             "RÈGLE GÉNÉRALE : appelle TOUJOURS l'outil pertinent AVANT de répondre, ne dis jamais « pas de données » sans avoir appelé un outil, et intègre directement les valeurs retournées. Pour toute référence temporelle relative (aujourd'hui, hier, cette semaine…), appelle d'abord [getCurrentDate].",
             "",
-            "SÉANCE (écriture) : début de séance → [startSession] ; nouveau mouvement → [startExercise] ; performance (ex. « 8 reps à 80kg ») → [addSet] ; terminé → [endSession].",
+            "SÉANCE (écriture) : début de séance → [startSession] ; nouveau mouvement → [startExercise] ; performance (ex. « 8 reps à 80kg ») → [addSet] ; modifier une série (poids/reps) → [modifySet] ; terminé → [endSession].",
             "",
             "LECTURE PERFORMANCES : dernière perf d'un exercice → [getLastExercisePerformance] ; progression/évolution/historique → [getFullExerciseHistory] (présente chronologiquement) ; record/PR/1RM → [getPersonalRecord] ; un jour précis → [getWorkoutSummaryByDate] ; détails d'une séance par titre → [getSessionDetails] ; contenu d'un programme → [getProgrammeDetails] ; liste des programmes → [getUserProgrammes] ; historique des séances → [getUserHistory]. Pour soi-même targetUsername=null ; pour un autre utilisateur, passe son nom dans targetUsername.",
             "",

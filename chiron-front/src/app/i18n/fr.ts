@@ -570,6 +570,8 @@ export const fr: Record<string, string> = {
   'programme.abandon': 'Abandonner la séance',
   'programme.totalSeries': 'Séries<br>Totales',
   'programme.add': 'Ajouter un Programme',
+  'programme.searchPlaceholder': 'Chercher un programme…',
+  'programme.interactiveSession': 'Séance interactive',
   'programme.confirmSwitch':
     'Une séance est déjà en cours sur un autre programme. La progression non enregistrée sera perdue. Continuer ?',
   'programme.confirmAbandon':
@@ -603,11 +605,18 @@ export const fr: Record<string, string> = {
   'session.notePlaceholder': 'Ressenti global, condition, à retenir pour la prochaine fois…',
   'session.noteTitle': 'Note de séance',
   'session.addToJournal': 'Ajouter au journal',
+  'session.finishInteractive': 'Terminer la séance',
   'session.newSession': 'Nouvelle séance',
+  'session.interactiveTitle': 'Séance interactive',
   'session.loadError': 'Impossible de charger ce programme.',
   'session.addedToJournal': 'Séance ajoutée au journal.',
   'session.modelUpdateFailed': 'Journal OK, mise à jour du modèle échouée.',
   'session.saveError': "Erreur lors de l'enregistrement dans le journal.",
+  'session.pushToTalkHint': 'Appuyer pour parler',
+  'session.listening': 'Écoute…',
+  'session.noMic': 'Micro non disponible sur ce navigateur.',
+  'session.micError': 'Erreur micro : {{error}}',
+  'session.coachError': 'Chiron na pas pu répondre. Réessaye.',
 
   // Profile
   'profile.title': 'PROFIL',

@@ -133,3 +133,26 @@ export function makeEmptyDegressif(): DegressifForm {
     reps: null,
   };
 }
+
+export function seriesFromDto(series: any[]): SerieForm[] {
+  if (!series || series.length === 0) {
+    return [makeEmptySerie()];
+  }
+
+  return series.map((dto) => ({
+    id: generateFormId(),
+    poids: dto.poids ?? null,
+    reps: dto.reps ?? null,
+    degressifs: (dto.degressifs ?? []).map((deg: any) => ({
+      id: generateFormId(),
+      poids: deg.poids ?? null,
+      reps: deg.reps ?? null,
+    })),
+    dureeMin: dto.dureeMin ?? null,
+    distanceM: dto.distanceM ?? null,
+    allureKmh: dto.allureKmh ?? null,
+    pentePct: dto.pentePct ?? null,
+    calories: dto.calories ?? null,
+    courseTraceId: dto.courseTraceId ?? null,
+  }));
+}

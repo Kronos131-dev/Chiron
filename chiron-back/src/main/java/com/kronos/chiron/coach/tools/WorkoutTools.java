@@ -274,6 +274,41 @@ public class WorkoutTools {
         return "Succès : Série enregistrée (" + reps + "x" + poids + "kg).";
     }
 
+    @Tool("Modifie une série déjà enregistrée de l'exercice en cours : change le poids et/ou le nombre "
+            + "de répétitions. Cible la dernière série par défaut, ou une série précise via son numéro (1 = première).")
+    public String modifySet(@ToolMemoryId String memoryId, Integer numeroSerie, Double nouveauPoids,
+            Integer nouvellesReps) {
+        Seance activeSeance = getActiveSeance(memoryId);
+
+        if (activeSeance == null) {
+            return "ERREUR SYSTEME : Aucune séance n'existe. Tu dois appeler [startSession] puis [startExercise] d'abord !";
+        }
+
+        if (activeSeance.getExercices() == null || activeSeance.getExercices().isEmpty()) {
+            return "ERREUR SYSTEME : Aucun exercice n'est en cours. Tu dois appeler l'outil [startExercise] d'abord !";
+        }
+
+        Exercice activeExercice = activeSeance.getExercices().get(activeSeance.getExercices().size() - 1);
+
+        if (activeExercice.getSeries() == null || activeExercice.getSeries().isEmpty()) {
+            return "ERREUR SYSTEME : Aucune série enregistrée. Tu dois appeler [addSet] d'abord !";
+        }
+
+        int targetIndex = (numeroSerie != null && numeroSerie > 0)
+                ? numeroSerie - 1
+                : activeExercice.getSeries().size() - 1;
+        if (targetIndex < 0 || targetIndex >= activeExercice.getSeries().size()) {
+            return "Erreur : Le numéro de série " + numeroSerie + " est invalide.";
+        }
+
+        Serie targetSerie = activeExercice.getSeries().get(targetIndex);
+        if (nouveauPoids != null) targetSerie.setPoids(nouveauPoids);
+        if (nouvellesReps != null) targetSerie.setNombreReps(nouvellesReps);
+
+        seanceRepository.save(activeSeance);
+        return "Succès : Série " + (targetIndex + 1) + " modifiée (" + nouvellesReps + "x" + nouveauPoids + "kg).";
+    }
+
     @Tool("Termine la séance d'entraînement en cours.")
     public String endSession(@ToolMemoryId String memoryId) {
         Seance activeSeance = getActiveSeance(memoryId);

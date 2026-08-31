@@ -180,6 +180,12 @@ export class ChironApi {
     );
   }
 
+  getLastPerformance(username: string, definitionId: number) {
+    return this.http.get<any>(
+      `${this.apiUrl}/journal/last-performance?username=${encodeURIComponent(username)}&definitionId=${definitionId}`,
+    );
+  }
+
   /**
    * Retrieves all workout programs (templates) belonging to a user.
    *

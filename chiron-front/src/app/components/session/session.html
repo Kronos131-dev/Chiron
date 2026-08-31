@@ -2,7 +2,6 @@
 
 <!-- Main Session Interface -->
 <main class="min-h-screen pt-20 pb-32 bg-slate-950 heroic-texture relative">
-
   <!-- Live session timer: thin pill just under the header, stays on scroll.
        pointer-events-none on the bar lets taps pass through to the page; only
        the small pill itself is opaque so it never blocks data entry. -->
@@ -11,10 +10,17 @@
        l'en-tête dès le premier défilement, sur le téléphone seulement — jamais sur
        le navigateur de bureau où la variable vaut exactement 4rem. -->
   @if (elapsed()) {
-    <div class="sticky top-[calc(var(--hauteur-entete)+0.5rem)] z-40 flex justify-center px-4 pointer-events-none">
-      <div class="pointer-events-auto inline-flex items-center gap-1.5 bg-slate-900/85 backdrop-blur-md border border-secondary/25 rounded-full pl-3 pr-3.5 py-1 shadow-lg shadow-black/30">
+    <div
+      class="sticky top-[calc(var(--hauteur-entete)+0.5rem)] z-40 flex justify-center px-4 pointer-events-none"
+    >
+      <div
+        class="pointer-events-auto inline-flex items-center gap-1.5 bg-slate-900/85 backdrop-blur-md border border-secondary/25 rounded-full pl-3 pr-3.5 py-1 shadow-lg shadow-black/30"
+      >
         <span class="material-symbols-outlined text-secondary text-base leading-none">timer</span>
-        <span class="font-headline text-sm font-bold text-white tabular-nums tracking-wider leading-none">{{ elapsed() }}</span>
+        <span
+          class="font-headline text-sm font-bold text-white tabular-nums tracking-wider leading-none"
+          >{{ elapsed() }}</span
+        >
       </div>
     </div>
   }
@@ -22,24 +28,32 @@
   <!-- Session Title and Global Actions Section -->
   <section class="px-6 py-10 relative overflow-hidden">
     <!-- Decorative Gradient -->
-    <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-slate-800/40 to-transparent pointer-events-none"></div>
+    <div
+      class="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-slate-800/40 to-transparent pointer-events-none"
+    ></div>
 
     <div class="max-w-md mx-auto relative z-10 space-y-4">
       <!-- Editable/Read-only Title Input -->
       <div>
-        <p class="text-secondary text-[10px] font-bold tracking-[0.25em] uppercase mb-1">{{ 'session.sessionLabel' | t }}</p>
-        <input type="text"
-               [ngModel]="titreRoutine()"
-               (ngModelChange)="titreRoutine.set($event)"
-               [readOnly]="isReadonly()"
-               class="w-full bg-transparent border-b-2 border-transparent hover:border-white/10 focus:border-secondary outline-none font-headline text-3xl md:text-4xl font-black text-white uppercase tracking-tight pb-1 transition-colors"
-               [placeholder]="'session.namePlaceholder' | t" />
+        <p class="text-secondary text-[10px] font-bold tracking-[0.25em] uppercase mb-1">
+          {{ 'session.sessionLabel' | t }}
+        </p>
+        <input
+          type="text"
+          [ngModel]="titreRoutine()"
+          (ngModelChange)="titreRoutine.set($event)"
+          [readOnly]="isReadonly()"
+          class="w-full bg-transparent border-b-2 border-transparent hover:border-white/10 focus:border-secondary outline-none font-headline text-3xl md:text-4xl font-black text-white uppercase tracking-tight pb-1 transition-colors"
+          [placeholder]="'session.namePlaceholder' | t"
+        />
       </div>
 
       <!-- Last Session Date Display (Hidden in Read-only Mode) -->
       @if (!isReadonly()) {
         <div class="pt-2">
-          <p class="text-on-surface-variant text-[10px] font-bold tracking-widest uppercase">{{ 'session.lastSession' | t }} : {{ derniereSession() }}</p>
+          <p class="text-on-surface-variant text-[10px] font-bold tracking-widest uppercase">
+            {{ 'session.lastSession' | t }} : {{ derniereSession() }}
+          </p>
         </div>
       }
     </div>
@@ -48,7 +62,6 @@
   <!-- Exercises List Section -->
   <section class="px-4 md:px-8">
     <div class="max-w-md mx-auto space-y-6">
-
       @for (exo of exercices(); track exo.id; let i = $index) {
         <app-exercice-card
           [exercice]="exo"
@@ -73,29 +86,59 @@
 
       <!-- Add Exercise Button → opens the library picker -->
       @if (!isReadonly()) {
-        <button (click)="openPicker()"
-                class="w-full mt-8 bg-[#1a1c23]/50 border-2 border-dashed border-secondary/30 rounded-xl p-6 flex flex-col items-center justify-center gap-3 text-secondary hover:bg-secondary/10 hover:border-secondary/60 transition-all group">
-          <div class="w-12 h-12 rounded-full bg-secondary/15 flex items-center justify-center group-hover:bg-secondary/25 group-hover:scale-110 transition-all">
+        <button
+          (click)="openPicker()"
+          class="w-full mt-8 bg-[#1a1c23]/50 border-2 border-dashed border-secondary/30 rounded-xl p-6 flex flex-col items-center justify-center gap-3 text-secondary hover:bg-secondary/10 hover:border-secondary/60 transition-all group"
+        >
+          <div
+            class="w-12 h-12 rounded-full bg-secondary/15 flex items-center justify-center group-hover:bg-secondary/25 group-hover:scale-110 transition-all"
+          >
             <span class="material-symbols-outlined text-2xl">add</span>
           </div>
-          <span class="text-xs font-bold tracking-[0.2em] uppercase">{{ 'builder.addExercise' | t }}</span>
+          <span class="text-xs font-bold tracking-[0.2em] uppercase">{{
+            'builder.addExercise' | t
+          }}</span>
         </button>
       }
 
       <!-- Note de séance (facultative) — juste avant l'enregistrement au journal -->
       @if (!isReadonly()) {
         <div class="pt-2">
-          <label class="text-secondary text-[9px] font-bold tracking-[0.2em] uppercase ml-1">{{ 'session.noteLabel' | t }}</label>
-          <textarea [ngModel]="noteSeance()"
-                    (ngModelChange)="noteSeance.set($event)"
-                    rows="2"
-                    class="w-full mt-1 bg-slate-950/50 border border-white/10 rounded p-3 text-white font-body text-sm outline-none focus:border-secondary/50 transition-colors resize-y"
-                    [placeholder]="'session.notePlaceholder' | t"></textarea>
+          <label class="text-secondary text-[9px] font-bold tracking-[0.2em] uppercase ml-1">{{
+            'session.noteLabel' | t
+          }}</label>
+          <textarea
+            [ngModel]="noteSeance()"
+            (ngModelChange)="noteSeance.set($event)"
+            rows="2"
+            class="w-full mt-1 bg-slate-950/50 border border-white/10 rounded p-3 text-white font-body text-sm outline-none focus:border-secondary/50 transition-colors resize-y"
+            [placeholder]="'session.notePlaceholder' | t"
+          ></textarea>
         </div>
       } @else if (noteSeance()) {
         <div class="bg-slate-950/40 border border-white/5 rounded-xl p-4">
-          <p class="text-secondary text-[9px] font-bold tracking-[0.2em] uppercase mb-1">{{ 'session.noteTitle' | t }}</p>
-          <p class="text-on-surface text-sm font-body whitespace-pre-wrap break-words">{{ noteSeance() }}</p>
+          <p class="text-secondary text-[9px] font-bold tracking-[0.2em] uppercase mb-1">
+            {{ 'session.noteTitle' | t }}
+          </p>
+          <p class="text-on-surface text-sm font-body whitespace-pre-wrap break-words">
+            {{ noteSeance() }}
+          </p>
+        </div>
+      }
+
+      <!-- Push-to-Talk Button for Interactive Sessions -->
+      @if (isInteractive() && !isReadonly()) {
+        <div class="pt-4">
+          <button
+            (click)="toggleRecording()"
+            [class.animate-pulse]="isRecording()"
+            class="w-full bg-gradient-to-r from-secondary to-[#c77a30] text-slate-950 font-bold text-sm px-6 py-4 rounded-xl uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-secondary/25 flex items-center justify-center gap-2"
+          >
+            <span class="material-symbols-outlined text-lg">{{
+              isRecording() ? 'mic' : 'mic_none'
+            }}</span>
+            {{ isRecording() ? ('session.listening' | t) : ('session.pushToTalkHint' | t) }}
+          </button>
         </div>
       }
 
@@ -103,21 +146,26 @@
            since the session is filled top-to-bottom. -->
       @if (!isReadonly()) {
         <div class="pt-4">
-          <button (click)="ajouterAuJournal()"
-                  class="w-full bg-gradient-to-r from-blue-500 to-blue-700 text-white font-bold text-sm px-6 py-4 rounded-xl uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2">
-            <span class="material-symbols-outlined text-lg">add_task</span>
-            {{ 'session.addToJournal' | t }}
+          <button
+            (click)="ajouterAuJournal()"
+            class="w-full bg-gradient-to-r from-blue-500 to-blue-700 text-white font-bold text-sm px-6 py-4 rounded-xl uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2"
+          >
+            <span class="material-symbols-outlined text-lg">{{
+              isInteractive() ? 'done_all' : 'add_task'
+            }}</span>
+            {{ isInteractive() ? ('session.finishInteractive' | t) : ('session.addToJournal' | t) }}
           </button>
 
           <!-- Transient status message (auto-clears after 3s) -->
           @if (saveStatus()) {
-            <p class="text-secondary text-xs font-bold tracking-widest uppercase text-center pt-3 animate-pulse">
+            <p
+              class="text-secondary text-xs font-bold tracking-widest uppercase text-center pt-3 animate-pulse"
+            >
               {{ saveStatus() }}
             </p>
           }
         </div>
       }
-
     </div>
   </section>
 </main>

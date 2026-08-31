@@ -14,6 +14,7 @@ import {
   BlockType,
   makeEmptyExercice,
   generateFormId,
+  seriesFromDto,
 } from '../../shared/exercise-forms';
 
 /**
@@ -45,17 +46,23 @@ export type RenderedItem =
 @Component({
   selector: 'app-programme-builder',
   standalone: true,
-  imports: [CommonModule, FormsModule, HeaderComponent, ExerciceCardComponent, ExercisePickerComponent, TranslatePipe],
+  imports: [
+    CommonModule,
+    FormsModule,
+    HeaderComponent,
+    ExerciceCardComponent,
+    ExercisePickerComponent,
+    TranslatePipe,
+  ],
   templateUrl: './programme-builder.html',
   styleUrls: ['./programme-builder.css'],
 })
 export class ProgrammeBuilder implements OnInit {
-
-  titre        = signal('');
-  exercices    = signal<ExerciceForm[]>([]);
-  isLoading    = signal(false);
-  isSaving     = signal(false);
-  saveStatus   = signal<string | null>(null);
+  titre = signal('');
+  exercices = signal<ExerciceForm[]>([]);
+  isLoading = signal(false);
+  isSaving = signal(false);
+  saveStatus = signal<string | null>(null);
   private _saveStatusTimer: ReturnType<typeof setTimeout> | null = null;
 
   /** ID of the programme being edited (null for a brand-new one). */
@@ -74,32 +81,32 @@ export class ProgrammeBuilder implements OnInit {
   });
 
   /** "Add exercise" picker — open flag + the exos appended during the current session. */
-  pickerOpen      = signal(false);
-  addedExercises  = signal<ExerciceForm[]>([]);
+  pickerOpen = signal(false);
+  addedExercises = signal<ExerciceForm[]>([]);
 
   // ── Drag & drop state for the programme's exercise list ─────────────────────
   dragFromIdx = signal(-1);
   dragOverIdx = signal(-1);
-  private _from           = -1;
-  private _to             = -1;
-  private _touchDragging  = false;
+  private _from = -1;
+  private _to = -1;
+  private _touchDragging = false;
   private _longPressTimer: any = null;
-  private _touchStartX    = 0;
-  private _touchStartY    = 0;
+  private _touchStartX = 0;
+  private _touchStartY = 0;
 
   constructor(
-    private router:      Router,
-    private route:       ActivatedRoute,
-    private chironApi:   ChironApi,
+    private router: Router,
+    private route: ActivatedRoute,
+    private chironApi: ChironApi,
     private authService: AuthService,
-    private i18n:        I18nService,
+    private i18n: I18nService,
   ) {}
 
   ngOnInit() {
     this.titre.set(this.i18n.t('builder.defaultTitle'));
-    this.route.paramMap.subscribe(params => {
+    this.route.paramMap.subscribe((params) => {
       this.programmeId = params.get('id');
-      this.route.queryParamMap.subscribe(qp => {
+      this.route.queryParamMap.subscribe((qp) => {
         const asUser = qp.get('asUser');
         this.targetUsername.set(asUser);
 
@@ -173,19 +180,37 @@ export class ProgrammeBuilder implements OnInit {
       def.cardioType as ExerciceForm['cardioType'],
       def.wodType as ExerciceForm['wodType'],
     );
-    this.exercices.update(list => [...list, exo]);
-    this.addedExercises.update(list => [...list, exo]);
+    this.exercices.update((list) => [...list, exo]);
+    this.addedExercises.update((list) => [...list, exo]);
+
+    if (def.id) {
+      const username = this.authService.getUsername();
+      if (username) {
+        this.chironApi.getLastPerformance(username, def.id).subscribe({
+          next: (lastExo) => {
+            this.exercices.update((list) => {
+              const idx = list.findIndex((e) => e.id === exo.id);
+              if (idx >= 0 && lastExo.series) {
+                list[idx] = { ...list[idx], series: seriesFromDto(lastExo.series) };
+              }
+              return list;
+            });
+          },
+          error: () => {},
+        });
+      }
+    }
   }
 
   addCustomExercice() {
     const exo = makeEmptyExercice();
-    this.exercices.update(list => [...list, exo]);
+    this.exercices.update((list) => [...list, exo]);
     this.closePicker();
   }
 
   removeExercice(exoId: number | string) {
-    this.exercices.update(list => this.normalizeBlocks(list.filter(e => e.id !== exoId)));
-    this.addedExercises.update(list => list.filter(e => e.id !== exoId));
+    this.exercices.update((list) => this.normalizeBlocks(list.filter((e) => e.id !== exoId)));
+    this.addedExercises.update((list) => list.filter((e) => e.id !== exoId));
   }
 
   // ── Supersets / bisets ─────────────────────────────────────────────────────
@@ -243,30 +268,40 @@ export class ProgrammeBuilder implements OnInit {
     const cur = list[index];
     const next = list[index + 1];
     const targetBlockId =
-      cur.blockId != null  ? cur.blockId  :
-      next.blockId != null ? next.blockId :
-      this.generateBlockId();
-    this.exercices.update(arr => this.normalizeBlocks(
-      arr.map((e, i) => {
-        if (i === index || i === index + 1 || (e.blockId != null && e.blockId === targetBlockId)) {
-          return { ...e, blockId: targetBlockId, blockType: type };
-        }
-        return e;
-      })
-    ));
+      cur.blockId != null
+        ? cur.blockId
+        : next.blockId != null
+          ? next.blockId
+          : this.generateBlockId();
+    this.exercices.update((arr) =>
+      this.normalizeBlocks(
+        arr.map((e, i) => {
+          if (
+            i === index ||
+            i === index + 1 ||
+            (e.blockId != null && e.blockId === targetBlockId)
+          ) {
+            return { ...e, blockId: targetBlockId, blockType: type };
+          }
+          return e;
+        }),
+      ),
+    );
   }
 
   /** Retire un seul exercice de son superset (le bloc se résorbe si <2 membres). */
   ungroupExercise(index: number) {
-    this.exercices.update(arr => this.normalizeBlocks(
-      arr.map((e, i) => i === index ? { ...e, blockId: null, blockType: null } : e)
-    ));
+    this.exercices.update((arr) =>
+      this.normalizeBlocks(
+        arr.map((e, i) => (i === index ? { ...e, blockId: null, blockType: null } : e)),
+      ),
+    );
   }
 
   /** Dissocie tout un superset : tous les exos du bloc redeviennent isolés. */
   dissociateBlock(blockId: number) {
-    this.exercices.update(arr =>
-      arr.map(e => e.blockId === blockId ? { ...e, blockId: null, blockType: null } : e)
+    this.exercices.update((arr) =>
+      arr.map((e) => (e.blockId === blockId ? { ...e, blockId: null, blockType: null } : e)),
     );
   }
 
@@ -285,7 +320,7 @@ export class ProgrammeBuilder implements OnInit {
       if (exo.blockId == null) return exo;
       const prev = list[i - 1];
       const next = list[i + 1];
-      const hasNeighbor = (prev?.blockId === exo.blockId) || (next?.blockId === exo.blockId);
+      const hasNeighbor = prev?.blockId === exo.blockId || next?.blockId === exo.blockId;
       return hasNeighbor ? exo : { ...exo, blockId: null, blockType: null };
     });
   }
@@ -327,24 +362,24 @@ export class ProgrammeBuilder implements OnInit {
       titre: this.titre(),
       weekNumber: 0,
       historique: false,
-      exercices: this.exercices().map(exo => ({
+      exercices: this.exercices().map((exo) => ({
         nom: exo.nom,
         commentaire: exo.commentaire ?? '',
         unilateral: exo.unilateral ?? false,
         exerciceDefinitionId: exo.definitionId ?? null,
         blockId: exo.blockId ?? null,
         blockType: exo.blockType ?? null,
-        series: exo.series.map(serie => ({
+        series: exo.series.map((serie) => ({
           poids: serie.poids != null ? Number(serie.poids) : 0,
-          reps:  serie.reps  != null ? Number(serie.reps)  : 0,
+          reps: serie.reps != null ? Number(serie.reps) : 0,
           commentaire: '',
-          dureeMin:  serie.dureeMin  != null ? Number(serie.dureeMin)  : null,
+          dureeMin: serie.dureeMin != null ? Number(serie.dureeMin) : null,
           distanceM: serie.distanceM != null ? Number(serie.distanceM) : null,
           allureKmh: serie.allureKmh != null ? Number(serie.allureKmh) : null,
-          pentePct:  serie.pentePct  != null ? Number(serie.pentePct)  : null,
-          degressifs: serie.degressifs.map(deg => ({
+          pentePct: serie.pentePct != null ? Number(serie.pentePct) : null,
+          degressifs: serie.degressifs.map((deg) => ({
             poids: deg.poids != null ? Number(deg.poids) : 0,
-            reps:  deg.reps  != null ? Number(deg.reps)  : 0,
+            reps: deg.reps != null ? Number(deg.reps) : 0,
           })),
         })),
       })),
@@ -409,7 +444,7 @@ export class ProgrammeBuilder implements OnInit {
     this.dragFromIdx.set(-1);
     this.dragOverIdx.set(-1);
     this._from = -1;
-    this._to   = -1;
+    this._to = -1;
   }
 
   onExoTouchStart(event: TouchEvent, index: number) {
@@ -427,7 +462,10 @@ export class ProgrammeBuilder implements OnInit {
   onExoTouchMove(event: TouchEvent) {
     const t = event.touches[0];
     if (!this._touchDragging) {
-      if (Math.abs(t.clientX - this._touchStartX) > 8 || Math.abs(t.clientY - this._touchStartY) > 8) {
+      if (
+        Math.abs(t.clientX - this._touchStartX) > 8 ||
+        Math.abs(t.clientY - this._touchStartY) > 8
+      ) {
         clearTimeout(this._longPressTimer);
       }
       return;
@@ -455,12 +493,12 @@ export class ProgrammeBuilder implements OnInit {
 
   private applyReorder() {
     const from = this._from;
-    const to   = this._to;
+    const to = this._to;
     this._from = -1;
-    this._to   = -1;
+    this._to = -1;
     if (from < 0 || to < 0 || from === to) return;
 
-    this.exercices.update(list => {
+    this.exercices.update((list) => {
       const next = [...list];
       const [moved] = next.splice(from, 1);
       next.splice(to, 0, moved);

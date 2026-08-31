@@ -10,25 +10,19 @@ import { ExerciceCardComponent } from '../shared/exercice-card/exercice-card';
 import { ExercisePickerComponent } from '../shared/exercise-picker/exercise-picker';
 import { TranslatePipe } from '../../service/translate.pipe';
 import { I18nService } from '../../service/i18n.service';
-import { nowAsLocalDateTime } from '../../util/local-date-time';
-import { ExerciceForm, generateFormId, makeEmptyExercice } from '../../shared/exercise-forms';
+import { nowAsLocalDateTime, getIsoWeekNumber } from '../../util/local-date-time';
+import {
+  ExerciceForm,
+  generateFormId,
+  makeEmptyExercice,
+  seriesFromDto,
+} from '../../shared/exercise-forms';
+import { ReconnaissanceVocale, creerReconnaissance } from '../../service/reconnaissance-vocale';
+import { corrigerVocabulaire } from '../../util/vocabulaire-vocal';
+import { creerVoix, Voix } from '../../util/voix';
 
 // Re-export so existing imports (e.g. tests) keep working until they're migrated.
 export type { DegressifForm, SerieForm, ExerciceForm } from '../../shared/exercise-forms';
-
-/**
- * ISO-8601 week number (Monday = first day of the week).
- * Week 1 is the week containing the year's first Thursday.
- */
-function getIsoWeekNumber(d: Date): number {
-  const target = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-  const dayNr = (target.getUTCDay() + 6) % 7; // Mon=0 .. Sun=6
-  target.setUTCDate(target.getUTCDate() - dayNr + 3); // jump to nearest Thursday
-  const firstThursday = new Date(Date.UTC(target.getUTCFullYear(), 0, 4));
-  const firstThursdayDayNr = (firstThursday.getUTCDay() + 6) % 7;
-  firstThursday.setUTCDate(firstThursday.getUTCDate() - firstThursdayDayNr + 3);
-  return 1 + Math.round((target.getTime() - firstThursday.getTime()) / (7 * 24 * 3600 * 1000));
-}
 
 /**
  * Component responsible for the execution, creation, and modification of a workout session.
@@ -69,6 +63,12 @@ export class Session implements OnInit, OnDestroy {
 
   /** Optional free-text note for the whole session (ressenti, condition…). */
   noteSeance = signal('');
+
+  isInteractive = signal(false);
+  isRecording = signal(false);
+  activeConversationId = signal<number | null>(null);
+  private recognition: ReconnaissanceVocale;
+  private voix: Voix | null = null;
 
   /** Loading state indicator. */
   isLoading = signal(false);
@@ -132,7 +132,9 @@ export class Session implements OnInit, OnDestroy {
     private authService: AuthService,
     private activeSession: ActiveSessionService,
     private i18n: I18nService,
-  ) {}
+  ) {
+    this.recognition = creerReconnaissance();
+  }
 
   /**
    * Lifecycle hook triggered on initialization.
@@ -155,8 +157,10 @@ export class Session implements OnInit, OnDestroy {
         // lives in ProgrammeBuilder.
         const fromJournal = queryParams['from'] === 'journal';
         const isExternal = queryParams['external'] === 'true';
+        const interactive = queryParams['interactive'] === 'true';
         this.isReadonly.set(fromJournal || isExternal);
         this.isExternalView.set(isExternal);
+        this.isInteractive.set(interactive);
 
         if (this.routineId) {
           // Execution mode: if this exact routine is already in progress, rehydrate
@@ -304,6 +308,24 @@ export class Session implements OnInit, OnDestroy {
     );
     this.exercices.update((list) => [...list, exo]);
     this.addedExercises.update((list) => [...list, exo]);
+
+    if (def.id) {
+      const username = this.authService.getUsername();
+      if (username) {
+        this.chironApi.getLastPerformance(username, def.id).subscribe({
+          next: (lastExo) => {
+            this.exercices.update((list) => {
+              const idx = list.findIndex((e) => e.id === exo.id);
+              if (idx >= 0 && lastExo.series) {
+                list[idx] = { ...list[idx], series: seriesFromDto(lastExo.series) };
+              }
+              return list;
+            });
+          },
+          error: () => {},
+        });
+      }
+    }
   }
 
   demarrerWod(exo: ExerciceForm) {
@@ -477,10 +499,8 @@ export class Session implements OnInit, OnDestroy {
       series: exo.series.map(({ courseTraceId, ...serie }) => serie),
     }));
 
-    // Always create a new historical session entry (the user can run the same programme
-    // multiple times).
     const journalDto = {
-      id: null,
+      id: this.isInteractive() && this.routineId ? parseInt(this.routineId, 10) : null,
       titre: this.titreRoutine(),
       note: this.noteSeance() || null,
       weekNumber: currentWeekNumber,
@@ -505,9 +525,7 @@ export class Session implements OnInit, OnDestroy {
           this.titreRoutine = signal(titre);
         }
 
-        // Sync the source template programme so next time the presets show
-        // the latest charges/reps — only when the session was started from a template.
-        if (this.routineId && !this.isReadonly()) {
+        if (!this.isInteractive() && this.routineId && !this.isReadonly()) {
           const templateDto = {
             id: parseInt(this.routineId, 10),
             titre: this.titreRoutine(),
@@ -532,5 +550,96 @@ export class Session implements OnInit, OnDestroy {
     } else {
       this.router.navigate(['/programme']);
     }
+  }
+
+  toggleRecording() {
+    if (!this.recognition.disponible()) {
+      alert(this.i18n.t('session.noMic'));
+      return;
+    }
+
+    if (this.isRecording()) {
+      this.recognition.arreter();
+      this.isRecording.set(false);
+      return;
+    }
+
+    this.isRecording.set(true);
+    this.recognition.demarrer(this.i18n.lang() === 'en' ? 'en-US' : 'fr-FR', {
+      final: (texte) => {
+        this.isRecording.set(false);
+        const corrected = corrigerVocabulaire(texte);
+        this.sendVoiceCommand(corrected);
+      },
+      erreur: (raison) => {
+        this.isRecording.set(false);
+        this.flashStatus(this.i18n.t('session.micError', { error: raison }));
+      },
+    });
+  }
+
+  private sendVoiceCommand(message: string) {
+    if (!message.trim() || !this.authService.getUsername()) return;
+
+    this.chironApi
+      .sendMessage(message, this.activeConversationId() || undefined, this.i18n.lang())
+      .subscribe({
+        next: (response) => {
+          if (response?.message) {
+            this.flashStatus(response.message);
+            if (!this.voix) {
+              this.voix = creerVoix(this.i18n.lang() === 'en' ? 'en-US' : 'fr-FR');
+            }
+            this.voix?.parler(response.message);
+          }
+          if (response?.conversationId) {
+            this.activeConversationId.set(response.conversationId);
+          }
+          this.refreshExercicesFromServer();
+        },
+        error: () => {
+          this.flashStatus(this.i18n.t('session.coachError'));
+        },
+      });
+  }
+
+  private refreshExercicesFromServer() {
+    if (!this.routineId) return;
+    const username = this.authService.getUsername();
+    if (!username) return;
+
+    this.chironApi.getProgrammeById(username, this.routineId).subscribe({
+      next: (data) => {
+        const exosFormatees: ExerciceForm[] = data.exercices.map((exo: any) => ({
+          id: exo.id || generateFormId(),
+          nom: exo.nom,
+          definitionId: exo.exerciceDefinitionId ?? undefined,
+          cardioType: exo.cardioType ?? null,
+          wodType: exo.wodType ?? null,
+          commentaire: exo.commentaire ?? '',
+          unilateral: exo.unilateral ?? false,
+          series: exo.series.map((serie: any) => ({
+            id: serie.id || generateFormId(),
+            poids: serie.poids,
+            reps: serie.reps,
+            dureeMin: serie.dureeMin ?? null,
+            distanceM: serie.distanceM ?? null,
+            allureKmh: serie.allureKmh ?? null,
+            pentePct: serie.pentePct ?? null,
+            calories: serie.calories ?? null,
+            courseTraceId: serie.courseTraceId ?? null,
+            degressifs: serie.degressifs
+              ? serie.degressifs.map((deg: any) => ({
+                  id: deg.id || generateFormId(),
+                  poids: deg.poids,
+                  reps: deg.reps,
+                }))
+              : [],
+          })),
+        }));
+        this.exercices.set(exosFormatees);
+      },
+      error: () => {},
+    });
   }
 }

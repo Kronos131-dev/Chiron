@@ -1,5 +1,6 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ChironApi } from '../../service/chiron-api';
 import { AuthService } from '../../service/auth.service';
@@ -7,6 +8,7 @@ import { ActiveSessionService } from '../../service/active-session.service';
 import { HeaderComponent } from '../shared/header/header';
 import { TranslatePipe } from '../../service/translate.pipe';
 import { I18nService } from '../../service/i18n.service';
+import { getIsoWeekNumber } from '../../util/local-date-time';
 
 export interface Routine {
   id: string;
@@ -18,35 +20,43 @@ export interface Routine {
 @Component({
   selector: 'app-programme',
   standalone: true,
-  imports: [CommonModule, HeaderComponent, TranslatePipe],
+  imports: [CommonModule, FormsModule, HeaderComponent, TranslatePipe],
   templateUrl: './programme.html',
   styleUrls: ['./programme.css'],
 })
 export class Programme implements OnInit {
-
-  routines  = signal<Routine[]>([]);
+  routines = signal<Routine[]>([]);
   isLoading = signal(true);
+  searchQuery = signal('');
+
+  filteredRoutines = computed(() => {
+    const query = this.searchQuery().toLowerCase().trim();
+    if (!query) return this.routines();
+    return this.routines().filter((r) => r.titre.toLowerCase().includes(query));
+  });
 
   // ── Drag state ───────────────────────────────────────────────────────────────
-  dragFromIdx  = signal(-1);
-  dragOverIdx  = signal(-1);
+  dragFromIdx = signal(-1);
+  dragOverIdx = signal(-1);
 
-  private _from           = -1;
-  private _to             = -1;
-  private _touchDragging  = false;
+  private _from = -1;
+  private _to = -1;
+  private _touchDragging = false;
   private _longPressTimer: any = null;
-  private _touchStartX    = 0;
-  private _touchStartY    = 0;
+  private _touchStartX = 0;
+  private _touchStartY = 0;
 
   constructor(
-    private router:      Router,
-    private chironApi:   ChironApi,
+    private router: Router,
+    private chironApi: ChironApi,
     private authService: AuthService,
-    public  activeSession: ActiveSessionService,
+    public activeSession: ActiveSessionService,
     private i18n: I18nService,
   ) {}
 
-  ngOnInit() { this.chargerProgrammes(); }
+  ngOnInit() {
+    this.chargerProgrammes();
+  }
 
   chargerProgrammes() {
     const username = this.authService.getUsername();
@@ -57,8 +67,15 @@ export class Programme implements OnInit {
       next: (data) => {
         const routinesFormatees = data.map((seance: any) => {
           let total = 0;
-          seance.exercices?.forEach((exo: any) => { total += exo.series?.length ?? 0; });
-          return { id: seance.id.toString(), titre: seance.titre, sousTitre: this.i18n.t('programme.sessionSubtitle'), totalSeries: total };
+          seance.exercices?.forEach((exo: any) => {
+            total += exo.series?.length ?? 0;
+          });
+          return {
+            id: seance.id.toString(),
+            titre: seance.titre,
+            sousTitre: this.i18n.t('programme.sessionSubtitle'),
+            totalSeries: total,
+          };
         });
         this.routines.set(routinesFormatees);
         this.isLoading.set(false);
@@ -91,15 +108,48 @@ export class Programme implements OnInit {
     }
   }
 
-  ajouterRoutine()             { this.router.navigate(['/programme', 'new']); }
-  editerRoutine(id: string)    { this.router.navigate(['/programme', id, 'edit']); }
+  onSearchInput(query: string) {
+    this.searchQuery.set(query);
+  }
+
+  commencerSeanceInteractive() {
+    const username = this.authService.getUsername();
+    if (!username) return;
+
+    const weekNumber = getIsoWeekNumber(new Date());
+    const dto = {
+      id: null,
+      titre: this.i18n.t('session.interactiveTitle'),
+      weekNumber,
+      historique: true,
+      endTime: null,
+      exercices: [],
+    };
+
+    this.chironApi.sauvegarderProgramme(username, dto).subscribe({
+      next: (response) => {
+        const match = typeof response === 'string' ? response.match(/ID:\s*(\d+)/) : null;
+        if (match) {
+          this.router.navigate(['/session', match[1]], { queryParams: { interactive: 'true' } });
+        }
+      },
+      error: () => alert(this.i18n.t('session.saveError')),
+    });
+  }
+
+  ajouterRoutine() {
+    this.router.navigate(['/programme', 'new']);
+  }
+  editerRoutine(id: string) {
+    this.router.navigate(['/programme', id, 'edit']);
+  }
 
   supprimerRoutine(routineId: string) {
     if (confirm(this.i18n.t('programme.confirmDelete'))) {
       const username = this.authService.getUsername();
       if (!username) return;
       this.chironApi.deleteProgramme(parseInt(routineId), username).subscribe({
-        next: () => this.routines.update(list => list.filter(r => r.id !== routineId)),
+        next: () => this.routines.update((list) => list.filter((r) => r.id !== routineId)),
         error: () => alert(this.i18n.t('programme.deleteError')),
       });
     }
@@ -108,6 +158,7 @@ export class Programme implements OnInit {
   // ── HTML5 Drag & Drop (desktop) ──────────────────────────────────────────────
 
   onDragStart(event: DragEvent, index: number, cardEl: HTMLElement) {
+    if (this.searchQuery()) return;
     this._from = index;
     this.dragFromIdx.set(index);
     event.dataTransfer?.setData('text/plain', String(index));
@@ -117,6 +168,7 @@ export class Programme implements OnInit {
   }
 
   onDragOver(event: DragEvent, index: number) {
+    if (this.searchQuery()) return;
     event.preventDefault();
     if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
     this._to = index;
@@ -124,6 +176,7 @@ export class Programme implements OnInit {
   }
 
   onDrop(event: DragEvent, index: number) {
+    if (this.searchQuery()) return;
     event.preventDefault();
     this._to = index;
     this._applyReorder();
@@ -133,12 +186,13 @@ export class Programme implements OnInit {
     this.dragFromIdx.set(-1);
     this.dragOverIdx.set(-1);
     this._from = -1;
-    this._to   = -1;
+    this._to = -1;
   }
 
   // ── Touch drag (mobile long-press) ───────────────────────────────────────────
 
   onTouchStart(event: TouchEvent, index: number) {
+    if (this.searchQuery()) return;
     const t = event.touches[0];
     this._touchStartX = t.clientX;
     this._touchStartY = t.clientY;
@@ -156,14 +210,17 @@ export class Programme implements OnInit {
 
     if (!this._touchDragging) {
       // Cancel long-press if finger moved significantly before 350ms
-      if (Math.abs(t.clientX - this._touchStartX) > 8 || Math.abs(t.clientY - this._touchStartY) > 8) {
+      if (
+        Math.abs(t.clientX - this._touchStartX) > 8 ||
+        Math.abs(t.clientY - this._touchStartY) > 8
+      ) {
         clearTimeout(this._longPressTimer);
       }
       return;
     }
 
     // Find the card under the finger
-    const el   = document.elementFromPoint(t.clientX, t.clientY) as HTMLElement;
+    const el = document.elementFromPoint(t.clientX, t.clientY) as HTMLElement;
     const card = el?.closest<HTMLElement>('[data-idx]');
     if (card) {
       const idx = parseInt(card.getAttribute('data-idx')!);
@@ -188,9 +245,9 @@ export class Programme implements OnInit {
 
   private _applyReorder() {
     const from = this._from;
-    const to   = this._to;
+    const to = this._to;
     this._from = -1;
-    this._to   = -1;
+    this._to = -1;
     if (from < 0 || to < 0 || from === to) return;
 
     const previous = this.routines();
@@ -202,7 +259,7 @@ export class Programme implements OnInit {
     const username = this.authService.getUsername();
     if (!username) return;
 
-    const ids = list.map(r => parseInt(r.id));
+    const ids = list.map((r) => parseInt(r.id));
     this.chironApi.updateProgrammesOrder(username, ids).subscribe({
       error: () => this.routines.set(previous),
     });
