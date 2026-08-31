@@ -26,6 +26,7 @@ import com.kronos.chiron.exercice.service.ExerciceDefinitionService;
 import com.kronos.chiron.performance.service.PerformanceService;
 import com.kronos.chiron.programme.service.ProgrammeService;
 import com.kronos.chiron.sante.service.ActiviteEnrichissementService;
+import com.kronos.chiron.fitbit.service.FitbitPushService;
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agent.tool.ToolMemoryId;
 import lombok.RequiredArgsConstructor;
@@ -59,6 +60,7 @@ public class WorkoutTools {
     private final PerformanceService performanceService;
     private final ToolUserResolver toolUserResolver;
     private final ActiviteEnrichissementService activiteEnrichissementService;
+    private final FitbitPushService fitbitPushService;
 
     private final Clock clock;
     @Tool("Retourne la date et l'heure actuelles et le jour de la semaine.")
@@ -291,6 +293,7 @@ public class WorkoutTools {
 
         seanceRepository.save(activeSeance);
         activiteEnrichissementService.planifierEnrichissement(activeSeance);
+        fitbitPushService.pousserSeance(activeSeance.getId());
         return "Séance terminée et sauvegardée avec succès dans l'historique.";
     }
 

@@ -18,6 +18,7 @@ import com.kronos.chiron.utilisateur.model.Role;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 
 import com.kronos.chiron.sante.service.ActiviteEnrichissementService;
+import com.kronos.chiron.fitbit.service.FitbitPushService;
 import com.kronos.chiron.seance.dto.ExerciceDto;
 import com.kronos.chiron.seance.dto.SeanceDto;
 import com.kronos.chiron.seance.dto.SerieDto;
@@ -50,6 +51,8 @@ class ProgrammeServiceTest {
     private UtilisateurRepository utilisateurRepository;
     @Mock
     private ActiviteEnrichissementService activiteEnrichissementService;
+    @Mock
+    private FitbitPushService fitbitPushService;
 
     @Spy
     private Clock clock = Clock.system(ZoneId.of("Europe/Paris"));

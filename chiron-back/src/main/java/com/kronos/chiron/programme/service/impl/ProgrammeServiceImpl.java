@@ -8,6 +8,7 @@ import static com.kronos.chiron.core.exceptions.ErrorFactory.forbidden;
 import static com.kronos.chiron.core.exceptions.ErrorFactory.notFound;
 
 import com.kronos.chiron.course.persistence.CourseTraceRepository;
+import com.kronos.chiron.fitbit.service.FitbitPushService;
 import com.kronos.chiron.seance.service.CardioCalorieService;
 import com.kronos.chiron.sante.service.ActiviteEnrichissementService;
 
@@ -49,6 +50,7 @@ public class ProgrammeServiceImpl implements ProgrammeService {
     private final ExerciceDefinitionRepository exerciceDefinitionRepository;
     private final CardioCalorieService cardioCalorieService;
     private final ActiviteEnrichissementService activiteEnrichissementService;
+    private final FitbitPushService fitbitPushService;
     private final CourseTraceRepository courseTraceRepository;
 
     private final Clock clock;
@@ -179,6 +181,7 @@ public class ProgrammeServiceImpl implements ProgrammeService {
 
         if (!isUpdate && Boolean.TRUE.equals(seanceDto.historique()) && saved.getEndTime() != null) {
             activiteEnrichissementService.planifierEnrichissement(saved);
+            fitbitPushService.pousserSeance(saved.getId());
         }
 
         if (seanceDto.exercices() != null) {

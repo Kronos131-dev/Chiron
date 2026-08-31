@@ -22,6 +22,7 @@ import com.kronos.chiron.utilisateur.persistence.UtilisateurRepository;
 import com.kronos.chiron.exercice.service.ExerciceDefinitionService;
 import com.kronos.chiron.programme.service.ProgrammeService;
 import com.kronos.chiron.sante.service.ActiviteEnrichissementService;
+import com.kronos.chiron.fitbit.service.FitbitPushService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -59,6 +60,8 @@ class WorkoutToolsTest {
     private ToolUserResolver toolUserResolver;
     @Mock
     private ActiviteEnrichissementService activiteEnrichissementService;
+    @Mock
+    private FitbitPushService fitbitPushService;
 
     @Spy
     private Clock clock = Clock.system(ZoneId.of("Europe/Paris"));

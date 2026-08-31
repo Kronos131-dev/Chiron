@@ -167,6 +167,20 @@ public class FitbitClient {
         return doPost(accessToken, type.dataPointsPath() + ":rollUp", requestBody);
     }
 
+    public JsonNode pousserSeance(String accessToken, Instant startUtc, String startUtcOffset,
+            Instant endUtc, String endUtcOffset, String exerciseType, String displayName, String notes) {
+        Map<String, Object> requestBody = Map.of(
+                "interval", Map.of(
+                        "startTime", startUtc.toString(),
+                        "startUtcOffset", startUtcOffset,
+                        "endTime", endUtc.toString(),
+                        "endUtcOffset", endUtcOffset),
+                "exerciseType", exerciseType,
+                "displayName", displayName,
+                "notes", notes);
+        return doPost(accessToken, GoogleHealthDataType.EXERCISE.dataPointsPath(), requestBody);
+    }
+
     private static Map<String, Object> civilDateTime(LocalDate d) {
         return Map.of("date", Map.of("year", d.getYear(), "month", d.getMonthValue(), "day", d.getDayOfMonth()));
     }
