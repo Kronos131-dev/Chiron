@@ -6,6 +6,7 @@ import com.kronos.chiron.coach.tools.AppGuideTools;
 import com.kronos.chiron.coach.agent.ChironAgent;
 import com.kronos.chiron.coach.agent.ChironAgentRouter;
 import com.kronos.chiron.coach.agent.ConversationMemoryManager;
+import com.kronos.chiron.course.agent.CourseVoiceInterpreter;
 import com.kronos.chiron.coach.tools.FitbitTools;
 import com.kronos.chiron.coach.tools.MemoryTools;
 import com.kronos.chiron.coach.tools.NutritionTools;
@@ -87,5 +88,20 @@ public class ChironConfig {
     @Bean
     public ChatMemoryProvider chatMemoryProvider(ConversationMemoryManager memoryManager) {
         return memoryManager::getOrCreate;
+    }
+
+    @Bean
+    public CourseVoiceInterpreter courseVoiceInterpreter() {
+        ChatModel mistral = MistralAiChatModel.builder()
+                .apiKey(mistralApiKey)
+                .modelName(mistralModel)
+                .timeout(Duration.ofSeconds(3))
+                .logRequests(true)
+                .logResponses(true)
+                .build();
+
+        return AiServices.builder(CourseVoiceInterpreter.class)
+                .chatModel(mistral)
+                .build();
     }
 }

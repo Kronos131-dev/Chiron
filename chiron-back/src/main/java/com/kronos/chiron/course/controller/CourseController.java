@@ -1,6 +1,8 @@
 package com.kronos.chiron.course.controller;
 
 import com.kronos.chiron.core.security.AuthenticatedUserService;
+import com.kronos.chiron.course.agent.CourseVoiceInterpreter;
+import com.kronos.chiron.course.dto.CommandeVoixDto;
 import com.kronos.chiron.course.dto.CourseTraceDto;
 import com.kronos.chiron.course.dto.CourseTraceRequestDto;
 import com.kronos.chiron.course.service.CourseTraceService;
@@ -17,6 +19,7 @@ public class CourseController {
 
     private final AuthenticatedUserService authenticatedUserService;
     private final CourseTraceService courseTraceService;
+    private final CourseVoiceInterpreter courseVoiceInterpreter;
 
     @PostMapping("/traces")
     public ResponseEntity<CourseTraceDto> enregistrerTrace(@RequestBody CourseTraceRequestDto requete) {
@@ -28,5 +31,13 @@ public class CourseController {
     public ResponseEntity<CourseTraceDto> lireTrace(@PathVariable Long id) {
         Utilisateur user = authenticatedUserService.getAuthenticatedUser();
         return ResponseEntity.ok(courseTraceService.lire(user, id));
+    }
+
+    @PostMapping("/interpret-command")
+    public ResponseEntity<CommandeVoixDto> interpretCommand(@RequestParam String transcript,
+            @RequestParam(defaultValue = "fr") String language) {
+        authenticatedUserService.getAuthenticatedUser();
+        CommandeVoixDto result = courseVoiceInterpreter.interpreter(transcript);
+        return ResponseEntity.ok(result);
     }
 }
