@@ -14,6 +14,7 @@ import com.kronos.chiron.utilisateur.persistence.UtilisateurRepository;
 import com.kronos.chiron.coach.service.AiUsageService;
 import com.kronos.chiron.coach.service.ConversationService;
 import com.kronos.chiron.coach.service.MemoryNoteService;
+import org.springframework.lang.Nullable;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -28,6 +29,7 @@ public class ChatController {
     private final ConversationService conversationService;
     private final ConversationMemoryManager memoryManager;
     private final AiUsageService aiUsageService;
+    @Nullable
     private final VoiceSessionContext voiceSessionContext;
 
     private static final int MEMORY_INJECTION_LIMIT = 10;
@@ -38,7 +40,7 @@ public class ChatController {
             ConversationService conversationService,
             ConversationMemoryManager memoryManager,
             AiUsageService aiUsageService,
-            VoiceSessionContext voiceSessionContext) {
+            @Nullable VoiceSessionContext voiceSessionContext) {
         this.chironAgentRouter = chironAgentRouter;
         this.utilisateurRepository = utilisateurRepository;
         this.memoryNoteService = memoryNoteService;
@@ -99,7 +101,9 @@ public class ChatController {
         Utilisateur user = utilisateurRepository.findByUsername(principal.getUsername())
                 .orElseThrow(() -> notFound("User not found"));
 
-        voiceSessionContext.setPinnedSeanceId(request.getSeanceId());
+        if (voiceSessionContext != null) {
+            voiceSessionContext.setPinnedSeanceId(request.getSeanceId());
+        }
 
         Conversation conversation = conversationService.getOrCreate(user, request.getConversationId(),
                 AgentType.CHIRON);
