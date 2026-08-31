@@ -10,6 +10,7 @@ import com.kronos.chiron.utilisateur.model.Utilisateur;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -19,6 +20,7 @@ public class CourseController {
 
     private final AuthenticatedUserService authenticatedUserService;
     private final CourseTraceService courseTraceService;
+    @Nullable
     private final CourseVoiceInterpreter courseVoiceInterpreter;
 
     @PostMapping("/traces")
@@ -37,6 +39,9 @@ public class CourseController {
     public ResponseEntity<CommandeVoixDto> interpretCommand(@RequestParam String transcript,
             @RequestParam(defaultValue = "fr") String language) {
         authenticatedUserService.getAuthenticatedUser();
+        if (courseVoiceInterpreter == null) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
+        }
         CommandeVoixDto result = courseVoiceInterpreter.interpreter(transcript);
         return ResponseEntity.ok(result);
     }

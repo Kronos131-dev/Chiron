@@ -18,6 +18,7 @@ import dev.langchain4j.model.googleai.GoogleAiGeminiChatModel;
 import dev.langchain4j.model.mistralai.MistralAiChatModel;
 import dev.langchain4j.service.AiServices;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -91,6 +92,7 @@ public class ChironConfig {
     }
 
     @Bean
+    @ConditionalOnProperty(name = "langchain4j.mistral-ai.chat-model.api-key")
     public CourseVoiceInterpreter courseVoiceInterpreter() {
         ChatModel mistral = MistralAiChatModel.builder()
                 .apiKey(mistralApiKey)
