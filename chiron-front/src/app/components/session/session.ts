@@ -582,15 +582,15 @@ export class Session implements OnInit, OnDestroy {
     if (!message.trim() || !this.authService.getUsername()) return;
 
     this.chironApi
-      .sendMessage(message, this.activeConversationId() || undefined, this.i18n.lang())
+      .sendMessage(message, this.activeConversationId() || null, this.i18n.lang())
       .subscribe({
         next: (response) => {
-          if (response?.message) {
-            this.flashStatus(response.message);
+          if (response?.reply) {
+            this.flashStatus(response.reply);
             if (!this.voix) {
               this.voix = creerVoix(this.i18n.lang() === 'en' ? 'en-US' : 'fr-FR');
             }
-            this.voix?.parler(response.message);
+            this.voix?.parler(response.reply);
           }
           if (response?.conversationId) {
             this.activeConversationId.set(response.conversationId);

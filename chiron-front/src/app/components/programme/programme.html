@@ -22,7 +22,7 @@
       <input
         type="text"
         [value]="searchQuery()"
-        (input)="onSearchInput(($event.target as HTMLInputElement).value)"
+        (input)="onSearchInput($any($event.target).value)"
         class="w-full bg-slate-900 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white outline-none focus:border-secondary/50 transition-colors placeholder:text-on-surface-variant"
         [placeholder]="'programme.searchPlaceholder' | t"
       />
