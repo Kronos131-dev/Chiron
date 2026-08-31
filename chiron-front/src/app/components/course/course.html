@@ -573,6 +573,42 @@
           <p class="text-on-surface-variant text-[10px] leading-relaxed">
             {{ 'course.commandList' | t }}
           </p>
+
+          <div class="border-t border-white/10 pt-3">
+            <span class="text-on-surface text-xs font-bold block">
+              {{ 'course.listenLog' | t }}
+            </span>
+            <p class="text-secondary text-[10px] font-bold tabular-nums mt-1">
+              {{
+                'course.listenLogCounters'
+                  | t: { transcripts: transcriptsRecus(), ecoutes: ecoutesLancees() }
+              }}
+            </p>
+            @if (derniereErreurMoteur(); as code) {
+              <p class="text-amber-300 text-[10px] font-bold tabular-nums">
+                {{ 'course.listenLogError' | t: { code: code } }}
+              </p>
+            }
+            <p class="text-on-surface-variant text-[10px] leading-relaxed mt-1">
+              {{ 'course.listenLogHint' | t }}
+            </p>
+
+            @if (journalEcoute().length) {
+              <div class="mt-2 max-h-48 overflow-y-auto space-y-1">
+                @for (ligne of journalEcoute(); track $index) {
+                  <p
+                    class="text-on-surface-variant text-[10px] font-mono leading-tight break-words"
+                  >
+                    {{ ligne }}
+                  </p>
+                }
+              </div>
+            } @else {
+              <p class="text-on-surface-variant text-[10px] italic mt-2">
+                {{ 'course.listenLogEmpty' | t }}
+              </p>
+            }
+          </div>
           <p class="text-on-surface-variant text-[10px] leading-relaxed">
             {{ 'course.micTalkHint' | t }}
           </p>

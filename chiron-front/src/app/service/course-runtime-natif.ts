@@ -30,6 +30,9 @@ const ETAT_INITIAL: EtatNatif = {
   motCleActif: false,
   motCleIndisponible: null,
   terminee: false,
+  transcriptsRecus: 0,
+  ecoutesLancees: 0,
+  derniereErreurMoteur: null,
 };
 
 export class RuntimeNatif implements CourseRuntime {
@@ -49,6 +52,9 @@ export class RuntimeNatif implements CourseRuntime {
   readonly microDisponible = computed(() => this.natifEtat().microDisponible);
   readonly motCleActif = computed(() => this.natifEtat().motCleActif);
   readonly motCleIndisponible = computed(() => this.natifEtat().motCleIndisponible);
+  readonly transcriptsRecus = computed(() => this.natifEtat().transcriptsRecus);
+  readonly ecoutesLancees = computed(() => this.natifEtat().ecoutesLancees);
+  readonly derniereErreurMoteur = computed(() => this.natifEtat().derniereErreurMoteur);
 
   readonly etat: Signal<EtatCourse> = computed(() => {
     if (this.termine()) return 'termine';
@@ -260,6 +266,15 @@ export class RuntimeNatif implements CourseRuntime {
         ChironCourse.executerAction({ action: commande.nom })
           .then((suivant) => this.natifEtat.set({ ...this.natifEtat(), ...suivant }))
           .catch(() => {});
+    }
+  }
+
+  async journalEcoute(): Promise<string[]> {
+    try {
+      const { lignes } = await ChironCourse.journal();
+      return lignes ?? [];
+    } catch {
+      return [];
     }
   }
 

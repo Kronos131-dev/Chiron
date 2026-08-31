@@ -139,6 +139,37 @@
             }}</span>
             {{ isRecording() ? ('session.listening' | t) : ('session.pushToTalkHint' | t) }}
           </button>
+
+          <!-- WHY: l'état vit ici, sous le micro que l'athlète regarde, et non dans le flash de
+               trois secondes au bas de la page. « Rien ne se passe » ne doit plus être une
+               réponse possible : chaque maillon dit ce qu'il a fait. -->
+          @if (etatVocal() !== 'repos') {
+            <p
+              class="text-center text-[10px] font-bold tracking-[0.15em] uppercase pt-2"
+              [class.text-secondary]="etatVocal() !== 'erreur'"
+              [class.text-red-400]="etatVocal() === 'erreur'"
+            >
+              @switch (etatVocal()) {
+                @case ('ecoute') {
+                  {{ 'session.listening' | t }}
+                }
+                @case ('envoi') {
+                  {{ 'session.voiceSending' | t }}
+                }
+                @case ('entendu') {
+                  {{ 'session.voiceHeard' | t }}
+                }
+              }
+            </p>
+          }
+          @if (transcriptVocal()) {
+            <p
+              class="text-on-surface text-xs font-body text-center pt-1 break-words"
+              [class.text-red-400]="etatVocal() === 'erreur'"
+            >
+              « {{ transcriptVocal() }} »
+            </p>
+          }
         </div>
       }
 

@@ -417,6 +417,12 @@ export const fr: Record<string, string> = {
   'course.announceEvery': 'Annonce vocale tous les',
   'course.announceHint':
     "À chaque palier franchi, Chiron annonce la distance, l'allure du segment et le temps total. Plus le pas est court, plus il parle.",
+  'course.listenLog': "Journal d'écoute",
+  'course.listenLogEmpty': "Rien entendu pour l'instant.",
+  'course.listenLogCounters': '{{transcripts}} phrases entendues · {{ecoutes}} ouvertures du micro',
+  'course.listenLogError': 'Dernière erreur du moteur : {{code}}',
+  'course.listenLogHint':
+    "Si le compteur de phrases reste à zéro après une sortie, ce n'est pas l'interprétation qui rate : c'est le moteur qui n'entend rien.",
   'course.wakeWord': 'Parler à Chiron',
   'course.wakeWordToggle': 'Écoute permanente',
   'course.wakeWordHint':
@@ -480,6 +486,8 @@ export const fr: Record<string, string> = {
   'course.say.noPace': 'allure indisponible',
   'course.say.confirmFinish': 'Tu veux vraiment terminer ? | Dis oui pour confirmer.',
   'course.say.finishCancelled': 'On continue.',
+  'course.say.heard': "Je n'ai pas compris : {{texte}}.",
+  'course.say.finishNeedsName': 'Pour terminer, dis : Hey Chiron, termine.',
   'course.say.notUnderstood': 'Répète.',
   // Exercise picker
   'picker.add': 'Ajouter',
@@ -615,6 +623,9 @@ export const fr: Record<string, string> = {
   'session.saveError': "Erreur lors de l'enregistrement dans le journal.",
   'session.pushToTalkHint': 'Appuyer pour parler',
   'session.listening': 'Écoute…',
+  'session.voiceSilent': 'Rien entendu. Appuie et parle plus près du micro.',
+  'session.voiceSending': 'Envoi à Chiron…',
+  'session.voiceHeard': 'Entendu',
   'session.noMic': 'Micro non disponible sur ce navigateur.',
   'session.micError': 'Erreur micro : {{error}}',
   'session.coachError': 'Chiron na pas pu répondre. Réessaye.',

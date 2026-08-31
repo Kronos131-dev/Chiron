@@ -310,6 +310,19 @@ public class ChironCoursePlugin extends Plugin {
         appel.resolve(enJsObject(reponse));
     }
 
+    // WHY: le journal ne voyage pas dans l'etat publie chaque seconde. Quarante lignes par tick
+    // pendant une heure de course inonderaient la passerelle pour un texte que personne ne lit
+    // avant l'arrivee : il se demande quand l'ecran l'affiche.
+    @PluginMethod
+    public void journal(PluginCall appel) {
+        CourseService service = PontCourse.service();
+        JSONObject reponse = new JSONObject();
+        try {
+            reponse.put("lignes", service == null ? new JSONArray() : service.journalJson());
+        } catch (JSONException ignore) {}
+        appel.resolve(enJsObject(reponse));
+    }
+
     @PluginMethod
     public void oublier(PluginCall appel) {
         Archive.effacer(getContext());

@@ -27,6 +27,8 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.Priority;
 import com.kronos.chiron.MainActivity;
 import com.kronos.chiron.R;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,6 +61,10 @@ public final class CourseService extends Service {
     private static final long DUREE_VEILLE_MS = 6 * 60 * 60 * 1000L;
     private static final long DELAI_MAX_AVANT_ECOUTE_MS = 2500;
     private static final long FENETRE_COMMANDE_MS = 8000;
+    private static final long SILENCE_ENTRE_INCOMPREHENSIONS_MS = 20000;
+    private static final int JOURNAL_MAX = 40;
+    private static final int MOTS_MAX_ADRESSE = 4;
+    private static final int LONGUEUR_MIN_REPONSE = 3;
 
     private final Handler boucle = new Handler(Looper.getMainLooper());
     private final Mesure mesure = new Mesure();
@@ -95,6 +101,11 @@ public final class CourseService extends Service {
     private volatile long fenetreJusquA = 0;
     private volatile long confirmationJusquA = 0;
     private boolean terminee = false;
+    private long derniereIncomprehensionA = 0;
+    private final Deque<String> journal = new ArrayDeque<>();
+    private int transcriptsRecus = 0;
+    private int ecoutesLancees = 0;
+    private Integer derniereErreurMoteur = null;
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -167,6 +178,11 @@ public final class CourseService extends Service {
         confirmationJusquA = 0;
         motCleIndisponible = null;
         terminee = false;
+        derniereIncomprehensionA = 0;
+        journal.clear();
+        transcriptsRecus = 0;
+        ecoutesLancees = 0;
+        derniereErreurMoteur = null;
     }
 
     private void demarrer(String configuration) {
@@ -612,6 +628,12 @@ public final class CourseService extends Service {
                 motCleIndisponible == null ? JSONObject.NULL : motCleIndisponible
             );
             etat.put("terminee", terminee);
+            etat.put("transcriptsRecus", transcriptsRecus);
+            etat.put("ecoutesLancees", ecoutesLancees);
+            etat.put(
+                "derniereErreurMoteur",
+                derniereErreurMoteur == null ? JSONObject.NULL : derniereErreurMoteur
+            );
         } catch (JSONException ignore) {}
         return etat;
     }
@@ -831,31 +853,96 @@ public final class CourseService extends Service {
             repondreALaConfirmation(texte);
             return;
         }
-        if (fenetreOuverte()) {
-            executerLeTexte(texte, true);
-            return;
-        }
+        transcriptsRecus++;
+
+        // WHY: le mot-cle n'est plus exige. L'athlete court seul, avec des ecouteurs, et le
+        // vocabulaire fait dix mots : un declenchement involontaire coute une annonce de trop,
+        // un ordre manque coute la fonction entiere. Le nom du coach est donc retire s'il est la,
+        // et ignore s'il n'y est pas.
+        boolean dansLaFenetre = fenetreOuverte();
         Commandes.Reveil reveil = Commandes.detecterMotCle(texte);
-        if (reveil == null) return;
-        if (!reveil.suite.isEmpty()) {
-            executerLeTexte(reveil.suite, false);
+        boolean nomme = reveil != null;
+        String ordre = nomme ? reveil.suite : Commandes.normaliser(texte);
+
+        if (ordre.isEmpty()) {
+            noter(texte, nomme ? "nom seul" : "vide");
+            if (nomme && reveil.avecInterjection) ouvrirLaFenetre();
             return;
         }
-        if (reveil.avecInterjection) ouvrirLaFenetre();
+        executerLeTexte(ordre, texte, nomme, dansLaFenetre);
     }
 
-    // WHY: repondre « je n'ai pas compris » chaque fois que le nom a ete mal entendu changerait
-    // un faux positif en interruption. Chiron ne se justifie donc que lorsque l'athlete sait
-    // qu'il l'ecoute, c'est-a-dire apres le « J'ecoute » de la fenetre.
-    private void executerLeTexte(String texte, boolean repondreSiIncompris) {
+    // WHY: « nothing happens » etait le seul retour possible, quel que soit le maillon casse —
+    // permission, moteur, modele, micro, transcript, interpretation. Le journal est ce qui rend
+    // la difference lisible apres coup, et les compteurs disent si le moteur a seulement demarre.
+    private void noter(String texte, String decision) {
+        journal.addFirst(Phrases.formaterChrono(dureeS()) + " · " + texte + " → " + decision);
+        while (journal.size() > JOURNAL_MAX) journal.removeLast();
+    }
+
+    public JSONArray journalJson() {
+        JSONArray lignes = new JSONArray();
+        for (String ligne : journal) lignes.put(ligne);
+        return lignes;
+    }
+
+    // WHY: l'interpretation locale passe en premier. Elle est instantanee, hors ligne, et couvre
+    // le vocabulaire de dix mots de la course ; l'IA n'est plus qu'un second recours pour une
+    // tournure inhabituelle. La consulter d'abord coutait trois secondes a chaque phrase et
+    // echouait la ou l'on court — loin de tout reseau.
+    private void executerLeTexte(String ordre, String entendu, boolean nomme, boolean dansLaFenetre) {
         fenetreJusquA = 0;
-        String langue = "fr";
-        Commandes.Commande commande = interpreterCommandes.interpreter(texte, langue);
-        if (commande == null) {
-            if (repondreSiIncompris) dire(phrases.t("notUnderstood"), true);
+        boolean adresse = nomme || dansLaFenetre || estCourt(ordre);
+
+        Commandes.Commande locale = Commandes.interpreter(ordre);
+        if (locale != null) {
+            appliquerLOrdre(locale, entendu, nomme);
             return;
         }
+        if (!adresse) {
+            noter(entendu, "ignore");
+            return;
+        }
+        interpreterCommandes.interpreterEnLigne(ordre, "fr", distante -> {
+            if (distante != null) {
+                appliquerLOrdre(distante, entendu, nomme);
+                return;
+            }
+            noter(entendu, "incompris");
+            repondreIncompris(entendu, true);
+        });
+    }
+
+    private void appliquerLOrdre(Commandes.Commande commande, String entendu, boolean nomme) {
+        // WHY: terminer est la seule commande qui clot la sortie. Elle garde le nom du coach
+        // parce qu'elle est la seule qu'un mot mal entendu rendrait couteuse.
+        if (commande.nom.equals("terminer") && !nomme) {
+            noter(entendu, "terminer sans le nom");
+            dire(phrases.t("finishNeedsName"), true);
+            return;
+        }
+        noter(entendu, "commande " + commande.nom);
         executerCommande(commande);
+    }
+
+    // WHY: se taire sur ce qu'on n'a pas compris rendait la panne invisible — l'athlete ne
+    // pouvait pas distinguer un moteur muet d'une phrase mal interpretee. Chiron repete donc ce
+    // qu'il a cru entendre, dans l'oreille, en courant. Le silence de vingt secondes est ce qui
+    // l'empeche de commenter chaque bribe de conversation captee.
+    private void repondreIncompris(String entendu, boolean adresse) {
+        if (!adresse || entendu.trim().length() < LONGUEUR_MIN_REPONSE) return;
+        long maintenant = System.currentTimeMillis();
+        if (maintenant - derniereIncomprehensionA < SILENCE_ENTRE_INCOMPREHENSIONS_MS) return;
+        derniereIncomprehensionA = maintenant;
+        Map<String, String> valeurs = new HashMap<>();
+        valeurs.put("texte", entendu);
+        dire(phrases.t("heard", valeurs), true);
+    }
+
+    // WHY: une phrase courte, pendant une sortie en solitaire, est presque toujours un ordre
+    // rate. Une phrase longue est presque toujours une conversation qui passe.
+    private static boolean estCourt(String ordre) {
+        return ordre.split(" ").length <= MOTS_MAX_ADRESSE;
     }
 
     private void executerCommande(Commandes.Commande commande) {
@@ -928,7 +1015,18 @@ public final class CourseService extends Service {
         @Override
         public void indisponible(String raison) {
             motCleIndisponible = raison;
+            noter("", "guetteur indisponible : " + raison);
             publierEtat();
+        }
+
+        @Override
+        public void ecouteLancee() {
+            ecoutesLancees++;
+        }
+
+        @Override
+        public void erreurMoteur(int code) {
+            derniereErreurMoteur = code;
         }
     }
 

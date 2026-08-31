@@ -25,6 +25,14 @@ public final class Guetteur {
         void entendu(String texte, boolean definitif);
 
         void indisponible(String raison);
+
+        // WHY: sans ces deux signaux, un guetteur muet est indiscernable d'un guetteur qui
+        // n'entend personne. Le compte des ecoutes lancees dit si le moteur demarre, le code
+        // d'erreur dit pourquoi il s'arrete — c'est ce qui distingue un micro casse d'un athlete
+        // silencieux, et rien d'autre ne le peut depuis l'ecran.
+        void ecouteLancee();
+
+        void erreurMoteur(int code);
     }
 
     private static final long RELANCE_MS = 200;
@@ -129,6 +137,7 @@ public final class Guetteur {
         enEcoute = true;
         try {
             moteur.startListening(intention());
+            ecouteur.ecouteLancee();
         } catch (Exception erreur) {
             enEcoute = false;
             relancer(reculer());
@@ -257,6 +266,7 @@ public final class Guetteur {
         @Override
         public void onError(int erreur) {
             enEcoute = false;
+            ecouteur.erreurMoteur(erreur);
             if (erreur == SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS) {
                 abandonner("permission");
                 return;

@@ -24,6 +24,8 @@ import { creerVoix, Voix } from '../../util/voix';
 // Re-export so existing imports (e.g. tests) keep working until they're migrated.
 export type { DegressifForm, SerieForm, ExerciceForm } from '../../shared/exercise-forms';
 
+const DELAI_ECOUTE_MS = 12000;
+
 /**
  * Component responsible for the execution, creation, and modification of a workout session.
  * Handles both the "Template/Program" mode and the "Active Journal" execution mode.
@@ -66,6 +68,12 @@ export class Session implements OnInit, OnDestroy {
 
   isInteractive = signal(false);
   isRecording = signal(false);
+  // WHY: « j'appuie, je parle, rien ne se passe » était le seul retour possible : l'état vivait
+  // dans un flash de trois secondes, en bas d'une page qui défile, sous un autre bouton. Il vit
+  // désormais sous le micro, et il dit lequel des maillons a répondu.
+  etatVocal = signal<'repos' | 'ecoute' | 'entendu' | 'envoi' | 'erreur'>('repos');
+  transcriptVocal = signal('');
+  private _voiceTimer: ReturnType<typeof setTimeout> | null = null;
   activeConversationId = signal<number | null>(null);
   private recognition: ReconnaissanceVocale;
   private voix: Voix | null = null;
@@ -188,6 +196,8 @@ export class Session implements OnInit, OnDestroy {
    */
   ngOnDestroy() {
     if (this._timer) clearInterval(this._timer);
+    if (this._voiceTimer) clearTimeout(this._voiceTimer);
+    this.recognition.arreter();
     this.persistActiveSession();
   }
 
@@ -552,34 +562,74 @@ export class Session implements OnInit, OnDestroy {
     }
   }
 
-  toggleRecording() {
-    if (!this.recognition.disponible()) {
-      alert(this.i18n.t('session.noMic'));
+  async toggleRecording() {
+    if (this.isRecording()) {
+      this.arreterEcoute('repos');
       return;
     }
 
-    if (this.isRecording()) {
-      this.recognition.arreter();
-      this.isRecording.set(false);
+    if (!(await this.recognition.disponible())) {
+      this.etatVocal.set('erreur');
+      this.transcriptVocal.set(this.i18n.t('session.noMic'));
       return;
     }
 
     this.isRecording.set(true);
+    this.etatVocal.set('ecoute');
+    this.transcriptVocal.set('');
+    this.armerLeDelaiVocal();
+
     this.recognition.demarrer(this.i18n.lang() === 'en' ? 'en-US' : 'fr-FR', {
+      partiel: (texte) => this.transcriptVocal.set(texte),
       final: (texte) => {
+        this.arreterLeDelaiVocal();
         this.isRecording.set(false);
-        const corrected = corrigerVocabulaire(texte);
-        this.sendVoiceCommand(corrected);
+        this.transcriptVocal.set(texte);
+        this.etatVocal.set('envoi');
+        this.sendVoiceCommand(corrigerVocabulaire(texte));
       },
       erreur: (raison) => {
+        this.arreterLeDelaiVocal();
         this.isRecording.set(false);
-        this.flashStatus(this.i18n.t('session.micError', { error: raison }));
+        this.etatVocal.set('erreur');
+        this.transcriptVocal.set(this.i18n.t('session.micError', { error: raison }));
       },
     });
   }
 
+  // WHY: un moteur qui ne rend jamais rien laissait le bouton sur « Écoute… » indéfiniment, et
+  // l'athlète devant un écran qui ne dit rien. Le délai de garde transforme cette attente muette
+  // en fait constaté.
+  private armerLeDelaiVocal() {
+    this.arreterLeDelaiVocal();
+    this._voiceTimer = setTimeout(() => {
+      if (!this.isRecording()) return;
+      this.recognition.arreter();
+      this.isRecording.set(false);
+      this.etatVocal.set('erreur');
+      this.transcriptVocal.set(this.i18n.t('session.voiceSilent'));
+    }, DELAI_ECOUTE_MS);
+  }
+
+  private arreterLeDelaiVocal() {
+    if (!this._voiceTimer) return;
+    clearTimeout(this._voiceTimer);
+    this._voiceTimer = null;
+  }
+
+  private arreterEcoute(etat: 'repos' | 'erreur') {
+    this.arreterLeDelaiVocal();
+    this.recognition.arreter();
+    this.isRecording.set(false);
+    this.etatVocal.set(etat);
+  }
+
   private sendVoiceCommand(message: string) {
-    if (!message.trim() || !this.authService.getUsername()) return;
+    if (!message.trim() || !this.authService.getUsername()) {
+      this.etatVocal.set('erreur');
+      this.transcriptVocal.set(this.i18n.t('session.voiceSilent'));
+      return;
+    }
 
     const seanceId =
       this.isInteractive() && this.routineId ? parseInt(this.routineId, 10) : undefined;
@@ -587,6 +637,7 @@ export class Session implements OnInit, OnDestroy {
       .sendMessage(message, this.activeConversationId() || null, this.i18n.lang(), seanceId)
       .subscribe({
         next: (response) => {
+          this.etatVocal.set('entendu');
           if (response?.reply) {
             this.flashStatus(response.reply);
             if (!this.voix) {
@@ -600,7 +651,8 @@ export class Session implements OnInit, OnDestroy {
           this.refreshExercicesFromServer();
         },
         error: () => {
-          this.flashStatus(this.i18n.t('session.coachError'));
+          this.etatVocal.set('erreur');
+          this.transcriptVocal.set(this.i18n.t('session.coachError'));
         },
       });
   }

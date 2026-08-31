@@ -39,6 +39,9 @@ export interface CourseRuntime {
   readonly objectifDureeS: Signal<number>;
   readonly motCleActif: Signal<boolean>;
   readonly motCleIndisponible: Signal<string | null>;
+  readonly transcriptsRecus: Signal<number>;
+  readonly ecoutesLancees: Signal<number>;
+  readonly derniereErreurMoteur: Signal<number | null>;
 
   attacher(routineId: string, exoId: string): void;
   reprendreCourseEnCours(): Promise<boolean>;
@@ -54,6 +57,7 @@ export interface CourseRuntime {
   commencerEcoute(): void;
   terminerEcoute(): void;
   executer(commande: Commande): void;
+  journalEcoute(): Promise<string[]>;
   purger(): void;
   liberer(): void;
 }
@@ -86,6 +90,8 @@ export const CLES_PHRASES: Record<string, string> = {
   summary: 'course.say.summary',
   listening: 'course.say.listening',
   notUnderstood: 'course.say.notUnderstood',
+  heard: 'course.say.heard',
+  finishNeedsName: 'course.say.finishNeedsName',
   noPace: 'course.say.noPace',
   notification: 'course.notification',
   pause: 'course.notificationPause',

@@ -8,7 +8,10 @@ export interface EcouteurVocal {
 }
 
 export interface ReconnaissanceVocale {
-  disponible(): boolean;
+  // WHY: la disponibilité se demande au natif, qui répond par la passerelle. La rendre
+  // asynchrone est ce qui permet à l'implémentation Android de dire la vérité plutôt que de
+  // répondre « oui » en dur — ce qu'elle faisait, masquant l'absence de moteur.
+  disponible(): Promise<boolean>;
   demarrer(langue: string, ecouteur: EcouteurVocal): void;
   arreter(): void;
 }
@@ -32,7 +35,7 @@ const ChironVoix = registerPlugin<ChironVoixPlugin>('ChironVoix');
 class ReconnaissanceWeb implements ReconnaissanceVocale {
   private moteur: any = null;
 
-  disponible(): boolean {
+  async disponible(): Promise<boolean> {
     return this.constructeur() !== null;
   }
 
@@ -88,8 +91,13 @@ class ReconnaissanceNative implements ReconnaissanceVocale {
   private abonnements: { remove: () => Promise<void> }[] = [];
   private ecouteur: EcouteurVocal | null = null;
 
-  disponible(): boolean {
-    return true;
+  async disponible(): Promise<boolean> {
+    try {
+      const { disponible } = await ChironVoix.disponible();
+      return disponible;
+    } catch {
+      return false;
+    }
   }
 
   demarrer(langue: string, ecouteur: EcouteurVocal): void {
@@ -110,8 +118,14 @@ class ReconnaissanceNative implements ReconnaissanceVocale {
     );
   }
 
+  // WHY: les abonnements n'étaient jamais retirés. Deux passages sur l'écran et chaque phrase
+  // partait en double au coach, une fois par instance de composant restée branchée.
   arreter(): void {
     ChironVoix.arreter().catch(() => {});
+    const anciens = this.abonnements;
+    this.abonnements = [];
+    this.ecouteur = null;
+    for (const abonnement of anciens) abonnement.remove().catch(() => {});
   }
 }
 

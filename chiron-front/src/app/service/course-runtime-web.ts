@@ -50,6 +50,9 @@ export class RuntimeWeb implements CourseRuntime {
   // donc l'appui-pour-parler, et le dit plutôt que de laisser croire à une panne.
   readonly motCleActif = signal(false);
   readonly motCleIndisponible = signal<string | null>('navigateur');
+  readonly transcriptsRecus = signal(0);
+  readonly ecoutesLancees = signal(0);
+  readonly derniereErreurMoteur = signal<number | null>(null);
   readonly microDisponible: Signal<boolean> = computed(() => this.moteurReconnaissance() !== null);
 
   private readonly enCours = computed(() => this.etat() === 'enCours');
@@ -160,6 +163,12 @@ export class RuntimeWeb implements CourseRuntime {
 
   private fractionDeVolume(): number {
     return Math.min(1, Math.max(0, (this.options?.volumeVoix ?? 100) / 100));
+  }
+
+  // WHY: le journal d'ecoute appartient au guetteur natif. Le navigateur n'en a pas, et rendre
+  // une liste vide vaut mieux qu'un contrat different d'un runtime a l'autre.
+  async journalEcoute(): Promise<string[]> {
+    return [];
   }
 
   purger(): void {

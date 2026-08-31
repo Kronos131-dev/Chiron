@@ -1,6 +1,8 @@
 package com.kronos.chiron.course;
 
 import android.net.Uri;
+import android.os.Handler;
+import android.os.Looper;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,6 +15,7 @@ import org.json.JSONObject;
 public final class CommandeInterpreter {
 
     private static final long TIMEOUT_MS = 3000;
+    private final Handler principal = new Handler(Looper.getMainLooper());
     private static final int TAMPON = 8192;
     private String baseUrl = null;
     private String token = null;
@@ -25,45 +28,30 @@ public final class CommandeInterpreter {
         this.token = token;
     }
 
-    public Commandes.Commande interpreter(String transcript, String langue) {
-        if (baseUrl == null || token == null) {
-            return interpreterLocalement(transcript);
-        }
-
-        try {
-            Commandes.Commande commande = appelApiAvecTimeout(transcript, langue);
-            if (commande != null) return commande;
-        } catch (Exception ignore) {}
-
-        return interpreterLocalement(transcript);
+    public interface Reponse {
+        void interpretee(Commandes.Commande commande);
     }
 
-    private Commandes.Commande appelApiAvecTimeout(String transcript, String langue) throws Exception {
-        final Commandes.Commande[] resultat = {null};
-        final Exception[] erreur = {null};
-        final Object verrou = new Object();
-
-        Thread thread = new Thread(() -> {
-            try {
-                resultat[0] = appelApi(transcript, langue);
-            } catch (Exception e) {
-                erreur[0] = e;
-            }
-            synchronized (verrou) {
-                verrou.notifyAll();
-            }
-        });
-        thread.setDaemon(true);
-        thread.start();
-
-        synchronized (verrou) {
-            try {
-                verrou.wait(TIMEOUT_MS);
-            } catch (InterruptedException ignore) {}
+    // WHY: l'appel bloquait le fil principal jusqu'a trois secondes, a chaque phrase entendue.
+    // Les rappels du moteur de reconnaissance arrivent sur ce fil : pendant l'attente, ni la
+    // voix ni la relance de l'ecoute ne pouvaient partir, et l'ordre semblait ignore avant de
+    // sortir trois secondes plus tard — quand l'athlete avait deja renonce. L'appel part donc
+    // sur son propre fil et rend sa reponse quand il l'a.
+    public void interpreterEnLigne(String transcript, String langue, Reponse reponse) {
+        if (baseUrl == null || token == null) {
+            reponse.interpretee(null);
+            return;
         }
-
-        if (erreur[0] != null) throw erreur[0];
-        return resultat[0];
+        Thread fil = new Thread(() -> {
+            Commandes.Commande trouvee = null;
+            try {
+                trouvee = appelApi(transcript, langue);
+            } catch (Exception ignore) {}
+            final Commandes.Commande resultat = trouvee;
+            principal.post(() -> reponse.interpretee(resultat));
+        });
+        fil.setDaemon(true);
+        fil.start();
     }
 
     private Commandes.Commande appelApi(String transcript, String langue)
@@ -116,7 +104,4 @@ public final class CommandeInterpreter {
         }
     }
 
-    private Commandes.Commande interpreterLocalement(String transcript) {
-        return Commandes.interpreter(transcript);
-    }
 }

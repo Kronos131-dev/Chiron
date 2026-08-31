@@ -127,6 +127,10 @@ export class Course implements OnInit, OnDestroy {
   readonly microDisponible = this.runtime.microDisponible;
   readonly motCleActif = this.runtime.motCleActif;
   readonly motCleIndisponible = this.runtime.motCleIndisponible;
+  readonly transcriptsRecus = this.runtime.transcriptsRecus;
+  readonly ecoutesLancees = this.runtime.ecoutesLancees;
+  readonly derniereErreurMoteur = this.runtime.derniereErreurMoteur;
+  readonly journalEcoute = signal<string[]>([]);
   readonly natif = this.runtime.natif;
 
   readonly enCours = computed(() => this.etat() === 'enCours');
@@ -516,8 +520,14 @@ export class Course implements OnInit, OnDestroy {
     this.runtime.essayerVoix(this.i18n.t('course.say.volumeTest'));
   }
 
+  // WHY: le journal se demande au natif a l'ouverture du panneau, pas a chaque seconde. C'est
+  // l'instrument qui dit lequel des maillons a lache — moteur, micro, ou interpretation — et il
+  // ne sert qu'une fois le telephone ressorti de la poche.
   basculerReglages(): void {
     this.reglagesOuverts.update((ouvert) => !ouvert);
+    if (this.reglagesOuverts()) {
+      this.runtime.journalEcoute().then((lignes) => this.journalEcoute.set(lignes));
+    }
   }
 
   // WHY: la droite graduée envoie une chaîne. Elle est bornée et alignée sur le pas ici, à la

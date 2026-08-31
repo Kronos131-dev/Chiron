@@ -36,6 +36,9 @@ export interface EtatNatif {
   motCleActif: boolean;
   motCleIndisponible: string | null;
   terminee: boolean;
+  transcriptsRecus: number;
+  ecoutesLancees: number;
+  derniereErreurMoteur: number | null;
   nouveauxPoints?: CoursePointDto[];
 }
 
@@ -62,6 +65,7 @@ export interface ChironCoursePlugin {
   essayerVoix(options: { texte: string; langue: string; volume: number }): Promise<void>;
   etat(): Promise<EtatNatif>;
   points(): Promise<{ points: CoursePointDto[] }>;
+  journal(): Promise<{ lignes: string[] }>;
   oublier(): Promise<void>;
   motCleDisponible(): Promise<{ disponible: boolean }>;
   exempterBatterie(): Promise<void>;
