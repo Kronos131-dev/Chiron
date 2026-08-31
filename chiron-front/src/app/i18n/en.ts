@@ -624,7 +624,11 @@ export const en: Record<string, string> = {
   'session.voiceHeard': 'Heard',
   'session.noMic': 'Microphone not available on this browser.',
   'session.micError': 'Mic error: {{error}}',
-  'session.coachError': 'Chiron could not respond. Try again.',
+  'session.coachUnavailable':
+    'The AI coach is not answering: the provider refused the request. Check the Mistral model and subscription.',
+  'session.coachOffline': 'No network. The request never left the phone.',
+  'session.coachExpired': 'Session expired. Sign in again.',
+  'session.coachError': 'Chiron could not respond (error {{statut}}).',
 
   // Profile
   'profile.title': 'PROFILE',

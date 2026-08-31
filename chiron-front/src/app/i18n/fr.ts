@@ -628,7 +628,11 @@ export const fr: Record<string, string> = {
   'session.voiceHeard': 'Entendu',
   'session.noMic': 'Micro non disponible sur ce navigateur.',
   'session.micError': 'Erreur micro : {{error}}',
-  'session.coachError': 'Chiron na pas pu répondre. Réessaye.',
+  'session.coachError': 'Chiron n’a pas pu répondre (erreur {{statut}}).',
+  'session.coachUnavailable':
+    "Le coach IA ne répond pas : le fournisseur a refusé la demande. Vérifie le modèle et l'abonnement Mistral.",
+  'session.coachOffline': 'Pas de réseau. La demande n’a pas quitté le téléphone.',
+  'session.coachExpired': 'Session expirée. Reconnecte-toi.',
 
   // Profile
   'profile.title': 'PROFIL',

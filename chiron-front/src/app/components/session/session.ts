@@ -650,11 +650,23 @@ export class Session implements OnInit, OnDestroy {
           }
           this.refreshExercicesFromServer();
         },
-        error: () => {
+        error: (erreur) => {
           this.etatVocal.set('erreur');
-          this.transcriptVocal.set(this.i18n.t('session.coachError'));
+          this.transcriptVocal.set(this.messageErreurCoach(erreur));
         },
       });
+  }
+
+  // WHY: « Chiron n'a pas pu répondre » écrasait un refus du fournisseur d'IA, une coupure
+  // réseau et une session expirée dans une seule phrase. Les trois se réparent différemment, et
+  // le code de statut est ce qui les distingue — un 503 a déjà coûté une soirée passée à
+  // chercher du côté du micro.
+  private messageErreurCoach(erreur: unknown): string {
+    const statut = (erreur as { status?: number })?.status ?? -1;
+    if (statut === 0) return this.i18n.t('session.coachOffline');
+    if (statut === 503) return this.i18n.t('session.coachUnavailable');
+    if (statut === 401 || statut === 403) return this.i18n.t('session.coachExpired');
+    return this.i18n.t('session.coachError', { statut });
   }
 
   private refreshExercicesFromServer() {
