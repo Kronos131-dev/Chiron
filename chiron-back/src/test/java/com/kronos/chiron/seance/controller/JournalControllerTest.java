@@ -32,7 +32,13 @@ class JournalControllerTest {
     @MockitoBean
     private SeanceRepository seanceRepository;
     @MockitoBean
+    private ExerciceRepository exerciceRepository;
+    @MockitoBean
+    private UtilisateurRepository utilisateurRepository;
+    @MockitoBean
     private SeanceMapper seanceMapper;
+    @MockitoBean
+    private Clock clock;
     @MockitoBean
     private JwtService jwtService;
     @MockitoBean
