@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { interpreter, lireAllure, normaliser } from './commandes-vocales';
+import { distance, interpreter, lireAllure, normaliser } from './commandes-vocales';
 
 describe('normaliser', () => {
   it('retire les accents, la ponctuation et les majuscules', () => {
@@ -78,6 +78,28 @@ describe('interpreter', () => {
   // l'emporter sur l'annonce, sinon l'athlète en pause reste en pause.
   it('préfère la reprise à l’annonce quand la phrase porte les deux', () => {
     expect(interpreter('reprends l allure')?.nom).toBe('reprendre');
+  });
+
+  // WHY: ces graphies ne sont pas inventées. Ce sont celles que le moteur rend vraiment quand
+  // l'athlète parle essoufflé — et chacune tombait à côté de la cascade de motifs exacts, en
+  // silence. Le jumeau Java porte les mêmes cas.
+  it('comprend les erreurs d’écoute réelles', () => {
+    expect(interpreter('allur')?.nom).toBe('allure');
+    expect(interpreter('pose')?.nom).toBe('pause');
+    expect(interpreter('billan')?.nom).toBe('bilan');
+    expect(interpreter('distance parcourue')?.nom).toBe('distance');
+  });
+
+  // WHY: la tolérance ne doit pas mordre sur les nombres. « sept » est à une lettre de « set »,
+  // et le laisser passer ferait d'un chiffre dicté un réglage de cible.
+  it('ne déclenche pas sur un mot court qui ressemble', () => {
+    expect(interpreter('sept')).toBeNull();
+  });
+
+  it('mesure une vraie distance d’édition', () => {
+    expect(distance('chiron', 'chiron')).toBe(0);
+    expect(distance('echiron', 'chiron')).toBe(1);
+    expect(distance('kitten', 'sitting')).toBe(3);
   });
 
   it('rend null sur une phrase hors sujet', () => {

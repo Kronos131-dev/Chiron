@@ -123,46 +123,183 @@ function borner(minParKm: number): number | null {
   return Math.round(minParKm * SECONDES_PAR_MINUTE) / SECONDES_PAR_MINUTE;
 }
 
-const PLUS_VITE =
-  /(plus\s+vite|plus\s+rapide|accelere|acceler|augmente|monte\s+le|faster|speed\s+up|go\s+faster)/;
-const MOINS_VITE = /(moins\s+vite|ralenti|ralentis|baisse|ralentir|slower|slow\s+down|ease\s+up)/;
-const PAUSE = /(pause|arret|arrete|stopp|stop|attends|halte|freeze)/;
-const REPRENDRE = /(repren|reprend|repart|on\s+y\s+va|continu|resum|go|restart)/;
-const CIBLE = /(cible|objectif|vise|passe|mets?\s+moi|regle|target|set|at\s+pace)/;
-const ALLURE = /(allur|rythm|vitess|pace|tempo)/;
-const DISTANCE = /(dist|combien.*(parcouru|fait|km|kilom|k|km)|how\s+far|far)/;
-const DUREE = /(dur|depuis|temps|chrono|time|how\s+long|long)/;
-const BILAN = /(bilan|resum|ou\s+j|status|recap|summary)/;
+// WHY: jumeau de Commandes.java. La cascade « premier motif gagnant » exigeait le mot exact,
+// alors que le moteur rend « allur », « pose » ou « billan » — et l'ordre tombait à côté en
+// silence. Chaque commande porte donc ses formulations, et c'est la meilleure ressemblance qui
+// gagne ; la priorité ne départage que les ex aequo.
+interface Motif {
+  nom: NomCommande;
+  priorite: number;
+  formulations: string[];
+}
 
-// WHY: l'ordre compte. « passe à cinq minutes trente » contient « allure » dans certaines
-// formulations, et « reprends l'allure » contient les deux : la commande la plus spécifique
-// doit être reconnue avant la plus générale, sinon l'athlète obtient une annonce au lieu d'un
-// réglage.
+// WHY: `terminer` n'existe que dans le jumeau Java. Clore une sortie à la voix repose sur
+// l'archive que le service Android laisse sur le disque, et le navigateur n'a pas d'équivalent :
+// l'écart est délibéré, pas un oubli.
+const VOCABULAIRE: Motif[] = [
+  {
+    nom: 'cible',
+    priorite: 3,
+    formulations: [
+      'cible',
+      'objectif',
+      'vise',
+      'passe a',
+      'mets moi a',
+      'met moi a',
+      'regle',
+      'target',
+      'set',
+    ],
+  },
+  {
+    nom: 'plusVite',
+    priorite: 2,
+    formulations: [
+      'plus vite',
+      'accelere',
+      'acceler',
+      'augmente',
+      'monte le rythme',
+      'faster',
+      'speed up',
+    ],
+  },
+  {
+    nom: 'moinsVite',
+    priorite: 2,
+    formulations: [
+      'moins vite',
+      'ralenti',
+      'ralentis',
+      'baisse le rythme',
+      'calme',
+      'slower',
+      'slow down',
+    ],
+  },
+  {
+    nom: 'reprendre',
+    priorite: 2,
+    formulations: [
+      'reprends',
+      'reprend',
+      'reprendre',
+      'repart',
+      'c est reparti',
+      'on y va',
+      'continue',
+      'resume',
+      'restart',
+    ],
+  },
+  // WHY: « pause » et « pose » sont homophones en français, et le moteur choisit le mot le plus
+  // courant. Deux lettres d'écart sur cinq ne suffisent pas à les rapprocher : la variante est
+  // nommée, comme le fait vocabulaire-vocal.ts pour la musculation.
+  {
+    nom: 'pause',
+    priorite: 2,
+    formulations: ['pause', 'pose', 'poser', 'arrete', 'stop', 'stoppe', 'attends', 'halte'],
+  },
+  {
+    nom: 'bilan',
+    priorite: 2,
+    formulations: ['bilan', 'resume', 'ou j en suis', 'status', 'recap', 'le point'],
+  },
+  {
+    nom: 'distance',
+    priorite: 2,
+    formulations: [
+      'distance',
+      'combien de kilometres',
+      'combien de km',
+      'combien j ai parcouru',
+      'combien j ai fait',
+      'how far',
+    ],
+  },
+  {
+    nom: 'duree',
+    priorite: 2,
+    formulations: ['duree', 'chrono', 'depuis combien de temps', 'combien de temps', 'how long'],
+  },
+  { nom: 'allure', priorite: 1, formulations: ['allure', 'rythme', 'vitesse', 'pace', 'tempo'] },
+];
+
+// WHY: en dessous de cinq caractères la tolérance devient un piège — « sept » est à une lettre de
+// « set », et un simple nombre dicté déclencherait un réglage de cible. Les formulations courtes
+// ne se reconnaissent qu'à l'identique.
+const LONGUEUR_MIN_APPROCHEE = 5;
+const SEUIL_RESSEMBLANCE = 0.75;
+
+export function distance(a: string, b: string): number {
+  const ligne = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    let diagonale = ligne[0];
+    ligne[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      const precedent = ligne[j];
+      const cout = a[i - 1] === b[j - 1] ? 0 : 1;
+      ligne[j] = Math.min(ligne[j] + 1, ligne[j - 1] + 1, diagonale + cout);
+      diagonale = precedent;
+    }
+  }
+  return ligne[b.length];
+}
+
+// WHY: le rapport, pas la distance brute. Une lettre fausse sur cinq n'a pas le même poids
+// qu'une lettre fausse sur quinze, et un seuil en distance absolue laisse tout passer sur les
+// mots longs tout en étranglant les courts.
+function rapport(entendu: string, attendu: string): number {
+  if (entendu === attendu) return 1;
+  if (attendu.length < LONGUEUR_MIN_APPROCHEE) return 0;
+  const longueur = Math.max(entendu.length, attendu.length);
+  if (longueur === 0) return 0;
+  return 1 - distance(entendu, attendu) / longueur;
+}
+
+// WHY: une formulation de plusieurs mots se compare à une fenêtre de même longueur, sinon
+// « allure » noyée dans une phrase de dix mots ne ressemble plus à rien.
+function scorer(texte: string, motif: Motif): number {
+  const mots = texte.split(' ');
+  let meilleur = 0;
+  for (const formulation of motif.formulations) {
+    const taille = formulation.split(' ').length;
+    for (let i = 0; i + taille <= mots.length; i++) {
+      const score = rapport(mots.slice(i, i + taille).join(' '), formulation);
+      if (score > meilleur) meilleur = score;
+    }
+  }
+  return meilleur;
+}
+
 export function interpreter(transcript: string): Commande | null {
-  const t = normaliser(transcript);
-  if (!t) return null;
+  const texte = normaliser(transcript);
+  if (!texte) return null;
 
-  if (CIBLE.test(t)) {
-    const cible = lireAllure(t);
-    if (cible !== null) return { nom: 'cible', cibleMinParKm: cible };
+  let meilleur: Motif | null = null;
+  let meilleurScore = 0;
+  for (const motif of VOCABULAIRE) {
+    const score = scorer(texte, motif);
+    if (score < SEUIL_RESSEMBLANCE) continue;
+    if (
+      meilleur === null ||
+      score > meilleurScore ||
+      (score === meilleurScore && motif.priorite > meilleur.priorite)
+    ) {
+      meilleur = motif;
+      meilleurScore = score;
+    }
   }
+  if (meilleur === null) return null;
 
-  if (
-    ALLURE.test(t) &&
-    /\d|zero|un|deux|trois|quatre|cinq|six|sept|huit|neuf|dix/.test(motsEnNombres(t))
-  ) {
-    const cible = lireAllure(t);
+  // WHY: « passe à cinq trente » et « allure cinq trente » demandent tous deux un réglage, pas
+  // une annonce. C'est la présence d'un nombre lisible comme une allure qui tranche, et elle se
+  // teste après coup plutôt que dans l'ordre des motifs.
+  if (meilleur.nom === 'cible' || meilleur.nom === 'allure') {
+    const cible = /\d/.test(motsEnNombres(texte)) ? lireAllure(texte) : null;
     if (cible !== null) return { nom: 'cible', cibleMinParKm: cible };
+    if (meilleur.nom === 'cible') return null;
   }
-
-  if (PLUS_VITE.test(t)) return { nom: 'plusVite' };
-  if (MOINS_VITE.test(t)) return { nom: 'moinsVite' };
-  if (REPRENDRE.test(t)) return { nom: 'reprendre' };
-  if (PAUSE.test(t)) return { nom: 'pause' };
-  if (BILAN.test(t)) return { nom: 'bilan' };
-  if (DISTANCE.test(t)) return { nom: 'distance' };
-  if (DUREE.test(t)) return { nom: 'duree' };
-  if (ALLURE.test(t)) return { nom: 'allure' };
-
-  return null;
+  return { nom: meilleur.nom };
 }

@@ -96,68 +96,87 @@ public final class Commandes {
     private static final Pattern DEUX_NOMBRES = Pattern.compile("(\\d{1,2})\\s+(\\d{1,2})");
     private static final Pattern SEUL = Pattern.compile("(\\d{1,2})");
 
-    private static final Pattern PLUS_VITE = Pattern.compile(
-        "(plus vite|accelere|acceler|augmente|monte le rythme|faster|speed up)"
-    );
-    private static final Pattern MOINS_VITE = Pattern.compile(
-        "(moins vite|ralenti|ralentis|baisse le rythme|calme|slower|slow down|ease)"
-    );
-    private static final Pattern PAUSE = Pattern.compile(
-        "(pause|arrete|arret|stoppe|stop|attends|halte)"
-    );
-    private static final Pattern REPRENDRE = Pattern.compile(
-        "(repren|reprend|repart|c est reparti|on y va|continue|resume|go|restart)"
-    );
-    private static final Pattern CIBLE = Pattern.compile(
-        "(cible|objectif|vise|passe a|mets? moi a|regle|target|set)"
-    );
-    private static final Pattern ALLURE = Pattern.compile("(allure|rythme|vitesse|pace|tempo)");
-    private static final Pattern DISTANCE = Pattern.compile(
-        "(distance|combien.*(parcouru|fait|km|kilometre)|how far)"
-    );
-    private static final Pattern DUREE = Pattern.compile(
-        "(duree|depuis combien|temps|chrono|time|how long)"
-    );
-    private static final Pattern BILAN = Pattern.compile("(bilan|resume|ou j en suis|status|recap)");
-
-    // WHY: « arrete » et « stop » appartiennent deja a la pause. Terminer se reconnait donc a
-    // des tournures entieres, jamais au verbe seul — confondre les deux clot une sortie que
-    // l'athlete voulait seulement suspendre le temps d'un feu rouge.
-    private static final Pattern TERMINER = Pattern.compile(
-        "(termin|c est fini|j ai fini|arrete la course|arreter la course|stop la course|" +
-        "finish the run|end the run)"
-    );
-
     private static final Pattern CHIFFRE = Pattern.compile("\\d");
 
-    private static final Pattern CONFIRMATION = Pattern.compile(
-        "(\\boui\\b|confirme|vas y|va s y|c est bon|d accord|\\byes\\b|confirm|go ahead)"
-    );
+    // WHY: la cascade « premier motif gagnant » exigeait que le moteur rende le mot exact. Il rend
+    // « allur », « pose », « billan » — et l'ordre tombait a cote sans que rien ne le dise. Chaque
+    // commande porte donc ses formulations, et c'est la meilleure ressemblance qui gagne.
+    // La priorite ne departage que les ex aequo : « passe a cinq trente » contient « allure » dans
+    // certaines formulations, et un reglage vaut mieux qu'une annonce.
+    private static final class Motif {
 
-    // WHY: la liste des graphies vient de ce que le moteur rend vraiment, pas de ce qu'on
-    // prononce. « Hey Chiron » revient en « et chiron », « he chirot » ou « ok kiron » selon le
-    // vent et le souffle ; l'ecran affiche le transcript brut pour que cette liste s'allonge sur
-    // preuve plutot que sur intuition.
-    private static final Pattern MOT_CLE = Pattern.compile(
-        "(?:\\b(hey|eh|he|et|est|ok|okay|allo|hello|salut)\\s+)?" +
-        "\\b(chiron|chirons|chirone|chiro|chirot|chiraud|chirac|kiron|kyron|shiron|shiro|siron)\\b"
-    );
+        final String nom;
+        final int priorite;
+        final String[] formulations;
+
+        Motif(String nom, int priorite, String... formulations) {
+            this.nom = nom;
+            this.priorite = priorite;
+            this.formulations = formulations;
+        }
+    }
+
+    private static final Motif[] VOCABULAIRE = {
+        new Motif("terminer", 3, "termine", "terminer", "c est fini", "j ai fini",
+            "arrete la course", "arreter la course", "stop la course", "finish the run",
+            "end the run"),
+        new Motif("cible", 3, "cible", "objectif", "vise", "passe a", "mets moi a", "met moi a",
+            "regle", "target", "set"),
+        new Motif("plusVite", 2, "plus vite", "accelere", "acceler", "augmente",
+            "monte le rythme", "faster", "speed up"),
+        new Motif("moinsVite", 2, "moins vite", "ralenti", "ralentis", "baisse le rythme",
+            "calme", "slower", "slow down"),
+        new Motif("reprendre", 2, "reprends", "reprend", "reprendre", "repart", "c est reparti",
+            "on y va", "continue", "resume", "restart"),
+        // WHY: « pause » et « pose » sont homophones en francais, et le moteur choisit le mot le
+        // plus courant. La ressemblance de graphie ne les rapproche pas assez — deux lettres sur
+        // cinq — donc la variante est nommee, comme le fait deja util/vocabulaire-vocal.ts pour
+        // le vocabulaire de la musculation.
+        new Motif("pause", 2, "pause", "pose", "poser", "arrete", "stop", "stoppe", "attends",
+            "halte"),
+        new Motif("bilan", 2, "bilan", "resume", "ou j en suis", "status", "recap", "le point"),
+        new Motif("distance", 2, "distance", "combien de kilometres", "combien de km",
+            "combien j ai parcouru", "combien j ai fait", "how far"),
+        new Motif("duree", 2, "duree", "chrono", "depuis combien de temps", "combien de temps",
+            "how long"),
+        new Motif("allure", 1, "allure", "rythme", "vitesse", "pace", "tempo")
+    };
+
+    // WHY: en dessous de cinq caracteres, la tolerance devient un piege : « sept » est a une
+    // lettre de « set », et un simple nombre declencherait un reglage de cible. Les formulations
+    // courtes ne se reconnaissent donc qu'a l'identique.
+    private static final int LONGUEUR_MIN_APPROCHEE = 5;
+    private static final double SEUIL_RESSEMBLANCE = 0.75;
+
+    private static final String[] NOMS_DU_COACH = {
+        "chiron", "chirons", "chirone", "chiro", "chirot", "chiraud", "chirac", "kiron", "kyron",
+        "shiron", "shiro", "siron"
+    };
+
+    private static final String[] INTERJECTIONS = {
+        "hey", "eh", "he", "et", "est", "ok", "okay", "allo", "hello", "salut"
+    };
 
     private Commandes() {}
 
-    private static int levenshteinDistance(String a, String b) {
-        int[] dp = new int[b.length() + 1];
-        for (int i = 0; i <= b.length(); i++) dp[i] = i;
+    // WHY: la version precedente intervertissait la diagonale et le voisin de gauche, et ne
+    // remettait jamais dp[0] a i. Elle rendait des distances qui n'en etaient pas — c'est
+    // vraisemblablement pourquoi le rattrapage approche ajoute pour le mot-cle n'a jamais rien
+    // rattrape en course. Tout le reste du fichier repose sur cette fonction : elle a son test.
+    static int distance(String a, String b) {
+        int[] ligne = new int[b.length() + 1];
+        for (int j = 0; j <= b.length(); j++) ligne[j] = j;
         for (int i = 1; i <= a.length(); i++) {
-            int prev = i;
+            int diagonale = ligne[0];
+            ligne[0] = i;
             for (int j = 1; j <= b.length(); j++) {
-                int cost = a.charAt(i - 1) == b.charAt(j - 1) ? 0 : 1;
-                int temp = dp[j];
-                dp[j] = Math.min(Math.min(dp[j] + 1, prev + 1), dp[j - 1] + cost);
-                prev = temp;
+                int precedent = ligne[j];
+                int cout = a.charAt(i - 1) == b.charAt(j - 1) ? 0 : 1;
+                ligne[j] = Math.min(Math.min(ligne[j] + 1, ligne[j - 1] + 1), diagonale + cout);
+                diagonale = precedent;
             }
         }
-        return dp[b.length()];
+        return ligne[b.length()];
     }
 
     // WHY: le moteur rend « cinq minutes trente », « 5 minutes 30 » ou « 5:30 » selon l'humeur du
@@ -176,65 +195,135 @@ public final class Commandes {
         return ESPACES.matcher(sansLiaison).replaceAll(" ").trim();
     }
 
+    // WHY: le moteur colle l'interjection au nom et rend « echiron » d'un seul tenant, ou le
+    // coupe en « e chiron ». Comparer mot a mot ratait le premier cas, et un simple decoupage
+    // ratait le second : la recherche se fait donc aussi sur la chaine privee de ses espaces,
+    // ou les deux graphies se rejoignent.
     public static Reveil detecterMotCle(String transcript) {
         String texte = normaliser(transcript);
         if (texte.isEmpty()) return null;
 
-        Matcher trouve = MOT_CLE.matcher(texte);
-        if (trouve.find()) {
-            return new Reveil(trouve.group(1) != null, texte.substring(trouve.end()).trim());
-        }
-
-        String[] mots = texte.split("\\s+");
-        String[] variantes = {"chiron", "chirons", "chirone", "chiro", "chirot", "chiraud", "chirac", "kiron", "kyron", "shiron", "shiro", "siron"};
+        String[] mots = texte.split(" ");
         for (int i = 0; i < mots.length; i++) {
-            for (String variante : variantes) {
-                if (levenshteinDistance(mots[i], variante) <= 2) {
-                    boolean avecInterjection = i > 0 && (mots[i - 1].matches("(?:hey|eh|he|et|est|ok|okay|allo|hello|salut)"));
-                    String suite = i + 1 < mots.length ? texte.substring(texte.indexOf(mots[i + 1])).trim() : "";
-                    return new Reveil(avecInterjection, suite);
-                }
-            }
+            if (!estLeNomDuCoach(mots[i])) continue;
+            boolean avecInterjection = i > 0 && estUneInterjection(mots[i - 1]);
+            String suite = i + 1 < mots.length ? joindre(mots, i + 1) : "";
+            return new Reveil(avecInterjection, suite);
         }
 
+        // WHY: dernier recours pour « echiron » seul, que le decoupage en mots ne rattrape pas.
+        // La suite est alors inconnue, mais le mot-cle n'est plus exige pour agir : ce qui
+        // compte est de savoir que l'athlete s'est adresse au coach.
+        String colle = texte.replace(" ", "");
+        for (String nom : NOMS_DU_COACH) {
+            for (String interjection : INTERJECTIONS) {
+                if (ressemble(colle, interjection + nom)) return new Reveil(true, "");
+            }
+            if (ressemble(colle, nom)) return new Reveil(false, "");
+        }
         return null;
     }
 
     public static boolean estUneConfirmation(String transcript) {
         String texte = normaliser(transcript);
-        return !texte.isEmpty() && CONFIRMATION.matcher(texte).find();
+        if (texte.isEmpty()) return false;
+        for (String mot : texte.split(" ")) {
+            if (mot.equals("oui") || mot.equals("yes") || mot.equals("confirme")) return true;
+        }
+        return texte.contains("vas y") || texte.contains("va s y") || texte.contains("c est bon")
+            || texte.contains("d accord") || texte.contains("go ahead");
     }
 
-    // WHY: l'ordre compte. « passe a cinq minutes trente » contient « allure » dans certaines
-    // formulations, et « reprends l'allure » contient les deux : la commande la plus specifique
-    // doit etre reconnue avant la plus generale, sinon l'athlete obtient une annonce au lieu d'un
-    // reglage.
+    private static boolean estLeNomDuCoach(String mot) {
+        for (String nom : NOMS_DU_COACH) {
+            if (ressemble(mot, nom)) return true;
+        }
+        return false;
+    }
+
+    private static boolean estUneInterjection(String mot) {
+        for (String interjection : INTERJECTIONS) {
+            if (mot.equals(interjection)) return true;
+        }
+        return false;
+    }
+
+    private static String joindre(String[] mots, int depuis) {
+        StringBuilder rendu = new StringBuilder();
+        for (int i = depuis; i < mots.length; i++) {
+            if (rendu.length() > 0) rendu.append(' ');
+            rendu.append(mots[i]);
+        }
+        return rendu.toString();
+    }
+
+    // WHY: le rapport, pas la distance brute. Une lettre fausse sur cinq n'a pas le meme poids
+    // qu'une lettre fausse sur quinze, et un seuil exprime en distance absolue laisse passer
+    // n'importe quoi sur les mots longs tout en etranglant les courts.
+    private static boolean ressemble(String entendu, String attendu) {
+        if (entendu.equals(attendu)) return true;
+        if (attendu.length() < LONGUEUR_MIN_APPROCHEE) return false;
+        int longueur = Math.max(entendu.length(), attendu.length());
+        if (longueur == 0) return false;
+        double rapport = 1.0 - (double) distance(entendu, attendu) / longueur;
+        return rapport >= SEUIL_RESSEMBLANCE;
+    }
+
     public static Commande interpreter(String transcript) {
         String texte = normaliser(transcript);
         if (texte.isEmpty()) return null;
 
-        if (TERMINER.matcher(texte).find()) return new Commande("terminer", null);
-
-        if (CIBLE.matcher(texte).find()) {
-            Double cible = lireAllure(texte);
-            if (cible != null) return new Commande("cible", cible);
+        Motif meilleur = null;
+        double meilleurScore = 0;
+        for (Motif motif : VOCABULAIRE) {
+            double score = scorer(texte, motif);
+            if (score < SEUIL_RESSEMBLANCE) continue;
+            if (meilleur == null || score > meilleurScore
+                || (score == meilleurScore && motif.priorite > meilleur.priorite)) {
+                meilleur = motif;
+                meilleurScore = score;
+            }
         }
+        if (meilleur == null) return null;
 
-        if (ALLURE.matcher(texte).find() && CHIFFRE.matcher(motsEnNombres(texte)).find()) {
-            Double cible = lireAllure(texte);
+        // WHY: « passe a cinq trente » et « allure cinq trente » demandent tous deux un reglage,
+        // pas une annonce. C'est la presence d'un nombre lisible comme une allure qui fait la
+        // difference, et elle se teste apres coup plutot que dans l'ordre des motifs.
+        if (meilleur.nom.equals("cible") || meilleur.nom.equals("allure")) {
+            Double cible = CHIFFRE.matcher(motsEnNombres(texte)).find() ? lireAllure(texte) : null;
             if (cible != null) return new Commande("cible", cible);
+            if (meilleur.nom.equals("cible")) return null;
         }
+        return new Commande(meilleur.nom, null);
+    }
 
-        if (PLUS_VITE.matcher(texte).find()) return new Commande("plusVite", null);
-        if (MOINS_VITE.matcher(texte).find()) return new Commande("moinsVite", null);
-        if (REPRENDRE.matcher(texte).find()) return new Commande("reprendre", null);
-        if (PAUSE.matcher(texte).find()) return new Commande("pause", null);
-        if (BILAN.matcher(texte).find()) return new Commande("bilan", null);
-        if (DISTANCE.matcher(texte).find()) return new Commande("distance", null);
-        if (DUREE.matcher(texte).find()) return new Commande("duree", null);
-        if (ALLURE.matcher(texte).find()) return new Commande("allure", null);
+    // WHY: une formulation de plusieurs mots doit etre comparee a une fenetre de meme longueur,
+    // sinon « allure » noyee dans une phrase de dix mots ne ressemble plus a rien.
+    private static double scorer(String texte, Motif motif) {
+        String[] mots = texte.split(" ");
+        double meilleur = 0;
+        for (String formulation : motif.formulations) {
+            int taille = formulation.split(" ").length;
+            for (int i = 0; i + taille <= mots.length; i++) {
+                String fenetre = joindreFenetre(mots, i, taille);
+                if (!ressemble(fenetre, formulation)) continue;
+                int longueur = Math.max(fenetre.length(), formulation.length());
+                double rapport = longueur == 0
+                    ? 0
+                    : 1.0 - (double) distance(fenetre, formulation) / longueur;
+                if (rapport > meilleur) meilleur = rapport;
+            }
+        }
+        return meilleur;
+    }
 
-        return null;
+    private static String joindreFenetre(String[] mots, int depuis, int taille) {
+        StringBuilder rendu = new StringBuilder();
+        for (int i = depuis; i < depuis + taille; i++) {
+            if (rendu.length() > 0) rendu.append(' ');
+            rendu.append(mots[i]);
+        }
+        return rendu.toString();
     }
 
     // WHY: « cinq minutes trente » se dicte aussi « cinq trente » ou « cinq et demi ». Les trois
