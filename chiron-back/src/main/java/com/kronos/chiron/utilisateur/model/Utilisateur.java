@@ -155,7 +155,7 @@ public class Utilisateur implements UserDetails {
     @JsonIgnore
     private String fitbitUserId;
 
-    @Column(name = "fitbit_scope")
+    @Column(name = "fitbit_scope", columnDefinition = "TEXT")
     @JsonIgnore
     private String fitbitScope;
 

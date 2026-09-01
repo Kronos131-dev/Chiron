@@ -14,6 +14,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 @RestController
@@ -81,6 +82,15 @@ public class FitbitController {
             return htmlPage(HttpStatus.SERVICE_UNAVAILABLE, false,
                     "Fitbit indisponible",
                     "Fitbit est momentanément injoignable. Ferme cette page et réessaie plus tard.");
+        } catch (RuntimeException e) {
+            // WHY: cette page-ci s'ouvre dans le navigateur, pas dans l'application : une
+            // exception qui s'échappe n'y devient pas du JSON, elle devient la page d'erreur
+            // brute de Spring. C'est ce que l'athlète a vu quand la liaison a débordé la
+            // colonne des scopes, sans que rien ne lui dise quoi faire.
+            log.error("FITBIT_CALLBACK_ECHEC", e);
+            return htmlPage(HttpStatus.INTERNAL_SERVER_ERROR, false,
+                    "Connexion impossible",
+                    "Le Sanctuaire n'a pas réussi à enregistrer la liaison. Ferme cette page et réessaie ; si cela recommence, le journal du serveur en garde la trace.");
         }
     }
 
@@ -121,7 +131,7 @@ public class FitbitController {
                 </html>
                 """.formatted(title, accent, icon, title, message);
         return ResponseEntity.status(status)
-                .contentType(MediaType.TEXT_HTML)
+                .contentType(new MediaType(MediaType.TEXT_HTML, StandardCharsets.UTF_8))
                 .body(html);
     }
 }
