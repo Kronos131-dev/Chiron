@@ -57,12 +57,15 @@ langchain4j:
   mistral-ai:
     chat-model:
       api-key: ${MISTRAL_API_KEY}
-      # WHY: mistral-large n'est pas inclus dans tous les paliers d'abonnement. L'API rend alors
-      # un 403 « tier_not_allowed » sur chaque appel, le repli est Mistral lui-même donc il n'y
-      # en a pas, et le coach est muet sans que rien à l'écran ne le dise. Le modèle se surcharge
-      # par CHIRON_MISTRAL_MODEL — la variable doit être absente, pas vide : Spring n'applique le
+      # WHY: le modèle est épinglé à une version, jamais à « latest ». L'alias
+      # mistral-large-latest désigne un modèle hors de ce palier d'abonnement et rend un 403
+      # « tier_not_allowed » sur chaque appel — le repli est Mistral lui-même, donc il n'y en a
+      # pas, et le coach devient muet. mistral-large-2512 est Mistral Large 3, vérifié servi sur
+      # ce palier ; l'alias le pointera un jour ailleurs, et le pointer ici casserait tout sans
+      # qu'aucun changement du dépôt ne l'explique. Le modèle se surcharge par
+      # CHIRON_MISTRAL_MODEL — la variable doit être absente, pas vide : Spring n'applique le
       # défaut que sur une propriété absente, une chaîne vide donnerait un modèle vide.
-      model-name: ${CHIRON_MISTRAL_MODEL:mistral-small-latest}
+      model-name: ${CHIRON_MISTRAL_MODEL:mistral-large-2512}
   # Fournisseur Gemini optionnel : si la clé est vide, le coach reste sur Mistral.
   google-ai-gemini:
     chat-model:
