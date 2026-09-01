@@ -397,6 +397,7 @@ jobs:
       - name: Vérifier les secrets obligatoires
         env:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
         run: |
           if [ -z "$JWT_SECRET" ]; then
             echo "::error::Le secret GitHub JWT_SECRET est absent ou vide. Créez-le dans Settings → Secrets and variables → Actions (openssl rand -hex 32)."
@@ -404,6 +405,10 @@ jobs:
           fi
           if [ ${#JWT_SECRET} -lt 64 ]; then
             echo "::error::JWT_SECRET fait ${#JWT_SECRET} caractères ; il en faut au moins 64 (32 octets une fois décodé) pour HMAC-SHA256."
+            exit 1
+          fi
+          if [ -z "$OPENROUTER_API_KEY" ]; then
+            echo "::error::Le secret GitHub OPENROUTER_API_KEY est absent ou vide. Toute l'IA passe par OpenRouter : sans lui le backend démarre avec un coach muet."
             exit 1
           fi
 
@@ -471,8 +476,9 @@ jobs:
 
       - name: Upload secrets
         run: |
-          printf 'JWT_SECRET=%s\nGMAIL_USERNAME=%s\nGMAIL_APP_PASSWORD=%s\nFRONTEND_URL=%s\nFITBIT_CLIENT_ID=%s\nFITBIT_CLIENT_SECRET=%s\nFITBIT_REDIRECT_URI=%s\nOLYMPUS_DB_URL=%s\nOLYMPUS_DB_USERNAME=%s\nOLYMPUS_DB_PASSWORD=%s\nVISBODY_MAILBOX_ENABLED=%s\nVAPID_PUBLIC_KEY=%s\nVAPID_PRIVATE_KEY=%s\nVAPID_SUBJECT=%s\n' \
+          printf 'JWT_SECRET=%s\nOPENROUTER_API_KEY=%s\nGMAIL_USERNAME=%s\nGMAIL_APP_PASSWORD=%s\nFRONTEND_URL=%s\nFITBIT_CLIENT_ID=%s\nFITBIT_CLIENT_SECRET=%s\nFITBIT_REDIRECT_URI=%s\nOLYMPUS_DB_URL=%s\nOLYMPUS_DB_USERNAME=%s\nOLYMPUS_DB_PASSWORD=%s\nVISBODY_MAILBOX_ENABLED=%s\nVAPID_PUBLIC_KEY=%s\nVAPID_PRIVATE_KEY=%s\nVAPID_SUBJECT=%s\n' \
             '${{ secrets.JWT_SECRET }}' \
+            '${{ secrets.OPENROUTER_API_KEY }}' \
             '${{ secrets.GMAIL_USERNAME }}' \
             '${{ secrets.GMAIL_APP_PASSWORD }}' \
             '${{ secrets.FRONTEND_URL }}' \
@@ -531,7 +537,7 @@ jobs:
 
             echo "▶ Mise à jour du .env..."
             ENV_FILE=$CHIRON_DIR/.env
-            grep -v '^JWT_SECRET=\|^GMAIL_\|^FRONTEND_URL=\|^FITBIT_\|^OLYMPUS_DB_\|^VISBODY_MAILBOX_ENABLED=\|^VAPID_' "$ENV_FILE" > /tmp/.env.tmp 2>/dev/null || true
+            grep -v '^JWT_SECRET=\|^OPENROUTER_API_KEY=\|^MISTRAL_API_KEY=\|^GEMINI_API_KEY=\|^GMAIL_\|^FRONTEND_URL=\|^FITBIT_\|^OLYMPUS_DB_\|^VISBODY_MAILBOX_ENABLED=\|^VAPID_' "$ENV_FILE" > /tmp/.env.tmp 2>/dev/null || true
             cat /tmp/chiron.secrets >> /tmp/.env.tmp
             mv /tmp/.env.tmp "$ENV_FILE"
 
