@@ -22,6 +22,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.ObjectProvider;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.springframework.transaction.annotation.Transactional;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
@@ -63,6 +64,24 @@ class FitbitServiceTest {
         user = Utilisateur.builder().id(1L).username("athlete").build();
         when(utilisateurRepository.findByUsername("athlete")).thenReturn(Optional.of(user));
         when(santeSyncServiceProvider.getIfAvailable()).thenReturn(santeSyncService);
+    }
+
+    // WHY: le comportement tient entierement a l'annotation, et rien d'autre ne peut l'attraper
+    // sans monter un contexte Spring. Sans noRollbackFor, ces deux exceptions marquaient la
+    // transaction partagee rollback-only avant que l'appelant ne les attrape : le rattrapage des
+    // calories d'un compte non lie repartait vide et le tableau de bord sante rendait un 500.
+    @Test
+    void getValidToken_neSaborde_pasLaTransactionDeLAppelant() throws Exception {
+        // Given
+        Transactional annotation = FitbitServiceImpl.class
+                .getMethod("getValidToken", String.class)
+                .getAnnotation(Transactional.class);
+
+        // When / Then
+        assertThat(annotation).isNotNull();
+        assertThat(annotation.noRollbackFor())
+                .containsExactlyInAnyOrder(FitbitService.NotLinkedException.class,
+                        FitbitService.ExpiredException.class);
     }
 
     @Test

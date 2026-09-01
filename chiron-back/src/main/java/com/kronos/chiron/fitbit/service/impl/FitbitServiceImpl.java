@@ -127,7 +127,13 @@ public class FitbitServiceImpl implements FitbitService {
         log.info("FITBIT_UNLINKED user={}", chironUsername);
     }
 
-    @Transactional
+    // WHY: NotLinkedException et ExpiredException sont des reponses, pas des pannes. Sans cette
+    // clause, la transaction partagee etait marquee rollback-only avant que l'appelant ne les
+    // attrape : son propre travail partait avec, et le commit rendait UnexpectedRollbackException.
+    // C'est ce qui vidait le rattrapage des calories d'un compte non lie et faisait repondre 500
+    // au tableau de bord sante du meme athlete — l'exception qu'on attrape ne dit rien de plus
+    // qu'un compte a relier, et le clearLink ci-dessous doit justement survivre.
+    @Transactional(noRollbackFor = {NotLinkedException.class, ExpiredException.class})
     @Override
     public String getValidToken(String chironUsername) {
         Utilisateur user = utilisateurRepository.findByUsername(chironUsername)
