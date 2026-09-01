@@ -12,10 +12,11 @@ spring:
     enabled: false
 
 langchain4j:
-  mistral-ai:
+  open-ai:
     chat-model:
       api-key: test-key
-      model-name: mistral-small-latest
+      base-url: http://localhost/openrouter-de-test
+      model-name: deepseek/deepseek-v4-flash-0731
 
 jwt:
   secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970

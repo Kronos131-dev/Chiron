@@ -47,10 +47,6 @@ export const fr: Record<string, string> = {
   'settings.language.fr': 'Français',
   'settings.language.en': 'English',
   'settings.language.updated': 'Langue mise à jour.',
-  'settings.ai.notConfigured':
-    "Gemini n'est pas configuré côté serveur — le coach reste sur Mistral.",
-  'settings.ai.updated': "Fournisseur d'IA mis à jour : {{provider}}.",
-  'settings.ai.error': "Erreur lors du changement de fournisseur d'IA.",
   'settings.tonnage.saved': 'Préférences de tonnage enregistrées.',
   'settings.tonnage.error': "Erreur lors de l'enregistrement des préférences.",
   'settings.password.mismatch': 'Les mots de passe ne correspondent pas.',
@@ -126,12 +122,6 @@ export const fr: Record<string, string> = {
     'Utilisés pour associer automatiquement les rapports de scan Visbody à ton compte.',
   'settings.identity.firstNamePh': 'Prénom',
   'settings.identity.lastNamePh': 'Nom',
-  'settings.ai.title': 'Coach IA',
-  'settings.ai.subtitle': 'Fournisseur du modèle ({{provider}})',
-  'settings.ai.desc':
-    'Choisis le modèle qui répond dans le chat du coach. Gemini doit être configuré côté serveur ; sinon le coach reste sur Mistral.',
-  'settings.ai.geminiUnavailable':
-    "Gemini n'est pas configuré côté serveur (clé manquante) : le coach reste sur Mistral.",
   'settings.tonnage.title': 'Calcul du tonnage',
   'settings.tonnage.subtitle': 'Conventions de saisie du poids',
   'settings.tonnage.desc':

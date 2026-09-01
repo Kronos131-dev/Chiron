@@ -12,10 +12,7 @@ import java.time.Clock;
 
 import com.kronos.chiron.auth.service.EmailService;
 
-import com.kronos.chiron.coach.agent.ChironAgentRouter;
-import com.kronos.chiron.utilisateur.dto.AiProviderDto;
 import com.kronos.chiron.utilisateur.dto.TrainingPrefsDto;
-import com.kronos.chiron.utilisateur.model.AiProvider;
 import com.kronos.chiron.auth.model.PasswordResetToken;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 import com.kronos.chiron.auth.persistence.PasswordResetTokenRepository;
@@ -58,8 +55,6 @@ class SettingsServiceTest {
     private EmailService emailService;
     @Mock
     private JwtService jwtService;
-    @Mock
-    private ChironAgentRouter chironAgentRouter;
 
     @Spy
     private Clock clock = Clock.system(ZoneId.of("Europe/Paris"));
@@ -116,37 +111,6 @@ class SettingsServiceTest {
         assertThat(user.isPoidsHaltereParImplement()).isFalse();
         assertThat(user.isPoidsMachineParCote()).isTrue();
         verify(utilisateurRepository).save(user);
-    }
-
-    @Test
-    void getAiProvider_reportsUserChoiceAndGeminiAvailability() {
-        user.setAiProvider(AiProvider.GEMINI);
-        givenUserExists();
-        when(chironAgentRouter.geminiAvailable()).thenReturn(true);
-
-        AiProviderDto dto = settingsService.getAiProvider(USERNAME);
-
-        assertThat(dto.provider()).isEqualTo(AiProvider.GEMINI);
-        assertThat(dto.geminiAvailable()).isTrue();
-    }
-
-    @Test
-    void updateAiProvider_setsTheRequestedProvider() {
-        givenUserExists();
-
-        settingsService.updateAiProvider(USERNAME, AiProvider.GEMINI);
-
-        assertThat(user.getAiProvider()).isEqualTo(AiProvider.GEMINI);
-        verify(utilisateurRepository).save(user);
-    }
-
-    @Test
-    void updateAiProvider_nullProvider_fallsBackToMistral() {
-        givenUserExists();
-
-        settingsService.updateAiProvider(USERNAME, null);
-
-        assertThat(user.getAiProvider()).isEqualTo(AiProvider.MISTRAL);
     }
 
     @Test

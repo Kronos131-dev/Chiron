@@ -54,23 +54,16 @@ spring:
           writetimeout: 5000
 
 langchain4j:
-  mistral-ai:
+  open-ai:
     chat-model:
-      api-key: ${MISTRAL_API_KEY}
-      # WHY: le modèle est épinglé à une version, jamais à « latest ». L'alias
-      # mistral-large-latest désigne un modèle hors de ce palier d'abonnement et rend un 403
-      # « tier_not_allowed » sur chaque appel — le repli est Mistral lui-même, donc il n'y en a
-      # pas, et le coach devient muet. mistral-large-2512 est Mistral Large 3, vérifié servi sur
-      # ce palier ; l'alias le pointera un jour ailleurs, et le pointer ici casserait tout sans
-      # qu'aucun changement du dépôt ne l'explique. Le modèle se surcharge par
-      # CHIRON_MISTRAL_MODEL — la variable doit être absente, pas vide : Spring n'applique le
-      # défaut que sur une propriété absente, une chaîne vide donnerait un modèle vide.
-      model-name: ${CHIRON_MISTRAL_MODEL:mistral-large-2512}
-  # Fournisseur Gemini optionnel : si la clé est vide, le coach reste sur Mistral.
-  google-ai-gemini:
-    chat-model:
-      api-key: ${GEMINI_API_KEY:}
-      model-name: ${CHIRON_GEMINI_MODEL:gemini-3.5-flash}
+      # WHY: OpenRouter parle le protocole d'OpenAI, d'où un client open-ai qui pointe
+      # ailleurs. Le modèle est épinglé à sa version datée : les alias glissent d'une révision
+      # à l'autre sans qu'aucun changement du dépôt ne l'explique, et tout le coach tient à une
+      # seule capacité, l'appel d'outils. Se surcharge par CHIRON_AI_MODEL — la variable doit
+      # être absente, pas vide : Spring n'applique le défaut que sur une propriété absente.
+      api-key: ${OPENROUTER_API_KEY}
+      base-url: ${CHIRON_AI_BASE_URL:https://openrouter.ai/api/v1}
+      model-name: ${CHIRON_AI_MODEL:deepseek/deepseek-v4-flash-0731}
 
 jwt:
   # Clé de signature HMAC, hexadécimale, 64 caractères minimum. Obligatoire :

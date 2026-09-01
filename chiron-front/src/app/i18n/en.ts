@@ -46,10 +46,6 @@ export const en: Record<string, string> = {
   'settings.language.fr': 'Français',
   'settings.language.en': 'English',
   'settings.language.updated': 'Language updated.',
-  'settings.ai.notConfigured':
-    'Gemini is not configured on the server — the coach stays on Mistral.',
-  'settings.ai.updated': 'AI provider updated: {{provider}}.',
-  'settings.ai.error': 'Error while switching AI provider.',
   'settings.tonnage.saved': 'Tonnage preferences saved.',
   'settings.tonnage.error': 'Error while saving preferences.',
   'settings.password.mismatch': 'Passwords do not match.',
@@ -123,12 +119,6 @@ export const en: Record<string, string> = {
   'settings.identity.hint': 'Used to automatically match Visbody scan reports to your account.',
   'settings.identity.firstNamePh': 'First name',
   'settings.identity.lastNamePh': 'Last name',
-  'settings.ai.title': 'AI Coach',
-  'settings.ai.subtitle': 'Model provider ({{provider}})',
-  'settings.ai.desc':
-    'Choose the model that answers in the coach chat. Gemini must be configured on the server; otherwise the coach stays on Mistral.',
-  'settings.ai.geminiUnavailable':
-    'Gemini is not configured on the server (missing key): the coach stays on Mistral.',
   'settings.tonnage.title': 'Tonnage calculation',
   'settings.tonnage.subtitle': 'Weight entry conventions',
   'settings.tonnage.desc':

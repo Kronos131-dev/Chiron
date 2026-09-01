@@ -1,6 +1,5 @@
 package com.kronos.chiron.coach.agent;
 
-import com.kronos.chiron.utilisateur.model.AiProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,72 +12,41 @@ public abstract class AgentRouter<A> {
     private static final int MAX_ATTEMPTS = 2;
     private static final long BASE_BACKOFF_MS = 400L;
 
-    private final A mistral;
-    private final A gemini;
+    private final A agent;
     private final ConversationMemoryManager memoryManager;
 
-    protected AgentRouter(A mistral, A gemini, ConversationMemoryManager memoryManager) {
-        this.mistral = mistral;
-        this.gemini = gemini;
+    protected AgentRouter(A agent, ConversationMemoryManager memoryManager) {
+        this.agent = agent;
         this.memoryManager = memoryManager;
     }
 
     protected abstract String call(A agent, String memoryId, String userMessage);
 
-    public A forProvider(AiProvider provider) {
-        if (provider == AiProvider.GEMINI && gemini != null) {
-            return gemini;
-        }
-        return mistral;
-    }
+    // WHY: un seul modèle depuis le passage à OpenRouter, donc plus de repli d'un fournisseur
+    // sur l'autre — il ne reste que la relance, qui traite ce qu'elle a toujours traité : le 429
+    // et le 503 d'un service occupé. La mémoire est réinitialisée entre deux essais parce qu'un
+    // appel d'outil interrompu y laisse un tour à moitié écrit, que le modèle refuse ensuite.
+    public String chat(String memoryId, String message) {
+        RuntimeException derniere = null;
 
-    public String chatWithFallback(AiProvider provider, String memoryId, String message) {
-        A agent = forProvider(provider);
-
-        try {
-            return chatWithRetries(agent, provider, memoryId, message);
-        } catch (RuntimeException primaryFailure) {
-            // WHY: repli sur Mistral seulement si l'agent en échec n'était pas déjà Mistral.
-            if (agent == mistral) {
-                throw unavailable(provider, primaryFailure);
-            }
-            log.warn("Agent {} en échec, repli sur Mistral", provider, primaryFailure);
-            memoryManager.reset(memoryId);
-            try {
-                return chatWithRetries(mistral, AiProvider.MISTRAL, memoryId, message);
-            } catch (RuntimeException fallbackFailure) {
-                throw unavailable(provider, fallbackFailure);
-            }
-        }
-    }
-
-    private String chatWithRetries(A agent, AiProvider provider, String memoryId, String message) {
-        RuntimeException last = null;
-
-        for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+        for (int tentative = 1; tentative <= MAX_ATTEMPTS; tentative++) {
             try {
                 return call(agent, memoryId, message);
             } catch (RuntimeException e) {
-                last = e;
-                if (attempt < MAX_ATTEMPTS && isTransient(e)) {
-                    log.warn("Agent {} : erreur transitoire (tentative {}/{}), réessai", provider, attempt,
+                derniere = e;
+                if (tentative < MAX_ATTEMPTS && isTransient(e)) {
+                    log.warn("Coach IA : erreur transitoire (tentative {}/{}), réessai", tentative,
                             MAX_ATTEMPTS, e);
                     memoryManager.reset(memoryId);
-                    sleep(BASE_BACKOFF_MS * attempt);
+                    sleep(BASE_BACKOFF_MS * tentative);
                 } else {
                     break;
                 }
             }
         }
 
-        throw last;
-    }
-
-    private AiUnavailableException unavailable(AiProvider provider, RuntimeException cause) {
-        log.error("Aucun agent n'a répondu : fournisseur demandé {}, jusqu'à {} tentatives par agent,"
-                + " repli Mistral {}", provider, MAX_ATTEMPTS,
-                provider == AiProvider.MISTRAL || gemini == null ? "sans objet" : "épuisé", cause);
-        return new AiUnavailableException("Le coach IA est temporairement indisponible.", cause);
+        log.error("Le coach IA n'a pas répondu après {} tentatives", MAX_ATTEMPTS, derniere);
+        throw new AiUnavailableException("Le coach IA est temporairement indisponible.", derniere);
     }
 
     private boolean isTransient(Throwable e) {
@@ -102,9 +70,5 @@ public abstract class AgentRouter<A> {
         } catch (InterruptedException ie) {
             Thread.currentThread().interrupt();
         }
-    }
-
-    public boolean geminiAvailable() {
-        return gemini != null;
     }
 }

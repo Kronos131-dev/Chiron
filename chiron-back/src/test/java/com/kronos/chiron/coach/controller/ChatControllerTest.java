@@ -3,14 +3,12 @@ package com.kronos.chiron.coach.controller;
 import tools.jackson.databind.json.JsonMapper;
 import com.kronos.chiron.coach.agent.ChironAgentRouter;
 import com.kronos.chiron.coach.agent.ConversationMemoryManager;
-import com.kronos.chiron.utilisateur.model.AiProvider;
 import com.kronos.chiron.coach.model.AgentType;
 import com.kronos.chiron.coach.model.Conversation;
 import com.kronos.chiron.utilisateur.model.Role;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 import com.kronos.chiron.utilisateur.persistence.UtilisateurRepository;
 import com.kronos.chiron.security.JwtService;
-import com.kronos.chiron.coach.service.AiUsageService;
 import com.kronos.chiron.coach.service.ConversationService;
 import com.kronos.chiron.coach.service.MemoryNoteService;
 import org.junit.jupiter.api.BeforeEach;
@@ -73,8 +71,6 @@ class ChatControllerTest {
     @MockitoBean
     private ConversationMemoryManager memoryManager;
     @MockitoBean
-    private AiUsageService aiUsageService;
-    @MockitoBean
     private JwtService jwtService;
     @MockitoBean
     private UserDetailsService userDetailsService;
@@ -92,7 +88,6 @@ class ChatControllerTest {
         // La conversation résolue porte l'id 42 → la mémoire IA est indexée sur "42".
         when(conversationService.getOrCreate(any(), any(), eq(AgentType.CHIRON)))
                 .thenReturn(Conversation.builder().id(42L).agent(AgentType.CHIRON).build());
-        when(aiUsageService.resolveProvider(any())).thenReturn(AiProvider.MISTRAL);
         when(memoryNoteService.formatForPrompt(any(), anyInt())).thenReturn("");
     }
 
@@ -100,7 +95,7 @@ class ChatControllerTest {
     @WithMockUser(username = "alice")
     void chat_validUser_returnsAgentResponse() throws Exception {
         when(utilisateurRepository.findByUsername("alice")).thenReturn(Optional.of(buildUser()));
-        when(chironAgentRouter.chatWithFallback(any(), eq("42"), anyString())).thenReturn("Séance enregistrée.");
+        when(chironAgentRouter.chat(eq("42"), anyString())).thenReturn("Séance enregistrée.");
 
         mockMvc.perform(post("/api/chat").with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
@@ -114,14 +109,14 @@ class ChatControllerTest {
     @WithMockUser(username = "alice")
     void chat_injectsUserContextInMessage() throws Exception {
         when(utilisateurRepository.findByUsername("alice")).thenReturn(Optional.of(buildUser()));
-        when(chironAgentRouter.chatWithFallback(any(), anyString(), anyString())).thenReturn("OK");
+        when(chironAgentRouter.chat(anyString(), anyString())).thenReturn("OK");
 
         mockMvc.perform(post("/api/chat").with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(Map.of("message", "Bonjour"))))
                 .andExpect(status().isOk());
 
-        verify(chironAgentRouter).chatWithFallback(any(), eq("42"), contains("alice"));
+        verify(chironAgentRouter).chat(eq("42"), contains("alice"));
     }
 
     @Test
@@ -131,7 +126,7 @@ class ChatControllerTest {
         // qu'un utilisateur authentifié ne puisse pas faire parler le coach au nom d'un autre.
         Utilisateur bob = Utilisateur.builder().id(2L).username("bob").role(Role.USER).build();
         when(utilisateurRepository.findByUsername("bob")).thenReturn(Optional.of(bob));
-        when(chironAgentRouter.chatWithFallback(any(), anyString(), anyString())).thenReturn("OK");
+        when(chironAgentRouter.chat(anyString(), anyString())).thenReturn("OK");
 
         mockMvc.perform(post("/api/chat").with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
@@ -146,7 +141,7 @@ class ChatControllerTest {
     @WithMockUser(username = "alice")
     void endSession_validUser_returnsAgentResponse() throws Exception {
         when(utilisateurRepository.findByUsername("alice")).thenReturn(Optional.of(buildUser()));
-        when(chironAgentRouter.chatWithFallback(any(), eq("42"), anyString())).thenReturn("Bien joué, soldat.");
+        when(chironAgentRouter.chat(eq("42"), anyString())).thenReturn("Bien joué, soldat.");
 
         mockMvc.perform(post("/api/end-session").with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)

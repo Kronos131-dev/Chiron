@@ -54,12 +54,6 @@ export interface TrainingPrefs {
 }
 
 /** Fournisseur d'IA du coach Chiron, choisi par l'utilisateur. */
-export type AiProvider = 'MISTRAL' | 'GEMINI';
-export interface AiProviderPref {
-  provider: AiProvider;
-  /** true si l'agent Gemini est réellement provisionné côté serveur (clé configurée). */
-  geminiAvailable: boolean;
-}
 
 /** Réponse du coach IA, avec l'id de la conversation à laquelle l'échange est rattaché. */
 export interface ChatResponse {
@@ -489,13 +483,6 @@ export class ChironApi {
   }
 
   /** Fournisseur d'IA du coach (Mistral ou Gemini). */
-  getAiProvider(): Observable<AiProviderPref> {
-    return this.http.get<AiProviderPref>(`${this.apiUrl}/settings/ai-provider`);
-  }
-
-  updateAiProvider(provider: AiProvider): Observable<void> {
-    return this.http.put<void>(`${this.apiUrl}/settings/ai-provider`, { provider });
-  }
 
   forgotPassword(email: string): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/auth/forgot-password`, { email });

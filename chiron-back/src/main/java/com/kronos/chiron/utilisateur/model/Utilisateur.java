@@ -104,18 +104,6 @@ public class Utilisateur implements UserDetails {
     @Builder.Default
     private Boolean isOnboarded = false;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "ai_provider", nullable = false, length = 20)
-    @Builder.Default
-    private AiProvider aiProvider = AiProvider.MISTRAL;
-
-    @Column(name = "gemini_call_date")
-    private LocalDate geminiCallDate;
-
-    @Column(name = "gemini_call_count", nullable = false)
-    @Builder.Default
-    private int geminiCallCount = 0;
-
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "utilisateur_materiel", joinColumns = @JoinColumn(name = "utilisateur_id"))
     @Column(name = "equipement", length = 32)

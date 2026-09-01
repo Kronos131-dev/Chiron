@@ -6,7 +6,6 @@ import com.kronos.chiron.coach.model.AgentType;
 import com.kronos.chiron.coach.model.Conversation;
 import com.kronos.chiron.coach.model.ConversationMessage;
 import com.kronos.chiron.coach.model.MessageRole;
-import com.kronos.chiron.coach.service.AiUsageService;
 import com.kronos.chiron.coach.service.ConversationService;
 import com.kronos.chiron.coach.service.MemoryNoteService;
 import com.kronos.chiron.core.security.AuthenticatedUserService;
@@ -15,7 +14,6 @@ import com.kronos.chiron.noctua.model.NoctuaBriefing;
 import com.kronos.chiron.noctua.model.NoctuaBriefingType;
 import com.kronos.chiron.noctua.persistence.NoctuaBriefingRepository;
 import com.kronos.chiron.security.JwtService;
-import com.kronos.chiron.utilisateur.model.AiProvider;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,8 +66,6 @@ class NoctuaControllerTest {
     private NoctuaAgentRouter noctuaAgentRouter;
     @MockitoBean
     private ConversationMemoryManager memoryManager;
-    @MockitoBean
-    private AiUsageService aiUsageService;
     @MockitoBean
     private Clock clock;
     @MockitoBean
@@ -156,8 +152,7 @@ class NoctuaControllerTest {
         when(noctuaBriefingRepository.findByIdAndUtilisateur(3L, user)).thenReturn(Optional.of(briefing));
         when(conversationService.getOrCreate(user, 55L, AgentType.NOCTUA)).thenReturn(conversation);
         when(memoryNoteService.formatForPrompt(any(), org.mockito.ArgumentMatchers.anyInt())).thenReturn("");
-        when(aiUsageService.resolveProvider(user)).thenReturn(AiProvider.MISTRAL);
-        when(noctuaAgentRouter.chatWithFallback(eq(AiProvider.MISTRAL), eq("55"), anyString()))
+        when(noctuaAgentRouter.chat(eq("55"), anyString()))
                 .thenReturn("Charge un peu élevée cette semaine.");
 
         mockMvc.perform(post("/api/noctua/briefings/3/messages")

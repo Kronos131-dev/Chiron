@@ -5,8 +5,8 @@ import com.kronos.chiron.coach.agent.ConversationMemoryManager;
 
 public class NoctuaAgentRouter extends AgentRouter<NoctuaAgent> {
 
-    public NoctuaAgentRouter(NoctuaAgent mistral, NoctuaAgent gemini, ConversationMemoryManager memoryManager) {
-        super(mistral, gemini, memoryManager);
+    public NoctuaAgentRouter(NoctuaAgent agent, ConversationMemoryManager memoryManager) {
+        super(agent, memoryManager);
     }
 
     @Override

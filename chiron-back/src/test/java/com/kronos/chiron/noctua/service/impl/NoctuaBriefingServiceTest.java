@@ -9,7 +9,6 @@ import com.kronos.chiron.noctua.agent.NoctuaAgentRouter;
 import com.kronos.chiron.noctua.model.NoctuaBriefing;
 import com.kronos.chiron.noctua.model.NoctuaBriefingType;
 import com.kronos.chiron.noctua.persistence.NoctuaBriefingRepository;
-import com.kronos.chiron.utilisateur.model.AiProvider;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -78,7 +77,7 @@ class NoctuaBriefingServiceTest {
 
         assertThat(result).isEmpty();
         verify(conversationService, never()).getOrCreate(any(), any(), any());
-        verify(noctuaAgentRouter, never()).chatWithFallback(any(), anyString(), anyString());
+        verify(noctuaAgentRouter, never()).chat(anyString(), anyString());
     }
 
     @Test
@@ -86,7 +85,7 @@ class NoctuaBriefingServiceTest {
         when(noctuaBriefingRepository.existsByUtilisateurAndCleDeclencheur(user, "REVEIL:" + TODAY))
                 .thenReturn(false);
         when(conversationService.getOrCreate(user, null, AgentType.NOCTUA)).thenReturn(conversation);
-        when(noctuaAgentRouter.chatWithFallback(eq(AiProvider.MISTRAL), eq("55"), anyString()))
+        when(noctuaAgentRouter.chat(eq("55"), anyString()))
                 .thenReturn("Nuit correcte, préparation à 71.");
         when(noctuaBriefingRepository.save(any(NoctuaBriefing.class))).thenAnswer(i -> i.getArgument(0));
 
@@ -106,7 +105,7 @@ class NoctuaBriefingServiceTest {
         when(noctuaBriefingRepository.existsByUtilisateurAndCleDeclencheur(user, "REVEIL:" + TODAY))
                 .thenReturn(false);
         when(conversationService.getOrCreate(user, null, AgentType.NOCTUA)).thenReturn(conversation);
-        when(noctuaAgentRouter.chatWithFallback(eq(AiProvider.MISTRAL), eq("55"), anyString()))
+        when(noctuaAgentRouter.chat(eq("55"), anyString()))
                 .thenThrow(new AiUnavailableException("indisponible", new RuntimeException("boom")));
 
         Optional<NoctuaBriefing> result = noctuaBriefingService.genererSiNecessaire(user, NoctuaBriefingType.REVEIL,
@@ -122,7 +121,7 @@ class NoctuaBriefingServiceTest {
         when(noctuaBriefingRepository.existsByUtilisateurAndCleDeclencheur(user, "REVEIL:" + TODAY))
                 .thenReturn(false);
         when(conversationService.getOrCreate(user, null, AgentType.NOCTUA)).thenReturn(conversation);
-        when(noctuaAgentRouter.chatWithFallback(eq(AiProvider.MISTRAL), eq("55"), anyString()))
+        when(noctuaAgentRouter.chat(eq("55"), anyString()))
                 .thenReturn("Bilan de la nuit.");
         when(noctuaBriefingRepository.save(any(NoctuaBriefing.class)))
                 .thenThrow(new DataIntegrityViolationException("contrainte unique violée"));

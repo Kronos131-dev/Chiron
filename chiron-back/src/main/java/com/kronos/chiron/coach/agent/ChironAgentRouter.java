@@ -2,8 +2,8 @@ package com.kronos.chiron.coach.agent;
 
 public class ChironAgentRouter extends AgentRouter<ChironAgent> {
 
-    public ChironAgentRouter(ChironAgent mistral, ChironAgent gemini, ConversationMemoryManager memoryManager) {
-        super(mistral, gemini, memoryManager);
+    public ChironAgentRouter(ChironAgent agent, ConversationMemoryManager memoryManager) {
+        super(agent, memoryManager);
     }
 
     @Override

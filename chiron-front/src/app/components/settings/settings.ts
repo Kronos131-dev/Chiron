@@ -2,7 +2,12 @@ import { Component, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { ChironApi, NutritionLinkStatus, FitbitLinkStatus, TrainingPrefs, AiProvider } from '../../service/chiron-api';
+import {
+  ChironApi,
+  NutritionLinkStatus,
+  FitbitLinkStatus,
+  TrainingPrefs,
+} from '../../service/chiron-api';
 import { AuthService } from '../../service/auth.service';
 import { I18nService, Lang } from '../../service/i18n.service';
 import { estNatif, ouvrirDansUnOnglet } from '../../service/plateforme';
@@ -22,19 +27,21 @@ export class Settings implements OnInit, OnDestroy {
   currentPrenom = signal<string | null>(null);
   currentNom = signal<string | null>(null);
 
-  openSection = signal<'password' | 'email' | 'username' | 'identity' | 'tonnage' | 'ai' | 'language' | 'delete' | null>(null);
+  openSection = signal<
+    'password' | 'email' | 'username' | 'identity' | 'tonnage' | 'ai' | 'language' | 'delete' | null
+  >(null);
 
   /** Langue active (signal du service i18n), exposée au template via `lang()`. */
-  get lang() { return this.i18n.lang; }
+  get lang() {
+    return this.i18n.lang;
+  }
 
   // --- Préférences de calcul du tonnage ---
   halteresParImplement = signal(true);
   machineParCote = signal(false);
 
   // --- Fournisseur d'IA du coach ---
-  aiProvider = signal<AiProvider>('MISTRAL');
   /** Gemini réellement disponible côté serveur (clé configurée) ; sinon repli Mistral. */
-  geminiAvailable = signal(false);
 
   // Champs password
   currentPasswordForPwd = '';
@@ -73,7 +80,7 @@ export class Settings implements OnInit, OnDestroy {
     private chironApi: ChironApi,
     private authService: AuthService,
     private router: Router,
-    public i18n: I18nService
+    public i18n: I18nService,
   ) {
     this.username = this.authService.getUsername() || '';
     this.newUsername = this.username;
@@ -85,7 +92,7 @@ export class Settings implements OnInit, OnDestroy {
         this.currentNom.set(info.nom);
         this.newPrenom = info.prenom ?? '';
         this.newNom = info.nom ?? '';
-      }
+      },
     });
   }
 
@@ -93,38 +100,6 @@ export class Settings implements OnInit, OnDestroy {
     this.loadNutritionStatus();
     this.loadFitbitStatus();
     this.loadTrainingPrefs();
-    this.loadAiProvider();
-  }
-
-  private loadAiProvider() {
-    this.chironApi.getAiProvider().subscribe({
-      next: (pref) => {
-        this.aiProvider.set(pref.provider);
-        this.geminiAvailable.set(pref.geminiAvailable);
-      },
-      error: () => {} // garde le défaut (MISTRAL) en cas d'échec
-    });
-  }
-
-  /** Change le fournisseur d'IA du coach et le persiste immédiatement. */
-  setAiProvider(provider: AiProvider) {
-    if (provider === 'GEMINI' && !this.geminiAvailable()) {
-      this.errorMessage.set(this.i18n.t('settings.ai.notConfigured'));
-      return;
-    }
-    if (this.aiProvider() === provider) return;
-    const previous = this.aiProvider();
-    this.aiProvider.set(provider);
-    this.chironApi.updateAiProvider(provider).subscribe({
-      next: () => {
-        this.successMessage.set(this.i18n.t('settings.ai.updated', { provider }));
-        setTimeout(() => this.successMessage.set(''), 2500);
-      },
-      error: () => {
-        this.aiProvider.set(previous);
-        this.errorMessage.set(this.i18n.t('settings.ai.error'));
-      },
-    });
   }
 
   /** Change la langue de l'application (switch à chaud) et la persiste. */
@@ -141,7 +116,7 @@ export class Settings implements OnInit, OnDestroy {
         this.halteresParImplement.set(prefs.halteresParImplement);
         this.machineParCote.set(prefs.machineParCote);
       },
-      error: () => {} // garde les défauts en cas d'échec
+      error: () => {}, // garde les défauts en cas d'échec
     });
   }
 
@@ -161,12 +136,12 @@ export class Settings implements OnInit, OnDestroy {
   }
 
   toggleHalteres() {
-    this.halteresParImplement.update(v => !v);
+    this.halteresParImplement.update((v) => !v);
     this.saveTrainingPrefs();
   }
 
   toggleMachine() {
-    this.machineParCote.update(v => !v);
+    this.machineParCote.update((v) => !v);
     this.saveTrainingPrefs();
   }
 
@@ -174,7 +149,17 @@ export class Settings implements OnInit, OnDestroy {
     this.stopFitbitPolling();
   }
 
-  toggle(section: 'password' | 'email' | 'username' | 'identity' | 'tonnage' | 'ai' | 'language' | 'delete') {
+  toggle(
+    section:
+      | 'password'
+      | 'email'
+      | 'username'
+      | 'identity'
+      | 'tonnage'
+      | 'ai'
+      | 'language'
+      | 'delete',
+  ) {
     this.openSection.set(this.openSection() === section ? null : section);
     this.clearFeedback();
   }
@@ -191,19 +176,24 @@ export class Settings implements OnInit, OnDestroy {
     }
     this.isLoading.set(true);
     this.clearFeedback();
-    this.chironApi.changePassword({ currentPassword: this.currentPasswordForPwd, newPassword: this.newPassword }).subscribe({
-      next: () => {
-        this.isLoading.set(false);
-        this.successMessage.set(this.i18n.t('settings.password.updated'));
-        this.currentPasswordForPwd = '';
-        this.newPassword = '';
-        this.confirmPassword = '';
-      },
-      error: (err) => {
-        this.isLoading.set(false);
-        this.errorMessage.set(err.error?.message || this.i18n.t('settings.password.wrong'));
-      }
-    });
+    this.chironApi
+      .changePassword({
+        currentPassword: this.currentPasswordForPwd,
+        newPassword: this.newPassword,
+      })
+      .subscribe({
+        next: () => {
+          this.isLoading.set(false);
+          this.successMessage.set(this.i18n.t('settings.password.updated'));
+          this.currentPasswordForPwd = '';
+          this.newPassword = '';
+          this.confirmPassword = '';
+        },
+        error: (err) => {
+          this.isLoading.set(false);
+          this.errorMessage.set(err.error?.message || this.i18n.t('settings.password.wrong'));
+        },
+      });
   }
 
   onChangeEmail() {
@@ -218,7 +208,7 @@ export class Settings implements OnInit, OnDestroy {
       error: (err) => {
         this.isLoading.set(false);
         this.errorMessage.set(err.error?.message || this.i18n.t('settings.email.error'));
-      }
+      },
     });
   }
 
@@ -237,7 +227,7 @@ export class Settings implements OnInit, OnDestroy {
       error: (err) => {
         this.isLoading.set(false);
         this.errorMessage.set(err.error?.message || this.i18n.t('settings.identity.error'));
-      }
+      },
     });
   }
 
@@ -254,7 +244,7 @@ export class Settings implements OnInit, OnDestroy {
       error: (err) => {
         this.isLoading.set(false);
         this.errorMessage.set(err.error?.message || this.i18n.t('settings.username.error'));
-      }
+      },
     });
   }
 
@@ -271,7 +261,7 @@ export class Settings implements OnInit, OnDestroy {
       error: () => {
         this.isLoading.set(false);
         this.errorMessage.set(this.i18n.t('settings.delete.error'));
-      }
+      },
     });
   }
 
@@ -286,7 +276,7 @@ export class Settings implements OnInit, OnDestroy {
   loadNutritionStatus() {
     this.chironApi.getNutritionStatus().subscribe({
       next: (status) => this.nutritionStatus.set(status),
-      error: () => this.nutritionStatus.set(null)
+      error: () => this.nutritionStatus.set(null),
     });
   }
 
@@ -310,7 +300,7 @@ export class Settings implements OnInit, OnDestroy {
         this.isLinking.set(false);
         const msg = err?.error?.message ?? this.i18n.t('settings.olympus.linkFail');
         this.linkError.set(msg);
-      }
+      },
     });
   }
 
@@ -318,7 +308,7 @@ export class Settings implements OnInit, OnDestroy {
     if (!confirm(this.i18n.t('settings.olympus.unlinkConfirm'))) return;
     this.chironApi.unlinkOlympus().subscribe({
       next: () => this.loadNutritionStatus(),
-      error: () => alert(this.i18n.t('settings.olympus.unlinkError'))
+      error: () => alert(this.i18n.t('settings.olympus.unlinkError')),
     });
   }
 
@@ -333,7 +323,7 @@ export class Settings implements OnInit, OnDestroy {
   loadFitbitStatus() {
     this.chironApi.getFitbitStatus().subscribe({
       next: (status) => this.fitbitStatus.set(status),
-      error: () => this.fitbitStatus.set(null)
+      error: () => this.fitbitStatus.set(null),
     });
   }
 
@@ -348,7 +338,7 @@ export class Settings implements OnInit, OnDestroy {
       error: () => {
         this.isFitbitConnecting.set(false);
         this.fitbitError.set(this.i18n.t('settings.fitbit.startError'));
-      }
+      },
     });
   }
 
@@ -356,7 +346,7 @@ export class Settings implements OnInit, OnDestroy {
     if (!confirm(this.i18n.t('settings.fitbit.disconnectConfirm'))) return;
     this.chironApi.unlinkFitbit().subscribe({
       next: () => this.loadFitbitStatus(),
-      error: () => alert(this.i18n.t('settings.fitbit.disconnectError'))
+      error: () => alert(this.i18n.t('settings.fitbit.disconnectError')),
     });
   }
 
@@ -377,7 +367,7 @@ export class Settings implements OnInit, OnDestroy {
             this.stopFitbitPolling();
           }
         },
-        error: () => {}
+        error: () => {},
       });
       if (elapsedSeconds >= 180) {
         this.isFitbitConnecting.set(false);
@@ -441,7 +431,9 @@ export class Settings implements OnInit, OnDestroy {
       error: (err) => {
         this.boditraxUploading.set(false);
         this.boditraxError.set(true);
-        this.boditraxMessage.set(err?.error?.detail ?? this.i18n.t('settings.boditrax.importError'));
+        this.boditraxMessage.set(
+          err?.error?.detail ?? this.i18n.t('settings.boditrax.importError'),
+        );
         input.value = '';
       },
     });

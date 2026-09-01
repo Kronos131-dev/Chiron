@@ -1,46 +1,37 @@
 package com.kronos.chiron.coach.configuration;
 
-import com.kronos.chiron.coach.tools.AdaptiveTools;
-import com.kronos.chiron.coach.tools.AnalyseDieteTools;
-import com.kronos.chiron.coach.tools.AppGuideTools;
 import com.kronos.chiron.coach.agent.ChironAgent;
 import com.kronos.chiron.coach.agent.ChironAgentRouter;
 import com.kronos.chiron.coach.agent.ConversationMemoryManager;
-import com.kronos.chiron.course.agent.CourseVoiceInterpreter;
-import com.kronos.chiron.course.dto.CommandeVoixDto;
+import com.kronos.chiron.coach.tools.AdaptiveTools;
+import com.kronos.chiron.coach.tools.AnalyseDieteTools;
+import com.kronos.chiron.coach.tools.AppGuideTools;
 import com.kronos.chiron.coach.tools.FitbitTools;
 import com.kronos.chiron.coach.tools.MemoryTools;
 import com.kronos.chiron.coach.tools.NutritionTools;
 import com.kronos.chiron.coach.tools.RecoveryTools;
 import com.kronos.chiron.coach.tools.WorkoutTools;
+import com.kronos.chiron.course.agent.CourseVoiceInterpreter;
+import com.kronos.chiron.course.dto.CommandeVoixDto;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.chat.ChatModel;
-import dev.langchain4j.model.googleai.GoogleAiGeminiChatModel;
-import dev.langchain4j.model.mistralai.MistralAiChatModel;
 import dev.langchain4j.service.AiServices;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.time.Duration;
 
 @Configuration
 public class ChironConfig {
 
-    @Value("${langchain4j.mistral-ai.chat-model.api-key}")
-    private String mistralApiKey;
+    private final ModeleIaConfig modeleIaConfig;
 
-    @Value("${langchain4j.mistral-ai.chat-model.model-name}")
-    private String mistralModel;
-
-    @Value("${langchain4j.google-ai-gemini.chat-model.api-key:}")
-    private String geminiApiKey;
-
-    @Value("${langchain4j.google-ai-gemini.chat-model.model-name:gemini-3.5-flash}")
-    private String geminiModel;
+    public ChironConfig(ModeleIaConfig modeleIaConfig) {
+        this.modeleIaConfig = modeleIaConfig;
+    }
 
     @Bean
-    public ChironAgentRouter chironAgentRouter(WorkoutTools workoutTools,
+    public ChironAgentRouter chironAgentRouter(@Qualifier(ModeleIaConfig.CONVERSATION) ChatModel modele,
+            WorkoutTools workoutTools,
             NutritionTools nutritionTools,
             MemoryTools memoryTools,
             RecoveryTools recoveryTools,
@@ -54,36 +45,13 @@ public class ChironConfig {
         Object[] tools = {workoutTools, nutritionTools, memoryTools, recoveryTools,
                 adaptiveTools, fitbitTools, appGuideTools, analyseDieteTools};
 
-        ChatModel mistral = MistralAiChatModel.builder()
-                .apiKey(mistralApiKey)
-                .modelName(mistralModel)
-                .timeout(Duration.ofSeconds(90))
-                .logRequests(true)
-                .logResponses(true)
-                .build();
-        ChironAgent agentMistral = AiServices.builder(ChironAgent.class)
-                .chatModel(mistral)
+        ChironAgent agent = AiServices.builder(ChironAgent.class)
+                .chatModel(modele)
                 .chatMemoryProvider(chatMemoryProvider)
                 .tools(tools)
                 .build();
 
-        ChironAgent agentGemini = null;
-        if (geminiApiKey != null && !geminiApiKey.isBlank()) {
-            ChatModel gemini = GoogleAiGeminiChatModel.builder()
-                    .apiKey(geminiApiKey)
-                    .modelName(geminiModel)
-                    .timeout(Duration.ofSeconds(90))
-                    .maxRetries(3)
-                    .logRequestsAndResponses(true)
-                    .build();
-            agentGemini = AiServices.builder(ChironAgent.class)
-                    .chatModel(gemini)
-                    .chatMemoryProvider(chatMemoryProvider)
-                    .tools(tools)
-                    .build();
-        }
-
-        return new ChironAgentRouter(agentMistral, agentGemini, memoryManager);
+        return new ChironAgentRouter(agent, memoryManager);
     }
 
     @Bean
@@ -91,21 +59,16 @@ public class ChironConfig {
         return memoryManager::getOrCreate;
     }
 
+    // WHY: sans clé, l'interprète rend « inconnu » plutôt que d'échouer. Le service Android
+    // interroge cette route pour chaque phrase qu'il n'a pas su lire lui-même ; une exception y
+    // coûterait une seconde de course et n'apprendrait rien de plus qu'un ordre non reconnu.
     @Bean
-    public CourseVoiceInterpreter courseVoiceInterpreter() {
-        if (mistralApiKey == null || mistralApiKey.isBlank()) {
+    public CourseVoiceInterpreter courseVoiceInterpreter(@Qualifier(ModeleIaConfig.VOIX) ChatModel modele) {
+        if (!modeleIaConfig.configure()) {
             return transcript -> new CommandeVoixDto("inconnu", null);
         }
-        ChatModel mistral = MistralAiChatModel.builder()
-                .apiKey(mistralApiKey)
-                .modelName(mistralModel)
-                .timeout(Duration.ofSeconds(3))
-                .logRequests(true)
-                .logResponses(true)
-                .build();
-
         return AiServices.builder(CourseVoiceInterpreter.class)
-                .chatModel(mistral)
+                .chatModel(modele)
                 .build();
     }
 }

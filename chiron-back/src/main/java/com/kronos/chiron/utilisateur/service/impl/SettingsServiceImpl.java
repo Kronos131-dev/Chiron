@@ -11,8 +11,6 @@ import java.time.Clock;
 import com.kronos.chiron.auth.service.EmailService;
 
 import com.kronos.chiron.auth.model.PasswordResetToken;
-import com.kronos.chiron.utilisateur.dto.AiProviderDto;
-import com.kronos.chiron.utilisateur.model.AiProvider;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 import com.kronos.chiron.auth.persistence.PasswordResetTokenRepository;
 import com.kronos.chiron.utilisateur.persistence.UtilisateurRepository;
@@ -39,7 +37,6 @@ public class SettingsServiceImpl implements SettingsService {
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
     private final JwtService jwtService;
-    private final com.kronos.chiron.coach.agent.ChironAgentRouter chironAgentRouter;
 
     private final Clock clock;
     @Value("${chiron.frontend-url}")
@@ -60,23 +57,6 @@ public class SettingsServiceImpl implements SettingsService {
                 .orElseThrow(() -> notFound("Utilisateur introuvable"));
         user.setPoidsHaltereParImplement(halteresParImplement);
         user.setPoidsMachineParCote(machineParCote);
-        utilisateurRepository.save(user);
-    }
-
-    @Override
-    public AiProviderDto getAiProvider(String username) {
-        Utilisateur user = utilisateurRepository.findByUsername(username)
-                .orElseThrow(() -> notFound("Utilisateur introuvable"));
-        return new AiProviderDto(
-                user.getAiProvider(), chironAgentRouter.geminiAvailable());
-    }
-
-    @Transactional
-    @Override
-    public void updateAiProvider(String username, AiProvider provider) {
-        Utilisateur user = utilisateurRepository.findByUsername(username)
-                .orElseThrow(() -> notFound("Utilisateur introuvable"));
-        user.setAiProvider(provider != null ? provider : AiProvider.MISTRAL);
         utilisateurRepository.save(user);
     }
 

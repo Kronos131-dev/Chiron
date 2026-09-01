@@ -8,7 +8,6 @@ import com.kronos.chiron.coach.dto.ConversationMessageDto;
 import com.kronos.chiron.coach.model.AgentType;
 import com.kronos.chiron.coach.model.Conversation;
 import com.kronos.chiron.coach.model.ConversationMessage;
-import com.kronos.chiron.coach.service.AiUsageService;
 import com.kronos.chiron.coach.service.ConversationService;
 import com.kronos.chiron.coach.service.MemoryNoteService;
 import com.kronos.chiron.core.security.AuthenticatedUserService;
@@ -19,7 +18,6 @@ import com.kronos.chiron.noctua.dto.NoctuaMessageRequest;
 import com.kronos.chiron.noctua.dto.NonLusDto;
 import com.kronos.chiron.noctua.model.NoctuaBriefing;
 import com.kronos.chiron.noctua.persistence.NoctuaBriefingRepository;
-import com.kronos.chiron.utilisateur.model.AiProvider;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -46,7 +44,6 @@ public class NoctuaController {
     private final MemoryNoteService memoryNoteService;
     private final NoctuaAgentRouter noctuaAgentRouter;
     private final ConversationMemoryManager memoryManager;
-    private final AiUsageService aiUsageService;
     private final Clock clock;
 
     @GetMapping("/briefings")
@@ -100,8 +97,7 @@ public class NoctuaController {
         ctx.append(memoryNoteService.formatForPrompt(user, MEMORY_INJECTION_LIMIT));
         ctx.append("MESSAGE DE L'UTILISATEUR : ").append(request.message());
 
-        AiProvider provider = aiUsageService.resolveProvider(user);
-        String reply = noctuaAgentRouter.chatWithFallback(provider, memoryId, ctx.toString());
+        String reply = noctuaAgentRouter.chat(memoryId, ctx.toString());
 
         conversationService.recordExchange(conversation, request.message(), reply);
         return new ChatResponse(conversation.getId(), reply);

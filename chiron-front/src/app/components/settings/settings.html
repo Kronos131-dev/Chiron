@@ -1,11 +1,12 @@
-<app-header [title]="('settings.title' | t)" [showBack]="true" [backRoute]="'/chat'"></app-header>
+<app-header [title]="'settings.title' | t" [showBack]="true" [backRoute]="'/chat'"></app-header>
 
 <main class="min-h-screen pt-24 pb-32 px-4 md:px-8 greek-bg heroic-texture">
   <div class="max-w-xl mx-auto space-y-4 pt-4">
-
     <!-- Feedback global -->
     @if (successMessage()) {
-      <div class="bg-emerald-500/10 border border-emerald-500/30 rounded-xl px-4 py-3 text-emerald-400 text-sm">
+      <div
+        class="bg-emerald-500/10 border border-emerald-500/30 rounded-xl px-4 py-3 text-emerald-400 text-sm"
+      >
         {{ successMessage() }}
       </div>
     }
@@ -17,8 +18,10 @@
 
     <!-- ── Langue / Language ── -->
     <div class="bg-slate-900/80 border border-white/10 rounded-2xl overflow-hidden">
-      <button (click)="toggle('language')"
-              class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-white/5 transition-colors">
+      <button
+        (click)="toggle('language')"
+        class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-white/5 transition-colors"
+      >
         <div class="flex items-center gap-3">
           <span class="material-symbols-outlined text-secondary">translate</span>
           <div>
@@ -26,26 +29,35 @@
             <p class="text-white/40 text-xs mt-0.5">{{ 'settings.language.subtitle' | t }}</p>
           </div>
         </div>
-        <span class="material-symbols-outlined text-secondary/60 transition-transform"
-              [class.rotate-180]="openSection() === 'language'">expand_more</span>
+        <span
+          class="material-symbols-outlined text-secondary/60 transition-transform"
+          [class.rotate-180]="openSection() === 'language'"
+          >expand_more</span
+        >
       </button>
       @if (openSection() === 'language') {
         <div class="px-5 pb-5 space-y-4 border-t border-white/5">
           <div class="flex gap-2 mt-4">
-            <button type="button" (click)="setLanguage('fr')"
-                    class="flex-1 py-2.5 rounded-xl text-sm font-bold transition-colors"
-                    [class.bg-secondary]="lang() === 'fr'"
-                    [class.text-slate-900]="lang() === 'fr'"
-                    [class.bg-slate-700]="lang() !== 'fr'"
-                    [class.text-white]="lang() !== 'fr'">
+            <button
+              type="button"
+              (click)="setLanguage('fr')"
+              class="flex-1 py-2.5 rounded-xl text-sm font-bold transition-colors"
+              [class.bg-secondary]="lang() === 'fr'"
+              [class.text-slate-900]="lang() === 'fr'"
+              [class.bg-slate-700]="lang() !== 'fr'"
+              [class.text-white]="lang() !== 'fr'"
+            >
               {{ 'settings.language.fr' | t }}
             </button>
-            <button type="button" (click)="setLanguage('en')"
-                    class="flex-1 py-2.5 rounded-xl text-sm font-bold transition-colors"
-                    [class.bg-secondary]="lang() === 'en'"
-                    [class.text-slate-900]="lang() === 'en'"
-                    [class.bg-slate-700]="lang() !== 'en'"
-                    [class.text-white]="lang() !== 'en'">
+            <button
+              type="button"
+              (click)="setLanguage('en')"
+              class="flex-1 py-2.5 rounded-xl text-sm font-bold transition-colors"
+              [class.bg-secondary]="lang() === 'en'"
+              [class.text-slate-900]="lang() === 'en'"
+              [class.bg-slate-700]="lang() !== 'en'"
+              [class.text-white]="lang() !== 'en'"
+            >
               {{ 'settings.language.en' | t }}
             </button>
           </div>
@@ -60,8 +72,10 @@
           <span class="material-symbols-outlined text-secondary">tune</span>
           <span class="text-white font-bold">{{ 'settings.profile.title' | t }}</span>
         </div>
-        <button (click)="goToOnboarding()"
-                class="w-full border border-secondary/30 text-secondary py-3 rounded-xl text-xs font-bold tracking-widest uppercase hover:bg-secondary/10 transition-colors flex items-center justify-center gap-2">
+        <button
+          (click)="goToOnboarding()"
+          class="w-full border border-secondary/30 text-secondary py-3 rounded-xl text-xs font-bold tracking-widest uppercase hover:bg-secondary/10 transition-colors flex items-center justify-center gap-2"
+        >
           <span class="material-symbols-outlined text-base">edit</span>
           {{ 'settings.profile.edit' | t }}
         </button>
@@ -80,22 +94,30 @@
           <div class="border border-emerald-500/20 bg-emerald-500/5 p-5 rounded-xl">
             <div class="flex items-center justify-between mb-3">
               <div>
-                <p class="text-emerald-400 text-[10px] font-bold tracking-[0.2em] uppercase">{{ 'settings.olympus.linked' | t }}</p>
-                <p class="text-white font-bold tracking-wide">{{ nutritionStatus()?.olympusUsername }}</p>
+                <p class="text-emerald-400 text-[10px] font-bold tracking-[0.2em] uppercase">
+                  {{ 'settings.olympus.linked' | t }}
+                </p>
+                <p class="text-white font-bold tracking-wide">
+                  {{ nutritionStatus()?.olympusUsername }}
+                </p>
               </div>
               <span class="material-symbols-outlined text-emerald-400 text-3xl">link</span>
             </div>
             <p class="text-white/50 text-xs mb-4">
               {{ 'settings.olympus.linkedDesc' | t }}
             </p>
-            <button (click)="unlinkOlympus()"
-                    class="w-full border border-red-500/30 text-red-400 py-2 rounded-lg text-xs font-bold tracking-widest uppercase hover:bg-red-500/10 transition-colors">
+            <button
+              (click)="unlinkOlympus()"
+              class="w-full border border-red-500/30 text-red-400 py-2 rounded-lg text-xs font-bold tracking-widest uppercase hover:bg-red-500/10 transition-colors"
+            >
               {{ 'settings.olympus.unlink' | t }}
             </button>
           </div>
         } @else if (nutritionStatus()?.expired) {
           <div class="border border-amber-500/30 bg-amber-500/5 p-5 rounded-xl mb-4">
-            <p class="text-amber-400 text-[10px] font-bold tracking-[0.2em] uppercase mb-1">{{ 'settings.olympus.expired' | t }}</p>
+            <p class="text-amber-400 text-[10px] font-bold tracking-[0.2em] uppercase mb-1">
+              {{ 'settings.olympus.expired' | t }}
+            </p>
             <p class="text-white text-sm">{{ 'settings.olympus.expiredDesc' | t }}</p>
           </div>
         }
@@ -105,23 +127,31 @@
             <p class="text-white/50 text-xs">
               {{ 'settings.olympus.connectDesc' | t }}
             </p>
-            <input type="text"
-                   [ngModel]="olympusPseudo()"
-                   (ngModelChange)="olympusPseudo.set($event)"
-                   [placeholder]="'settings.olympus.usernamePh' | t"
-                   class="w-full bg-slate-950/60 text-white px-4 py-2.5 rounded-lg border border-white/10 focus:border-emerald-500/50 outline-none text-sm">
-            <input type="password"
-                   [ngModel]="olympusPassword()"
-                   (ngModelChange)="olympusPassword.set($event)"
-                   [placeholder]="'settings.olympus.passwordPh' | t"
-                   class="w-full bg-slate-950/60 text-white px-4 py-2.5 rounded-lg border border-white/10 focus:border-emerald-500/50 outline-none text-sm">
+            <input
+              type="text"
+              [ngModel]="olympusPseudo()"
+              (ngModelChange)="olympusPseudo.set($event)"
+              [placeholder]="'settings.olympus.usernamePh' | t"
+              class="w-full bg-slate-950/60 text-white px-4 py-2.5 rounded-lg border border-white/10 focus:border-emerald-500/50 outline-none text-sm"
+            />
+            <input
+              type="password"
+              [ngModel]="olympusPassword()"
+              (ngModelChange)="olympusPassword.set($event)"
+              [placeholder]="'settings.olympus.passwordPh' | t"
+              class="w-full bg-slate-950/60 text-white px-4 py-2.5 rounded-lg border border-white/10 focus:border-emerald-500/50 outline-none text-sm"
+            />
             @if (linkError()) {
               <p class="text-red-400 text-xs">{{ linkError() }}</p>
             }
-            <button (click)="linkOlympus()"
-                    [disabled]="isLinking()"
-                    class="w-full bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 py-2.5 rounded-lg text-xs font-bold tracking-widest uppercase hover:bg-emerald-500/25 transition-colors disabled:opacity-50">
-              {{ isLinking() ? ('settings.olympus.linking' | t) : ('settings.olympus.linkBtn' | t) }}
+            <button
+              (click)="linkOlympus()"
+              [disabled]="isLinking()"
+              class="w-full bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 py-2.5 rounded-lg text-xs font-bold tracking-widest uppercase hover:bg-emerald-500/25 transition-colors disabled:opacity-50"
+            >
+              {{
+                isLinking() ? ('settings.olympus.linking' | t) : ('settings.olympus.linkBtn' | t)
+              }}
             </button>
           </div>
         }
@@ -165,7 +195,9 @@
           <div class="border border-cyan-500/20 bg-cyan-500/5 p-5 rounded-xl">
             <div class="flex items-center justify-between mb-3">
               <div>
-                <p class="text-cyan-400 text-[10px] font-bold tracking-[0.2em] uppercase">{{ 'settings.fitbit.connected' | t }}</p>
+                <p class="text-cyan-400 text-[10px] font-bold tracking-[0.2em] uppercase">
+                  {{ 'settings.fitbit.connected' | t }}
+                </p>
                 <p class="text-white font-bold tracking-wide">{{ 'settings.fitbit.synced' | t }}</p>
               </div>
               <span class="material-symbols-outlined text-cyan-400 text-3xl">link</span>
@@ -173,18 +205,24 @@
             <p class="text-white/50 text-xs mb-4">
               {{ 'settings.fitbit.connectedDesc' | t }}
             </p>
-            <button (click)="goToFitbitDashboard()"
-                    class="w-full bg-cyan-500/15 border border-cyan-500/40 text-cyan-400 py-2.5 rounded-lg text-xs font-bold tracking-widest uppercase hover:bg-cyan-500/25 transition-colors mb-2">
+            <button
+              (click)="goToFitbitDashboard()"
+              class="w-full bg-cyan-500/15 border border-cyan-500/40 text-cyan-400 py-2.5 rounded-lg text-xs font-bold tracking-widest uppercase hover:bg-cyan-500/25 transition-colors mb-2"
+            >
               {{ 'settings.fitbit.dashboard' | t }}
             </button>
-            <button (click)="disconnectFitbit()"
-                    class="w-full border border-red-500/30 text-red-400 py-2 rounded-lg text-xs font-bold tracking-widest uppercase hover:bg-red-500/10 transition-colors">
+            <button
+              (click)="disconnectFitbit()"
+              class="w-full border border-red-500/30 text-red-400 py-2 rounded-lg text-xs font-bold tracking-widest uppercase hover:bg-red-500/10 transition-colors"
+            >
               {{ 'settings.fitbit.disconnect' | t }}
             </button>
           </div>
         } @else if (fitbitStatus()?.needsReconnect) {
           <div class="border border-amber-500/30 bg-amber-500/5 p-5 rounded-xl mb-4">
-            <p class="text-amber-400 text-[10px] font-bold tracking-[0.2em] uppercase mb-1">{{ 'settings.fitbit.expired' | t }}</p>
+            <p class="text-amber-400 text-[10px] font-bold tracking-[0.2em] uppercase mb-1">
+              {{ 'settings.fitbit.expired' | t }}
+            </p>
             <p class="text-white text-sm">{{ 'settings.fitbit.expiredDesc' | t }}</p>
           </div>
         }
@@ -202,10 +240,16 @@
                 {{ 'settings.fitbit.waiting' | t }}
               </p>
             }
-            <button (click)="connectFitbit()"
-                    [disabled]="isFitbitConnecting()"
-                    class="w-full bg-cyan-500/15 border border-cyan-500/40 text-cyan-400 py-2.5 rounded-lg text-xs font-bold tracking-widest uppercase hover:bg-cyan-500/25 transition-colors disabled:opacity-50">
-              {{ isFitbitConnecting() ? ('settings.fitbit.waitingBtn' | t) : ('settings.fitbit.connectBtn' | t) }}
+            <button
+              (click)="connectFitbit()"
+              [disabled]="isFitbitConnecting()"
+              class="w-full bg-cyan-500/15 border border-cyan-500/40 text-cyan-400 py-2.5 rounded-lg text-xs font-bold tracking-widest uppercase hover:bg-cyan-500/25 transition-colors disabled:opacity-50"
+            >
+              {{
+                isFitbitConnecting()
+                  ? ('settings.fitbit.waitingBtn' | t)
+                  : ('settings.fitbit.connectBtn' | t)
+              }}
             </button>
           </div>
         }
@@ -214,25 +258,45 @@
 
     <!-- ── Changer le mot de passe ── -->
     <div class="bg-slate-900/80 border border-white/10 rounded-2xl overflow-hidden">
-      <button (click)="toggle('password')"
-              class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-white/5 transition-colors">
+      <button
+        (click)="toggle('password')"
+        class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-white/5 transition-colors"
+      >
         <div class="flex items-center gap-3">
           <span class="material-symbols-outlined text-secondary">lock</span>
           <span class="text-white font-bold">{{ 'settings.password.title' | t }}</span>
         </div>
-        <span class="material-symbols-outlined text-secondary/60 transition-transform"
-              [class.rotate-180]="openSection() === 'password'">expand_more</span>
+        <span
+          class="material-symbols-outlined text-secondary/60 transition-transform"
+          [class.rotate-180]="openSection() === 'password'"
+          >expand_more</span
+        >
       </button>
       @if (openSection() === 'password') {
         <div class="px-5 pb-5 space-y-3 border-t border-white/5">
-          <input type="password" [(ngModel)]="currentPasswordForPwd" [placeholder]="'settings.password.currentPh' | t"
-                 class="w-full mt-4 bg-slate-950/60 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:border-secondary outline-none">
-          <input type="password" [(ngModel)]="newPassword" [placeholder]="'settings.password.newPh' | t"
-                 class="w-full bg-slate-950/60 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:border-secondary outline-none">
-          <input type="password" [(ngModel)]="confirmPassword" [placeholder]="'settings.password.confirmPh' | t"
-                 class="w-full bg-slate-950/60 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:border-secondary outline-none">
-          <button (click)="onChangePassword()" [disabled]="isLoading()"
-                  class="w-full bg-secondary text-slate-900 font-black uppercase tracking-widest py-3 rounded-xl hover:bg-secondary/80 transition-colors disabled:opacity-50">
+          <input
+            type="password"
+            [(ngModel)]="currentPasswordForPwd"
+            [placeholder]="'settings.password.currentPh' | t"
+            class="w-full mt-4 bg-slate-950/60 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:border-secondary outline-none"
+          />
+          <input
+            type="password"
+            [(ngModel)]="newPassword"
+            [placeholder]="'settings.password.newPh' | t"
+            class="w-full bg-slate-950/60 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:border-secondary outline-none"
+          />
+          <input
+            type="password"
+            [(ngModel)]="confirmPassword"
+            [placeholder]="'settings.password.confirmPh' | t"
+            class="w-full bg-slate-950/60 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:border-secondary outline-none"
+          />
+          <button
+            (click)="onChangePassword()"
+            [disabled]="isLoading()"
+            class="w-full bg-secondary text-slate-900 font-black uppercase tracking-widest py-3 rounded-xl hover:bg-secondary/80 transition-colors disabled:opacity-50"
+          >
             {{ 'settings.update' | t }}
           </button>
         </div>
@@ -241,8 +305,10 @@
 
     <!-- ── Changer l'email ── -->
     <div class="bg-slate-900/80 border border-white/10 rounded-2xl overflow-hidden">
-      <button (click)="toggle('email')"
-              class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-white/5 transition-colors">
+      <button
+        (click)="toggle('email')"
+        class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-white/5 transition-colors"
+      >
         <div class="flex items-center gap-3">
           <span class="material-symbols-outlined text-secondary">mail</span>
           <div>
@@ -254,15 +320,25 @@
             }
           </div>
         </div>
-        <span class="material-symbols-outlined text-secondary/60 transition-transform"
-              [class.rotate-180]="openSection() === 'email'">expand_more</span>
+        <span
+          class="material-symbols-outlined text-secondary/60 transition-transform"
+          [class.rotate-180]="openSection() === 'email'"
+          >expand_more</span
+        >
       </button>
       @if (openSection() === 'email') {
         <div class="px-5 pb-5 space-y-3 border-t border-white/5">
-          <input type="email" [(ngModel)]="newEmail" [placeholder]="'settings.email.newPh' | t"
-                 class="w-full mt-4 bg-slate-950/60 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:border-secondary outline-none">
-          <button (click)="onChangeEmail()" [disabled]="isLoading()"
-                  class="w-full bg-secondary text-slate-900 font-black uppercase tracking-widest py-3 rounded-xl hover:bg-secondary/80 transition-colors disabled:opacity-50">
+          <input
+            type="email"
+            [(ngModel)]="newEmail"
+            [placeholder]="'settings.email.newPh' | t"
+            class="w-full mt-4 bg-slate-950/60 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:border-secondary outline-none"
+          />
+          <button
+            (click)="onChangeEmail()"
+            [disabled]="isLoading()"
+            class="w-full bg-secondary text-slate-900 font-black uppercase tracking-widest py-3 rounded-xl hover:bg-secondary/80 transition-colors disabled:opacity-50"
+          >
             {{ 'settings.update' | t }}
           </button>
         </div>
@@ -271,8 +347,10 @@
 
     <!-- ── Changer le pseudo ── -->
     <div class="bg-slate-900/80 border border-white/10 rounded-2xl overflow-hidden">
-      <button (click)="toggle('username')"
-              class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-white/5 transition-colors">
+      <button
+        (click)="toggle('username')"
+        class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-white/5 transition-colors"
+      >
         <div class="flex items-center gap-3">
           <span class="material-symbols-outlined text-secondary">badge</span>
           <div>
@@ -280,16 +358,26 @@
             <p class="text-white/40 text-xs mt-0.5">{{ username }}</p>
           </div>
         </div>
-        <span class="material-symbols-outlined text-secondary/60 transition-transform"
-              [class.rotate-180]="openSection() === 'username'">expand_more</span>
+        <span
+          class="material-symbols-outlined text-secondary/60 transition-transform"
+          [class.rotate-180]="openSection() === 'username'"
+          >expand_more</span
+        >
       </button>
       @if (openSection() === 'username') {
         <div class="px-5 pb-5 space-y-3 border-t border-white/5">
           <p class="text-white/40 text-xs mt-4">{{ 'settings.username.hint' | t }}</p>
-          <input type="text" [(ngModel)]="newUsername" [placeholder]="'settings.username.newPh' | t"
-                 class="w-full bg-slate-950/60 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:border-secondary outline-none">
-          <button (click)="onChangeUsername()" [disabled]="isLoading()"
-                  class="w-full bg-secondary text-slate-900 font-black uppercase tracking-widest py-3 rounded-xl hover:bg-secondary/80 transition-colors disabled:opacity-50">
+          <input
+            type="text"
+            [(ngModel)]="newUsername"
+            [placeholder]="'settings.username.newPh' | t"
+            class="w-full bg-slate-950/60 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:border-secondary outline-none"
+          />
+          <button
+            (click)="onChangeUsername()"
+            [disabled]="isLoading()"
+            class="w-full bg-secondary text-slate-900 font-black uppercase tracking-widest py-3 rounded-xl hover:bg-secondary/80 transition-colors disabled:opacity-50"
+          >
             {{ 'settings.update' | t }}
           </button>
         </div>
@@ -298,8 +386,10 @@
 
     <!-- ── Prénom / Nom ── -->
     <div class="bg-slate-900/80 border border-white/10 rounded-2xl overflow-hidden">
-      <button (click)="toggle('identity')"
-              class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-white/5 transition-colors">
+      <button
+        (click)="toggle('identity')"
+        class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-white/5 transition-colors"
+      >
         <div class="flex items-center gap-3">
           <span class="material-symbols-outlined text-secondary">person</span>
           <div>
@@ -311,20 +401,34 @@
             }
           </div>
         </div>
-        <span class="material-symbols-outlined text-secondary/60 transition-transform"
-              [class.rotate-180]="openSection() === 'identity'">expand_more</span>
+        <span
+          class="material-symbols-outlined text-secondary/60 transition-transform"
+          [class.rotate-180]="openSection() === 'identity'"
+          >expand_more</span
+        >
       </button>
       @if (openSection() === 'identity') {
         <div class="px-5 pb-5 space-y-3 border-t border-white/5">
           <p class="text-white/40 text-xs mt-4">
             {{ 'settings.identity.hint' | t }}
           </p>
-          <input type="text" [(ngModel)]="newPrenom" [placeholder]="'settings.identity.firstNamePh' | t"
-                 class="w-full bg-slate-950/60 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:border-secondary outline-none">
-          <input type="text" [(ngModel)]="newNom" [placeholder]="'settings.identity.lastNamePh' | t"
-                 class="w-full bg-slate-950/60 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:border-secondary outline-none">
-          <button (click)="onChangeIdentity()" [disabled]="isLoading()"
-                  class="w-full bg-secondary text-slate-900 font-black uppercase tracking-widest py-3 rounded-xl hover:bg-secondary/80 transition-colors disabled:opacity-50">
+          <input
+            type="text"
+            [(ngModel)]="newPrenom"
+            [placeholder]="'settings.identity.firstNamePh' | t"
+            class="w-full bg-slate-950/60 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:border-secondary outline-none"
+          />
+          <input
+            type="text"
+            [(ngModel)]="newNom"
+            [placeholder]="'settings.identity.lastNamePh' | t"
+            class="w-full bg-slate-950/60 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:border-secondary outline-none"
+          />
+          <button
+            (click)="onChangeIdentity()"
+            [disabled]="isLoading()"
+            class="w-full bg-secondary text-slate-900 font-black uppercase tracking-widest py-3 rounded-xl hover:bg-secondary/80 transition-colors disabled:opacity-50"
+          >
             {{ 'settings.update' | t }}
           </button>
         </div>
@@ -332,58 +436,12 @@
     </div>
 
     <!-- ── Coach IA (fournisseur) ── -->
-    <div class="bg-slate-900/80 border border-white/10 rounded-2xl overflow-hidden">
-      <button (click)="toggle('ai')"
-              class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-white/5 transition-colors">
-        <div class="flex items-center gap-3">
-          <span class="material-symbols-outlined text-secondary">smart_toy</span>
-          <div>
-            <span class="text-white font-bold">{{ 'settings.ai.title' | t }}</span>
-            <p class="text-white/40 text-xs mt-0.5">{{ 'settings.ai.subtitle' | t:{ provider: aiProvider() } }}</p>
-          </div>
-        </div>
-        <span class="material-symbols-outlined text-secondary/60 transition-transform"
-              [class.rotate-180]="openSection() === 'ai'">expand_more</span>
-      </button>
-      @if (openSection() === 'ai') {
-        <div class="px-5 pb-5 space-y-4 border-t border-white/5">
-          <p class="text-white/40 text-xs mt-4 leading-relaxed">
-            {{ 'settings.ai.desc' | t }}
-          </p>
-          <div class="flex gap-2">
-            <button type="button" (click)="setAiProvider('MISTRAL')"
-                    class="flex-1 py-2.5 rounded-xl text-sm font-bold transition-colors"
-                    [class.bg-secondary]="aiProvider() === 'MISTRAL'"
-                    [class.text-slate-900]="aiProvider() === 'MISTRAL'"
-                    [class.bg-slate-700]="aiProvider() !== 'MISTRAL'"
-                    [class.text-white]="aiProvider() !== 'MISTRAL'">
-              Mistral
-            </button>
-            <button type="button" (click)="setAiProvider('GEMINI')"
-                    [disabled]="!geminiAvailable()"
-                    class="flex-1 py-2.5 rounded-xl text-sm font-bold transition-colors"
-                    [class.bg-secondary]="aiProvider() === 'GEMINI'"
-                    [class.text-slate-900]="aiProvider() === 'GEMINI'"
-                    [class.bg-slate-700]="aiProvider() !== 'GEMINI'"
-                    [class.text-white]="aiProvider() !== 'GEMINI'"
-                    [class.opacity-40]="!geminiAvailable()"
-                    [class.cursor-not-allowed]="!geminiAvailable()">
-              Gemini
-            </button>
-          </div>
-          @if (!geminiAvailable()) {
-            <p class="text-amber-400/80 text-[11px] mt-2">
-              {{ 'settings.ai.geminiUnavailable' | t }}
-            </p>
-          }
-        </div>
-      }
-    </div>
-
     <!-- ── Calcul du tonnage ── -->
     <div class="bg-slate-900/80 border border-white/10 rounded-2xl overflow-hidden">
-      <button (click)="toggle('tonnage')"
-              class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-white/5 transition-colors">
+      <button
+        (click)="toggle('tonnage')"
+        class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-white/5 transition-colors"
+      >
         <div class="flex items-center gap-3">
           <span class="material-symbols-outlined text-secondary">scale</span>
           <div>
@@ -391,8 +449,11 @@
             <p class="text-white/40 text-xs mt-0.5">{{ 'settings.tonnage.subtitle' | t }}</p>
           </div>
         </div>
-        <span class="material-symbols-outlined text-secondary/60 transition-transform"
-              [class.rotate-180]="openSection() === 'tonnage'">expand_more</span>
+        <span
+          class="material-symbols-outlined text-secondary/60 transition-transform"
+          [class.rotate-180]="openSection() === 'tonnage'"
+          >expand_more</span
+        >
       </button>
       @if (openSection() === 'tonnage') {
         <div class="px-5 pb-5 space-y-4 border-t border-white/5">
@@ -401,32 +462,50 @@
           </p>
 
           <!-- Haltères -->
-          <button type="button" (click)="toggleHalteres()"
-                  class="w-full flex items-center justify-between gap-3 text-left">
+          <button
+            type="button"
+            (click)="toggleHalteres()"
+            class="w-full flex items-center justify-between gap-3 text-left"
+          >
             <span class="text-white text-sm">
               {{ 'settings.tonnage.dumbbell' | t }}
-              <span class="text-white/40 block text-xs mt-0.5">{{ 'settings.tonnage.countsX2' | t }}</span>
+              <span class="text-white/40 block text-xs mt-0.5">{{
+                'settings.tonnage.countsX2' | t
+              }}</span>
             </span>
-            <span class="relative shrink-0 w-11 h-6 rounded-full transition-colors"
-                  [class.bg-secondary]="halteresParImplement()"
-                  [class.bg-slate-700]="!halteresParImplement()">
-              <span class="absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform"
-                    [class.translate-x-5]="halteresParImplement()"></span>
+            <span
+              class="relative shrink-0 w-11 h-6 rounded-full transition-colors"
+              [class.bg-secondary]="halteresParImplement()"
+              [class.bg-slate-700]="!halteresParImplement()"
+            >
+              <span
+                class="absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform"
+                [class.translate-x-5]="halteresParImplement()"
+              ></span>
             </span>
           </button>
 
           <!-- Machine -->
-          <button type="button" (click)="toggleMachine()"
-                  class="w-full flex items-center justify-between gap-3 text-left">
+          <button
+            type="button"
+            (click)="toggleMachine()"
+            class="w-full flex items-center justify-between gap-3 text-left"
+          >
             <span class="text-white text-sm">
               {{ 'settings.tonnage.machine' | t }}
-              <span class="text-white/40 block text-xs mt-0.5">{{ 'settings.tonnage.countsX2' | t }}</span>
+              <span class="text-white/40 block text-xs mt-0.5">{{
+                'settings.tonnage.countsX2' | t
+              }}</span>
             </span>
-            <span class="relative shrink-0 w-11 h-6 rounded-full transition-colors"
-                  [class.bg-secondary]="machineParCote()"
-                  [class.bg-slate-700]="!machineParCote()">
-              <span class="absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform"
-                    [class.translate-x-5]="machineParCote()"></span>
+            <span
+              class="relative shrink-0 w-11 h-6 rounded-full transition-colors"
+              [class.bg-secondary]="machineParCote()"
+              [class.bg-slate-700]="!machineParCote()"
+            >
+              <span
+                class="absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform"
+                [class.translate-x-5]="machineParCote()"
+              ></span>
             </span>
           </button>
         </div>
@@ -435,25 +514,41 @@
 
     <!-- ── Supprimer le compte ── -->
     <div class="bg-slate-900/80 border border-red-500/20 rounded-2xl overflow-hidden">
-      <button (click)="toggle('delete')"
-              class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-red-500/5 transition-colors">
+      <button
+        (click)="toggle('delete')"
+        class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-red-500/5 transition-colors"
+      >
         <div class="flex items-center gap-3">
           <span class="material-symbols-outlined text-red-400">delete_forever</span>
           <span class="text-red-400 font-bold">{{ 'settings.delete.title' | t }}</span>
         </div>
-        <span class="material-symbols-outlined text-red-400/60 transition-transform"
-              [class.rotate-180]="openSection() === 'delete'">expand_more</span>
+        <span
+          class="material-symbols-outlined text-red-400/60 transition-transform"
+          [class.rotate-180]="openSection() === 'delete'"
+          >expand_more</span
+        >
       </button>
       @if (openSection() === 'delete') {
         <div class="px-5 pb-5 space-y-3 border-t border-red-500/10">
           <p class="text-red-400/80 text-sm mt-4">
             {{ 'settings.delete.warning' | t }}
           </p>
-          <p class="text-white/50 text-xs">{{ 'settings.delete.confirmPre' | t }} <span class="text-white font-bold">{{ username }}</span> {{ 'settings.delete.confirmPost' | t }}</p>
-          <input type="text" [(ngModel)]="deleteConfirm" [placeholder]="username"
-                 class="w-full bg-slate-950/60 border border-red-500/30 rounded-xl px-4 py-3 text-white placeholder:text-white/20 focus:border-red-500 outline-none">
-          <button (click)="onDeleteAccount()" [disabled]="isLoading() || deleteConfirm !== username"
-                  class="w-full bg-red-600 text-white font-black uppercase tracking-widest py-3 rounded-xl hover:bg-red-700 transition-colors disabled:opacity-40">
+          <p class="text-white/50 text-xs">
+            {{ 'settings.delete.confirmPre' | t }}
+            <span class="text-white font-bold">{{ username }}</span>
+            {{ 'settings.delete.confirmPost' | t }}
+          </p>
+          <input
+            type="text"
+            [(ngModel)]="deleteConfirm"
+            [placeholder]="username"
+            class="w-full bg-slate-950/60 border border-red-500/30 rounded-xl px-4 py-3 text-white placeholder:text-white/20 focus:border-red-500 outline-none"
+          />
+          <button
+            (click)="onDeleteAccount()"
+            [disabled]="isLoading() || deleteConfirm !== username"
+            class="w-full bg-red-600 text-white font-black uppercase tracking-widest py-3 rounded-xl hover:bg-red-700 transition-colors disabled:opacity-40"
+          >
             {{ 'settings.delete.confirmBtn' | t }}
           </button>
         </div>
@@ -471,14 +566,27 @@
           <p class="text-white/70 text-sm">
             {{ 'settings.visbody.desc' | t }}
           </p>
-          <label class="w-full inline-flex items-center justify-center gap-2 border border-secondary/40 text-secondary py-3 rounded-xl text-xs font-bold tracking-widest uppercase hover:bg-secondary/10 transition-colors cursor-pointer">
+          <label
+            class="w-full inline-flex items-center justify-center gap-2 border border-secondary/40 text-secondary py-3 rounded-xl text-xs font-bold tracking-widest uppercase hover:bg-secondary/10 transition-colors cursor-pointer"
+          >
             <span class="material-symbols-outlined text-base">upload_file</span>
-            {{ visbodyUploading() ? ('settings.importing' | t) : ('settings.visbody.importBtn' | t) }}
-            <input type="file" accept="application/pdf" class="hidden"
-                   [disabled]="visbodyUploading()" (change)="uploadVisbody($event)">
+            {{
+              visbodyUploading() ? ('settings.importing' | t) : ('settings.visbody.importBtn' | t)
+            }}
+            <input
+              type="file"
+              accept="application/pdf"
+              class="hidden"
+              [disabled]="visbodyUploading()"
+              (change)="uploadVisbody($event)"
+            />
           </label>
           @if (visbodyMessage()) {
-            <p class="text-sm" [class.text-emerald-400]="!visbodyError()" [class.text-red-400]="visbodyError()">
+            <p
+              class="text-sm"
+              [class.text-emerald-400]="!visbodyError()"
+              [class.text-red-400]="visbodyError()"
+            >
               {{ visbodyMessage() }}
             </p>
           }
@@ -497,20 +605,32 @@
           <p class="text-white/70 text-sm">
             {{ 'settings.boditrax.desc' | t }}
           </p>
-          <label class="w-full inline-flex items-center justify-center gap-2 border border-secondary/40 text-secondary py-3 rounded-xl text-xs font-bold tracking-widest uppercase hover:bg-secondary/10 transition-colors cursor-pointer">
+          <label
+            class="w-full inline-flex items-center justify-center gap-2 border border-secondary/40 text-secondary py-3 rounded-xl text-xs font-bold tracking-widest uppercase hover:bg-secondary/10 transition-colors cursor-pointer"
+          >
             <span class="material-symbols-outlined text-base">upload_file</span>
-            {{ boditraxUploading() ? ('settings.importing' | t) : ('settings.boditrax.importBtn' | t) }}
-            <input type="file" accept=".csv,text/csv" class="hidden"
-                   [disabled]="boditraxUploading()" (change)="uploadBoditrax($event)">
+            {{
+              boditraxUploading() ? ('settings.importing' | t) : ('settings.boditrax.importBtn' | t)
+            }}
+            <input
+              type="file"
+              accept=".csv,text/csv"
+              class="hidden"
+              [disabled]="boditraxUploading()"
+              (change)="uploadBoditrax($event)"
+            />
           </label>
           @if (boditraxMessage()) {
-            <p class="text-sm" [class.text-emerald-400]="!boditraxError()" [class.text-red-400]="boditraxError()">
+            <p
+              class="text-sm"
+              [class.text-emerald-400]="!boditraxError()"
+              [class.text-red-400]="boditraxError()"
+            >
               {{ boditraxMessage() }}
             </p>
           }
         </div>
       </div>
     </div>
-
   </div>
 </main>

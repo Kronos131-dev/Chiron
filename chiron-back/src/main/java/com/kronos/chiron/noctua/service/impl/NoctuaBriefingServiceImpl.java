@@ -11,7 +11,6 @@ import com.kronos.chiron.noctua.model.NoctuaBriefingType;
 import com.kronos.chiron.noctua.persistence.NoctuaBriefingRepository;
 import com.kronos.chiron.noctua.service.NoctuaBriefingService;
 import com.kronos.chiron.push.service.WebPushService;
-import com.kronos.chiron.utilisateur.model.AiProvider;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -71,7 +70,7 @@ public class NoctuaBriefingServiceImpl implements NoctuaBriefingService {
 
         String reply;
         try {
-            reply = noctuaAgentRouter.chatWithFallback(AiProvider.MISTRAL, memoryId, ctx.toString());
+            reply = noctuaAgentRouter.chat(memoryId, ctx.toString());
         } catch (AiUnavailableException e) {
             log.warn("NOCTUA_BRIEFING_ECHEC user={} type={} cle={} : {}", user.getUsername(), type, cleDeclencheur,
                     e.getMessage());
