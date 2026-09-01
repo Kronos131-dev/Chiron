@@ -40,6 +40,11 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ProfileServiceImpl implements ProfileService {
 
+    // WHY: le profil montre les dernieres seances, pas toutes. Le champ s'appelle
+    // historiqueRecent et l'ecran les empile sans fin : un athlete de deux ans y chargeait des
+    // centaines de seances a chaque ouverture, pour n'en lire que le haut.
+    private static final int HISTORIQUE_RECENT_MAX = 6;
+
     private final UtilisateurRepository utilisateurRepository;
     private final SeanceRepository seanceRepository;
     private final PerformanceService performanceService;
@@ -81,6 +86,7 @@ public class ProfileServiceImpl implements ProfileService {
         List<Seance> historique = seanceRepository
                 .findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc(username);
         List<SeanceSummaryDto> historiqueSummaries = historique.stream()
+                .limit(HISTORIQUE_RECENT_MAX)
                 .map(this::toSeanceSummaryDto)
                 .collect(Collectors.toList());
 
