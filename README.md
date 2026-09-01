@@ -133,6 +133,7 @@ Loaded from `chiron-back/.env` through `spring.config.import`, or from the envir
 | `OPENROUTER_API_KEY` | the single AI provider behind the coach, Noctua and the run voice | **yes** |
 | `CHIRON_AI_MODEL` | model id on OpenRouter; defaults to `deepseek/deepseek-v4-flash-0731` | no |
 | `CHIRON_AI_BASE_URL` | OpenRouter base URL, for pointing at another OpenAI-compatible gateway | no |
+| `CHIRON_NOCTUA_IA` | `true` re-enables Noctua's briefings, off by default | no |
 | `CHIRON_SECRET_KEY` | AES-256 key (base64) encrypting stored third-party OAuth tokens | prod |
 | `GMAIL_USERNAME` / `GMAIL_APP_PASSWORD` | password-reset mail, and the Visbody mailbox | no |
 | `FRONTEND_URL` | base URL used in outgoing links | no |

@@ -19,6 +19,7 @@ Everything else has a default, which is why the rest fail silently.
 | `OPENROUTER_API_KEY` | **none** | the application refuses to start — every AI call goes through OpenRouter |
 | `CHIRON_AI_MODEL` | `deepseek/deepseek-v4-flash-0731` | the pinned default is used; the model must advertise `tools` |
 | `CHIRON_AI_BASE_URL` | `https://openrouter.ai/api/v1` | the default gateway is used |
+| `CHIRON_NOCTUA_IA` | `false` | Noctua produces no briefing and answers no message; its health sync keeps running |
 
 ## Security
 

@@ -53,7 +53,10 @@ public class NoctuaBriefingServiceImpl implements NoctuaBriefingService {
     public Optional<NoctuaBriefing> genererSiNecessaire(Utilisateur user, NoctuaBriefingType type,
             LocalDate dateReference, String cleDeclencheur, String titre, String declencheurLisible,
             String commandeSysteme) {
-        if (dejaProduit(user, cleDeclencheur)) {
+        // WHY: le test passe avant la conversation, pas après. genererSiNecessaire crée la
+        // conversation avant d'appeler le modèle : laisser l'appel échouer plus bas sèmerait une
+        // conversation vide par athlète et par déclencheur, toutes les cinq minutes.
+        if (!noctuaAgentRouter.actif() || dejaProduit(user, cleDeclencheur)) {
             return Optional.empty();
         }
 

@@ -32,6 +32,7 @@ Variables: `JWT_SECRET` and `OPENROUTER_API_KEY` (**both mandatory, no default â
 to start without them**; `JwtService` additionally rejects a blank, non-base64 or under-32-byte key,
 so an empty value fails the boot instead of breaking every login at runtime),
 `CHIRON_AI_MODEL` (defaults to `deepseek/deepseek-v4-flash-0731`), `CHIRON_AI_BASE_URL`,
+`CHIRON_NOCTUA_IA` (**`false`** â€” Noctua's briefings are switched off; its health sync still runs),
 `CHIRON_SECRET_KEY` (base64 AES-256, encrypts stored OAuth tokens),
 `GMAIL_USERNAME` / `GMAIL_APP_PASSWORD`, `FRONTEND_URL`, `UPLOADS_DIR`, `OLYMPUS_*`, `FITBIT_*`,
 `VISBODY_*`. JWT expiration is 30 days. Apply the `manage-env-and-secrets` skill before adding one.

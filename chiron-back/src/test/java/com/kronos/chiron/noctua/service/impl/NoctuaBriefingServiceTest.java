@@ -33,6 +33,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -65,6 +66,22 @@ class NoctuaBriefingServiceTest {
         user = Utilisateur.builder().id(7L).username("athlete").build();
         conversation = Conversation.builder().id(55L).utilisateur(user).agent(AgentType.NOCTUA).build();
         when(memoryNoteService.formatForPrompt(any(), org.mockito.ArgumentMatchers.anyInt())).thenReturn("");
+        when(noctuaAgentRouter.actif()).thenReturn(true);
+    }
+
+    // WHY: la veille tourne toutes les cinq minutes pour chaque athlete lie, et chaque briefing
+    // est un appel au modele. L'interrupteur coupe avant la conversation, sinon chaque tour en
+    // semerait une vide, que rien ne viendrait jamais remplir.
+    @Test
+    void genererSiNecessaire_noctuaEnPause_nAppelleRienEtNeCreePasDeConversation() {
+        when(noctuaAgentRouter.actif()).thenReturn(false);
+
+        Optional<NoctuaBriefing> result = noctuaBriefingService.genererSiNecessaire(user, NoctuaBriefingType.REVEIL,
+                TODAY, "REVEIL:" + TODAY, "Réveil", "Réveil détecté", "Fais le point du réveil.");
+
+        assertThat(result).isEmpty();
+        verify(noctuaAgentRouter, never()).chat(anyString(), anyString());
+        verifyNoInteractions(conversationService);
     }
 
     @Test

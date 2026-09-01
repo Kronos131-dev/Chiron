@@ -11,11 +11,15 @@ import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.service.AiServices;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class NoctuaConfig {
+
+    @Value("${chiron.noctua.ia-active:true}")
+    private boolean iaActive;
 
     @Bean
     public NoctuaAgentRouter noctuaAgentRouter(@Qualifier(ModeleIaConfig.CONVERSATION) ChatModel modele,
@@ -33,6 +37,6 @@ public class NoctuaConfig {
                 .tools(tools)
                 .build();
 
-        return new NoctuaAgentRouter(agent, memoryManager);
+        return new NoctuaAgentRouter(agent, memoryManager, iaActive);
     }
 }
