@@ -52,6 +52,62 @@ describe('Session', () => {
     expect(component).toBeTruthy();
   });
 
+  describe('séance interactive', () => {
+    async function monter(queryParams: Record<string, string>): Promise<Session> {
+      TestBed.resetTestingModule();
+      await TestBed.configureTestingModule({
+        imports: [Session],
+        providers: [
+          {
+            provide: ChironApi,
+            useValue: {
+              getProgrammeById: vi
+                .fn()
+                .mockReturnValue(of({ titre: 'T', modele: false, exercices: [] })),
+              sauvegarderProgramme: vi.fn().mockReturnValue(of('')),
+              searchExercices: vi.fn().mockReturnValue(of([])),
+              getLastPerformance: vi.fn().mockReturnValue(of({ series: [] })),
+            },
+          },
+          { provide: AuthService, useValue: { getUsername: vi.fn().mockReturnValue('alice') } },
+          { provide: Router, useValue: { navigate: vi.fn() } },
+          {
+            provide: ActivatedRoute,
+            useValue: {
+              paramMap: of(convertToParamMap({ id: '7' })),
+              queryParams: of(queryParams),
+            },
+          },
+        ],
+      }).compileComponents();
+
+      const monte = TestBed.createComponent(Session);
+      monte.componentInstance.ngOnInit();
+      return monte.componentInstance;
+    }
+
+    // WHY: le `?interactive=true` n'est posé qu'au départ depuis la liste des programmes.
+    // Reprendre la séance, ou revenir d'un WOD ou d'une course, repasse sans lui — et le micro
+    // disparaissait de l'écran au beau milieu de la séance.
+    it('reste interactive quand on y revient sans le paramètre d’URL', async () => {
+      localStorage.clear();
+      const depart = await monter({ interactive: 'true' });
+      expect(depart.isInteractive()).toBe(true);
+
+      const retour = await monter({});
+
+      expect(retour.isInteractive()).toBe(true);
+    });
+
+    it('ne devient pas interactive pour une séance ordinaire', async () => {
+      localStorage.clear();
+      await monter({});
+      const retour = await monter({});
+
+      expect(retour.isInteractive()).toBe(false);
+    });
+  });
+
   describe('library picker', () => {
     function makeDef(id: number, nom: string) {
       return {

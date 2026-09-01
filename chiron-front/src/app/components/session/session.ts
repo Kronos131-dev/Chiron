@@ -168,7 +168,12 @@ export class Session implements OnInit, OnDestroy {
         const interactive = queryParams['interactive'] === 'true';
         this.isReadonly.set(fromJournal || isExternal);
         this.isExternalView.set(isExternal);
-        this.isInteractive.set(interactive);
+        // WHY: le `?interactive=true` n'est posé qu'au départ depuis la liste des programmes.
+        // Reprendre la séance, ou revenir d'un WOD ou d'une course, repasse ici sans lui : c'est
+        // la séance en cours qui garde le caractère interactif, sinon le micro disparaît.
+        const reprise =
+          !this.isReadonly() && !!this.routineId && this.activeSession.isActiveFor(this.routineId);
+        this.isInteractive.set(interactive || (reprise && this.activeSession.interactive()));
 
         if (this.routineId) {
           // Execution mode: if this exact routine is already in progress, rehydrate
@@ -266,7 +271,7 @@ export class Session implements OnInit, OnDestroy {
         // In execution mode, hand the freshly loaded session to the shared service
         // and bind the component to its signals so the state survives navigation.
         if (!this.isReadonly() && this.routineId) {
-          this.activeSession.start(this.routineId, data.titre, exosFormates);
+          this.activeSession.start(this.routineId, data.titre, exosFormates, this.isInteractive());
           this.titreRoutine = this.activeSession.titre;
           this.exercices = this.activeSession.exercices;
         }

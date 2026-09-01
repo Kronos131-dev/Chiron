@@ -11,6 +11,7 @@ interface StoredSession {
   titre: string;
   exercices: ExerciceForm[];
   startedAt: string | null;
+  interactive: boolean;
 }
 
 /**
@@ -36,6 +37,12 @@ export class ActiveSessionService {
   /** ISO timestamp of when the session was started ("Commencer"), or null. */
   readonly startedAt = signal<string | null>(null);
 
+  // WHY: le caractère interactif n'appartient pas à l'URL. Il n'arrive qu'une fois, dans le
+  // `?interactive=true` du départ ; tout retour vers la séance — reprendre depuis la liste,
+  // revenir d'un WOD ou d'une course — repasse sans lui, et le micro disparaissait alors de
+  // l'écran. Il appartient à la séance en cours, et la suit tant qu'elle dure.
+  readonly interactive = signal(false);
+
   constructor() {
     this.restoreFromStorage();
   }
@@ -58,11 +65,12 @@ export class ActiveSessionService {
    * @param titre     Title of the session.
    * @param exercices Exercise forms — kept by reference, not copied.
    */
-  start(routineId: string, titre: string, exercices: ExerciceForm[]) {
+  start(routineId: string, titre: string, exercices: ExerciceForm[], interactive = false) {
     this.routineId.set(routineId);
     this.titre.set(titre);
     this.exercices.set(exercices);
     this.startedAt.set(nowAsLocalDateTime());
+    this.interactive.set(interactive);
     this.snapshot();
   }
 
@@ -76,6 +84,7 @@ export class ActiveSessionService {
       titre: this.titre(),
       exercices: this.exercices(),
       startedAt: this.startedAt(),
+      interactive: this.interactive(),
     };
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -90,6 +99,7 @@ export class ActiveSessionService {
     this.titre.set('');
     this.exercices.set([]);
     this.startedAt.set(null);
+    this.interactive.set(false);
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch {
@@ -114,6 +124,7 @@ export class ActiveSessionService {
         this.titre.set(data.titre ?? '');
         this.exercices.set(data.exercices);
         this.startedAt.set(data.startedAt ?? null);
+        this.interactive.set(data.interactive === true);
       }
     } catch {
       /* corrupt payload — ignore */
