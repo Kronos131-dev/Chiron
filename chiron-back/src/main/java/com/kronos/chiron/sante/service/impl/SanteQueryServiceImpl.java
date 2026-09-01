@@ -184,7 +184,8 @@ public class SanteQueryServiceImpl implements SanteQueryService {
 
     private SanteActiviteDto versDto(SanteActivite a) {
         return new SanteActiviteDto(a.getId(), a.getSource(), a.getTypeActivite(), a.getStartTime(),
-                a.getEndTime(), a.getCalories(), a.getFcMoyenne(), a.getFcMin(), a.getFcMax(),
+                a.getEndTime(), a.getCalories(), a.isCaloriesEstimees(), a.getFcMoyenne(), a.getFcMin(),
+                a.getFcMax(),
                 a.getMinutesZoneBasse(), a.getMinutesZoneBruleuse(), a.getMinutesZoneCardio(),
                 a.getMinutesZonePic(), a.getMinutesZoneActive(), a.getChargeCardio(),
                 a.getSeance() != null ? a.getSeance().getId() : null,

@@ -8,6 +8,7 @@ import com.kronos.chiron.sante.model.TypeActivite;
 import com.kronos.chiron.sante.persistence.SanteActiviteRepository;
 import com.kronos.chiron.sante.service.ActiviteEnrichissementService;
 import com.kronos.chiron.sante.service.ActiviteFusionService;
+import com.kronos.chiron.sante.service.CaloriesSeanceService;
 import com.kronos.chiron.sante.service.SanteSyncService;
 import com.kronos.chiron.seance.model.Seance;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,7 @@ public class ActiviteEnrichissementServiceImpl implements ActiviteEnrichissement
     private final FitbitService fitbitService;
     private final SanteSyncService santeSyncService;
     private final ActiviteFusionService activiteFusionService;
+    private final CaloriesSeanceService caloriesSeanceService;
     private final Clock clock;
 
     @Override
@@ -95,10 +97,22 @@ public class ActiviteEnrichissementServiceImpl implements ActiviteEnrichissement
         santeActiviteRepository.save(activite);
     }
 
+    // WHY: abandonner ne veut pas dire laisser la case vide. Sans compte Google Health lie, la
+    // frequence cardiaque n'arrivera jamais, et la seance restait sans calories dans le journal
+    // alors que sa duree, les exercices et la morphologie de l'athlete suffisent a en donner
+    // l'ordre de grandeur. Le drapeau dit a l'ecran que le chiffre est calcule, pas mesure.
     private void abandonner(SanteActivite activite, String message) {
+        if (activite.getCalories() == null) {
+            Integer estimees = caloriesSeanceService.estimer(activite);
+            if (estimees != null && estimees > 0) {
+                activite.setCalories(estimees);
+                activite.setCaloriesEstimees(true);
+            }
+        }
         activite.setStatutEnrichissement(StatutEnrichissement.ABANDONNE);
         activite.setProchaineTentativeAt(null);
         santeActiviteRepository.save(activite);
-        log.info("SANTE_ACTIVITE_ABANDON activiteId={} message={}", activite.getId(), message);
+        log.info("SANTE_ACTIVITE_ABANDON activiteId={} calories={} message={}", activite.getId(),
+                activite.getCalories(), message);
     }
 }

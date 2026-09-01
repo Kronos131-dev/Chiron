@@ -7,6 +7,7 @@ import com.kronos.chiron.sante.model.StatutEnrichissement;
 import com.kronos.chiron.sante.model.TypeActivite;
 import com.kronos.chiron.sante.persistence.SanteActiviteRepository;
 import com.kronos.chiron.sante.service.ActiviteFusionService;
+import com.kronos.chiron.sante.service.CaloriesSeanceService;
 import com.kronos.chiron.sante.service.SanteSyncService;
 import com.kronos.chiron.seance.model.Seance;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
@@ -48,6 +49,8 @@ class ActiviteEnrichissementServiceImplTest {
     private SanteSyncService santeSyncService;
     @Mock
     private ActiviteFusionService activiteFusionService;
+    @Mock
+    private CaloriesSeanceService caloriesSeanceService;
 
     @Spy
     private Clock clock = Clock.fixed(Instant.parse("2026-08-19T20:00:00Z"), ZoneId.of("Europe/Paris"));
@@ -61,7 +64,7 @@ class ActiviteEnrichissementServiceImplTest {
     @BeforeEach
     void setUp() {
         service = new ActiviteEnrichissementServiceImpl(santeActiviteRepository, fitbitService, santeSyncService,
-                activiteFusionService, clock);
+                activiteFusionService, caloriesSeanceService, clock);
         user = Utilisateur.builder().id(1L).username("athlete").build();
         debut = LocalDateTime.of(2026, 8, 19, 18, 0);
         fin = LocalDateTime.of(2026, 8, 19, 19, 15);
@@ -132,6 +135,36 @@ class ActiviteEnrichissementServiceImplTest {
         assertThat(activite.getProchaineTentativeAt()).isNull();
         verifyNoInteractions(santeSyncService, activiteFusionService);
         verify(santeActiviteRepository).save(activite);
+    }
+
+    // WHY: un compte non lie ne rendra jamais de frequence cardiaque. Laisser la case vide etait
+    // la seule chose a ne pas faire : la duree, les exercices et la morphologie suffisent a en
+    // donner l'ordre de grandeur, et le drapeau dit que c'est un calcul, pas une mesure.
+    @Test
+    void tenterEnrichissement_notLinked_storesTheEstimateAndFlagsIt() {
+        SanteActivite activite = activiteEnAttente(0);
+        when(santeActiviteRepository.findById(10L)).thenReturn(Optional.of(activite));
+        when(fitbitService.getValidToken("athlete")).thenThrow(new FitbitService.NotLinkedException());
+        when(caloriesSeanceService.estimer(activite)).thenReturn(324);
+
+        service.tenterEnrichissement(10L);
+
+        assertThat(activite.getCalories()).isEqualTo(324);
+        assertThat(activite.isCaloriesEstimees()).isTrue();
+        assertThat(activite.getStatutEnrichissement()).isEqualTo(StatutEnrichissement.ABANDONNE);
+    }
+
+    @Test
+    void tenterEnrichissement_notLinkedAndNothingToEstimate_leavesCaloriesEmpty() {
+        SanteActivite activite = activiteEnAttente(0);
+        when(santeActiviteRepository.findById(10L)).thenReturn(Optional.of(activite));
+        when(fitbitService.getValidToken("athlete")).thenThrow(new FitbitService.NotLinkedException());
+        when(caloriesSeanceService.estimer(activite)).thenReturn(null);
+
+        service.tenterEnrichissement(10L);
+
+        assertThat(activite.getCalories()).isNull();
+        assertThat(activite.isCaloriesEstimees()).isFalse();
     }
 
     @Test

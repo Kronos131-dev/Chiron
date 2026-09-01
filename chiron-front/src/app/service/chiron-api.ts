@@ -835,6 +835,7 @@ export interface SanteActiviteDto {
   startTime: string;
   endTime: string;
   calories: number | null;
+  caloriesEstimees: boolean;
   fcMoyenne: number | null;
   fcMin: number | null;
   fcMax: number | null;

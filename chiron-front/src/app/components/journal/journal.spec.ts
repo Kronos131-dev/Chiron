@@ -10,7 +10,9 @@ import { environment } from '../../../environments/environment';
 
 function flushJournalRequests(httpMock: HttpTestingController, activites: SanteActiviteDto[] = []) {
   httpMock.expectOne(`${environment.apiUrl}/journal/historique?username=alice`).flush([]);
-  httpMock.expectOne(`${environment.apiUrl}/sante/activites?jours=400&source=CHIRON_MUSCU`).flush(activites);
+  httpMock
+    .expectOne(`${environment.apiUrl}/sante/activites?jours=400&source=CHIRON_MUSCU`)
+    .flush(activites);
   httpMock.expectOne(`${environment.apiUrl}/profile/alice?requestUsername=alice`).flush({});
 }
 
@@ -22,6 +24,7 @@ function buildActivite(overrides: Partial<SanteActiviteDto>): SanteActiviteDto {
     startTime: '2026-08-18T18:00:00',
     endTime: '2026-08-18T19:15:00',
     calories: null,
+    caloriesEstimees: false,
     fcMoyenne: null,
     fcMin: null,
     fcMax: null,

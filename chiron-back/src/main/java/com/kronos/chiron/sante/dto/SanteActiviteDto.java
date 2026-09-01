@@ -12,6 +12,7 @@ public record SanteActiviteDto(
         LocalDateTime startTime,
         LocalDateTime endTime,
         Integer calories,
+        boolean caloriesEstimees,
         Double fcMoyenne,
         Integer fcMin,
         Integer fcMax,

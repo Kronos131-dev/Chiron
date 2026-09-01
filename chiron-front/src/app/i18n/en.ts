@@ -304,6 +304,8 @@ export const en: Record<string, string> = {
   'journal.activite.syncing': 'Syncing…',
   'journal.activite.avgHr': 'Avg heart rate',
   'journal.activite.calories': 'Calories',
+  'journal.activite.caloriesEstimees':
+    'Estimated from your body metrics and the session exercises, for want of a measured heart rate.',
   'journal.activite.cardioLoad': 'Cardio load',
   'journal.activite.activeMinutes': 'Active minutes',
   'journal.activite.zoneLow': 'Low',

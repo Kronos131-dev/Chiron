@@ -118,7 +118,8 @@
                           }
                           @if (activite.calories) {
                             <span class="flex items-center gap-1"
-                              >🔥 {{ activite.calories }} kcal</span
+                              >🔥 {{ activite.caloriesEstimees ? '≈' : ''
+                              }}{{ activite.calories }} kcal</span
                             >
                           }
                         </div>
@@ -215,8 +216,17 @@
                                     {{ 'journal.activite.calories' | t }}
                                   </p>
                                   <p class="text-lg font-black text-secondary">
-                                    {{ activite.calories }} kcal
+                                    {{ activite.caloriesEstimees ? '≈' : ''
+                                    }}{{ activite.calories }}
+                                    kcal
                                   </p>
+                                  @if (activite.caloriesEstimees) {
+                                    <p
+                                      class="text-on-surface-variant text-[9px] leading-tight mt-0.5"
+                                    >
+                                      {{ 'journal.activite.caloriesEstimees' | t }}
+                                    </p>
+                                  }
                                 </div>
                               }
                               @if (activite.chargeCardio) {

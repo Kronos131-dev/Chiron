@@ -121,7 +121,7 @@ class SanteControllerTest {
         when(authenticatedUserService.getAuthenticatedUser()).thenReturn(user);
         when(santeQueryService.getActivites(user, 366, null)).thenReturn(List.of(
                 new SanteActiviteDto(1L, SourceActivite.CHIRON_MUSCU, TypeActivite.MUSCULATION,
-                        LocalDateTime.of(2026, 8, 17, 18, 0), LocalDateTime.of(2026, 8, 17, 19, 15), 406, 124.0,
+                        LocalDateTime.of(2026, 8, 17, 18, 0), LocalDateTime.of(2026, 8, 17, 19, 15), 406, false, 124.0,
                         95, 168, 14, 46, 15, 0, 73, 71.0, 42L, false)));
 
         mockMvc.perform(get("/api/sante/activites"))
@@ -171,7 +171,8 @@ class SanteControllerTest {
     void activiteDetail_activiteExistante_returnsActiviteEtPointsFcEtSeuils() throws Exception {
         when(authenticatedUserService.getAuthenticatedUser()).thenReturn(user);
         SanteActiviteDto activite = new SanteActiviteDto(5L, SourceActivite.CHIRON_MUSCU, TypeActivite.MUSCULATION,
-                LocalDateTime.of(2026, 8, 20, 11, 59), LocalDateTime.of(2026, 8, 20, 12, 45), 320, 128.0, 90, 150,
+                LocalDateTime.of(2026, 8, 20, 11, 59), LocalDateTime.of(2026, 8, 20, 12, 45), 320, false, 128.0, 90,
+                150,
                 10, 20, 12, 4, 36, 61.0, 42L, false);
         SanteActiviteDetailDto detail = new SanteActiviteDetailDto(activite,
                 List.of(new SanteFcPointDto(LocalDateTime.of(2026, 8, 20, 12, 0), 100, 120.0, 140)),

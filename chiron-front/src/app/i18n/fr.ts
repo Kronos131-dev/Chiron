@@ -308,6 +308,8 @@ export const fr: Record<string, string> = {
   'journal.activite.syncing': 'Synchronisation…',
   'journal.activite.avgHr': 'FC moyenne',
   'journal.activite.calories': 'Calories',
+  'journal.activite.caloriesEstimees':
+    "Estimée d'après ta morphologie et les exercices de la séance, faute de fréquence cardiaque mesurée.",
   'journal.activite.cardioLoad': 'Charge cardiaque',
   'journal.activite.activeMinutes': 'Minutes actives',
   'journal.activite.zoneLow': 'Basse',

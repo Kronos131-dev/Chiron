@@ -49,6 +49,10 @@ public class SanteActivite {
     @Column(name = "calories")
     private Integer calories;
 
+    @Column(name = "calories_estimees", nullable = false)
+    @Builder.Default
+    private boolean caloriesEstimees = false;
+
     @Column(name = "fc_moyenne")
     private Double fcMoyenne;
 

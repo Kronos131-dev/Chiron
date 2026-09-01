@@ -87,6 +87,7 @@ public class ActiviteFusionServiceImpl implements ActiviteFusionService {
 
         appliquerFrequenceEtZones(activite, buckets);
         activite.setCalories(caloriesEffortService.estimer(activite.getUtilisateur(), buckets));
+        activite.setCaloriesEstimees(false);
         activite.setStatutEnrichissement(StatutEnrichissement.COMPLET);
         activite.setProchaineTentativeAt(null);
         santeActiviteRepository.save(activite);
