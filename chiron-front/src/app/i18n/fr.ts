@@ -426,9 +426,9 @@ export const fr: Record<string, string> = {
   'course.listenLogHint':
     "Si le compteur de phrases reste à zéro après une sortie, ce n'est pas l'interprétation qui rate : c'est le moteur qui n'entend rien.",
   'course.wakeWord': 'Parler à Chiron',
-  'course.wakeWordToggle': 'Écoute permanente',
+  'course.wakeWordToggle': 'Micro toujours ouvert',
   'course.wakeWordHint':
-    "Chiron écoute par le micro du téléphone, jamais par celui du casque : ta musique reste en qualité pleine. Rien ne quitte l'appareil, la reconnaissance est embarquée.",
+    "Ouvert, Chiron prend tes ordres sans que tu touches à rien. Fermé, le micro ne s'allume qu'en appuyant sur le bouton de l'écran. Dans les deux cas il passe par le micro du téléphone, jamais par celui du casque — ta musique reste en qualité pleine — et rien ne quitte l'appareil.",
   'course.wakeWordUnavailable.modele':
     "La reconnaissance hors-ligne n'est pas installée. Télécharge la langue française dans les réglages de saisie vocale du téléphone, ou sers-toi du bouton micro.",
   'course.wakeWordUnavailable.version':
@@ -440,7 +440,7 @@ export const fr: Record<string, string> = {
   'course.wakeWordUnavailable.navigateur':
     "Le mot-clé demande l'application Android : la reconnaissance du navigateur s'éteint avec l'écran.",
   'course.commandList':
-    '« Hey Chiron » puis : pause, reprends, allure, distance, durée, bilan, plus vite, moins vite, passe à 5:30, termine.',
+    'Pause, reprends, allure, distance, durée, bilan, plus vite, moins vite, passe à 5:30 — le nom du coach est facultatif. Seul « Hey Chiron, termine » clôt la sortie, et demande confirmation.',
   'course.micTalkHint':
     "Le bouton micro de l'écran reste là quand tu préfères appuyer plutôt que parler.",
   'course.micError.permission': "Chiron n'a pas l'autorisation d'utiliser le micro.",

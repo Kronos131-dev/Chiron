@@ -422,9 +422,9 @@ export const en: Record<string, string> = {
   'course.listenLogHint':
     'If the phrase counter is still zero after a run, the fault is not the interpretation: the engine is hearing nothing.',
   'course.wakeWord': 'Talking to Chiron',
-  'course.wakeWordToggle': 'Always listening',
+  'course.wakeWordToggle': 'Microphone always on',
   'course.wakeWordHint':
-    'Chiron listens through the phone microphone, never the headset one: your music stays at full quality. Nothing leaves the device, recognition runs on board.',
+    'On, Chiron takes your orders without you touching anything. Off, the mic only opens when you press the on-screen button. Either way it goes through the phone microphone, never the headset one — your music stays at full quality — and nothing leaves the device.',
   'course.wakeWordUnavailable.modele':
     'Offline recognition is not installed. Download the French language in the phone voice typing settings, or use the mic button.',
   'course.wakeWordUnavailable.version':
@@ -436,7 +436,7 @@ export const en: Record<string, string> = {
   'course.wakeWordUnavailable.navigateur':
     'The wake word needs the Android app: the browser recogniser dies with the screen.',
   'course.commandList':
-    '"Hey Chiron" then: pause, resume, pace, distance, time, recap, faster, slower, set 5:30, finish.',
+    'Pause, resume, pace, distance, time, recap, faster, slower, set 5:30 — the coach name is optional. Only "Hey Chiron, finish" ends the run, and it asks for confirmation.',
   'course.micTalkHint':
     'The on-screen mic button stays there when you would rather press than speak.',
   'course.micError.permission': 'Chiron is not allowed to use the microphone.',
