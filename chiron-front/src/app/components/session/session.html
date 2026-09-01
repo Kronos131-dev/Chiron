@@ -1,7 +1,11 @@
 <app-header [title]="'session.title' | t" [showBack]="true" [backRoute]="'/programme'"></app-header>
 
 <!-- Main Session Interface -->
-<main class="min-h-screen pt-20 pb-32 bg-slate-950 heroic-texture relative">
+<main
+  class="min-h-screen pt-20 bg-slate-950 heroic-texture relative"
+  [class.pb-32]="!isInteractive() || isReadonly()"
+  [class.pb-56]="isInteractive() && !isReadonly()"
+>
   <!-- Live session timer: thin pill just under the header, stays on scroll.
        pointer-events-none on the bar lets taps pass through to the page; only
        the small pill itself is opaque so it never blocks data entry. -->
@@ -126,53 +130,6 @@
         </div>
       }
 
-      <!-- Push-to-Talk Button for Interactive Sessions -->
-      @if (isInteractive() && !isReadonly()) {
-        <div class="pt-4">
-          <button
-            (click)="toggleRecording()"
-            [class.animate-pulse]="isRecording()"
-            class="w-full bg-gradient-to-r from-secondary to-[#c77a30] text-slate-950 font-bold text-sm px-6 py-4 rounded-xl uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-secondary/25 flex items-center justify-center gap-2"
-          >
-            <span class="material-symbols-outlined text-lg">{{
-              isRecording() ? 'mic' : 'mic_none'
-            }}</span>
-            {{ isRecording() ? ('session.listening' | t) : ('session.pushToTalkHint' | t) }}
-          </button>
-
-          <!-- WHY: l'état vit ici, sous le micro que l'athlète regarde, et non dans le flash de
-               trois secondes au bas de la page. « Rien ne se passe » ne doit plus être une
-               réponse possible : chaque maillon dit ce qu'il a fait. -->
-          @if (etatVocal() !== 'repos') {
-            <p
-              class="text-center text-[10px] font-bold tracking-[0.15em] uppercase pt-2"
-              [class.text-secondary]="etatVocal() !== 'erreur'"
-              [class.text-red-400]="etatVocal() === 'erreur'"
-            >
-              @switch (etatVocal()) {
-                @case ('ecoute') {
-                  {{ 'session.listening' | t }}
-                }
-                @case ('envoi') {
-                  {{ 'session.voiceSending' | t }}
-                }
-                @case ('entendu') {
-                  {{ 'session.voiceHeard' | t }}
-                }
-              }
-            </p>
-          }
-          @if (transcriptVocal()) {
-            <p
-              class="text-on-surface text-xs font-body text-center pt-1 break-words"
-              [class.text-red-400]="etatVocal() === 'erreur'"
-            >
-              « {{ transcriptVocal() }} »
-            </p>
-          }
-        </div>
-      }
-
       <!-- Save to Journal — primary end-of-session action, placed at the bottom
            since the session is filled top-to-bottom. -->
       @if (!isReadonly()) {
@@ -200,6 +157,61 @@
     </div>
   </section>
 </main>
+
+<!-- WHY: le micro est fixe à l'écran, jamais dans le flux. Au bas d'une séance de dix
+     exercices il fallait faire défiler toute la page pour l'atteindre, alors que tout le
+     principe de la séance interactive est d'allumer l'écran, d'appuyer sans viser, de parler
+     et de repartir. Il se pose au-dessus de la barre d'onglets, elle-même en position fixe. -->
+@if (isInteractive() && !isReadonly()) {
+  <div class="fixed inset-x-0 bottom-[var(--hauteur-barre-onglets)] z-40 px-4 pointer-events-none">
+    <div class="max-w-md mx-auto space-y-2 pointer-events-auto">
+      @if (etatVocal() !== 'repos' || transcriptVocal()) {
+        <div
+          class="bg-slate-950/90 backdrop-blur-md border border-white/10 rounded-xl px-4 py-2 shadow-lg shadow-black/40"
+        >
+          @if (etatVocal() !== 'repos') {
+            <p
+              class="text-center text-[10px] font-bold tracking-[0.15em] uppercase"
+              [class.text-secondary]="etatVocal() !== 'erreur'"
+              [class.text-red-400]="etatVocal() === 'erreur'"
+            >
+              @switch (etatVocal()) {
+                @case ('ecoute') {
+                  {{ 'session.listening' | t }}
+                }
+                @case ('envoi') {
+                  {{ 'session.voiceSending' | t }}
+                }
+                @case ('entendu') {
+                  {{ 'session.voiceHeard' | t }}
+                }
+              }
+            </p>
+          }
+          @if (transcriptVocal()) {
+            <p
+              class="text-on-surface text-xs font-body text-center pt-1 break-words"
+              [class.text-red-400]="etatVocal() === 'erreur'"
+            >
+              « {{ transcriptVocal() }} »
+            </p>
+          }
+        </div>
+      }
+
+      <button
+        (click)="toggleRecording()"
+        [class.animate-pulse]="isRecording()"
+        class="w-full bg-gradient-to-r from-secondary to-[#c77a30] text-slate-950 font-bold text-base px-6 py-6 rounded-2xl uppercase tracking-widest active:scale-95 transition-transform shadow-xl shadow-secondary/30 flex items-center justify-center gap-3"
+      >
+        <span class="material-symbols-outlined text-3xl leading-none">{{
+          isRecording() ? 'mic' : 'mic_none'
+        }}</span>
+        {{ isRecording() ? ('session.listening' | t) : ('session.pushToTalkHint' | t) }}
+      </button>
+    </div>
+  </div>
+}
 
 <app-exercise-picker
   [open]="pickerOpen()"

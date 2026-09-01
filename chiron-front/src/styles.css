@@ -145,13 +145,18 @@
    lui aussi fixe qui se place dessous doit connaître cette hauteur, sinon il passe sous
    l'en-tête dès que l'appareil impose l'edge-to-edge — ce qui n'arrive sur aucun navigateur
    de bureau, donc jamais pendant le développement. */
+/* WHY: la barre d'onglets est fixe elle aussi, et grandit de la barre gestuelle. Tout ce qui
+   se pose au-dessus d'elle — le micro de la séance interactive — a besoin de sa hauteur, sinon
+   il passe dessous sur un téléphone edge-to-edge et nulle part ailleurs. */
 :root {
   --hauteur-entete: 4rem;
+  --hauteur-barre-onglets: 5.5rem;
 }
 
 @supports (padding: env(safe-area-inset-top)) {
   :root {
     --hauteur-entete: calc(4rem + env(safe-area-inset-top));
+    --hauteur-barre-onglets: calc(5.5rem + env(safe-area-inset-bottom));
   }
   header.fixed {
     padding-top: calc(1rem + env(safe-area-inset-top));
