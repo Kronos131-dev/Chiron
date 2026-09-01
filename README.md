@@ -4,7 +4,7 @@
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0.6-brightgreen.svg)
 ![Angular](https://img.shields.io/badge/Angular-21-dd0031.svg)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791.svg)
-![AI](https://img.shields.io/badge/AI-Mistral%20%2B%20Gemini%20via%20LangChain4j-ffb779.svg)
+![AI](https://img.shields.io/badge/AI-DeepSeek%20via%20OpenRouter%20%2B%20LangChain4j-ffb779.svg)
 
 A strength-training tracker whose entry point is a conversation. You tell the coach
 *"start a chest session"*, then *"80 kg, 8 reps"* between sets — by voice, mid-effort — and it
@@ -20,9 +20,9 @@ today?"* from your actual history.
 ## What it does
 
 **The coach.** Text or voice. It opens sessions, records sets, reads your history, and adapts
-advice to your recent state. Two providers are wired — Mistral and Gemini — with automatic fallback
-when one is unavailable and a daily quota that silently downgrades Gemini to Mistral. Conversations
-are persisted and replayed, so context survives a page reload.
+advice to your recent state. It runs on a single model — DeepSeek V4 Flash, reached through
+OpenRouter — with two retries on a transient failure. Conversations are persisted and replayed, so
+context survives a page reload.
 
 **Voice logging.** The microphone uses the Web Speech API in French. An internal dictionary fixes
 the mis-hearings that matter in a gym (*crêpe* → *reps*), because you are out of breath and holding
@@ -97,7 +97,7 @@ A tool only exists for the coach if it is **both** registered in `ChironConfig` 
 
 ## Running it locally
 
-**Prerequisites** — JDK 25, Node 22, Docker, and a Mistral API key.
+**Prerequisites** — JDK 25, Node 22, Docker, and an OpenRouter API key.
 
 ```bash
 # 1. Database
@@ -106,7 +106,7 @@ docker compose up -d db          # postgres:16-alpine on host port 5454
 # 2. Backend configuration
 cat > chiron-back/.env <<'EOF'
 JWT_SECRET=<64 hex chars, e.g. openssl rand -hex 32>
-MISTRAL_API_KEY=<your key>
+OPENROUTER_API_KEY=<your key>
 EOF
 
 # 3. Backend — http://localhost:9090, Swagger at /swagger-ui.html
@@ -116,7 +116,7 @@ cd chiron-back && ./mvnw spring-boot:run
 cd chiron-front && npm install && npm start
 ```
 
-`JWT_SECRET` and `MISTRAL_API_KEY` are **mandatory and have no defaults**. The application refuses
+`JWT_SECRET` and `OPENROUTER_API_KEY` are **mandatory and have no defaults**. The application refuses
 to start without them: `JwtService` rejects a secret that is absent, blank, not base64, or shorter
 than 32 bytes once decoded, rather than signing tokens with a key that would be public.
 
@@ -130,9 +130,9 @@ Loaded from `chiron-back/.env` through `spring.config.import`, or from the envir
 | Variable | Purpose | Required |
 |----------|---------|----------|
 | `JWT_SECRET` | HMAC signing key for JWTs, base64/hex, ≥ 32 bytes decoded | **yes** |
-| `MISTRAL_API_KEY` | Mistral provider for the coach | **yes** |
-| `GEMINI_API_KEY` | enables the Gemini provider; blank means Mistral only | no |
-| `CHIRON_GEMINI_MODEL` | Gemini model name | no |
+| `OPENROUTER_API_KEY` | the single AI provider behind the coach, Noctua and the run voice | **yes** |
+| `CHIRON_AI_MODEL` | model id on OpenRouter; defaults to `deepseek/deepseek-v4-flash-0731` | no |
+| `CHIRON_AI_BASE_URL` | OpenRouter base URL, for pointing at another OpenAI-compatible gateway | no |
 | `CHIRON_SECRET_KEY` | AES-256 key (base64) encrypting stored third-party OAuth tokens | prod |
 | `GMAIL_USERNAME` / `GMAIL_APP_PASSWORD` | password-reset mail, and the Visbody mailbox | no |
 | `FRONTEND_URL` | base URL used in outgoing links | no |

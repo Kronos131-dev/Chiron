@@ -1,13 +1,13 @@
 ---
 name: manage-env-and-secrets
-description: Handles environment variables and secrets across chiron-back, the GitHub repository secrets and the deploy workflow. Use when an integration silently does nothing, when adding a configuration property or an API key, when setting up the project on a fresh machine, or when a feature works locally but not in production. Covers chiron-back/.env loaded through spring.config.import, the mandatory MISTRAL_API_KEY and CHIRON_SECRET_KEY, the Gemini, Fitbit, Olympus, Gmail and Visbody variables, and the three places a new variable must exist before it reaches the server. Do not use for a build or test failure (see verify-backend-change), for reading production logs (see inspect-production), or for a red pipeline (see diagnose-ci-failure).
+description: Handles environment variables and secrets across chiron-back, the GitHub repository secrets and the deploy workflow. Use when an integration silently does nothing, when adding a configuration property or an API key, when setting up the project on a fresh machine, or when a feature works locally but not in production. Covers chiron-back/.env loaded through spring.config.import, the mandatory OPENROUTER_API_KEY and CHIRON_SECRET_KEY, the Fitbit, Olympus, Gmail and Visbody variables, and the three places a new variable must exist before it reaches the server. Do not use for a build or test failure (see verify-backend-change), for reading production logs (see inspect-production), or for a red pipeline (see diagnose-ci-failure).
 ---
 
 # Environment variables and secrets
 
-Chiron's integrations **degrade silently when unconfigured**. A blank `GEMINI_API_KEY` means
-`ChironConfig` never builds the Gemini agent and every request lands on Mistral, with no error
-anywhere. A missing Fitbit or Visbody variable means the feature does nothing. That produces symptoms
+Chiron's integrations **degrade silently when unconfigured**. A `CHIRON_AI_MODEL` pointing at a
+withdrawn model, or at one without tool support, leaves a coach that answers plausibly and writes
+nothing. A missing Fitbit or Visbody variable means the feature does nothing. That produces symptoms
 that read like logic bugs and sends debugging in the wrong direction — so when a feature "does
 nothing", check the configuration before reading the code.
 
@@ -61,11 +61,10 @@ and the secret exists but is never written to the server.
 
 ## Error Handling
 
-* If the application fails to start with `Could not resolve placeholder 'MISTRAL_API_KEY'`, the
+* If the application fails to start with `Could not resolve placeholder 'OPENROUTER_API_KEY'`, the
   mandatory key is absent. There is no default by design.
-* If the coach only ever answers as Mistral, `GEMINI_API_KEY` is blank, so the Gemini agent was never
-  built — or the user exhausted the 5-call daily cap, which looks identical. See
-  `debug-ai-conversation`.
+* If every AI call returns 503, read OpenRouter's own error above the exception: a 401 is a bad key,
+  a 404 on the model id is a withdrawn or renamed model. See `debug-ai-conversation`.
 * If token decryption fails after a redeploy, `CHIRON_SECRET_KEY` changed. Stored OAuth tokens are
   encrypted with it and cannot be recovered; the affected users must reconnect.
 * If Fitbit authorisation returns a redirect-URI mismatch, `FITBIT_REDIRECT_URI` must match the

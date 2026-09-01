@@ -7,7 +7,7 @@ all present as logic bugs.
 
 | Symptom | Cause | Confirm with |
 |---------|-------|--------------|
-| The coach always sounds like Mistral | `GEMINI_API_KEY` blank, so the Gemini agent was never built — or the 5-call daily cap was reached | `application.yml`, then `service/AiUsageService` |
+| The coach answers but writes nothing to the database | The pinned OpenRouter model lost tool support, or `CHIRON_AI_MODEL` points elsewhere | `application.yml`, then `coach/configuration/ModeleIaConfig` |
 | No Visbody report is ever imported | `VISBODY_MAILBOX_ENABLED` defaults to **false** | `application.yml` |
 | Nutrition screens report no Olympus link | `OLYMPUS_DB_*` defaults point at the docker service name, unreachable outside the production network | the container state |
 | Fitbit authorisation fails at the redirect | `FITBIT_REDIRECT_URI` must match the Google Cloud console entry exactly | the workflow `env:` block |

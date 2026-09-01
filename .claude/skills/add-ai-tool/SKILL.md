@@ -1,6 +1,6 @@
 ---
 name: add-ai-tool
-description: Gives the Chiron AI coach a new capability by adding a LangChain4j @Tool method to one of the coach/tools/*Tools components. Use when the coach should be able to read or write something it currently cannot, when a tool exists but the coach never calls it, or when editing the ChironAgent @SystemMessage. Covers choosing the right tool component, the @Tool and @ToolMemoryId signature, returning text a language model can use, enforcing ownership and coach rules inside the tool, registering the bean in ChironConfig for both the Mistral and the Gemini agent, and declaring the tool in the system prompt. Do not use for a plain REST endpoint the frontend calls (see add-api-endpoint), for a coach that answers wrongly or forgets (see debug-ai-conversation), or for schema changes (see add-flyway-migration).
+description: Gives the Chiron AI coach a new capability by adding a LangChain4j @Tool method to one of the coach/tools/*Tools components. Use when the coach should be able to read or write something it currently cannot, when a tool exists but the coach never calls it, or when editing the ChironAgent @SystemMessage. Covers choosing the right tool component, the @Tool and @ToolMemoryId signature, returning text a language model can use, enforcing ownership and coach rules inside the tool, registering the bean in ChironConfig, and declaring the tool in the system prompt. Do not use for a plain REST endpoint the frontend calls (see add-api-endpoint), for a coach that answers wrongly or forgets (see debug-ai-conversation), or for schema changes (see add-flyway-migration).
 ---
 
 # Give the coach a new capability
@@ -50,8 +50,8 @@ whatever ownership rule the feature needs must be written inside the tool itself
    the array. Skip to Step 5.
 2. For a new component, add it as a constructor parameter of `chironAgentRouter` and add it to the
    `Object[] tools` array in `config/ChironConfig.java`.
-3. The array is shared by the Mistral agent and the Gemini agent. Adding it to one only is not
-   possible in the current structure, and must stay that way.
+3. There is a single agent, on the single OpenRouter model built by `ModeleIaConfig`. The array is
+   the only place a tool becomes reachable.
 
 **Step 5: Declare the tool in the system prompt — the step that makes it real**
 1. Open `coach/agent/ChironAgent.java` and find the rule block that matches the domain (SÉANCE, LECTURE
@@ -90,8 +90,8 @@ whatever ownership rule the feature needs must be written inside the tool itself
   sentence instead.
 * If the tool returns JSON, the model paraphrases it badly and leaks field names to the user. Return
   prose with the numbers in it.
-* If the tool works on Mistral and not on Gemini, it is not the registration — both agents share the
-  array. Read the router's fallback path with the `debug-ai-conversation` skill.
+* If the tool is never called, the registration is only half the story — the prompt must name it in
+  brackets. Read the `debug-ai-conversation` skill before touching the tool itself.
 * If a `LazyInitializationException` surfaces, the tool touched a lazy association outside a
   transaction. Fetch what is needed in the repository query, or call a service that owns the
   transaction.

@@ -1,7 +1,7 @@
 # The eight tool components
 
 All under `chiron-back/src/main/java/com/kronos/chiron/coach/`. All eight are passed as one
-`Object[] tools` array to both the Mistral and the Gemini agent in `config/ChironConfig.java`.
+`Object[] tools` array to the single agent in `config/ChironConfig.java`.
 
 | Component | Owns | Tools | Prompt block in `ChironAgent` |
 |-----------|------|-------|-------------------------------|

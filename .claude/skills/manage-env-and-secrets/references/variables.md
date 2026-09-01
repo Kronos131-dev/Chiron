@@ -16,8 +16,9 @@ Everything else has a default, which is why the rest fail silently.
 
 | Variable | Default | Absent ⇒ |
 |----------|---------|----------|
-| `GEMINI_API_KEY` | blank | `ChironConfig` never builds the Gemini agent; every request silently lands on Mistral |
-| `CHIRON_GEMINI_MODEL` | `gemini-3.5-flash` | the default model is used |
+| `OPENROUTER_API_KEY` | **none** | the application refuses to start — every AI call goes through OpenRouter |
+| `CHIRON_AI_MODEL` | `deepseek/deepseek-v4-flash-0731` | the pinned default is used; the model must advertise `tools` |
+| `CHIRON_AI_BASE_URL` | `https://openrouter.ai/api/v1` | the default gateway is used |
 
 ## Security
 

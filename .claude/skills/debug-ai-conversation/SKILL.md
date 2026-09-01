@@ -1,14 +1,14 @@
 ---
 name: debug-ai-conversation
-description: Diagnoses the Chiron AI coach when it answers wrongly, forgets the conversation, ignores a tool, returns 503, or behaves differently on Mistral than on Gemini. Use for any complaint about the chat itself rather than about a screen. Walks ChatController, ChironAgentRouter, ConversationMemoryManager, ConversationService and AiUsageService, and covers the retry and fallback path, the daily Gemini quota that silently downgrades to Mistral, memory keyed by conversation id, and why replay reinjects text without tool calls. Do not use for adding a capability the coach lacks (see add-ai-tool), for a backend build or test failure (see verify-backend-change), or for a frontend rendering problem in the chat component (see add-angular-feature).
+description: Diagnoses the Chiron AI coach when it answers wrongly, forgets the conversation, ignores a tool, or returns 503. Use for any complaint about the chat itself rather than about a screen. Walks ChatController, ChironAgentRouter, ConversationMemoryManager and ConversationService, and covers the retry path, the single OpenRouter model behind every agent, memory keyed by conversation id, and why replay reinjects text without tool calls. Do not use for adding a capability the coach lacks (see add-ai-tool), for a backend build or test failure (see verify-backend-change), or for a frontend rendering problem in the chat component (see add-angular-feature).
 ---
 
 # Debug the coach
 
 Almost every "the coach is broken" report resolves to one of four things, and they are
-distinguishable before reading any code: it was never told the tool exists, it ran out of Gemini
-quota and silently changed model, its memory was reset by a retry, or the provider itself failed and
-the router exhausted its fallback. Establish which before forming a hypothesis — the layers look
+distinguishable before reading any code: it was never told the tool exists, its memory was reset by
+a retry, the model refused the prompt, or OpenRouter itself failed and the router exhausted its two
+attempts. Establish which before forming a hypothesis — the layers look
 similar from the outside and cost a lot to explore blind.
 
 ## Procedures
@@ -27,8 +27,8 @@ similar from the outside and cost a lot to explore blind.
    history, the `coach/tools/*Tools` components do the work.
 
 **Step 3: Read the backend log for the exchange**
-1. Both providers log requests and responses — `logRequests(true)` and `logResponses(true)` for
-   Mistral, `logRequestsAndResponses(true)` for Gemini.
+1. The model logs requests and responses — `logRequests(true)` and `logResponses(true)` in
+   `ModeleIaConfig`.
 2. Confirm from the log whether a tool was called at all. "Answered without calling the tool" and
    "called the tool and misreported it" are different bugs with different fixes.
 3. In production, read it with the `inspect-production` skill.
@@ -47,26 +47,26 @@ similar from the outside and cost a lot to explore blind.
 3. On a cold start the window is seeded from the database by replaying **USER and AI text only** —
    never tool calls. A coach that "forgets what it just looked up" after a restart is this, and it is
    deliberate: replaying an orphaned tool request breaks the next call.
-4. `reset` purges and replays before each retry, so a fallback loses whatever the failed attempt had
-   accumulated.
+4. `reset` purges and replays before each retry, so the second attempt loses whatever the failed one
+   had accumulated.
 
 **Step 6: If the reply is a 503**
 1. `AiUnavailableException` reaching the client means the router exhausted everything:
-   `MAX_ATTEMPTS = 2` with a 400 ms backoff per attempt, then the fallback to Mistral.
+   `MAX_ATTEMPTS = 2` with a 400 ms backoff per attempt. There is one model, so there is nothing to
+   fall back to.
 2. It only retries **transient** errors — the message must contain `503`, `unavailable`,
    `overloaded`, `timeout`, `deadline`, `429` or `rate limit`. Any other error fails on the first
    attempt by design.
-3. Read the provider's own error in the lines above the exception. A 401 from Mistral is a bad
-   `MISTRAL_API_KEY`, not an outage — apply `manage-env-and-secrets`.
+3. Read OpenRouter's own error in the lines above the exception. A 401 is a bad
+   `OPENROUTER_API_KEY` and a 404 on the model id is a renamed or withdrawn model, neither of which
+   is an outage — apply `manage-env-and-secrets`.
 
-**Step 7: If it behaves differently on Gemini**
-1. Check the quota first: `service/AiUsageService` allows non-admins `DAILY_GEMINI_LIMIT = 5` calls a
-   day, tracked by `geminiCallDate` and `geminiCallCount` on `Utilisateur`, and **silently downgrades
-   to Mistral** past that. The user sees a different personality with no explanation.
-2. Confirm `GEMINI_API_KEY` is non-blank in the environment. When it is blank, `ChironConfig` never
-   builds the Gemini agent at all and every request lands on Mistral.
-3. Both agents share the identical tool array, so a tool working on one and not the other is a prompt
-   interpretation difference, not a registration problem. Sharpen the clause.
+**Step 7: If the model itself is the suspect**
+1. `CHIRON_AI_MODEL` pins a dated version on OpenRouter. Confirm the id still exists and still
+   advertises `tools` in its `supported_parameters` — the whole coach is function calling, and a
+   model without tool support answers plausibly while writing nothing to the database.
+2. A model swap changes behaviour with no code change and no log line saying so. Check the deployed
+   value before blaming a prompt.
 
 **Step 8: Reproduce and fix under test**
 1. A tool that returns the wrong thing is ordinary Java — write a unit test against the tool class,

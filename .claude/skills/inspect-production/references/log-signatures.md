@@ -22,8 +22,8 @@ container, `head -80` is the useful view, not `--tail`.
 |--------------------|---------|
 | Everything answers 403, including `/actuator/health` | The running jar is not the deployed one — its `SecurityConfig` predates the current rules. Confirm with the sha256 comparison |
 | `AiUnavailableException` in the log, 503 to the client | Both providers failed after the router's retries. Read the lines above it for the provider's own error, then apply `debug-ai-conversation` |
-| Mistral or Gemini `429` / `rate limit` | Quota exhausted upstream. The router already retried and fell back |
-| Gemini never appears in the log at all | `GEMINI_API_KEY` is blank on the server, so `ChironConfig` never built the Gemini agent |
+| OpenRouter `429` / `rate limit` | Quota or credit exhausted upstream. The router already retried twice |
+| OpenRouter `404` on the model id | `CHIRON_AI_MODEL` points at a withdrawn or renamed model |
 | `JWT expired` on many requests at once | Expected — tokens last 30 days and expire in cohorts |
 | Repeated `DEBUG o.s.security` noise | `application.yml` still ships debug logging for Spring Security, left over from a 403 investigation |
 | `OutOfMemoryError` or a container restarting on its own | Check `docker stats --no-stream` and `free -m` before suspecting the code |

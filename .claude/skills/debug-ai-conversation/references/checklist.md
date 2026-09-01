@@ -8,15 +8,15 @@
 
 ## Ruling out the silent causes first
 * [ ] The tool is named in brackets in the matching `ChironAgent` `@SystemMessage` block.
-* [ ] The Gemini daily cap of 5 calls for non-admins was checked before blaming the model.
-* [ ] `GEMINI_API_KEY` was confirmed non-blank if Gemini is expected.
+* [ ] `OPENROUTER_API_KEY` was confirmed non-blank, and the model id in `CHIRON_AI_MODEL` still
+      exists on OpenRouter and still advertises `tools`.
 * [ ] The 20-message window was considered before calling it a memory bug.
 
 ## Fixing
 * [ ] The fix targets the layer the symptom actually belongs to.
 * [ ] A tool bug is covered by a unit test against the tool class, with no model involved.
-* [ ] A router or memory bug is covered by a test with mocked agents.
-* [ ] A prompt change was verified by conversation on both providers.
+* [ ] A router or memory bug is covered by a test with a mocked agent.
+* [ ] A prompt change was verified by conversation against the deployed model.
 * [ ] A neighbouring question was confirmed **not** to trigger the tool.
 * [ ] No deliberate behaviour from the "should not be fixed" table was changed without saying why.
 

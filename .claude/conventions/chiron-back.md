@@ -1,7 +1,7 @@
 # chiron-back — conventions
 
 Spring Boot 4.0.6 · Java 25 · PostgreSQL 16 with Flyway · Spring Security with stateless JWT ·
-LangChain4j 1.14.1 over Mistral and Gemini · Lombok · springdoc OpenAPI. Maven, with a wrapper
+LangChain4j 1.14.1 over OpenRouter · Lombok · springdoc OpenAPI. Maven, with a wrapper
 (`./mvnw`, script-only). `<finalName>app</finalName>` — the build produces `target/app.jar`.
 
 The non-negotiable code style lives in the root `CLAUDE.md`, which is always loaded.
@@ -28,10 +28,11 @@ the production stack and is not useful locally.
 ## Configuration
 
 `spring.config.import: optional:file:.env[.properties]` loads a gitignored `chiron-back/.env`.
-Variables: `JWT_SECRET` and `MISTRAL_API_KEY` (**both mandatory, no default — the application refuses
+Variables: `JWT_SECRET` and `OPENROUTER_API_KEY` (**both mandatory, no default — the application refuses
 to start without them**; `JwtService` additionally rejects a blank, non-base64 or under-32-byte key,
-so an empty value fails the boot instead of breaking every login at runtime), `GEMINI_API_KEY` (blank ⇒ the Gemini agent is never built),
-`CHIRON_GEMINI_MODEL`, `CHIRON_SECRET_KEY` (base64 AES-256, encrypts stored OAuth tokens),
+so an empty value fails the boot instead of breaking every login at runtime),
+`CHIRON_AI_MODEL` (defaults to `deepseek/deepseek-v4-flash-0731`), `CHIRON_AI_BASE_URL`,
+`CHIRON_SECRET_KEY` (base64 AES-256, encrypts stored OAuth tokens),
 `GMAIL_USERNAME` / `GMAIL_APP_PASSWORD`, `FRONTEND_URL`, `UPLOADS_DIR`, `OLYMPUS_*`, `FITBIT_*`,
 `VISBODY_*`. JWT expiration is 30 days. Apply the `manage-env-and-secrets` skill before adding one.
 
@@ -68,9 +69,9 @@ module-local Spring configuration (`nutrition/configuration/OlympusDbConfig`).
 | `seance/` | the core domain: `Seance`, `Exercice`, `Serie`, `Degressif`, `CardioType`, `ExerciseType`, the journal controller, `JournalService`, `CardioCalorieService`, `SeanceMapper` |
 | `programme/` | building, reordering and copying programmes |
 | `exercice/` | the exercise library: `ExerciceDefinition`, `MuscleGroup`, `TypeEquipement`, `NiveauDifficulte`, `ExerciceDataImporter` |
-| `utilisateur/` | `Utilisateur` and its enums (`Role`, `Sexe`, `NiveauExperience`, `ObjectifPrincipal`, `AiProvider`), profile and settings |
+| `utilisateur/` | `Utilisateur` and its enums (`Role`, `Sexe`, `NiveauExperience`, `ObjectifPrincipal`), profile and settings |
 | `auth/` | registration, login, password reset, `EmailService` |
-| `coach/` | the AI subsystem — `agent/` (`ChironAgent`, `ChironAgentRouter`, `ConversationMemoryManager`, `AiUnavailableException`), `tools/` (the eight `@Tool` beans), `configuration/ChironConfig`, plus conversations, memory notes and the Gemini quota |
+| `coach/` | the AI subsystem — `agent/` (`ChironAgent`, `ChironAgentRouter`, `ConversationMemoryManager`, `AiUnavailableException`), `tools/` (the eight `@Tool` beans), `configuration/ChironConfig` and `configuration/ModeleIaConfig`, plus conversations and memory notes |
 | `journalier/` | `EtatJournalier` and `RecoveryService` |
 | `performance/` | `PerformanceRecord`, `PerformanceTier`, 1RM and tiers |
 | `agora/` | the social listing |
@@ -144,21 +145,21 @@ Read `.claude/skills/add-ai-tool/SKILL.md` before changing anything here.
   `@SystemMessage` split into rule blocks (STYLE, SÉANCE, BIBLIOTHÈQUE, NUTRITION, FITBIT, MÉMOIRE
   LONG-TERME…). Each block names the tools it may use in brackets, e.g. `[startSession]`, `[addSet]`.
   **This prompt is the main lever on coach behaviour.**
-- `coach/configuration/ChironConfig` builds two `AiServices` proxies of that interface — one on
-  `MistralAiChatModel`, and one on `GoogleAiGeminiChatModel` only when `GEMINI_API_KEY` is non-blank.
-  Both receive the *same* eight tool beans and the same `ChatMemoryProvider`.
+- `coach/configuration/ModeleIaConfig` builds the only two `ChatModel` beans — `modeleConversation`
+  (90 s) and `modeleVoix` (3 s) — both `OpenAiChatModel` pointed at OpenRouter, because OpenRouter
+  speaks the OpenAI protocol. The model is pinned to a dated version, never an alias.
+- `coach/configuration/ChironConfig` builds one `AiServices` proxy of that interface on
+  `modeleConversation`, with the eight tool beans and the `ChatMemoryProvider`.
 - The tool beans are `@Component`s in `coach/tools/`: `WorkoutTools` (41 tools, the writes), `NutritionTools`,
   `MemoryTools`, `RecoveryTools`, `AdaptiveTools`, `FitbitTools`, `AppGuideTools`,
   `AnalyseDieteTools`. A tool method is annotated `@Tool("description en français")` and takes the
   caller as `@ToolMemoryId String userId`.
-- `coach/agent/ChironAgentRouter` picks the agent from the user's `AiProvider`, retries twice on transient
-  errors (503, unavailable, overloaded, timeout, deadline, 429, rate limit), resets memory before each
-  retry, falls back to Mistral, and finally throws `AiUnavailableException`.
+- `coach/agent/ChironAgentRouter` retries twice on transient errors (503, unavailable, overloaded,
+  timeout, deadline, 429, rate limit), resets memory before each retry, then throws
+  `AiUnavailableException`. There is one model, so there is no fallback to another provider.
 - `coach/agent/ConversationMemoryManager` keys memory by **conversation id**, not by user —
   `MessageWindowChatMemory.withMaxMessages(20)`. Replay from the database reinjects USER and AI text
   only, never tool calls, so that an orphaned tool request cannot break the next call.
-- `coach/service/AiUsageService` caps non-admins at 5 Gemini calls a day and silently downgrades to Mistral
-  past that.
 - `ChatController` prepends the language directive, a `SYSTEM CONTEXT` line and the ten most recent
   `ChironMemoryNote`s to every user message.
 

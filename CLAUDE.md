@@ -9,7 +9,7 @@ it** — this file holds only what applies everywhere.
 
 | Folder | Stack | Conventions |
 |--------|-------|-------------|
-| `chiron-back/` | Spring Boot 4.0.6 · Java 25 · PostgreSQL 16 / Flyway · LangChain4j (Mistral + Gemini) | `.claude/conventions/chiron-back.md` |
+| `chiron-back/` | Spring Boot 4.0.6 · Java 25 · PostgreSQL 16 / Flyway · LangChain4j (DeepSeek via OpenRouter) | `.claude/conventions/chiron-back.md` |
 | `chiron-front/` | Angular 21 standalone · Signals · Tailwind 4 · Vitest · Capacitor (Android) | `.claude/conventions/chiron-front.md` |
 | `chiron-front/android/` | Java 21 · Gradle · service Android au premier plan (GPS, voix, mot-clé) | mêmes conventions, hors périmètre des hooks |
 

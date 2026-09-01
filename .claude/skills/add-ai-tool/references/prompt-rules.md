@@ -50,11 +50,11 @@ There is no unit test for the prompt. Verify by conversation:
 
 1. Ask the question a user would ask, in French, without naming the tool.
 2. Confirm the tool was called, in the backend log — `logRequests(true)` and `logResponses(true)` are
-   on for Mistral, `logRequestsAndResponses(true)` for Gemini.
+   on in `ModeleIaConfig`.
 3. Ask a neighbouring question and confirm the tool is **not** called. An over-broad trigger makes the
    coach call it constantly, which is slower and costs more.
-4. Test on both providers if `GEMINI_API_KEY` is set locally: the two models weigh the prompt
-   differently, and a clause that works on Mistral can be ignored by Gemini.
+4. Re-test after any change to `CHIRON_AI_MODEL`: a different model weighs the same prompt
+   differently, and a clause that works on one can be ignored by the next.
 
 ## What not to do here
 
