@@ -98,9 +98,6 @@ export class Course implements OnInit, OnDestroy {
   readonly objectifKm = signal('');
   readonly motCle = signal(true);
   readonly intervalleAnnonce = signal(INTERVALLE_DEFAUT_M);
-  readonly intervalleMin = INTERVALLE_MIN_M;
-  readonly intervalleMax = INTERVALLE_MAX_M;
-  readonly intervallePas = INTERVALLE_PAS_M;
   readonly graduations = [100, 250, 500, 750, 1000];
   readonly unites = UNITES_ALLURE;
   readonly volumeMin = VOLUME_MIN;

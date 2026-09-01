@@ -632,6 +632,38 @@ describe('Course', () => {
     });
   });
 
+  describe('cadence des annonces', () => {
+    function curseurCadence(): HTMLInputElement {
+      const selecteur = `input[aria-label="${fr['course.announceEvery']}"]`;
+      return fixture.nativeElement.querySelector(selecteur) as HTMLInputElement;
+    }
+
+    // WHY: Angular pose la propriété `value` avant les liaisons `[attr.]`. Avec des bornes
+    // liées, le champ avait encore son maximum implicite de 100 quand la valeur arrivait : le
+    // curseur affichait « 100 m » pendant que la voix annonçait toujours au kilomètre.
+    it('pose le curseur sur la cadence retenue, pas sur la borne basse', async () => {
+      await boot([exoCourse('a')], 'a');
+      component.basculerReglages();
+      fixture.detectChanges();
+
+      expect(component.intervalleAnnonce()).toBe(1000);
+      expect(curseurCadence().value).toBe('1000');
+    });
+
+    it('retient la cadence entre deux visites', async () => {
+      await boot([exoCourse('a')], 'a');
+      component.changerIntervalle('100');
+      component.validerIntervalle();
+
+      await boot([exoCourse('a')], 'a');
+      component.basculerReglages();
+      fixture.detectChanges();
+
+      expect(component.intervalleAnnonce()).toBe(100);
+      expect(curseurCadence().value).toBe('100');
+    });
+  });
+
   describe('mot-clé', () => {
     it('écoute en permanence par défaut', async () => {
       await boot([exoCourse('a')], 'a');

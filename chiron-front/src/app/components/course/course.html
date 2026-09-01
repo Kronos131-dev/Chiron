@@ -492,11 +492,16 @@
             </span>
           </div>
 
+          <!-- WHY: les bornes sont des attributs statiques parce qu'Angular pose la propriété
+               `value` avant les liaisons `[attr.]`. Écrites en `[attr.max]`, le champ avait
+               encore son maximum implicite de 100 quand la valeur arrivait : 1 km y était
+               raboté à 100, le curseur se posait à gauche et affichait « 100 m » pendant que
+               la voix annonçait toujours au kilomètre. -->
           <input
             type="range"
-            [attr.min]="intervalleMin"
-            [attr.max]="intervalleMax"
-            [attr.step]="intervallePas"
+            min="100"
+            max="1000"
+            step="100"
             [value]="intervalleAnnonce()"
             (input)="changerIntervalle($any($event.target).value)"
             (change)="validerIntervalle()"
