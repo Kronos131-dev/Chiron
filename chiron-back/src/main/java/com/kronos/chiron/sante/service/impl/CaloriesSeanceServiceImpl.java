@@ -29,6 +29,15 @@ public class CaloriesSeanceServiceImpl implements CaloriesSeanceService {
     // et non la série elle-même — c'est ce qui la rend comparable à une durée de séance.
     private static final double MET_MUSCULATION = 3.5;
 
+    // WHY: bornes de vraisemblance, pas de réglage. Une séance dont la durée enregistrée dépasse
+    // cinq heures n'est pas une séance : c'est une séance qu'on a oublié de fermer, et sa durée ne
+    // dit plus rien du temps passé sous la barre. Le premier rattrapage en production a rendu
+    // 29 153 kcal sur une activité — environ quatre jours et demi de musculation continue. Le
+    // plafond en calories est la même méfiance, un cran plus loin : il attrape aussi le cas où ce
+    // sont les calories d'une série qui sont fausses, que la borne de durée ne verrait pas.
+    private static final double DUREE_MAX_MINUTES = 300;
+    private static final double KCAL_MAX = 5000;
+
     private static final double MINUTES_PAR_JOUR = 1440.0;
     private static final double ML_O2_PAR_KG_PAR_MET = 3.5;
     private static final double ML_O2_PAR_KCAL = 200.0;
@@ -45,7 +54,6 @@ public class CaloriesSeanceServiceImpl implements CaloriesSeanceService {
         if (seance == null) return null;
 
         double minutesTotal = minutes(activite, seance);
-        if (minutesTotal <= 0) return null;
 
         double kcalCardio = 0;
         double minutesCardio = 0;
@@ -56,10 +64,13 @@ public class CaloriesSeanceServiceImpl implements CaloriesSeanceService {
             }
         }
 
-        double minutesMusculation = Math.max(0, minutesTotal - minutesCardio);
+        double minutesMusculation = minutesTotal > DUREE_MAX_MINUTES
+                ? 0
+                : Math.max(0, minutesTotal - minutesCardio);
         double kcal = kcalCardio
                 + MET_MUSCULATION * kcalParMetMinute(activite.getUtilisateur()) * minutesMusculation;
-        return (int) Math.round(Math.max(0, kcal));
+        if (kcal <= 0 || kcal > KCAL_MAX) return null;
+        return (int) Math.round(kcal);
     }
 
     private double minutes(SanteActivite activite, Seance seance) {

@@ -105,6 +105,45 @@ class CaloriesSeanceServiceImplTest {
         assertThat(kcal).isEqualTo(377);
     }
 
+    // WHY: le premier rattrapage en production a rendu 29 153 kcal sur une activité — environ
+    // quatre jours et demi de musculation continue. Une séance qu'on a oublié de fermer garde une
+    // durée qui ne dit plus rien du temps passé sous la barre : le cardio, lui, reste mesuré, et
+    // c'est tout ce qui subsiste.
+    @Test
+    void estimer_seanceRestee0uverteDesJours_neChiffrePasLeTempsSousLaBarre() {
+        // Given
+        SanteActivite activite = activite(athlete(80.0, 180.0), seanceAvec(serie(30.0, 350.0)));
+        activite.setEndTime(DEBUT.plusDays(5));
+
+        // When
+        Integer kcal = service.estimer(activite);
+
+        // Then
+        assertThat(kcal).isEqualTo(350);
+    }
+
+    @Test
+    void estimer_seanceOuverteEtSansCardio_neRendRien() {
+        // Given
+        SanteActivite activite = activite(athlete(80.0, 180.0), seanceAvec(serie(null, null)));
+        activite.setEndTime(DEBUT.plusDays(5));
+
+        // When / Then
+        assertThat(service.estimer(activite)).isNull();
+    }
+
+    // WHY: la borne en calories attrape ce que la borne de durée ne voit pas — une série dont les
+    // calories enregistrées sont fausses. Aucune séance ne dépasse cinq mille kilocalories ; au
+    // delà, on ne publie pas un chiffre qu'on ne sait pas justifier.
+    @Test
+    void estimer_caloriesDeSerieAberrantes_neRendRien() {
+        // Given
+        SanteActivite activite = activite(athlete(80.0, 180.0), seanceAvec(serie(30.0, 40000.0)));
+
+        // When / Then
+        assertThat(service.estimer(activite)).isNull();
+    }
+
     @Test
     void estimer_sansSeance_neDevinePas() {
         // Given
