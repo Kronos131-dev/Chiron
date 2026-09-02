@@ -369,7 +369,12 @@ export class ChironApi {
 
   addPerformanceRecord(
     username: string,
-    dto: { exerciseType: string; poids: number; nombreReps: number },
+    dto: {
+      exerciseType: string;
+      poids?: number;
+      nombreReps?: number;
+      tempsSecondes?: number;
+    },
   ): Observable<any> {
     return this.http.post<any>(
       `${this.apiUrl}/performance/${encodeURIComponent(username)}/record`,

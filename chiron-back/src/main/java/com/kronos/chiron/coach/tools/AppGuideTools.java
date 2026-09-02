@@ -54,14 +54,17 @@ public class AppGuideTools {
                         "• En mode Coach, tu peux éditer le programme d'un autre athlète.");
 
         GUIDES.put("tresor",
-                "Le Trésor est l'écran de progression force. Pour chaque grand exercice (développé,\n" +
+                "Le Trésor est l'écran de progression. Pour chaque grand exercice (développé,\n" +
                         "squat, soulevé de terre, tractions, dips), il calcule ton 1RM estimé et te place\n" +
                         "sur une échelle de 8 paliers :\n" +
                         "  Novice : Éphèbe, Argonaute\n" +
                         "  Athlète : Hoplite, Myrmidon, Spartiate\n" +
                         "  Légende : Héros, Demi-Dieu, Olympien\n" +
-                        "Le palier dépend du ratio (poids soulevé / poids corporel). Renseigne ton poids\n" +
-                        "corporel en haut de l'écran pour activer le calcul.");
+                        "Le palier d'une barre dépend du ratio (poids soulevé / poids corporel) : renseigne\n" +
+                        "ton poids corporel en haut de l'écran pour activer le calcul.\n" +
+                        "Deux épreuves de course, le 5 km et le 10 km, se rangent sur la même échelle. Là,\n" +
+                        "on saisit un chrono et le palier se lit sur la vitesse moyenne — le poids corporel\n" +
+                        "n'entre pas dans le calcul.");
 
         GUIDES.put("agora",
                 "L'Agora (icône groupe) liste les autres athlètes. Tu peux :\n" +

@@ -3,34 +3,43 @@
 <!-- ═══════════════ MAIN ═══════════════ -->
 <main class="min-h-screen pt-24 pb-32 heroic-texture px-4 md:px-8">
   <div class="max-w-xl mx-auto space-y-6">
-
     <!-- Loading -->
     @if (isLoading()) {
       <div class="flex justify-center py-20">
-        <span class="w-12 h-12 border-4 border-secondary/20 border-t-secondary rounded-full animate-spin"></span>
+        <span
+          class="w-12 h-12 border-4 border-secondary/20 border-t-secondary rounded-full animate-spin"
+        ></span>
       </div>
     }
 
     @if (!isLoading() && summary()) {
-
       <!-- ── POIDS CORPOREL ─────────────────────────────────────────────── -->
       <div class="bg-slate-900/60 backdrop-blur-md rounded-2xl p-5 border border-secondary/15">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-[10px] font-bold tracking-[0.2em] text-on-surface-variant uppercase mb-1">{{ 'tresor.bodyweight' | t }}</p>
+            <p
+              class="text-[10px] font-bold tracking-[0.2em] text-on-surface-variant uppercase mb-1"
+            >
+              {{ 'tresor.bodyweight' | t }}
+            </p>
             @if (!editingBodyweight()) {
               <p class="text-2xl font-black font-headline text-white">
                 @if (summary().poidsCorps) {
-                  {{ summary().poidsCorps }} <span class="text-sm text-on-surface-variant font-normal">kg</span>
+                  {{ summary().poidsCorps }}
+                  <span class="text-sm text-on-surface-variant font-normal">kg</span>
                 } @else {
-                  <span class="text-on-surface-variant text-base font-bold">{{ 'tresor.notSet' | t }}</span>
+                  <span class="text-on-surface-variant text-base font-bold">{{
+                    'tresor.notSet' | t
+                  }}</span>
                 }
               </p>
             }
           </div>
           @if (isMyProfile() && !editingBodyweight()) {
-            <button (click)="startEditBodyweight()"
-                    class="flex items-center gap-1.5 bg-secondary/10 border border-secondary/20 text-secondary px-3 py-1.5 rounded-lg text-xs font-bold tracking-widest uppercase hover:bg-secondary/20 transition-colors">
+            <button
+              (click)="startEditBodyweight()"
+              class="flex items-center gap-1.5 bg-secondary/10 border border-secondary/20 text-secondary px-3 py-1.5 rounded-lg text-xs font-bold tracking-widest uppercase hover:bg-secondary/20 transition-colors"
+            >
               <span class="material-symbols-outlined text-sm">edit</span>
               {{ 'tresor.edit' | t }}
             </button>
@@ -39,17 +48,32 @@
 
         @if (editingBodyweight()) {
           <div class="flex items-center gap-3 mt-2">
-            <input type="number" step="0.5" min="30" max="200"
-                   [ngModel]="bodyweightDraft()"
-                   (ngModelChange)="bodyweightDraft.set($event)"
-                   [placeholder]="'tresor.bodyweightPlaceholder' | t"
-                   class="flex-1 bg-slate-950/60 border border-secondary/30 text-white rounded-xl px-4 py-2.5 text-lg font-bold outline-none focus:border-secondary font-headline">
+            <input
+              type="number"
+              step="0.5"
+              min="30"
+              max="200"
+              [ngModel]="bodyweightDraft()"
+              (ngModelChange)="bodyweightDraft.set($event)"
+              [placeholder]="'tresor.bodyweightPlaceholder' | t"
+              class="flex-1 bg-slate-950/60 border border-secondary/30 text-white rounded-xl px-4 py-2.5 text-lg font-bold outline-none focus:border-secondary font-headline"
+            />
             <span class="text-on-surface-variant text-sm">kg</span>
-            <button (click)="saveBodyweight()" [disabled]="savingBodyweight()"
-                    class="bg-gradient-to-r from-secondary to-[#c77a30] text-slate-950 font-black text-xs tracking-widest uppercase px-4 py-2.5 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50">
-              @if (savingBodyweight()) { … } @else { {{ 'tresor.save' | t }} }
+            <button
+              (click)="saveBodyweight()"
+              [disabled]="savingBodyweight()"
+              class="bg-gradient-to-r from-secondary to-[#c77a30] text-slate-950 font-black text-xs tracking-widest uppercase px-4 py-2.5 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50"
+            >
+              @if (savingBodyweight()) {
+                …
+              } @else {
+                {{ 'tresor.save' | t }}
+              }
             </button>
-            <button (click)="cancelEditBodyweight()" class="text-on-surface-variant hover:text-white transition-colors">
+            <button
+              (click)="cancelEditBodyweight()"
+              class="text-on-surface-variant hover:text-white transition-colors"
+            >
               <span class="material-symbols-outlined">close</span>
             </button>
           </div>
@@ -64,28 +88,38 @@
       </div>
 
       <!-- ── PALIER GLOBAL ──────────────────────────────────────────────── -->
-      <div class="bg-slate-900/60 backdrop-blur-md rounded-3xl p-8 border border-secondary/20 text-center relative overflow-hidden">
-        <div class="absolute inset-0 bg-gradient-to-t opacity-30"
-             [style.background]="'radial-gradient(circle at 50% 80%, var(--tier-bg, rgba(255,183,121,0.15)) 0%, transparent 70%)'"
-             [class]="tierClass(summary().overallTierLevel)"></div>
+      <div
+        class="bg-slate-900/60 backdrop-blur-md rounded-3xl p-8 border border-secondary/20 text-center relative overflow-hidden"
+      >
+        <div
+          class="absolute inset-0 bg-gradient-to-t opacity-30"
+          [style.background]="'radial-gradient(circle at 50% 80%, var(--tier-bg, rgba(255,183,121,0.15)) 0%, transparent 70%)'"
+          [class]="tierClass(summary().overallTierLevel)"
+        ></div>
 
         <div class="flex items-center justify-center gap-2 mb-3 relative z-10">
-          <p class="text-[10px] font-bold tracking-[0.25em] text-on-surface-variant uppercase">{{ 'tresor.globalTier' | t }}</p>
-          <button type="button"
-                  (click)="openTiersModal()"
-                  [attr.aria-label]="'tresor.tierScale' | t"
-                  [title]="'tresor.viewTierScale' | t"
-                  class="tiers-info-btn">
+          <p class="text-[10px] font-bold tracking-[0.25em] text-on-surface-variant uppercase">
+            {{ 'tresor.globalTier' | t }}
+          </p>
+          <button
+            type="button"
+            (click)="openTiersModal()"
+            [attr.aria-label]="'tresor.tierScale' | t"
+            [title]="'tresor.viewTierScale' | t"
+            class="tiers-info-btn"
+          >
             <span class="material-symbols-outlined text-sm">info</span>
           </button>
         </div>
 
         <!-- Badge image (moyenne sur les 3 meilleurs exos) -->
         <div class="flex justify-center mb-5 relative z-10">
-          <img [src]="tierBadge(summary().overallTierLevel)"
-               [alt]="summary().overallTier"
-               [class]="'tresor-badge-img-lg ' + tierClass(summary().overallTierLevel)"
-               [title]="('tresor.averageTier' | t) + ' — ' + summary().overallTier" />
+          <img
+            [src]="tierBadge(summary().overallTierLevel)"
+            [alt]="summary().overallTier"
+            [class]="'tresor-badge-img-lg ' + tierClass(summary().overallTierLevel)"
+            [title]="('tresor.averageTier' | t) + ' — ' + summary().overallTier"
+          />
         </div>
 
         <div class="flex justify-center mb-2">
@@ -107,68 +141,124 @@
         <!-- Tier progression dots -->
         <div class="flex justify-center gap-2 mt-5">
           @for (t of tiers; track t.level) {
-            <div class="w-2 h-2 rounded-full transition-all"
-                 [class]="t.level <= summary().overallTierLevel ? tierClass(t.level) : ''"
-                 [style.background]="t.level <= summary().overallTierLevel ? 'var(--tier-color)' : 'rgba(255,255,255,0.1)'"
-                 [style.width]="t.level === summary().overallTierLevel ? '24px' : '8px'"
-                 [title]="t.name">
-            </div>
+            <div
+              class="w-2 h-2 rounded-full transition-all"
+              [class]="t.level <= summary().overallTierLevel ? tierClass(t.level) : ''"
+              [style.background]="
+                t.level <= summary().overallTierLevel
+                  ? 'var(--tier-color)'
+                  : 'rgba(255,255,255,0.1)'
+              "
+              [style.width]="t.level === summary().overallTierLevel ? '24px' : '8px'"
+              [title]="t.name"
+            ></div>
           }
         </div>
       </div>
 
       <!-- ── EXERCICES ──────────────────────────────────────────────────── -->
-      <h2 class="text-xs font-black tracking-[0.25em] text-on-surface-variant uppercase flex items-center gap-2 px-1">
+      <h2
+        class="text-xs font-black tracking-[0.25em] text-on-surface-variant uppercase flex items-center gap-2 px-1"
+      >
         <span class="material-symbols-outlined text-secondary text-base">fitness_center</span>
         {{ 'tresor.perfByExercise' | t }}
       </h2>
 
       @for (exercise of summary().exercises; track exercise.exerciseType) {
-        <div class="exercise-card bg-slate-900/60 backdrop-blur-md rounded-2xl border transition-colors overflow-hidden"
-             [class]="tierClass(exercise.tierLevel)"
-             [style.border-color]="'var(--tier-border)'">
-
+        <div
+          class="exercise-card bg-slate-900/60 backdrop-blur-md rounded-2xl border transition-colors overflow-hidden"
+          [class]="tierClass(exercise.tierLevel)"
+          [style.border-color]="'var(--tier-border)'"
+        >
           <div class="p-5">
             <!-- Hero: badge centré + nom + palier -->
             <div class="exercise-hero flex flex-col items-center text-center">
-              <img [src]="tierBadge(exercise.tierLevel)"
-                   [alt]="exercise.tier"
-                   class="exercise-badge"
-                   [title]="exercise.nom + ' — ' + exercise.tier" />
-              <h3 class="text-xl font-black text-white tracking-widest uppercase font-headline mt-3">
+              <img
+                [src]="tierBadge(exercise.tierLevel)"
+                [alt]="exercise.tier"
+                class="exercise-badge"
+                [title]="exercise.nom + ' — ' + exercise.tier"
+              />
+              <h3
+                class="text-xl font-black text-white tracking-widest uppercase font-headline mt-3"
+              >
                 {{ exercise.nom }}
               </h3>
               <div class="flex items-center gap-2 mt-1.5">
                 <span class="h-px w-6 bg-white/15"></span>
-                <span class="tier-badge" [class]="tierClass(exercise.tierLevel)">{{ exercise.tier }}</span>
+                <span class="tier-badge" [class]="tierClass(exercise.tierLevel)">{{
+                  exercise.tier
+                }}</span>
                 <span class="h-px w-6 bg-white/15"></span>
               </div>
               @if (isBodyweightExercise(exercise.exerciseType)) {
-                <p class="text-[10px] text-secondary/60 tracking-widest uppercase mt-1.5">{{ 'tresor.ballastBodyweight' | t }}</p>
+                <p class="text-[10px] text-secondary/60 tracking-widest uppercase mt-1.5">
+                  {{ 'tresor.ballastBodyweight' | t }}
+                </p>
               }
             </div>
 
-            @if (exercise.poids !== null && exercise.poids !== undefined) {
+            @if (
+              exercise.tempsSecondes || (exercise.poids !== null && exercise.poids !== undefined)
+            ) {
               <!-- Performance stats -->
               <div class="grid grid-cols-3 gap-3 mb-4 mt-4">
-                <div class="bg-slate-950/50 rounded-xl p-3 text-center">
-                  <p class="text-[9px] text-on-surface-variant tracking-widest uppercase mb-1">
-                    {{ (isBodyweightExercise(exercise.exerciseType) ? 'tresor.ballast' : 'tresor.weight') | t }}
-                  </p>
-                  <p class="text-lg font-black font-headline text-white">
-                    {{ exercise.poids }}<span class="text-xs font-normal">kg</span>
-                  </p>
-                </div>
-                <div class="bg-slate-950/50 rounded-xl p-3 text-center">
-                  <p class="text-[9px] text-on-surface-variant tracking-widest uppercase mb-1">Reps</p>
-                  <p class="text-lg font-black font-headline text-white">{{ exercise.nombreReps }}</p>
-                </div>
-                <div class="bg-slate-950/50 rounded-xl p-3 text-center">
-                  <p class="text-[9px] text-on-surface-variant tracking-widest uppercase mb-1">{{ 'tresor.rm1Est' | t }}</p>
-                  <p class="text-lg font-black font-headline" [style.color]="'var(--tier-color)'">
-                    {{ exercise.rm1Estime }}<span class="text-xs font-normal">kg</span>
-                  </p>
-                </div>
+                @if (isCourse(exercise.exerciseType)) {
+                  <div class="bg-slate-950/50 rounded-xl p-3 text-center">
+                    <p class="text-[9px] text-on-surface-variant tracking-widest uppercase mb-1">
+                      {{ 'tresor.chrono' | t }}
+                    </p>
+                    <p class="text-lg font-black font-headline text-white">
+                      {{ formatChrono(exercise.tempsSecondes) }}
+                    </p>
+                  </div>
+                  <div class="bg-slate-950/50 rounded-xl p-3 text-center">
+                    <p class="text-[9px] text-on-surface-variant tracking-widest uppercase mb-1">
+                      {{ 'tresor.pace' | t }}
+                    </p>
+                    <p class="text-lg font-black font-headline text-white">
+                      {{ allureParKm(exercise) }}<span class="text-xs font-normal">/km</span>
+                    </p>
+                  </div>
+                  <div class="bg-slate-950/50 rounded-xl p-3 text-center">
+                    <p class="text-[9px] text-on-surface-variant tracking-widest uppercase mb-1">
+                      {{ 'tresor.speed' | t }}
+                    </p>
+                    <p class="text-lg font-black font-headline" [style.color]="'var(--tier-color)'">
+                      {{ exercise.ratioPerformance }}<span class="text-xs font-normal">km/h</span>
+                    </p>
+                  </div>
+                } @else {
+                  <div class="bg-slate-950/50 rounded-xl p-3 text-center">
+                    <p class="text-[9px] text-on-surface-variant tracking-widest uppercase mb-1">
+                      {{
+                        (isBodyweightExercise(exercise.exerciseType)
+                          ? 'tresor.ballast'
+                          : 'tresor.weight'
+                        ) | t
+                      }}
+                    </p>
+                    <p class="text-lg font-black font-headline text-white">
+                      {{ exercise.poids }}<span class="text-xs font-normal">kg</span>
+                    </p>
+                  </div>
+                  <div class="bg-slate-950/50 rounded-xl p-3 text-center">
+                    <p class="text-[9px] text-on-surface-variant tracking-widest uppercase mb-1">
+                      Reps
+                    </p>
+                    <p class="text-lg font-black font-headline text-white">
+                      {{ exercise.nombreReps }}
+                    </p>
+                  </div>
+                  <div class="bg-slate-950/50 rounded-xl p-3 text-center">
+                    <p class="text-[9px] text-on-surface-variant tracking-widest uppercase mb-1">
+                      {{ 'tresor.rm1Est' | t }}
+                    </p>
+                    <p class="text-lg font-black font-headline" [style.color]="'var(--tier-color)'">
+                      {{ exercise.rm1Estime }}<span class="text-xs font-normal">kg</span>
+                    </p>
+                  </div>
+                }
               </div>
 
               @if (exercise.ratioPerformance) {
@@ -176,10 +266,19 @@
                 <div class="mb-4">
                   <div class="flex items-center justify-between mb-1.5">
                     <span class="text-[10px] text-on-surface-variant tracking-widest uppercase">
-                      {{ 'tresor.ratio1rmBw' | t }}
+                      {{
+                        (isCourse(exercise.exerciseType)
+                          ? 'tresor.averageSpeed'
+                          : 'tresor.ratio1rmBw'
+                        ) | t
+                      }}
                     </span>
                     <span class="text-xs font-black" [style.color]="'var(--tier-color)'">
-                      {{ exercise.ratioPerformance }}×
+                      @if (isCourse(exercise.exerciseType)) {
+                        {{ exercise.ratioPerformance }} km/h
+                      } @else {
+                        {{ exercise.ratioPerformance }}×
+                      }
                     </span>
                   </div>
 
@@ -189,19 +288,23 @@
                       <div class="progress-fill" [style.width]="progress.percent + '%'"></div>
                     </div>
                     <div class="flex justify-between mt-1">
-                      <span class="text-[9px] text-on-surface-variant">{{ progress.percent }}%</span>
+                      <span class="text-[9px] text-on-surface-variant"
+                        >{{ progress.percent }}%</span
+                      >
                       <span class="text-[9px] text-on-surface-variant">
-                        −{{ progress.remaining }}× {{ 'tresor.toward' | t }} {{ progress.nextTier }}
+                        −{{ progress.manque }} {{ 'tresor.toward' | t }} {{ progress.nextTier }}
                       </span>
                     </div>
                   } @else {
                     <div class="progress-track">
                       <div class="progress-fill" [style.width]="'100%'"></div>
                     </div>
-                    <p class="text-[9px] text-center mt-1" [style.color]="'var(--tier-color)'">{{ 'tresor.maxTierReached' | t }}</p>
+                    <p class="text-[9px] text-center mt-1" [style.color]="'var(--tier-color)'">
+                      {{ 'tresor.maxTierReached' | t }}
+                    </p>
                   }
                 </div>
-              } @else if (!summary().poidsCorps) {
+              } @else if (!summary().poidsCorps && !isCourse(exercise.exerciseType)) {
                 <p class="text-[10px] text-amber-500/70 mb-4 flex items-center gap-1">
                   <span class="material-symbols-outlined text-sm">info</span>
                   {{ 'tresor.bodyweightToSeeTier' | t }}
@@ -209,15 +312,19 @@
               }
             } @else {
               <!-- No record yet -->
-              <p class="text-on-surface-variant text-xs text-center py-3 bg-slate-950/40 rounded-xl border border-white/5 mb-4">
+              <p
+                class="text-on-surface-variant text-xs text-center py-3 bg-slate-950/40 rounded-xl border border-white/5 mb-4"
+              >
                 {{ 'tresor.noPerformance' | t }}
               </p>
             }
 
             <!-- Update button (own profile only) -->
             @if (isMyProfile()) {
-              <button (click)="openModal(exercise)"
-                      class="w-full flex items-center justify-center gap-2 bg-secondary/10 border border-secondary/20 text-secondary py-2.5 rounded-xl text-xs font-black tracking-widest uppercase hover:bg-secondary/20 transition-colors active:scale-95">
+              <button
+                (click)="openModal(exercise)"
+                class="w-full flex items-center justify-center gap-2 bg-secondary/10 border border-secondary/20 text-secondary py-2.5 rounded-xl text-xs font-black tracking-widest uppercase hover:bg-secondary/20 transition-colors active:scale-95"
+              >
                 <span class="material-symbols-outlined text-sm">update</span>
                 {{ 'tresor.update' | t }}
               </button>
@@ -225,41 +332,52 @@
           </div>
         </div>
       }
-
     }
   </div>
 </main>
 
 <!-- ═══════════════ MODAL MISE À JOUR ═══════════════ -->
 @if (showModal()) {
-  <div class="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4"
-       (click)="closeModal()">
-
+  <div
+    class="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4"
+    (click)="closeModal()"
+  >
     <!-- Overlay -->
     <div class="absolute inset-0 bg-slate-950/85 backdrop-blur-sm"></div>
 
     <!-- Card -->
-    <div class="relative w-full max-w-sm bg-slate-900 border border-secondary/25 rounded-3xl overflow-hidden shadow-2xl animate-in slide-in-from-bottom-4 duration-300"
-         (click)="$event.stopPropagation()">
-
+    <div
+      class="relative w-full max-w-sm bg-slate-900 border border-secondary/25 rounded-3xl overflow-hidden shadow-2xl animate-in slide-in-from-bottom-4 duration-300"
+      (click)="$event.stopPropagation()"
+    >
       <!-- Header -->
       <div class="flex items-center justify-between px-6 pt-6 pb-4 border-b border-white/5">
         <div>
-          <p class="text-[10px] text-on-surface-variant tracking-[0.2em] uppercase mb-0.5">{{ 'tresor.update' | t }}</p>
+          <p class="text-[10px] text-on-surface-variant tracking-[0.2em] uppercase mb-0.5">
+            {{ 'tresor.update' | t }}
+          </p>
           <h3 class="text-lg font-black text-white tracking-widest uppercase font-headline">
             {{ editingExercise()?.nom }}
           </h3>
         </div>
-        <button (click)="closeModal()" class="text-on-surface-variant hover:text-white transition-colors">
+        <button
+          (click)="closeModal()"
+          class="text-on-surface-variant hover:text-white transition-colors"
+        >
           <span class="material-symbols-outlined">close</span>
         </button>
       </div>
 
       <div class="p-6 space-y-6">
-
         <!-- Warning if no bodyweight for bodyweight exercises -->
-        @if (isBodyweightExercise(editingExercise()?.exerciseType) && !summary()?.poidsCorps) {
-          <div class="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 flex items-center gap-2">
+        @if (
+          isBodyweightExercise(editingExercise()?.exerciseType) &&
+          !summary()?.poidsCorps &&
+          !editedIsCourse()
+        ) {
+          <div
+            class="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 flex items-center gap-2"
+          >
             <span class="material-symbols-outlined text-amber-500 text-sm">warning</span>
             <p class="text-xs text-amber-400">{{ 'tresor.setBodyweightFirst' | t }}</p>
           </div>
@@ -267,115 +385,318 @@
 
         <!-- Wheels + inputs -->
         <div class="grid grid-cols-2 gap-4">
+          @if (editedIsCourse()) {
+            <!-- MINUTES WHEEL -->
+            <div class="flex flex-col gap-2">
+              <p
+                class="text-[10px] font-black tracking-[0.2em] text-on-surface-variant uppercase text-center"
+              >
+                {{ 'tresor.minutes' | t }}
+              </p>
 
-          <!-- POIDS WHEEL -->
-          <div class="flex flex-col gap-2">
-            <p class="text-[10px] font-black tracking-[0.2em] text-on-surface-variant uppercase text-center">
-              {{ (isBodyweightExercise(editingExercise()?.exerciseType) ? 'tresor.ballastKg' : 'tresor.weightKg') | t }}
-            </p>
-
-            <div class="drum-wrapper"
-                 (mousedown)="startDrag($event, 'weight')"
-                 (touchstart)="startDrag($event, 'weight')">
-              <div class="drum-teeth-top" [style.background-position-x]="weightTeethOffset()"></div>
-              <div class="drum-track">
-                <div class="drum-strip" [style.transform]="weightTransform()">
-                  @for (val of weightWindow(); track $index) {
-                    <div class="drum-item" [class.active]="val === weightValue()">
-                      @if (val !== null) { {{ formatWeight(val) }} }
-                    </div>
-                  }
+              <div
+                class="drum-wrapper"
+                (mousedown)="startDrag($event, minutesDrum)"
+                (touchstart)="startDrag($event, minutesDrum)"
+              >
+                <div
+                  class="drum-teeth-top"
+                  [style.background-position-x]="minutesDrum.teethOffset()"
+                ></div>
+                <div class="drum-track">
+                  <div class="drum-strip" [style.transform]="minutesDrum.transform()">
+                    @for (val of minutesDrum.window(); track $index) {
+                      <div class="drum-item" [class.active]="val === minutesDrum.value()">
+                        @if (val !== null) {
+                          {{ val }}
+                        }
+                      </div>
+                    }
+                  </div>
                 </div>
+                <div
+                  class="drum-teeth-bottom"
+                  [style.background-position-x]="minutesDrum.teethOffset()"
+                ></div>
+                <div class="drum-center-indicator"></div>
               </div>
-              <div class="drum-teeth-bottom" [style.background-position-x]="weightTeethOffset()"></div>
-              <div class="drum-center-indicator"></div>
+
+              <div
+                class="flex items-center gap-1 bg-slate-950/60 border border-secondary/20 rounded-xl px-3 py-1.5"
+              >
+                <input
+                  type="number"
+                  step="1"
+                  min="0"
+                  max="240"
+                  [ngModel]="minutesDrum.value()"
+                  (ngModelChange)="setFromInput(minutesDrum, $event)"
+                  class="w-full bg-transparent text-white text-center font-black font-headline text-lg outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
+                <span class="text-[10px] text-on-surface-variant font-bold shrink-0">min</span>
+              </div>
             </div>
 
-            <div class="flex items-center gap-1 bg-slate-950/60 border border-secondary/20 rounded-xl px-3 py-1.5">
-              <input type="number" step="0.5" min="0" max="300"
-                     [ngModel]="weightValue()"
-                     (ngModelChange)="setWeightFromInput($event)"
-                     class="w-full bg-transparent text-white text-center font-black font-headline text-lg outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
-              <span class="text-[10px] text-on-surface-variant font-bold shrink-0">kg</span>
-            </div>
-          </div>
+            <!-- SECONDES WHEEL -->
+            <div class="flex flex-col gap-2">
+              <p
+                class="text-[10px] font-black tracking-[0.2em] text-on-surface-variant uppercase text-center"
+              >
+                {{ 'tresor.seconds' | t }}
+              </p>
 
-          <!-- REPS WHEEL -->
-          <div class="flex flex-col gap-2">
-            <p class="text-[10px] font-black tracking-[0.2em] text-on-surface-variant uppercase text-center">{{ 'tresor.reps' | t }}</p>
-
-            <div class="drum-wrapper"
-                 (mousedown)="startDrag($event, 'reps')"
-                 (touchstart)="startDrag($event, 'reps')">
-              <div class="drum-teeth-top" [style.background-position-x]="repsTeethOffset()"></div>
-              <div class="drum-track">
-                <div class="drum-strip" [style.transform]="repsTransform()">
-                  @for (val of repsWindow(); track $index) {
-                    <div class="drum-item" [class.active]="val === repsValue()">
-                      @if (val !== null) { {{ val }} }
-                    </div>
-                  }
+              <div
+                class="drum-wrapper"
+                (mousedown)="startDrag($event, secondesDrum)"
+                (touchstart)="startDrag($event, secondesDrum)"
+              >
+                <div
+                  class="drum-teeth-top"
+                  [style.background-position-x]="secondesDrum.teethOffset()"
+                ></div>
+                <div class="drum-track">
+                  <div class="drum-strip" [style.transform]="secondesDrum.transform()">
+                    @for (val of secondesDrum.window(); track $index) {
+                      <div class="drum-item" [class.active]="val === secondesDrum.value()">
+                        @if (val !== null) {
+                          {{ val }}
+                        }
+                      </div>
+                    }
+                  </div>
                 </div>
+                <div
+                  class="drum-teeth-bottom"
+                  [style.background-position-x]="secondesDrum.teethOffset()"
+                ></div>
+                <div class="drum-center-indicator"></div>
               </div>
-              <div class="drum-teeth-bottom" [style.background-position-x]="repsTeethOffset()"></div>
-              <div class="drum-center-indicator"></div>
+
+              <div
+                class="flex items-center gap-1 bg-slate-950/60 border border-secondary/20 rounded-xl px-3 py-1.5"
+              >
+                <input
+                  type="number"
+                  step="1"
+                  min="0"
+                  max="59"
+                  [ngModel]="secondesDrum.value()"
+                  (ngModelChange)="setFromInput(secondesDrum, $event)"
+                  class="w-full bg-transparent text-white text-center font-black font-headline text-lg outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
+                <span class="text-[10px] text-on-surface-variant font-bold shrink-0">s</span>
+              </div>
+            </div>
+          } @else {
+            <!-- POIDS WHEEL -->
+            <div class="flex flex-col gap-2">
+              <p
+                class="text-[10px] font-black tracking-[0.2em] text-on-surface-variant uppercase text-center"
+              >
+                {{
+                  (isBodyweightExercise(editingExercise()?.exerciseType)
+                    ? 'tresor.ballastKg'
+                    : 'tresor.weightKg'
+                  ) | t
+                }}
+              </p>
+
+              <div
+                class="drum-wrapper"
+                (mousedown)="startDrag($event, poidsDrum)"
+                (touchstart)="startDrag($event, poidsDrum)"
+              >
+                <div
+                  class="drum-teeth-top"
+                  [style.background-position-x]="poidsDrum.teethOffset()"
+                ></div>
+                <div class="drum-track">
+                  <div class="drum-strip" [style.transform]="poidsDrum.transform()">
+                    @for (val of poidsDrum.window(); track $index) {
+                      <div class="drum-item" [class.active]="val === poidsDrum.value()">
+                        @if (val !== null) {
+                          {{ formatWeight(val) }}
+                        }
+                      </div>
+                    }
+                  </div>
+                </div>
+                <div
+                  class="drum-teeth-bottom"
+                  [style.background-position-x]="poidsDrum.teethOffset()"
+                ></div>
+                <div class="drum-center-indicator"></div>
+              </div>
+
+              <div
+                class="flex items-center gap-1 bg-slate-950/60 border border-secondary/20 rounded-xl px-3 py-1.5"
+              >
+                <input
+                  type="number"
+                  step="0.5"
+                  min="0"
+                  max="300"
+                  [ngModel]="poidsDrum.value()"
+                  (ngModelChange)="setFromInput(poidsDrum, $event)"
+                  class="w-full bg-transparent text-white text-center font-black font-headline text-lg outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
+                <span class="text-[10px] text-on-surface-variant font-bold shrink-0">kg</span>
+              </div>
             </div>
 
-            <div class="flex items-center gap-1 bg-slate-950/60 border border-secondary/20 rounded-xl px-3 py-1.5">
-              <input type="number" step="1" min="1" max="36"
-                     [ngModel]="repsValue()"
-                     (ngModelChange)="setRepsFromInput($event)"
-                     class="w-full bg-transparent text-white text-center font-black font-headline text-lg outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
-              <span class="text-[10px] text-on-surface-variant font-bold shrink-0">reps</span>
+            <!-- REPS WHEEL -->
+            <div class="flex flex-col gap-2">
+              <p
+                class="text-[10px] font-black tracking-[0.2em] text-on-surface-variant uppercase text-center"
+              >
+                {{ 'tresor.reps' | t }}
+              </p>
+
+              <div
+                class="drum-wrapper"
+                (mousedown)="startDrag($event, repsDrum)"
+                (touchstart)="startDrag($event, repsDrum)"
+              >
+                <div
+                  class="drum-teeth-top"
+                  [style.background-position-x]="repsDrum.teethOffset()"
+                ></div>
+                <div class="drum-track">
+                  <div class="drum-strip" [style.transform]="repsDrum.transform()">
+                    @for (val of repsDrum.window(); track $index) {
+                      <div class="drum-item" [class.active]="val === repsDrum.value()">
+                        @if (val !== null) {
+                          {{ val }}
+                        }
+                      </div>
+                    }
+                  </div>
+                </div>
+                <div
+                  class="drum-teeth-bottom"
+                  [style.background-position-x]="repsDrum.teethOffset()"
+                ></div>
+                <div class="drum-center-indicator"></div>
+              </div>
+
+              <div
+                class="flex items-center gap-1 bg-slate-950/60 border border-secondary/20 rounded-xl px-3 py-1.5"
+              >
+                <input
+                  type="number"
+                  step="1"
+                  min="1"
+                  max="36"
+                  [ngModel]="repsDrum.value()"
+                  (ngModelChange)="setFromInput(repsDrum, $event)"
+                  class="w-full bg-transparent text-white text-center font-black font-headline text-lg outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
+                <span class="text-[10px] text-on-surface-variant font-bold shrink-0">reps</span>
+              </div>
             </div>
-          </div>
+          }
         </div>
 
         <!-- Hint -->
-        <p class="text-[9px] text-on-surface-variant/50 text-center tracking-widest uppercase flex items-center justify-center gap-1">
+        <p
+          class="text-[9px] text-on-surface-variant/50 text-center tracking-widest uppercase flex items-center justify-center gap-1"
+        >
           <span class="material-symbols-outlined text-sm">swipe</span>
           {{ 'tresor.dragHint' | t }}
         </p>
 
         <!-- Live preview -->
-        @if (preview1RM()) {
+        @if (editedIsCourse() && previewVitesse()) {
           <div class="bg-slate-950/60 rounded-2xl p-4 border border-secondary/15">
             <div class="grid grid-cols-2 gap-4 text-center">
               <div>
-                <p class="text-[9px] text-on-surface-variant tracking-widest uppercase mb-1">{{ 'tresor.rm1Estimated' | t }}</p>
+                <p class="text-[9px] text-on-surface-variant tracking-widest uppercase mb-1">
+                  {{ 'tresor.averageSpeed' | t }}
+                </p>
                 <p class="text-2xl font-black font-headline text-white">
-                  {{ preview1RM() }}<span class="text-xs font-normal text-on-surface-variant">kg</span>
+                  {{ previewVitesse()
+                  }}<span class="text-xs font-normal text-on-surface-variant">km/h</span>
+                </p>
+                <p class="text-[9px] text-on-surface-variant mt-1">
+                  {{ 'tresor.pace' | t }} {{ previewAllure() }}/km
                 </p>
               </div>
               <div>
-                <p class="text-[9px] text-on-surface-variant tracking-widest uppercase mb-1">{{ 'profile.tier' | t }}</p>
+                <p class="text-[9px] text-on-surface-variant tracking-widest uppercase mb-1">
+                  {{ 'profile.tier' | t }}
+                </p>
+                <div class="flex justify-center">
+                  <div class="tier-badge" [class]="tierClass(previewTier().level)">
+                    {{ previewTier().name }}
+                  </div>
+                </div>
+                <p class="text-[9px] text-on-surface-variant mt-1">
+                  {{ formatChrono(tempsSaisiSecondes()) }}
+                </p>
+              </div>
+            </div>
+          </div>
+        } @else if (preview1RM()) {
+          <div class="bg-slate-950/60 rounded-2xl p-4 border border-secondary/15">
+            <div class="grid grid-cols-2 gap-4 text-center">
+              <div>
+                <p class="text-[9px] text-on-surface-variant tracking-widest uppercase mb-1">
+                  {{ 'tresor.rm1Estimated' | t }}
+                </p>
+                <p class="text-2xl font-black font-headline text-white">
+                  {{ preview1RM()
+                  }}<span class="text-xs font-normal text-on-surface-variant">kg</span>
+                </p>
+              </div>
+              <div>
+                <p class="text-[9px] text-on-surface-variant tracking-widest uppercase mb-1">
+                  {{ 'profile.tier' | t }}
+                </p>
                 <div class="flex justify-center">
                   <div class="tier-badge" [class]="tierClass(previewTier().level)">
                     {{ previewTier().name }}
                   </div>
                 </div>
                 @if (previewRatio()) {
-                  <p class="text-[9px] text-on-surface-variant mt-1">{{ 'tresor.ratio' | t }} {{ previewRatio() }}×</p>
+                  <p class="text-[9px] text-on-surface-variant mt-1">
+                    {{ 'tresor.ratio' | t }} {{ previewRatio() }}×
+                  </p>
                 }
               </div>
             </div>
           </div>
-        } @else if (!preview1RM()) {
+        } @else {
           <div class="bg-slate-950/60 rounded-2xl p-4 border border-white/5 text-center">
-            <p class="text-xs text-on-surface-variant">{{ 'tresor.selectWeightReps' | t }}</p>
+            <p class="text-xs text-on-surface-variant">
+              {{ (editedIsCourse() ? 'tresor.selectTime' : 'tresor.selectWeightReps') | t }}
+            </p>
           </div>
         }
 
         <!-- Action buttons -->
         <div class="flex gap-3">
-          <button (click)="closeModal()"
-                  class="flex-1 py-3 rounded-xl border border-white/10 text-on-surface-variant text-xs font-bold tracking-widest uppercase hover:bg-white/5 transition-colors">
+          <button
+            (click)="closeModal()"
+            class="flex-1 py-3 rounded-xl border border-white/10 text-on-surface-variant text-xs font-bold tracking-widest uppercase hover:bg-white/5 transition-colors"
+          >
             {{ 'common.cancel' | t }}
           </button>
-          <button (click)="submitRecord()"
-                  [disabled]="isSaving() || (isBodyweightExercise(editingExercise()?.exerciseType) && !summary()?.poidsCorps)"
-                  class="flex-1 py-3 rounded-xl bg-gradient-to-r from-secondary to-[#c77a30] text-slate-950 font-black text-xs tracking-widest uppercase hover:opacity-90 transition-opacity active:scale-95 disabled:opacity-40">
-            @if (isSaving()) { … } @else { {{ 'common.confirm' | t }} }
+          <button
+            (click)="submitRecord()"
+            [disabled]="
+              isSaving() ||
+              (editedIsCourse() && tempsSaisiSecondes() <= 0) ||
+              (!editedIsCourse() &&
+                isBodyweightExercise(editingExercise()?.exerciseType) &&
+                !summary()?.poidsCorps)
+            "
+            class="flex-1 py-3 rounded-xl bg-gradient-to-r from-secondary to-[#c77a30] text-slate-950 font-black text-xs tracking-widest uppercase hover:opacity-90 transition-opacity active:scale-95 disabled:opacity-40"
+          >
+            @if (isSaving()) {
+              …
+            } @else {
+              {{ 'common.confirm' | t }}
+            }
           </button>
         </div>
       </div>
@@ -385,20 +706,31 @@
 
 <!-- ═══════════════ MODAL ÉCHELLE DES PALIERS ═══════════════ -->
 @if (showTiersModal()) {
-  <div class="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4"
-       (click)="closeTiersModal()">
-
+  <div
+    class="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4"
+    (click)="closeTiersModal()"
+  >
     <div class="absolute inset-0 bg-slate-950/85 backdrop-blur-sm"></div>
 
-    <div class="relative w-full max-w-sm bg-slate-900 border border-secondary/25 rounded-3xl overflow-hidden shadow-2xl animate-in slide-in-from-bottom-4 duration-300 max-h-[80vh] flex flex-col"
-         (click)="$event.stopPropagation()">
-
-      <div class="flex items-center justify-between px-6 pt-6 pb-4 border-b border-white/5 shrink-0">
+    <div
+      class="relative w-full max-w-sm bg-slate-900 border border-secondary/25 rounded-3xl overflow-hidden shadow-2xl animate-in slide-in-from-bottom-4 duration-300 max-h-[80vh] flex flex-col"
+      (click)="$event.stopPropagation()"
+    >
+      <div
+        class="flex items-center justify-between px-6 pt-6 pb-4 border-b border-white/5 shrink-0"
+      >
         <div>
-          <p class="text-[10px] text-on-surface-variant tracking-[0.2em] uppercase mb-0.5">{{ 'tresor.scale' | t }}</p>
-          <h3 class="text-lg font-black text-white tracking-widest uppercase font-headline">{{ 'tresor.eightTiers' | t }}</h3>
+          <p class="text-[10px] text-on-surface-variant tracking-[0.2em] uppercase mb-0.5">
+            {{ 'tresor.scale' | t }}
+          </p>
+          <h3 class="text-lg font-black text-white tracking-widest uppercase font-headline">
+            {{ 'tresor.eightTiers' | t }}
+          </h3>
         </div>
-        <button (click)="closeTiersModal()" class="text-on-surface-variant hover:text-white transition-colors">
+        <button
+          (click)="closeTiersModal()"
+          class="text-on-surface-variant hover:text-white transition-colors"
+        >
           <span class="material-symbols-outlined">close</span>
         </button>
       </div>
@@ -406,14 +738,23 @@
       <div class="p-6 overflow-y-auto">
         @for (group of tierGroups; track group.cat) {
           <div class="mb-5 last:mb-0">
-            <p class="text-on-surface-variant text-[9px] uppercase tracking-widest font-bold mb-2">{{ group.cat }}</p>
+            <p class="text-on-surface-variant text-[9px] uppercase tracking-widest font-bold mb-2">
+              {{ group.cat }}
+            </p>
             <div class="space-y-2">
               @for (t of group.tiers; track t.level) {
                 <div [class]="'tier-row tier-' + t.level">
-                  <img [src]="tierBadge(t.level)" [alt]="t.name" class="tier-row-badge">
+                  <img [src]="tierBadge(t.level)" [alt]="t.name" class="tier-row-badge" />
                   <div class="flex-1 min-w-0">
-                    <p class="font-black font-headline text-sm uppercase tracking-wide" [style.color]="'var(--tier-color)'">{{ t.name }}</p>
-                    <p class="text-on-surface-variant text-[10px] uppercase tracking-wider">{{ 'profile.tier' | t }} {{ t.level }}/8</p>
+                    <p
+                      class="font-black font-headline text-sm uppercase tracking-wide"
+                      [style.color]="'var(--tier-color)'"
+                    >
+                      {{ t.name }}
+                    </p>
+                    <p class="text-on-surface-variant text-[10px] uppercase tracking-wider">
+                      {{ 'profile.tier' | t }} {{ t.level }}/8
+                    </p>
                   </div>
                 </div>
               }

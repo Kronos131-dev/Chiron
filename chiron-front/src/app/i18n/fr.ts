@@ -695,6 +695,13 @@ export const fr: Record<string, string> = {
   'tresor.rm1Estimated': '1RM Estimé',
   'tresor.ratio': 'ratio',
   'tresor.selectWeightReps': 'Sélectionne ton poids et tes reps',
+  'tresor.selectTime': 'Sélectionne ton chrono',
+  'tresor.chrono': 'Chrono',
+  'tresor.pace': 'Allure',
+  'tresor.speed': 'Vitesse',
+  'tresor.averageSpeed': 'Vitesse moyenne',
+  'tresor.minutes': 'Minutes',
+  'tresor.seconds': 'Secondes',
   'tresor.scale': 'Échelle',
   'tresor.eightTiers': 'Les 8 paliers',
 

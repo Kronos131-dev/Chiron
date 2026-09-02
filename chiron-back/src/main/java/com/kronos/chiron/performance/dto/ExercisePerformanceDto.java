@@ -17,6 +17,8 @@ public class ExercisePerformanceDto {
     private String nom;
     private Double poids;
     private Integer nombreReps;
+    private Integer tempsSecondes;
+    private Double distanceKm;
     private Double rm1Estime;
     private Double ratioPerformance;
     private Double poidsCorporel;

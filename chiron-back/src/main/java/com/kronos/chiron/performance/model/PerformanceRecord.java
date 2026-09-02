@@ -29,13 +29,16 @@ public class PerformanceRecord {
     @Column(name = "exercise_type", nullable = false, length = 50)
     private ExerciseType exerciseType;
 
-    @Column(nullable = false)
+    @Column
     private Double poids;
 
-    @Column(name = "nombre_reps", nullable = false)
+    @Column(name = "nombre_reps")
     private Integer nombreReps;
 
-    @Column(name = "rm1_estime", nullable = false)
+    @Column(name = "temps_secondes")
+    private Integer tempsSecondes;
+
+    @Column(name = "rm1_estime")
     private Double rm1Estime;
 
     @Column(name = "ratio_performance")

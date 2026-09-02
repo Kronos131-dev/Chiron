@@ -30,6 +30,11 @@ import java.util.stream.Collectors;
 @Slf4j
 public class PerformanceServiceImpl implements PerformanceService {
 
+    // WHY: borne de vraisemblance, pas de réglage. Le record du monde du 5 000 m tourne autour
+    // de 23,8 km/h et celui du 10 km sur route autour de 22,7 : au-delà, ce n'est plus une
+    // course, c'est un chrono saisi en minutes dans un champ qui attend des secondes.
+    private static final double VITESSE_MAX_KMH = 25.0;
+
     private final PerformanceRecordRepository performanceRecordRepository;
     private final UtilisateurRepository utilisateurRepository;
     private final NutritionService nutritionService;
@@ -59,24 +64,11 @@ public class PerformanceServiceImpl implements PerformanceService {
     public PerformanceSummaryDto addRecord(String username, PerformanceRecordDto dto) {
         Utilisateur user = findUser(username);
         ExerciseType type = parseExerciseType(dto.getExerciseType());
-
-        if (dto.getNombreReps() < 1 || dto.getNombreReps() > 36) {
-            throw badRequest("Le nombre de répétitions doit être entre 1 et 36.");
-        }
-
         Double poidsCorps = user.getPoidsCorps();
-        double rm1 = calculateRm1(type, dto.getPoids(), dto.getNombreReps(), poidsCorps);
-        Double ratio = (poidsCorps != null && poidsCorps > 0) ? computeRatio(rm1, poidsCorps) : null;
 
-        PerformanceRecord record = PerformanceRecord.builder()
-                .utilisateur(user)
-                .exerciseType(type)
-                .poids(dto.getPoids())
-                .nombreReps(dto.getNombreReps())
-                .rm1Estime(rm1)
-                .ratioPerformance(ratio)
-                .poidsCorporel(poidsCorps)
-                .build();
+        PerformanceRecord record = type.isCourse()
+                ? nouvelleCourse(user, type, dto, poidsCorps)
+                : nouvelleCharge(user, type, dto, poidsCorps);
 
         performanceRecordRepository.saveAndFlush(record);
 
@@ -90,6 +82,53 @@ public class PerformanceServiceImpl implements PerformanceService {
                 .overallTierCategorie(overall.getCategorie())
                 .poidsCorps(poidsCorps)
                 .exercises(exercises)
+                .build();
+    }
+
+    private PerformanceRecord nouvelleCharge(Utilisateur user, ExerciseType type, PerformanceRecordDto dto,
+            Double poidsCorps) {
+        if (dto.getPoids() == null) {
+            throw badRequest("La charge soulevée doit être renseignée.");
+        }
+        if (dto.getNombreReps() == null || dto.getNombreReps() < 1 || dto.getNombreReps() > 36) {
+            throw badRequest("Le nombre de répétitions doit être entre 1 et 36.");
+        }
+
+        double rm1 = calculateRm1(type, dto.getPoids(), dto.getNombreReps(), poidsCorps);
+        Double ratio = (poidsCorps != null && poidsCorps > 0) ? computeRatio(rm1, poidsCorps) : null;
+
+        return PerformanceRecord.builder()
+                .utilisateur(user)
+                .exerciseType(type)
+                .poids(dto.getPoids())
+                .nombreReps(dto.getNombreReps())
+                .rm1Estime(rm1)
+                .ratioPerformance(ratio)
+                .poidsCorporel(poidsCorps)
+                .build();
+    }
+
+    // WHY: le palier d'une course ne dépend pas du poids de corps — un chrono se suffit à
+    // lui-même. La vitesse moyenne tient donc lieu de ratio, et le classement fonctionne même
+    // pour un athlète qui n'a jamais renseigné sa masse.
+    private PerformanceRecord nouvelleCourse(Utilisateur user, ExerciseType type, PerformanceRecordDto dto,
+            Double poidsCorps) {
+        Integer temps = dto.getTempsSecondes();
+        if (temps == null || temps <= 0) {
+            throw badRequest("Le temps de course doit être renseigné, en secondes.");
+        }
+
+        double vitesse = type.vitesseKmh(temps);
+        if (vitesse > VITESSE_MAX_KMH) {
+            throw badRequest("Ce chrono dépasse le record du monde de la distance : vérifie la saisie.");
+        }
+
+        return PerformanceRecord.builder()
+                .utilisateur(user)
+                .exerciseType(type)
+                .tempsSecondes(temps)
+                .ratioPerformance(round2(vitesse))
+                .poidsCorporel(poidsCorps)
                 .build();
     }
 
@@ -130,9 +169,7 @@ public class PerformanceServiceImpl implements PerformanceService {
                 .findByUtilisateurIdAndExerciseTypeOrderByRecordedAtDesc(user.getId(), type)
                 .stream()
                 .map(r -> {
-                    Double ratio = (poidsCorps != null && poidsCorps > 0)
-                            ? round2(computeRatio(r.getRm1Estime(), poidsCorps))
-                            : r.getRatioPerformance();
+                    Double ratio = ratioCourant(type, r, poidsCorps);
                     return toDto(r, tierForRatio(type, ratio), ratio);
                 })
                 .collect(Collectors.toList());
@@ -157,6 +194,7 @@ public class PerformanceServiceImpl implements PerformanceService {
             return ExercisePerformanceDto.builder()
                     .exerciseType(type.name())
                     .nom(type.getNom())
+                    .distanceKm(type.getDistanceKm())
                     .tier(ephebe.getNom())
                     .tierLevel(ephebe.getLevel())
                     .tierCategorie(ephebe.getCategorie())
@@ -164,15 +202,23 @@ public class PerformanceServiceImpl implements PerformanceService {
         }
 
         PerformanceRecord r = best.get();
-
-        // WHY: le ratio et le palier se calculent sur le poids de corps courant, pas sur celui
-        // figé dans l'enregistrement — sinon un athlète qui prend du poids garde son ancien palier.
-        Double currentRatio = (poidsCorps != null && poidsCorps > 0)
-                ? round2(computeRatio(r.getRm1Estime(), poidsCorps))
-                : null;
-
+        Double currentRatio = ratioCourant(type, r, poidsCorps);
         PerformanceTier tier = tierForRatio(type, currentRatio);
         return toDto(r, tier, currentRatio);
+    }
+
+    // WHY: pour une barre, le ratio et le palier se recalculent sur le poids de corps courant et
+    // non sur celui figé dans l'enregistrement — sinon un athlète qui prend du poids garde son
+    // ancien palier. Pour une course, la vitesse enregistrée est définitive : le poids de corps
+    // n'entre pas dans le calcul.
+    private Double ratioCourant(ExerciseType type, PerformanceRecord record, Double poidsCorps) {
+        if (type.isCourse()) {
+            return record.getRatioPerformance();
+        }
+        if (record.getRm1Estime() == null || poidsCorps == null || poidsCorps <= 0) {
+            return null;
+        }
+        return round2(computeRatio(record.getRm1Estime(), poidsCorps));
     }
 
     private ExercisePerformanceDto toDto(PerformanceRecord r, PerformanceTier tier, Double ratio) {
@@ -181,7 +227,9 @@ public class PerformanceServiceImpl implements PerformanceService {
                 .nom(r.getExerciseType().getNom())
                 .poids(r.getPoids())
                 .nombreReps(r.getNombreReps())
-                .rm1Estime(round2(r.getRm1Estime()))
+                .tempsSecondes(r.getTempsSecondes())
+                .distanceKm(r.getExerciseType().getDistanceKm())
+                .rm1Estime(r.getRm1Estime() != null ? round2(r.getRm1Estime()) : null)
                 .ratioPerformance(ratio)
                 .poidsCorporel(r.getPoidsCorporel())
                 .tier(tier.getNom())

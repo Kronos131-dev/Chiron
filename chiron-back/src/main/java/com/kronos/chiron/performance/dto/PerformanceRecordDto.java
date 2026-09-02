@@ -14,4 +14,5 @@ public class PerformanceRecordDto {
     private String exerciseType;
     private Double poids;
     private Integer nombreReps;
+    private Integer tempsSecondes;
 }

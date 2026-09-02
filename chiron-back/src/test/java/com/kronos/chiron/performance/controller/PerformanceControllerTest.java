@@ -61,7 +61,8 @@ class PerformanceControllerTest {
     @Test
     void addRecord_validData_returns200() throws Exception {
         when(performanceService.addRecord(eq("alice"), any())).thenReturn(buildSummary());
-        PerformanceRecordDto dto = new PerformanceRecordDto("DEVELOPPE_COUCHE", 100.0, 5);
+        PerformanceRecordDto dto = PerformanceRecordDto.builder().exerciseType("DEVELOPPE_COUCHE").poids(100.0)
+                .nombreReps(5).build();
 
         mockMvc.perform(post("/api/performance/alice/record")
                 .contentType(MediaType.APPLICATION_JSON)

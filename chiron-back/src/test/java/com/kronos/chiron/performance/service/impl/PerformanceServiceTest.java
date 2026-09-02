@@ -159,7 +159,8 @@ class PerformanceServiceTest {
 
     @Test
     void addRecord_validData_savesRecord() {
-        PerformanceRecordDto dto = new PerformanceRecordDto("DEVELOPPE_COUCHE", 100.0, 5);
+        PerformanceRecordDto dto = PerformanceRecordDto.builder().exerciseType("DEVELOPPE_COUCHE").poids(100.0)
+                .nombreReps(5).build();
         when(performanceRecordRepository.saveAndFlush(any())).thenAnswer(inv -> inv.getArgument(0));
 
         performanceService.addRecord("athlete", dto);
@@ -172,7 +173,8 @@ class PerformanceServiceTest {
 
     @Test
     void addRecord_invalidReps_zero_throwsException() {
-        PerformanceRecordDto dto = new PerformanceRecordDto("SQUAT", 100.0, 0);
+        PerformanceRecordDto dto = PerformanceRecordDto.builder().exerciseType("SQUAT").poids(100.0).nombreReps(0)
+                .build();
         assertThatThrownBy(() -> performanceService.addRecord("athlete", dto))
                 .isInstanceOfSatisfying(ErrorResponseException.class,
                         e -> assertThat(e.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST));
@@ -180,7 +182,8 @@ class PerformanceServiceTest {
 
     @Test
     void addRecord_invalidReps_tooHigh_throwsException() {
-        PerformanceRecordDto dto = new PerformanceRecordDto("SQUAT", 100.0, 37);
+        PerformanceRecordDto dto = PerformanceRecordDto.builder().exerciseType("SQUAT").poids(100.0).nombreReps(37)
+                .build();
         assertThatThrownBy(() -> performanceService.addRecord("athlete", dto))
                 .isInstanceOfSatisfying(ErrorResponseException.class,
                         e -> assertThat(e.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST));
@@ -188,7 +191,8 @@ class PerformanceServiceTest {
 
     @Test
     void addRecord_unknownExerciseType_throwsException() {
-        PerformanceRecordDto dto = new PerformanceRecordDto("UNKNOWN_EX", 100.0, 5);
+        PerformanceRecordDto dto = PerformanceRecordDto.builder().exerciseType("UNKNOWN_EX").poids(100.0).nombreReps(5)
+                .build();
         assertThatThrownBy(() -> performanceService.addRecord("athlete", dto))
                 .isInstanceOfSatisfying(ErrorResponseException.class,
                         e -> assertThat(e.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST))
@@ -197,7 +201,8 @@ class PerformanceServiceTest {
 
     @Test
     void addRecord_withBodyweight_computesRatio() {
-        PerformanceRecordDto dto = new PerformanceRecordDto("DEVELOPPE_COUCHE", 80.0, 1);
+        PerformanceRecordDto dto = PerformanceRecordDto.builder().exerciseType("DEVELOPPE_COUCHE").poids(80.0)
+                .nombreReps(1).build();
         when(performanceRecordRepository.saveAndFlush(any())).thenAnswer(inv -> inv.getArgument(0));
 
         performanceService.addRecord("athlete", dto);
@@ -209,12 +214,93 @@ class PerformanceServiceTest {
     @Test
     void addRecord_noBodyweight_ratioIsNull() {
         user.setPoidsCorps(null);
-        PerformanceRecordDto dto = new PerformanceRecordDto("DEVELOPPE_COUCHE", 80.0, 1);
+        PerformanceRecordDto dto = PerformanceRecordDto.builder().exerciseType("DEVELOPPE_COUCHE").poids(80.0)
+                .nombreReps(1).build();
         when(performanceRecordRepository.saveAndFlush(any())).thenAnswer(inv -> inv.getArgument(0));
 
         performanceService.addRecord("athlete", dto);
 
         verify(performanceRecordRepository).saveAndFlush(argThat(r -> r.getRatioPerformance() == null));
+    }
+
+    // --- addRecord : les courses ---
+
+    // WHY: un chrono ne se compare pas à un poids de corps. La vitesse moyenne tient lieu de
+    // ratio, et le classement fonctionne pour un athlète qui n'a jamais renseigné sa masse.
+    @Test
+    void addRecord_course_storesTimeAndSpeedInsteadOfLoad() {
+        // Given
+        user.setPoidsCorps(null);
+        PerformanceRecordDto dto = PerformanceRecordDto.builder()
+                .exerciseType("COURSE_5KM").tempsSecondes(1500).build();
+        when(performanceRecordRepository.saveAndFlush(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        // When
+        performanceService.addRecord("athlete", dto);
+
+        // Then
+        verify(performanceRecordRepository).saveAndFlush(argThat(r -> r.getTempsSecondes() == 1500
+                && r.getRatioPerformance() == 12.0
+                && r.getPoids() == null
+                && r.getNombreReps() == null
+                && r.getRm1Estime() == null));
+    }
+
+    @Test
+    void addRecord_courseWithoutTime_throwsException() {
+        // Given
+        PerformanceRecordDto dto = PerformanceRecordDto.builder().exerciseType("COURSE_10KM").build();
+
+        // When / Then
+        assertThatThrownBy(() -> performanceService.addRecord("athlete", dto))
+                .isInstanceOfSatisfying(ErrorResponseException.class,
+                        e -> assertThat(e.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST));
+    }
+
+    // WHY: 15 minutes sur 10 km, c'est 40 km/h — une saisie en minutes dans un champ qui attend
+    // des secondes, pas une performance.
+    @Test
+    void addRecord_courseFasterThanTheWorldRecord_throwsException() {
+        // Given
+        PerformanceRecordDto dto = PerformanceRecordDto.builder()
+                .exerciseType("COURSE_10KM").tempsSecondes(900).build();
+
+        // When / Then
+        assertThatThrownBy(() -> performanceService.addRecord("athlete", dto))
+                .isInstanceOfSatisfying(ErrorResponseException.class,
+                        e -> assertThat(e.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST));
+    }
+
+    @Test
+    void tierForRatio_course5kmAtTwelveKilometresPerHour_isMyrmidon() {
+        assertThat(performanceService.tierForRatio(ExerciseType.COURSE_5KM, 12.0))
+                .isEqualTo(PerformanceTier.MYRMIDON);
+    }
+
+    @Test
+    void getSummary_courseRecord_keepsSpeedAsRatioWhateverTheBodyweight() {
+        // Given
+        user.setPoidsCorps(120.0);
+        PerformanceRecord course = PerformanceRecord.builder()
+                .exerciseType(ExerciseType.COURSE_5KM)
+                .tempsSecondes(1500)
+                .ratioPerformance(12.0)
+                .recordedAt(LocalDateTime.now())
+                .build();
+        when(performanceRecordRepository.findLatestPerExerciseTypeForUser(1L)).thenReturn(List.of(course));
+
+        // When
+        PerformanceSummaryDto summary = performanceService.getSummary("athlete");
+
+        // Then
+        ExercisePerformanceDto dto = summary.getExercises().stream()
+                .filter(e -> "COURSE_5KM".equals(e.getExerciseType()))
+                .findFirst()
+                .orElseThrow();
+        assertThat(dto.getRatioPerformance()).isEqualTo(12.0);
+        assertThat(dto.getTempsSecondes()).isEqualTo(1500);
+        assertThat(dto.getDistanceKm()).isEqualTo(5.0);
+        assertThat(dto.getTierLevel()).isEqualTo(PerformanceTier.MYRMIDON.getLevel());
     }
 
     // --- updateBodyweight ---
