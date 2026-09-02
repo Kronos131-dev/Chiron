@@ -28,6 +28,12 @@ public class ActiviteEnrichissementServiceImpl implements ActiviteEnrichissement
     private static final Duration[] BACKOFF = {Duration.ofMinutes(2), Duration.ofMinutes(10),
             Duration.ofMinutes(30), Duration.ofHours(2), Duration.ofHours(6)};
 
+    // WHY: la séance est poussée vers Google Health au moment même où elle se termine, et c'est
+    // Google qui construit ensuite l'activité autour de l'intervalle qu'on lui a donné — calories,
+    // fréquence moyenne, minutes de zone. Interroger dans la seconde ne ramenait donc jamais que
+    // l'enveloppe qu'on venait d'écrire. La première tentative attend que le calcul ait eu lieu.
+    private static final Duration DELAI_CALCUL_GOOGLE = Duration.ofMinutes(5);
+
     private final SanteActiviteRepository santeActiviteRepository;
     private final FitbitService fitbitService;
     private final SanteSyncService santeSyncService;
@@ -47,9 +53,24 @@ public class ActiviteEnrichissementServiceImpl implements ActiviteEnrichissement
                 .endTime(seance.getEndTime())
                 .statutEnrichissement(StatutEnrichissement.EN_ATTENTE)
                 .tentativesEnrichissement(0)
-                .prochaineTentativeAt(LocalDateTime.now(clock))
+                .prochaineTentativeAt(LocalDateTime.now(clock).plus(DELAI_CALCUL_GOOGLE))
                 .build();
         santeActiviteRepository.save(activite);
+    }
+
+    @Override
+    @Transactional
+    public void enregistrerPousseeGoogle(Long seanceId, String externalId) {
+        if (seanceId == null) return;
+        santeActiviteRepository.findBySeanceId(seanceId).ifPresent(activite -> {
+            activite.setPousseGoogle(true);
+            if (externalId != null && !externalId.isBlank() && activite.getExternalId() == null) {
+                activite.setExternalId(externalId);
+            }
+            santeActiviteRepository.save(activite);
+            log.info("SANTE_ACTIVITE_POUSSEE activiteId={} externalId={}", activite.getId(),
+                    activite.getExternalId());
+        });
     }
 
     @Override

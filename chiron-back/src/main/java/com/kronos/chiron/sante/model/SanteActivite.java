@@ -83,6 +83,15 @@ public class SanteActivite {
     @Column(name = "external_id")
     private String externalId;
 
+    // WHY: dit que CETTE ligne est une séance qu'on a écrite dans Google Health, et pas un
+    // exercice que la montre a détecté toute seule. C'est ce qui autorise à recopier les
+    // chiffres que Google republie : il les a calculés sur l'intervalle qu'on lui a donné.
+    // L'externalId ne suffirait pas — la synchronisation le remplit aussi depuis un exercice
+    // détecté, sur une fenêtre plus courte que la vraie séance.
+    @Column(name = "pousse_google", nullable = false)
+    @Builder.Default
+    private boolean pousseGoogle = false;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "statut_enrichissement", nullable = false, length = 32)
     private StatutEnrichissement statutEnrichissement;

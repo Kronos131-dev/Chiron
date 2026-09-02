@@ -493,6 +493,26 @@ class GoogleHealthParserTest {
         assertThat(GoogleHealthParser.exerciseSessions(node)).isEmpty();
     }
 
+    // WHY: c'est ce nom qui relie la séance qu'on a poussée à l'exercice que Google finit par
+    // calculer autour d'elle. La forme exacte de la réponse de création n'étant pas documentée,
+    // le parseur accepte le point à plat comme enveloppé.
+    @Test
+    void dataPointName_readsTheCreatedDataPointIdentifier() {
+        assertThat(GoogleHealthParser.dataPointName(
+                json.readTree("{\"name\":\"users/me/dataTypes/exercise/dataPoints/7\"}")))
+                .isEqualTo("users/me/dataTypes/exercise/dataPoints/7");
+        assertThat(GoogleHealthParser.dataPointName(json.readTree("{\"dataPoint\":{\"name\":\"abc\"}}")))
+                .isEqualTo("abc");
+        assertThat(GoogleHealthParser.dataPointName(json.readTree("{\"dataPointId\":\"xyz\"}"))).isEqualTo("xyz");
+    }
+
+    @Test
+    void dataPointName_responseWithoutIdentifier_isNull() {
+        assertThat(GoogleHealthParser.dataPointName(json.readTree("{}"))).isNull();
+        assertThat(GoogleHealthParser.dataPointName(json.readTree("{\"name\":\"  \"}"))).isNull();
+        assertThat(GoogleHealthParser.dataPointName(null)).isNull();
+    }
+
     @Test
     void nextPageToken_presentAndAbsent() {
         assertThat(GoogleHealthParser.nextPageToken(json.readTree("{\"nextPageToken\":\"abc\"}"))).isEqualTo("abc");

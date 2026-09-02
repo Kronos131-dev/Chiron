@@ -320,6 +320,66 @@ class SanteSyncServiceImplTest {
                 .findByUtilisateurAndStartTimeAndSource(any(), any(), any());
     }
 
+    // WHY: depuis qu'on pousse la séance vers Google Health, l'exercice que Google republie
+    // n'est plus forcément une détection de la montre : c'est parfois celui qu'on lui a écrit,
+    // calculé sur NOTRE intervalle exact. Ses calories et sa fréquence moyenne portent alors sur
+    // la bonne durée, viennent du capteur, et vont au journal telles quelles.
+    @Test
+    void syncRecent_exerciseIsTheSeanceWePushed_copiesGoogleMeasurementsIntoTheJournal() {
+        // Given
+        SanteActivite chironRow = SanteActivite.builder().id(9L).utilisateur(user)
+                .source(SourceActivite.CHIRON_MUSCU).typeActivite(TypeActivite.MUSCULATION)
+                .startTime(java.time.LocalDateTime.of(2026, 8, 17, 20, 0))
+                .endTime(java.time.LocalDateTime.of(2026, 8, 17, 21, 15))
+                .externalId("users/x/dataTypes/exercise/dataPoints/1")
+                .pousseGoogle(true)
+                .caloriesEstimees(true)
+                .statutEnrichissement(StatutEnrichissement.EN_ATTENTE).build();
+        when(fitbitService.getValidToken("athlete")).thenReturn("token");
+        when(fitbitClient.listDataPoints(eq("token"), eq(GoogleHealthDataType.EXERCISE), any(), any()))
+                .thenReturn(new tools.jackson.databind.json.JsonMapper().readTree(EXERCICE_MUSCU_JSON));
+        when(santeActiviteRepository.findFirstByUtilisateurAndSourceAndStartTimeLessThanAndEndTimeGreaterThan(
+                eq(user), eq(SourceActivite.CHIRON_MUSCU), any(), any())).thenReturn(Optional.of(chironRow));
+
+        // When
+        santeSyncService.syncRecent("athlete", 1);
+
+        // Then
+        assertThat(chironRow.getCalories()).isEqualTo(406);
+        assertThat(chironRow.isCaloriesEstimees()).isFalse();
+        assertThat(chironRow.getFcMoyenne()).isEqualTo(124.0);
+        assertThat(chironRow.getMinutesZoneBruleuse()).isEqualTo(46);
+        assertThat(chironRow.getStatutEnrichissement()).isEqualTo(StatutEnrichissement.COMPLET);
+        assertThat(chironRow.getProchaineTentativeAt()).isNull();
+        verify(santeActiviteRepository).save(chironRow);
+    }
+
+    // WHY: une séance d'avant la poussée peut tomber sur le même intervalle qu'un exercice
+    // détecté sans qu'on l'ait jamais écrite dans Google Health. Ses chiffres restent alors ceux
+    // que ActiviteFusionService recalcule sur les buckets de fréquence cardiaque.
+    @Test
+    void syncRecent_intervalMatchesButWeNeverPushedIt_leavesTheRecalculationToTheFusionService() {
+        // Given
+        SanteActivite chironRow = SanteActivite.builder().id(9L).utilisateur(user)
+                .source(SourceActivite.CHIRON_MUSCU).typeActivite(TypeActivite.MUSCULATION)
+                .startTime(java.time.LocalDateTime.of(2026, 8, 17, 20, 0))
+                .endTime(java.time.LocalDateTime.of(2026, 8, 17, 21, 15))
+                .statutEnrichissement(StatutEnrichissement.EN_ATTENTE).build();
+        when(fitbitService.getValidToken("athlete")).thenReturn("token");
+        when(fitbitClient.listDataPoints(eq("token"), eq(GoogleHealthDataType.EXERCISE), any(), any()))
+                .thenReturn(new tools.jackson.databind.json.JsonMapper().readTree(EXERCICE_MUSCU_JSON));
+        when(santeActiviteRepository.findFirstByUtilisateurAndSourceAndStartTimeLessThanAndEndTimeGreaterThan(
+                eq(user), eq(SourceActivite.CHIRON_MUSCU), any(), any())).thenReturn(Optional.of(chironRow));
+
+        // When
+        santeSyncService.syncRecent("athlete", 1);
+
+        // Then
+        assertThat(chironRow.getCalories()).isNull();
+        verify(activiteFusionService).fusionnerActivite(chironRow);
+        verify(santeActiviteRepository, org.mockito.Mockito.never()).save(any());
+    }
+
     @Test
     void syncRecent_exerciseOverlappingChironSeanceWithExternalIdAlready_doesNotOverwriteIt() {
         SanteActivite chironRow = SanteActivite.builder().id(9L).utilisateur(user)

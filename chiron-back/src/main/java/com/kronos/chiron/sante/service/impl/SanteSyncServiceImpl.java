@@ -33,6 +33,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -63,6 +64,8 @@ public class SanteSyncServiceImpl implements SanteSyncService {
     private static final String[] CANDIDATS_LIST = {"beatsPerMinute", "percentage", "breathsPerMinute", "bpm",
             "value"};
     private static final int TOLERANCE_CHEVAUCHEMENT_MINUTES = 5;
+
+    private static final int TOLERANCE_SEANCE_POUSSEE_SECONDES = 60;
 
     private final FitbitService fitbitService;
     private final FitbitClient fitbitClient;
@@ -436,8 +439,20 @@ public class SanteSyncServiceImpl implements SanteSyncService {
             // externalId ; les chiffres sont recalculés sur la vraie fenêtre Chiron par
             // ActiviteFusionService, à partir des buckets de fréquence cardiaque.
             SanteActivite activite = chironCorrespondante.get();
+            boolean seancePoussee = estLaSeancePoussee(activite, debut, fin);
             if (activite.getExternalId() == null) activite.setExternalId(brut.externalId());
             activiteFusionService.fusionnerActivite(activite);
+
+            // WHY: sauf quand l'exercice EST la séance qu'on a poussée. Google l'a alors calculé
+            // sur notre intervalle exact, celui qu'on lui a donné : ses calories et sa fréquence
+            // moyenne portent sur la bonne durée, et elles viennent du capteur plutôt que d'une
+            // reconstruction par tranches de cinq minutes. Ce sont elles qui vont au journal.
+            if (seancePoussee && brut.caloriesKcal() != null) {
+                appliquerMesuresGoogle(activite, brut);
+                santeActiviteRepository.save(activite);
+                log.info("SANTE_ACTIVITE_MESUREE_GOOGLE activiteId={} calories={} fc={}", activite.getId(),
+                        brut.caloriesKcal(), brut.fcMoyenne());
+            }
             return;
         }
 
@@ -460,6 +475,40 @@ public class SanteSyncServiceImpl implements SanteSyncService {
         activite.setChargeCardio(
                 ZoneCardiaque.chargeCardio(brut.minutesBruleuse(), brut.minutesCardio(), brut.minutesPic()));
         santeActiviteRepository.save(activite);
+    }
+
+    // WHY: deux conditions. Il faut d'abord qu'on ait écrit cette séance dans Google Health —
+    // l'identifiant seul ne le dirait pas, la synchronisation le remplit aussi depuis un exercice
+    // détecté. Il faut ensuite que les deux bornes de l'intervalle coïncident à la minute près,
+    // ce qu'un exercice détecté par la montre ne fait jamais : il démarre en retard et s'arrête
+    // en avance.
+    private boolean estLaSeancePoussee(SanteActivite activite, LocalDateTime debut, LocalDateTime fin) {
+        if (!activite.isPousseGoogle()) return false;
+        if (activite.getStartTime() == null || activite.getEndTime() == null) return false;
+        return ecartSecondes(activite.getStartTime(), debut) <= TOLERANCE_SEANCE_POUSSEE_SECONDES
+                && ecartSecondes(activite.getEndTime(), fin) <= TOLERANCE_SEANCE_POUSSEE_SECONDES;
+    }
+
+    private long ecartSecondes(LocalDateTime a, LocalDateTime b) {
+        return Math.abs(Duration.between(a, b).toSeconds());
+    }
+
+    private void appliquerMesuresGoogle(SanteActivite activite, GoogleHealthParser.ExerciceBrut brut) {
+        activite.setCalories(brut.caloriesKcal());
+        activite.setCaloriesEstimees(false);
+        if (brut.fcMoyenne() != null) activite.setFcMoyenne(brut.fcMoyenne());
+        if (brut.activeZoneMinutes() != null) activite.setMinutesZoneActive(brut.activeZoneMinutes());
+        if (brut.minutesBasse() != null) activite.setMinutesZoneBasse(brut.minutesBasse());
+        if (brut.minutesBruleuse() != null) activite.setMinutesZoneBruleuse(brut.minutesBruleuse());
+        if (brut.minutesCardio() != null) activite.setMinutesZoneCardio(brut.minutesCardio());
+        if (brut.minutesPic() != null) activite.setMinutesZonePic(brut.minutesPic());
+
+        Double charge = ZoneCardiaque.chargeCardio(brut.minutesBruleuse(), brut.minutesCardio(),
+                brut.minutesPic());
+        if (charge != null) activite.setChargeCardio(charge);
+
+        activite.setStatutEnrichissement(StatutEnrichissement.COMPLET);
+        activite.setProchaineTentativeAt(null);
     }
 
     private SanteJour jourDe(Utilisateur user, LocalDate date) {

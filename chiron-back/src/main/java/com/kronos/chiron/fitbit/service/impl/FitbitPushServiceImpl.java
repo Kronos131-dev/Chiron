@@ -1,8 +1,10 @@
 package com.kronos.chiron.fitbit.service.impl;
 
 import com.kronos.chiron.fitbit.client.FitbitClient;
+import com.kronos.chiron.fitbit.client.GoogleHealthParser;
 import com.kronos.chiron.fitbit.service.FitbitPushService;
 import com.kronos.chiron.fitbit.service.FitbitService;
+import com.kronos.chiron.sante.service.ActiviteEnrichissementService;
 import com.kronos.chiron.seance.model.Seance;
 import com.kronos.chiron.seance.persistence.SeanceRepository;
 import com.kronos.chiron.seance.service.SeanceResumeService;
@@ -10,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import tools.jackson.databind.JsonNode;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -26,6 +29,7 @@ public class FitbitPushServiceImpl implements FitbitPushService {
     private final SeanceResumeService seanceResumeService;
     private final FitbitService fitbitService;
     private final FitbitClient fitbitClient;
+    private final ActiviteEnrichissementService activiteEnrichissementService;
     private final Clock clock;
 
     // WHY: la valeur exacte du type d'exercice pour la musculation dans Google Health API
@@ -62,8 +66,15 @@ public class FitbitPushServiceImpl implements FitbitPushService {
                     ? seance.getTitre()
                     : "Séance d'entraînement";
 
-            fitbitClient.pousserSeance(accessToken, startUtc, startUtcOffset, endUtc, endUtcOffset,
-                    EXERCISE_TYPE_MUSCULATION, titre, notes);
+            JsonNode creation = fitbitClient.pousserSeance(accessToken, startUtc, startUtcOffset, endUtc,
+                    endUtcOffset, EXERCISE_TYPE_MUSCULATION, titre, notes);
+
+            // WHY: l'identifiant du point créé est ce qui permettra de reconnaître, dans la
+            // prochaine synchronisation, l'activité que Google a calculée autour de NOTRE
+            // intervalle — et donc de recopier ses chiffres sans les confondre avec ceux d'un
+            // exercice que la montre aurait détecté toute seule sur une fenêtre plus courte.
+            activiteEnrichissementService.enregistrerPousseeGoogle(seanceId,
+                    GoogleHealthParser.dataPointName(creation));
         } catch (FitbitService.NotLinkedException | FitbitService.ExpiredException e) {
         } catch (RuntimeException e) {
             log.warn("FITBIT_SEANCE_PUSH_FAILED user={} seanceId={} : {}", username, seanceId,

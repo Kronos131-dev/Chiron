@@ -17,6 +17,20 @@ public final class GoogleHealthParser {
     private GoogleHealthParser() {
     }
 
+    // WHY: la création d'un dataPoint renvoie le point créé, dont le champ « name » est
+    // l'identifiant que la liste republiera ensuite. C'est le seul lien sûr entre la séance
+    // qu'on a poussée et l'exercice que Google finit par calculer autour d'elle ; les autres
+    // noms de champ sont des filets, la forme exacte de la réponse n'étant pas documentée.
+    public static String dataPointName(JsonNode response) {
+        if (response == null) return null;
+        for (String champ : new String[]{"name", "dataPointId", "id"}) {
+            JsonNode valeur = response.get(champ);
+            if (valeur != null && valeur.isTextual() && !valeur.asText().isBlank()) return valeur.asText();
+        }
+        JsonNode imbrique = response.get("dataPoint");
+        return imbrique != null && imbrique.isObject() ? dataPointName(imbrique) : null;
+    }
+
     public static String nextPageToken(JsonNode response) {
         if (response == null) return null;
         JsonNode token = response.get("nextPageToken");

@@ -101,6 +101,76 @@ class ActiviteEnrichissementServiceImplTest {
         assertThat(saved.getEndTime()).isEqualTo(fin);
     }
 
+    // WHY: la séance part vers Google Health à la seconde où elle se termine, et c'est Google
+    // qui construit ensuite l'activité autour de l'intervalle qu'on lui a donné. Interroger dans
+    // la foulée ne ramenait que l'enveloppe qu'on venait d'écrire.
+    @Test
+    void planifierEnrichissement_waitsBeforeTheFirstAttempt() {
+        // Given
+        Seance seance = new Seance();
+        seance.setId(42L);
+        seance.setUtilisateur(user);
+        seance.setStartTime(debut);
+        seance.setEndTime(fin);
+
+        // When
+        service.planifierEnrichissement(seance);
+
+        // Then
+        ArgumentCaptor<SanteActivite> captor = ArgumentCaptor.forClass(SanteActivite.class);
+        verify(santeActiviteRepository).save(captor.capture());
+        assertThat(captor.getValue().getProchaineTentativeAt())
+                .isAfter(LocalDateTime.now(clock));
+    }
+
+    @Test
+    void enregistrerPousseeGoogle_marksTheRowAsOursAndStoresTheCreatedDataPointId() {
+        // Given
+        SanteActivite activite = activiteEnAttente(0);
+        when(santeActiviteRepository.findBySeanceId(42L)).thenReturn(Optional.of(activite));
+
+        // When
+        service.enregistrerPousseeGoogle(42L, "users/me/dataTypes/exercise/dataPoints/abc");
+
+        // Then
+        assertThat(activite.isPousseGoogle()).isTrue();
+        assertThat(activite.getExternalId()).isEqualTo("users/me/dataTypes/exercise/dataPoints/abc");
+        verify(santeActiviteRepository).save(activite);
+    }
+
+    // WHY: la réponse de création n'est pas garantie de porter un identifiant. Le drapeau, lui,
+    // ne dépend que du succès de l'écriture : c'est lui qui autorisera plus tard à recopier les
+    // chiffres calculés par Google sur notre intervalle.
+    @Test
+    void enregistrerPousseeGoogle_googleReturnedNoId_stillMarksTheRowAsOurs() {
+        // Given
+        SanteActivite activite = activiteEnAttente(0);
+        when(santeActiviteRepository.findBySeanceId(42L)).thenReturn(Optional.of(activite));
+
+        // When
+        service.enregistrerPousseeGoogle(42L, null);
+
+        // Then
+        assertThat(activite.isPousseGoogle()).isTrue();
+        assertThat(activite.getExternalId()).isNull();
+        verify(santeActiviteRepository).save(activite);
+    }
+
+    @Test
+    void enregistrerPousseeGoogle_alreadyLinked_keepsTheKnownId() {
+        // Given
+        SanteActivite activite = activiteEnAttente(0);
+        activite.setExternalId("deja-connu");
+        when(santeActiviteRepository.findBySeanceId(42L)).thenReturn(Optional.of(activite));
+
+        // When
+        service.enregistrerPousseeGoogle(42L, "autre");
+
+        // Then
+        assertThat(activite.getExternalId()).isEqualTo("deja-connu");
+        assertThat(activite.isPousseGoogle()).isTrue();
+    }
+
     @Test
     void tenterEnrichissement_activiteNotFound_isNoOp() {
         when(santeActiviteRepository.findById(10L)).thenReturn(Optional.empty());
