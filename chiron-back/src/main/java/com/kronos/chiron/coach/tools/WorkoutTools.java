@@ -175,10 +175,7 @@ public class WorkoutTools {
         Utilisateur user = toolUserResolver.load(memoryId);
 
         seanceRepository.findFirstByUtilisateurIdAndEndTimeIsNullOrderByStartTimeDesc(user.getId())
-                .ifPresent(s -> {
-                    s.setEndTime(LocalDateTime.now(clock));
-                    seanceRepository.save(s);
-                });
+                .ifPresent(this::clorePrecedente);
 
         int currentWeek = LocalDate.now(clock).get(WeekFields.of(Locale.FRANCE).weekOfWeekBasedYear());
 
@@ -324,19 +321,40 @@ public class WorkoutTools {
             return "L'utilisateur a demandé à terminer, mais il n'y a aucune séance en cours.";
         }
 
+        if (estVide(activeSeance)) {
+            seanceRepository.delete(activeSeance);
+            return "Séance vide : aucun exercice n'y a été enregistré, elle a été effacée plutôt que classée dans l'historique.";
+        }
+
         activeSeance.setEndTime(LocalDateTime.now(clock));
 
-        if (activeSeance.getExercices() != null && !activeSeance.getExercices().isEmpty()) {
-            Exercice lastExo = activeSeance.getExercices().get(activeSeance.getExercices().size() - 1);
-            if (lastExo.getEndTime() == null) {
-                lastExo.setEndTime(LocalDateTime.now(clock));
-            }
+        Exercice lastExo = activeSeance.getExercices().get(activeSeance.getExercices().size() - 1);
+        if (lastExo.getEndTime() == null) {
+            lastExo.setEndTime(LocalDateTime.now(clock));
         }
 
         seanceRepository.save(activeSeance);
         activiteEnrichissementService.planifierEnrichissement(activeSeance);
         fitbitPushService.pousserSeance(activeSeance.getId());
         return "Séance terminée et sauvegardée avec succès dans l'historique.";
+    }
+
+    // WHY: [startSession] écrit la séance en base avant le moindre exercice. Une séance
+    // interactive abandonnée en route — l'athlète ferme l'application, la voix décroche — laisse
+    // donc une coquille sans exercice que le profil comptait parmi ses dernières batailles. Une
+    // séance où rien n'a été enregistré n'est pas un entraînement : elle s'efface au lieu de se
+    // clore.
+    private void clorePrecedente(Seance precedente) {
+        if (estVide(precedente)) {
+            seanceRepository.delete(precedente);
+            return;
+        }
+        precedente.setEndTime(LocalDateTime.now(clock));
+        seanceRepository.save(precedente);
+    }
+
+    private boolean estVide(Seance seance) {
+        return seance.getExercices() == null || seance.getExercices().isEmpty();
     }
 
     @Tool("Récupère les performances de la DERNIÈRE FOIS que l'utilisateur a fait un exercice spécifique.")

@@ -70,13 +70,33 @@ class ProfileServiceTest {
 
         when(seanceRepository.findByUtilisateurUsernameAndHistoriqueFalseOrderByDisplayOrderAscStartTimeDesc(any()))
                 .thenReturn(List.of());
-        when(seanceRepository.findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc(any()))
+        when(seanceRepository
+                .findByUtilisateurUsernameAndHistoriqueTrueAndExercicesIsNotEmptyOrderByStartTimeDesc(any()))
                 .thenReturn(List.of());
         when(seanceRepository.countTotalSeriesForUserSince(any(), any())).thenReturn(0);
         when(performanceService.getSummary(any())).thenReturn(emptyPerf);
     }
 
     // --- getProfile ---
+
+    // WHY: l'agent crée la séance dès [startSession], avant le moindre exercice. Une séance
+    // interactive abandonnée laissait une coquille vide dans les dernières batailles et dans le
+    // total, alors que le journal ne la montrait pas.
+    @Test
+    void getProfile_readsOnlySessionsThatHoldAnExercise() {
+        // Given
+        when(utilisateurRepository.findByUsername("private")).thenReturn(Optional.of(privateUser));
+
+        // When
+        ProfileDto dto = profileService.getProfile("private", "private");
+
+        // Then
+        assertThat(dto.getHistoriqueRecent()).isEmpty();
+        assertThat(dto.getTotalSessions()).isZero();
+        verify(seanceRepository)
+                .findByUtilisateurUsernameAndHistoriqueTrueAndExercicesIsNotEmptyOrderByStartTimeDesc("private");
+        verify(seanceRepository, never()).findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc(any());
+    }
 
     @Test
     void getProfile_publicUser_returnsProfile() {

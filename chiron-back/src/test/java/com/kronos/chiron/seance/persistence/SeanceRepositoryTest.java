@@ -109,6 +109,32 @@ class SeanceRepositoryTest {
         assertThat(results.get(0).getTitre()).isEqualTo("RealSession");
     }
 
+    // WHY: [startSession] écrit la séance avant le moindre exercice. Une séance interactive
+    // abandonnée en route reste donc en base sans un seul exercice, et le profil la comptait
+    // parmi les dernières batailles.
+    @Test
+    void findByHistoriqueTrueAndExercicesIsNotEmpty_skipsSessionsThatNeverStarted() {
+        // Given
+        Seance reelle = makeSeance("RealSession", true, 1, LocalDateTime.now(), LocalDateTime.now());
+        Exercice exo = new Exercice();
+        exo.setNom("Squat");
+        exo.setDisplayOrder(0);
+        reelle.addExercice(exo);
+        em.persist(reelle);
+        makeSeance("Abandonnee", true, 1, LocalDateTime.now(), null);
+        em.flush();
+        em.clear();
+
+        // When
+        List<Seance> results = seanceRepository
+                .findByUtilisateurUsernameAndHistoriqueTrueAndExercicesIsNotEmptyOrderByStartTimeDesc(
+                        user.getUsername());
+
+        // Then
+        assertThat(results).hasSize(1);
+        assertThat(results.get(0).getTitre()).isEqualTo("RealSession");
+    }
+
     @Test
     void findByHistoriqueFalse_returnsOnlyTemplates() {
         makeSeance("RealSession", true, 1, LocalDateTime.now(), LocalDateTime.now());

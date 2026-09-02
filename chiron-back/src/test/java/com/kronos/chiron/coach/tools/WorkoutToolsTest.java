@@ -119,15 +119,40 @@ class WorkoutToolsTest {
 
     @Test
     void startSession_closesExistingActiveSeance() {
+        // Given
         Seance active = new Seance();
         active.setStartTime(LocalDateTime.now(clock).minusHours(1));
+        Exercice exo = new Exercice();
+        exo.setNom("Squat");
+        active.addExercice(exo);
         when(seanceRepository.findFirstByUtilisateurIdAndEndTimeIsNullOrderByStartTimeDesc(1L))
                 .thenReturn(Optional.of(active));
 
+        // When
         workoutTools.startSession(MEMORY_ID, "New Session");
 
+        // Then
         assertThat(active.getEndTime()).isNotNull();
         verify(seanceRepository, atLeast(1)).save(any());
+    }
+
+    // WHY: [startSession] écrit la séance avant le moindre exercice. Une séance interactive
+    // abandonnée en route laissait une coquille vide que le profil comptait parmi les dernières
+    // batailles ; elle n'a jamais commencé, elle s'efface.
+    @Test
+    void startSession_previousSeanceHasNoExercice_deletesItInsteadOfClosingIt() {
+        // Given
+        Seance abandonnee = new Seance();
+        abandonnee.setStartTime(LocalDateTime.now(clock).minusHours(1));
+        when(seanceRepository.findFirstByUtilisateurIdAndEndTimeIsNullOrderByStartTimeDesc(1L))
+                .thenReturn(Optional.of(abandonnee));
+
+        // When
+        workoutTools.startSession(MEMORY_ID, "New Session");
+
+        // Then
+        verify(seanceRepository).delete(abandonnee);
+        assertThat(abandonnee.getEndTime()).isNull();
     }
 
     // --- startExercise ---
@@ -227,6 +252,24 @@ class WorkoutToolsTest {
 
         assertThat(result).isNotBlank();
         verifyNoInteractions(activiteEnrichissementService);
+    }
+
+    @Test
+    void endSession_seanceWithoutExercice_deletesItInsteadOfArchivingIt() {
+        // Given
+        Seance vide = new Seance();
+        vide.setId(7L);
+        when(seanceRepository.findFirstByUtilisateurIdAndEndTimeIsNullOrderByStartTimeDesc(1L))
+                .thenReturn(Optional.of(vide));
+
+        // When
+        String result = workoutTools.endSession(MEMORY_ID);
+
+        // Then
+        assertThat(result).containsIgnoringCase("vide");
+        verify(seanceRepository).delete(vide);
+        verifyNoInteractions(activiteEnrichissementService);
+        verifyNoInteractions(fitbitPushService);
     }
 
     @Test

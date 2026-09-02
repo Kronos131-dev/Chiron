@@ -19,6 +19,9 @@ public interface SeanceRepository extends JpaRepository<Seance, Long> {
 
     List<Seance> findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc(String username);
 
+    List<Seance> findByUtilisateurUsernameAndHistoriqueTrueAndExercicesIsNotEmptyOrderByStartTimeDesc(
+            String username);
+
     List<Seance> findByUtilisateurUsernameAndHistoriqueFalseOrderByDisplayOrderAscStartTimeDesc(String username);
 
     @Query("SELECT COUNT(s) FROM Serie s JOIN s.exercice e JOIN e.seance se WHERE se.utilisateur.id = :userId AND se.historique = true AND se.startTime >= :startDate")

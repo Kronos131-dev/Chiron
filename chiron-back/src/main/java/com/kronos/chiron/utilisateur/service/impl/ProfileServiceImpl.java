@@ -83,8 +83,12 @@ public class ProfileServiceImpl implements ProfileService {
                 .map(this::toSeanceSummaryDto)
                 .collect(Collectors.toList());
 
+        // WHY: l'agent crée la séance en base dès [startSession], avant le moindre exercice. Une
+        // séance interactive abandonnée en cours de route laisse donc une coquille vide, sans un
+        // seul exercice, que le profil affichait parmi les dernières batailles et comptait dans
+        // le total. Ce n'est pas un entraînement : c'est une séance qui n'a jamais commencé.
         List<Seance> historique = seanceRepository
-                .findByUtilisateurUsernameAndHistoriqueTrueOrderByStartTimeDesc(username);
+                .findByUtilisateurUsernameAndHistoriqueTrueAndExercicesIsNotEmptyOrderByStartTimeDesc(username);
         List<SeanceSummaryDto> historiqueSummaries = historique.stream()
                 .limit(HISTORIQUE_RECENT_MAX)
                 .map(this::toSeanceSummaryDto)
