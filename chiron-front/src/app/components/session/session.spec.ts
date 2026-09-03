@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
 import { of } from 'rxjs';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Session, ExerciceForm } from './session';
 import { ChironApi } from '../../service/chiron-api';
@@ -10,6 +10,10 @@ import { AuthService } from '../../service/auth.service';
 describe('Session', () => {
   let component: Session;
   let fixture: ComponentFixture<Session>;
+
+  afterEach(() => {
+    localStorage.clear();
+  });
 
   function fakeDragEvent(): any {
     return { preventDefault: () => {}, dataTransfer: null };

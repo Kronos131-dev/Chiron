@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Programme } from './programme';
 import { ChironApi } from '../../service/chiron-api';
 import { AuthService } from '../../service/auth.service';
+import { ActiveSessionService } from '../../service/active-session.service';
 
 describe('Programme', () => {
   let component: Programme;
@@ -13,6 +14,12 @@ describe('Programme', () => {
   let chironApi: { getProgrammes: ReturnType<typeof vi.fn>; deleteProgramme: ReturnType<typeof vi.fn>; updateProgrammesOrder: ReturnType<typeof vi.fn>; };
   let auth: { getUsername: ReturnType<typeof vi.fn>; };
   let router: { navigate: ReturnType<typeof vi.fn>; };
+  let activeSession: {
+    hasActiveSession: ReturnType<typeof vi.fn>;
+    isActiveFor: ReturnType<typeof vi.fn>;
+    titre: ReturnType<typeof vi.fn>;
+    clear: ReturnType<typeof vi.fn>;
+  };
 
   function fakeDragEvent(): any {
     return { preventDefault: () => {}, dataTransfer: null };
@@ -30,6 +37,12 @@ describe('Programme', () => {
     };
     auth = { getUsername: vi.fn().mockReturnValue('alice') };
     router = { navigate: vi.fn() };
+    activeSession = {
+      hasActiveSession: vi.fn().mockReturnValue(false),
+      isActiveFor: vi.fn().mockReturnValue(false),
+      titre: vi.fn().mockReturnValue(''),
+      clear: vi.fn(),
+    };
 
     await TestBed.configureTestingModule({
       imports: [Programme],
@@ -37,6 +50,7 @@ describe('Programme', () => {
         { provide: ChironApi, useValue: chironApi },
         { provide: AuthService, useValue: auth },
         { provide: Router, useValue: router },
+        { provide: ActiveSessionService, useValue: activeSession },
       ],
     }).compileComponents();
 
