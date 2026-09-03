@@ -11,9 +11,13 @@ import { ActiveSessionService } from '../../service/active-session.service';
 describe('Programme', () => {
   let component: Programme;
   let fixture: ComponentFixture<Programme>;
-  let chironApi: { getProgrammes: ReturnType<typeof vi.fn>; deleteProgramme: ReturnType<typeof vi.fn>; updateProgrammesOrder: ReturnType<typeof vi.fn>; };
-  let auth: { getUsername: ReturnType<typeof vi.fn>; };
-  let router: { navigate: ReturnType<typeof vi.fn>; };
+  let chironApi: {
+    getProgrammes: ReturnType<typeof vi.fn>;
+    deleteProgramme: ReturnType<typeof vi.fn>;
+    updateProgrammesOrder: ReturnType<typeof vi.fn>;
+  };
+  let auth: { getUsername: ReturnType<typeof vi.fn> };
+  let router: { navigate: ReturnType<typeof vi.fn> };
   let activeSession: {
     hasActiveSession: ReturnType<typeof vi.fn>;
     isActiveFor: ReturnType<typeof vi.fn>;
@@ -27,11 +31,13 @@ describe('Programme', () => {
 
   beforeEach(async () => {
     chironApi = {
-      getProgrammes: vi.fn().mockReturnValue(of([
-        { id: 1, titre: 'A', exercices: [] },
-        { id: 2, titre: 'B', exercices: [] },
-        { id: 3, titre: 'C', exercices: [] },
-      ])),
+      getProgrammes: vi.fn().mockReturnValue(
+        of([
+          { id: 1, titre: 'A', exercices: [] },
+          { id: 2, titre: 'B', exercices: [] },
+          { id: 3, titre: 'C', exercices: [] },
+        ]),
+      ),
       deleteProgramme: vi.fn(),
       updateProgrammesOrder: vi.fn().mockReturnValue(of(null)),
     };
@@ -65,7 +71,7 @@ describe('Programme', () => {
 
   it('loads programmes on init', () => {
     expect(chironApi.getProgrammes).toHaveBeenCalledWith('alice');
-    expect(component.routines().map(r => r.id)).toEqual(['1', '2', '3']);
+    expect(component.routines().map((r) => r.id)).toEqual(['1', '2', '3']);
   });
 
   describe('navigation', () => {
@@ -91,7 +97,7 @@ describe('Programme', () => {
       component.onDragOver(fakeDragEvent(), 2);
       component.onDrop(fakeDragEvent(), 2);
 
-      expect(component.routines().map(r => r.id)).toEqual(['2', '3', '1']);
+      expect(component.routines().map((r) => r.id)).toEqual(['2', '3', '1']);
       expect(chironApi.updateProgrammesOrder).toHaveBeenCalledWith('alice', [2, 3, 1]);
     });
 
@@ -101,7 +107,7 @@ describe('Programme', () => {
       component.onDrop(fakeDragEvent(), 1);
 
       expect(chironApi.updateProgrammesOrder).not.toHaveBeenCalled();
-      expect(component.routines().map(r => r.id)).toEqual(['1', '2', '3']);
+      expect(component.routines().map((r) => r.id)).toEqual(['1', '2', '3']);
     });
 
     it('rolls back the local order if the API call fails', () => {
@@ -112,7 +118,7 @@ describe('Programme', () => {
       component.onDrop(fakeDragEvent(), 2);
 
       expect(chironApi.updateProgrammesOrder).toHaveBeenCalled();
-      expect(component.routines().map(r => r.id)).toEqual(['1', '2', '3']);
+      expect(component.routines().map((r) => r.id)).toEqual(['1', '2', '3']);
     });
   });
 });
