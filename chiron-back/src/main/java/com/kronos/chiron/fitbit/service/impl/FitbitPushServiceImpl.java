@@ -32,10 +32,12 @@ public class FitbitPushServiceImpl implements FitbitPushService {
     private final ActiviteEnrichissementService activiteEnrichissementService;
     private final Clock clock;
 
-    // WHY: la valeur exacte du type d'exercice pour la musculation dans Google Health API
-    // n'a pas été confirmée (doc Google tronque avant listing complet des ExerciseType).
-    // À vérifier contre google.devicesandservices.health.v4.Exercise.ExerciseType.
-    private static final String EXERCISE_TYPE_MUSCULATION = "WEIGHT_TRAINING";
+    // WHY: WEIGHT_TRAINING n'existe pas — la référence HTML tronque la liste, mais le document
+    // de découverte donne les 182 valeurs et celle-là n'en fait pas partie, ce qui faisait
+    // refuser chaque écriture. STRENGTH_TRAINING est la valeur générique de la musculation ;
+    // le bracelet, lui, étiquette ce qu'il détecte WEIGHT_MACHINES, donc en garder une autre
+    // distingue à l'œil nu la séance qu'on écrit de celle que la montre a devinée.
+    private static final String EXERCISE_TYPE_MUSCULATION = "STRENGTH_TRAINING";
 
     @Override
     @Async

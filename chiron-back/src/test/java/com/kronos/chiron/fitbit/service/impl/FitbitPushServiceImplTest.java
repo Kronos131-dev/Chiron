@@ -120,4 +120,21 @@ class FitbitPushServiceImplTest {
                 anyString(), anyString(), anyString());
         verify(activiteEnrichissementService, never()).enregistrerPousseeGoogle(eq(42L), any());
     }
+
+    // WHY: WEIGHT_TRAINING avait été deviné et n'appartient pas à Exercise.ExerciseType, ce qui
+    // faisait refuser chaque écriture sans que rien ne le dise. Les valeurs admises viennent du
+    // document de découverte de l'API ; ce test fige celle qu'on envoie.
+    @Test
+    void pousserSeance_sendsAnExerciseTypeGoogleDefines() {
+        // Given
+        when(fitbitClient.pousserSeance(anyString(), any(), anyString(), any(), anyString(), anyString(),
+                anyString(), anyString())).thenReturn(json.readTree("{\"name\":\"points/7\"}"));
+
+        // When
+        fitbitPushService.pousserSeance(42L);
+
+        // Then
+        verify(fitbitClient).pousserSeance(anyString(), any(), anyString(), any(), anyString(),
+                eq("STRENGTH_TRAINING"), eq("Push Day"), eq("Développé couché : 4×8"));
+    }
 }

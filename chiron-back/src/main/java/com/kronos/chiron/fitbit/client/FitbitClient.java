@@ -13,6 +13,7 @@ import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 import tools.jackson.databind.JsonNode;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Map;
@@ -167,17 +168,27 @@ public class FitbitClient {
         return doPost(accessToken, type.dataPointsPath() + ":rollUp", requestBody);
     }
 
+    // WHY: le corps d'un create est un DataPoint, jamais un Exercise à plat — la ressource
+    // porte un champ par type de donnée et le nôtre s'appelle « exercise ». L'ancien corps
+    // envoyait interval, exerciseType et displayName au premier niveau, que Google refuse.
+    // Vérifié dans le document de découverte : health.users.dataTypes.dataPoints.create
+    // attend $ref DataPoint, dont la propriété exercise porte le Exercise.
+    // recordingMethod MANUAL dit que la séance est saisie, pas mesurée par un capteur ;
+    // platform et application sont en lecture seule et se remplissent côté Google.
     public JsonNode pousserSeance(String accessToken, Instant startUtc, String startUtcOffset,
             Instant endUtc, String endUtcOffset, String exerciseType, String displayName, String notes) {
         Map<String, Object> requestBody = Map.of(
-                "interval", Map.of(
-                        "startTime", startUtc.toString(),
-                        "startUtcOffset", startUtcOffset,
-                        "endTime", endUtc.toString(),
-                        "endUtcOffset", endUtcOffset),
-                "exerciseType", exerciseType,
-                "displayName", displayName,
-                "notes", notes);
+                "dataSource", Map.of("recordingMethod", "MANUAL"),
+                "exercise", Map.of(
+                        "interval", Map.of(
+                                "startTime", startUtc.toString(),
+                                "startUtcOffset", startUtcOffset,
+                                "endTime", endUtc.toString(),
+                                "endUtcOffset", endUtcOffset),
+                        "activeDuration", Duration.between(startUtc, endUtc).toSeconds() + "s",
+                        "exerciseType", exerciseType,
+                        "displayName", displayName,
+                        "notes", notes));
         return doPost(accessToken, GoogleHealthDataType.EXERCISE.dataPointsPath(), requestBody);
     }
 

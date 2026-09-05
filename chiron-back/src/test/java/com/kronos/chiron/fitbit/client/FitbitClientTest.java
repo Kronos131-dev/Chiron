@@ -165,4 +165,32 @@ class FitbitClientTest {
 
         mockServer.verify();
     }
+
+    // WHY: rien n'assertait le corps de cette écriture, et c'est ce qui a laissé partir en
+    // production un Exercise à plat au lieu d'un DataPoint. Google refusait chaque séance en
+    // silence pendant que le journal se rabattait sur son recalcul.
+    @Test
+    void pousserSeance_wrapsTheExerciseInADataPoint() {
+        mockServer.expect(requestTo(BASE_URL + "/v4/users/me/dataTypes/exercise/dataPoints"))
+                .andExpect(method(HttpMethod.POST))
+                .andExpect(jsonPath("$.dataSource.recordingMethod").value("MANUAL"))
+                .andExpect(jsonPath("$.exercise.exerciseType").value("STRENGTH_TRAINING"))
+                .andExpect(jsonPath("$.exercise.displayName").value("Séance Push"))
+                .andExpect(jsonPath("$.exercise.notes").value("Développé couché : 4×8"))
+                .andExpect(jsonPath("$.exercise.interval.startTime").value("2026-09-02T16:00:00Z"))
+                .andExpect(jsonPath("$.exercise.interval.startUtcOffset").value("7200s"))
+                .andExpect(jsonPath("$.exercise.interval.endTime").value("2026-09-02T17:06:00Z"))
+                .andExpect(jsonPath("$.exercise.interval.endUtcOffset").value("7200s"))
+                .andExpect(jsonPath("$.exercise.activeDuration").value("3960s"))
+                .andExpect(jsonPath("$.interval").doesNotExist())
+                .andExpect(jsonPath("$.exerciseType").doesNotExist())
+                .andRespond(withSuccess("{\"name\":\"users/1/dataTypes/exercise/dataPoints/9\"}",
+                        MediaType.APPLICATION_JSON));
+
+        fitbitClient.pousserSeance("token", Instant.parse("2026-09-02T16:00:00Z"), "7200s",
+                Instant.parse("2026-09-02T17:06:00Z"), "7200s", "STRENGTH_TRAINING", "Séance Push",
+                "Développé couché : 4×8");
+
+        mockServer.verify();
+    }
 }
