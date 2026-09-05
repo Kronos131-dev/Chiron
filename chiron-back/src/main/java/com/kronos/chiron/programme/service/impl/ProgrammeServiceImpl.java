@@ -32,6 +32,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -187,7 +189,7 @@ public class ProgrammeServiceImpl implements ProgrammeService {
         if (Boolean.TRUE.equals(seanceDto.historique())
                 && ((!isUpdate && saved.getEndTime() != null) || isSessionJustClosed)) {
             activiteEnrichissementService.planifierEnrichissement(saved);
-            fitbitPushService.pousserSeance(saved.getId());
+            pousserApresCommit(saved.getId());
         }
 
         if (seanceDto.exercices() != null) {
@@ -201,6 +203,25 @@ public class ProgrammeServiceImpl implements ProgrammeService {
         }
 
         return saved;
+    }
+
+    // WHY: planifierEnrichissement écrit la ligne sante_activite dans la transaction de cette
+    // méthode, qui n'est pas encore commitée. Le push est @Async : son thread ouvre sa propre
+    // transaction, ne voit pas cette ligne, et le drapeau pousseGoogle qu'il doit y poser se
+    // perd — la synchronisation ne reconnaît alors plus la séance comme étant la nôtre et
+    // recalcule au lieu de recopier les mesures de Google. Attendre le commit ferme la course.
+    // Hors transaction, l'agent vocal appelant le même service, le push part directement.
+    private void pousserApresCommit(Long seanceId) {
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            fitbitPushService.pousserSeance(seanceId);
+            return;
+        }
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                fitbitPushService.pousserSeance(seanceId);
+            }
+        });
     }
 
     // WHY: la trace est téléversée avant la séance, donc son identifiant arrive du client.
