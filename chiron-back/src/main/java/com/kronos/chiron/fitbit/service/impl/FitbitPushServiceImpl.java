@@ -45,11 +45,19 @@ public class FitbitPushServiceImpl implements FitbitPushService {
         if (seanceId == null) return;
 
         Seance seance = seanceRepository.findById(seanceId).orElse(null);
-        if (seance == null || seance.getUtilisateur() == null) return;
+        if (seance == null) return;
         if (seance.getStartTime() == null || seance.getEndTime() == null) return;
-        if (seance.getExercices() == null || seance.getExercices().isEmpty()) return;
 
-        String username = seance.getUtilisateur().getUsername();
+        // WHY: cette méthode tourne en @Async, donc hors transaction et hors session Hibernate —
+        // l'ouverture en vue ne suit pas le thread. Toucher seance.getUtilisateur() ou
+        // seance.getExercices() y lève une LazyInitializationException, et comme ces lectures
+        // précédaient le try, elle s'échappait vers le gestionnaire d'exceptions asynchrone :
+        // aucune séance n'était jamais poussée, sans qu'aucun log de la chaîne ne le dise.
+        // Le nom passe par une projection, et decrireContenu — qui a sa propre transaction —
+        // rend une chaîne vide pour une séance sans exercice, ce que le test de blanc couvre.
+        String username = seanceRepository.findUsernameBySeanceId(seanceId).orElse(null);
+        if (username == null) return;
+
         String notes = seanceResumeService.decrireContenu(seanceId);
         if (notes == null || notes.isBlank()) return;
 

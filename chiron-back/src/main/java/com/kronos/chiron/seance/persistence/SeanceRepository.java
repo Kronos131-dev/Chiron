@@ -26,4 +26,10 @@ public interface SeanceRepository extends JpaRepository<Seance, Long> {
 
     @Query("SELECT COUNT(s) FROM Serie s JOIN s.exercice e JOIN e.seance se WHERE se.utilisateur.id = :userId AND se.historique = true AND se.startTime >= :startDate")
     Integer countTotalSeriesForUserSince(@Param("userId") Long userId, @Param("startDate") LocalDateTime startDate);
+
+    // WHY: le push vers Google Health tourne en @Async, donc sans session Hibernate : lire
+    // seance.getUtilisateur().getUsername() y déclenche une LazyInitializationException. Cette
+    // projection rend le nom sans jamais initialiser le proxy.
+    @Query("SELECT se.utilisateur.username FROM Seance se WHERE se.id = :seanceId")
+    Optional<String> findUsernameBySeanceId(@Param("seanceId") Long seanceId);
 }

@@ -281,4 +281,23 @@ class SeanceRepositoryTest {
 
         assertThat(count).isEqualTo(0);
     }
+
+    // WHY: cette projection existe pour le push vers Google Health, qui tourne en @Async donc
+    // sans session Hibernate : y lire seance.getUtilisateur().getUsername() lève une
+    // LazyInitializationException. Le nom doit donc sortir sans initialiser le proxy.
+    @Test
+    void findUsernameBySeanceId_returnsTheOwnerWithoutLoadingTheSeance() {
+        Seance seance = makeSeance("Push", true, 1, LocalDateTime.now().minusHours(2),
+                LocalDateTime.now().minusHours(1));
+        em.flush();
+
+        Optional<String> username = seanceRepository.findUsernameBySeanceId(seance.getId());
+
+        assertThat(username).contains("testuser");
+    }
+
+    @Test
+    void findUsernameBySeanceId_unknownSeance_returnsEmpty() {
+        assertThat(seanceRepository.findUsernameBySeanceId(-1L)).isEmpty();
+    }
 }

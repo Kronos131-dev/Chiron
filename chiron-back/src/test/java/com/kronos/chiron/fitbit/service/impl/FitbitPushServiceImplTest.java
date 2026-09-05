@@ -9,6 +9,7 @@ import com.kronos.chiron.seance.persistence.SeanceRepository;
 import com.kronos.chiron.seance.service.SeanceResumeService;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 
+import org.hibernate.LazyInitializationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,6 +25,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -69,6 +71,7 @@ class FitbitPushServiceImplTest {
         seance.addExercice(exo);
 
         when(seanceRepository.findById(42L)).thenReturn(Optional.of(seance));
+        when(seanceRepository.findUsernameBySeanceId(42L)).thenReturn(Optional.of("athlete"));
         when(seanceResumeService.decrireContenu(42L)).thenReturn("Développé couché : 4×8");
         when(fitbitService.getValidToken("athlete")).thenReturn("token");
     }
@@ -136,5 +139,40 @@ class FitbitPushServiceImplTest {
         // Then
         verify(fitbitClient).pousserSeance(anyString(), any(), anyString(), any(), anyString(),
                 eq("STRENGTH_TRAINING"), eq("Push Day"), eq("Développé couché : 4×8"));
+    }
+
+    // WHY: le push tourne en @Async, donc sur un thread sans session Hibernate — l'ouverture en
+    // vue ne le suit pas. Lire une relation paresseuse de la séance y lève une
+    // LazyInitializationException, et comme ces lectures précédaient le try, elle s'échappait
+    // vers le gestionnaire asynchrone : plus aucune séance n'atteignait Google Health, et aucun
+    // log de la chaîne ne le disait. Cette séance-ci refuse ses deux relations paresseuses,
+    // exactement comme une entité détachée en production.
+    @Test
+    void pousserSeance_detachedSeance_pushesWithoutTouchingLazyRelations() {
+        // Given
+        Seance detachee = new Seance() {
+            @Override
+            public Utilisateur getUtilisateur() {
+                throw new LazyInitializationException("no session");
+            }
+
+            @Override
+            public List<Exercice> getExercices() {
+                throw new LazyInitializationException("no session");
+            }
+        };
+        detachee.setId(42L);
+        detachee.setTitre("Push Day");
+        detachee.setStartTime(LocalDateTime.of(2026, 8, 17, 18, 0));
+        detachee.setEndTime(LocalDateTime.of(2026, 8, 17, 19, 15));
+        when(seanceRepository.findById(42L)).thenReturn(Optional.of(detachee));
+        when(fitbitClient.pousserSeance(anyString(), any(), anyString(), any(), anyString(), anyString(),
+                anyString(), anyString())).thenReturn(json.readTree("{\"name\":\"points/7\"}"));
+
+        // When
+        fitbitPushService.pousserSeance(42L);
+
+        // Then
+        verify(activiteEnrichissementService).enregistrerPousseeGoogle(42L, "points/7");
     }
 }
