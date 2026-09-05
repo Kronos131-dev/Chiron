@@ -25,6 +25,10 @@ import java.time.LocalDateTime;
 @Slf4j
 public class ActiviteEnrichissementServiceImpl implements ActiviteEnrichissementService {
 
+    // WHY: le dernier palier n'était jamais atteint — la borne d'abandon se déclenchait à la
+    // tentative 5 avant que BACKOFF[4] ne soit lu, ce qui fermait la fenêtre à 2 h 47. Or la
+    // fréquence cardiaque n'arrive dans Google que quand le bracelet se synchronise, plusieurs
+    // heures après la séance : on abandonnait systématiquement avant la seule donnée attendue.
     private static final Duration[] BACKOFF = {Duration.ofMinutes(2), Duration.ofMinutes(10),
             Duration.ofMinutes(30), Duration.ofHours(2), Duration.ofHours(6)};
 
@@ -108,7 +112,7 @@ public class ActiviteEnrichissementServiceImpl implements ActiviteEnrichissement
         if (donneesTrouvees) {
             activite.setStatutEnrichissement(StatutEnrichissement.COMPLET);
             activite.setProchaineTentativeAt(null);
-        } else if (tentative >= BACKOFF.length) {
+        } else if (tentative > BACKOFF.length) {
             activite.setStatutEnrichissement(StatutEnrichissement.ABANDONNE);
             activite.setProchaineTentativeAt(null);
         } else {

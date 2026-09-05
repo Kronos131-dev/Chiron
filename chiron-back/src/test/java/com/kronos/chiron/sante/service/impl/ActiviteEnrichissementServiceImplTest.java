@@ -304,9 +304,26 @@ class ActiviteEnrichissementServiceImplTest {
         assertThat(activite.getProchaineTentativeAt()).isEqualTo(LocalDateTime.now(clock).plusMinutes(2));
     }
 
+    // WHY: la fréquence cardiaque n'entre dans Google que quand le bracelet se synchronise, des
+    // heures après la séance. Le dernier palier de six heures n'était jamais atteint — la borne
+    // d'abandon se déclenchait une tentative trop tôt — et la fenêtre se refermait à 2 h 47,
+    // avant la seule donnée qu'on attendait.
+    @Test
+    void tenterEnrichissement_noDataOnTheLastRung_waitsSixHoursRatherThanGivingUp() {
+        SanteActivite activite = activiteEnAttente(4);
+        when(santeActiviteRepository.findById(10L)).thenReturn(Optional.of(activite));
+        when(fitbitService.getValidToken("athlete")).thenReturn("token");
+
+        service.tenterEnrichissement(10L);
+
+        assertThat(activite.getStatutEnrichissement()).isEqualTo(StatutEnrichissement.EN_ATTENTE);
+        assertThat(activite.getTentativesEnrichissement()).isEqualTo(5);
+        assertThat(activite.getProchaineTentativeAt()).isEqualTo(LocalDateTime.now(clock).plusHours(6));
+    }
+
     @Test
     void tenterEnrichissement_noDataBudgetExhausted_marksAbandonne() {
-        SanteActivite activite = activiteEnAttente(4);
+        SanteActivite activite = activiteEnAttente(5);
         when(santeActiviteRepository.findById(10L)).thenReturn(Optional.of(activite));
         when(fitbitService.getValidToken("athlete")).thenReturn("token");
 
