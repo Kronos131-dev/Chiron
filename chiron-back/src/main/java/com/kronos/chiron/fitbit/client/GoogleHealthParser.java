@@ -27,8 +27,18 @@ public final class GoogleHealthParser {
             JsonNode valeur = response.get(champ);
             if (valeur != null && valeur.isTextual() && !valeur.asText().isBlank()) return valeur.asText();
         }
-        JsonNode imbrique = response.get("dataPoint");
-        return imbrique != null && imbrique.isObject() ? dataPointName(imbrique) : null;
+        // WHY: la création ne rend pas le point directement mais une google.longrunning.Operation
+        // — {"done":true,"response":{"@type":"…DataPoint","name":"users/…/dataPoints/…"}} — et le
+        // « name » de l'enveloppe est absent, pas celui du point. Sans traverser « response »,
+        // l'identifiant revenait null à chaque écriture.
+        for (String enveloppe : new String[]{"response", "dataPoint"}) {
+            JsonNode imbrique = response.get(enveloppe);
+            if (imbrique != null && imbrique.isObject()) {
+                String nom = dataPointName(imbrique);
+                if (nom != null) return nom;
+            }
+        }
+        return null;
     }
 
     public static String nextPageToken(JsonNode response) {

@@ -506,6 +506,23 @@ class GoogleHealthParserTest {
         assertThat(GoogleHealthParser.dataPointName(json.readTree("{\"dataPointId\":\"xyz\"}"))).isEqualTo("xyz");
     }
 
+    // WHY: charge utile réelle d'une création en production. Google ne rend pas le point mais une
+    // google.longrunning.Operation, dont l'enveloppe n'a pas de « name » : le seul identifiant est
+    // sous « response ». Le parseur ne traversait pas ce niveau et rendait null à chaque écriture.
+    @Test
+    void dataPointName_longRunningOperationEnvelope_readsTheNestedIdentifier() {
+        String creation = """
+                {"done":true,"response":{
+                  "@type":"type.googleapis.com/google.devicesandservices.health.v4.DataPoint",
+                  "name":"users/4369363054743728680/dataTypes/exercise/dataPoints/2330110161290453536",
+                  "dataSource":{"recordingMethod":"MANUAL","platform":"GOOGLE_WEB_API"},
+                  "exercise":{"exerciseType":"STRENGTH_TRAINING","activeDuration":"2s"}}}
+                """;
+
+        assertThat(GoogleHealthParser.dataPointName(json.readTree(creation)))
+                .isEqualTo("users/4369363054743728680/dataTypes/exercise/dataPoints/2330110161290453536");
+    }
+
     @Test
     void dataPointName_responseWithoutIdentifier_isNull() {
         assertThat(GoogleHealthParser.dataPointName(json.readTree("{}"))).isNull();
