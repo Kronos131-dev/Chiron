@@ -47,8 +47,11 @@ thing. `ng serve` does rebuild on save, but only if it is running at all.
 **Step 4: Start the frontend**
 1. Check `curl -sI localhost:4200`. If it answers, leave the server alone — it already serves the
    edited files.
-2. Otherwise run `npm start` in the background from `chiron-front/`, logging outside the repository,
-   and wait for `Application bundle generation complete` or an `ERROR` line.
+2. Otherwise run `npx ng serve --poll 1500` in the background from `chiron-front/`, logging outside
+   the repository, and wait for `Application bundle generation complete` or an `ERROR` line.
+   `--poll` is not optional on this machine: the repository sits on a Windows drive mounted into
+   WSL, which raises no file events, so a plain `npm start` silently stops rebuilding and serves a
+   stale bundle.
 3. `npm start` uses the development configuration (`environment.ts`, no service worker). Never use
    `npm run build` output to test: it is the production configuration.
 
@@ -80,6 +83,9 @@ thing. `ng serve` does rebuild on save, but only if it is running at all.
   field is out of step — apply `add-flyway-migration`. Never edit an applied migration.
 * If `mvnw` reports `release version 25 not supported`, `JAVA_HOME` was not set on that command.
 * If `Connection refused` points at `127.0.0.1:5454`, the database container is down — Step 2.
+* If the page does not show the latest edit, or a new route redirects to `chat`, the dev server is
+  serving a stale bundle. Stop it by PID (`ss -ltnp | grep :4200`) — never `pkill -f "ng serve"`,
+  which also kills the shell running the command — and restart it with `--poll`.
 * If port 4200 is taken by something else, `ng serve` cannot ask for another port non-interactively.
   Stop the stale `ng serve` it belongs to, or start with `npm start -- --port 4201` and give the owner
   that URL.
