@@ -97,12 +97,12 @@
         </div>
 
         <!-- Graphe des pas -->
-        <div class="bg-slate-900/40 border border-white/5 rounded-xl p-6 mb-6">
+        <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4 min-[400px]:p-6 mb-6">
           <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-4">{{ 'fitbit.steps7d' | t }}</h3>
           @if (d.days.length > 0) {
-            <div class="flex items-stretch gap-2 h-40">
+            <div class="flex items-stretch gap-1 min-[400px]:gap-2 h-40">
               @for (day of d.days; track day.date) {
-                <div class="flex-1 flex flex-col items-center">
+                <div class="flex-1 min-w-0 flex flex-col items-center">
                   <span class="text-[9px] text-on-surface-variant mb-1">{{ day.steps ?? 0 }}</span>
                   <div class="flex-1 w-full flex items-end">
                     <div class="w-full rounded-t bg-gradient-to-t from-cyan-500/60 to-cyan-400/30"
@@ -118,12 +118,12 @@
         </div>
 
         <!-- Graphe du sommeil -->
-        <div class="bg-slate-900/40 border border-white/5 rounded-xl p-6">
+        <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4 min-[400px]:p-6">
           <h3 class="text-sm font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-4">{{ 'fitbit.sleep7n' | t }}</h3>
           @if (d.days.length > 0) {
-            <div class="flex items-stretch gap-2 h-40">
+            <div class="flex items-stretch gap-1 min-[400px]:gap-2 h-40">
               @for (day of d.days; track day.date) {
-                <div class="flex-1 flex flex-col items-center">
+                <div class="flex-1 min-w-0 flex flex-col items-center">
                   <span class="text-[9px] text-on-surface-variant mb-1">
                     {{ day.sleepHours != null ? day.sleepHours + 'h' : '—' }}
                   </span>

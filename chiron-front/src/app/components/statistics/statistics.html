@@ -25,7 +25,7 @@
     </div>
 
     <!-- Onglets -->
-    <div class="flex gap-2 overflow-x-auto pb-2 mb-6 no-scrollbar">
+    <div class="flex gap-2 overflow-x-auto pb-2 mb-6 no-scrollbar [mask-image:linear-gradient(to_right,black_88%,transparent)]">
       @for (t of tabs; track t.id) {
         <button (click)="selectTab(t.id)"
                 [class]="activeTab() === t.id
@@ -49,34 +49,34 @@
     @if (activeTab() === 'overview' && !loading().overview) {
       @if (overview(); as o) {
         <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-          <div class="bg-slate-900/40 border border-white/5 rounded-xl p-5">
+          <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4 min-[400px]:p-5">
             <p class="text-[10px] font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-1">{{ 'stats.sessions30' | t }}</p>
-            <p class="text-3xl font-black text-white">{{ o.seances30 }}</p>
+            <p class="text-2xl min-[400px]:text-3xl font-black min-w-0 text-white">{{ o.seances30 }}</p>
           </div>
-          <div class="bg-slate-900/40 border border-white/5 rounded-xl p-5">
+          <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4 min-[400px]:p-5">
             <p class="text-[10px] font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-1">{{ 'stats.sessionsTotal' | t }}</p>
-            <p class="text-3xl font-black text-white">{{ o.seancesTotal }}</p>
+            <p class="text-2xl min-[400px]:text-3xl font-black min-w-0 text-white">{{ o.seancesTotal }}</p>
           </div>
-          <div class="bg-slate-900/40 border border-white/5 rounded-xl p-5">
+          <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4 min-[400px]:p-5">
             <p class="text-[10px] font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-1">{{ 'stats.volumeWeek' | t }}</p>
-            <p class="text-3xl font-black text-white">{{ o.tonnageSemaine | number:'1.0-0' }} <span class="text-base text-on-surface-variant">kg</span></p>
+            <p class="text-2xl min-[400px]:text-3xl font-black min-w-0 text-white">{{ o.tonnageSemaine | number:'1.0-0' }} <span class="text-base text-on-surface-variant">kg</span></p>
           </div>
-          <div class="bg-slate-900/40 border border-white/5 rounded-xl p-5">
+          <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4 min-[400px]:p-5">
             <p class="text-[10px] font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-1">{{ 'stats.streakWeeks' | t }}</p>
-            <p class="text-3xl font-black text-secondary">{{ o.streakSemaines }} 🔥</p>
+            <p class="text-2xl min-[400px]:text-3xl font-black min-w-0 text-secondary">{{ o.streakSemaines }} 🔥</p>
           </div>
-          <div class="bg-slate-900/40 border border-white/5 rounded-xl p-5">
+          <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4 min-[400px]:p-5">
             <p class="text-[10px] font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-1">{{ 'stats.bodyweight' | t }}</p>
-            <p class="text-3xl font-black text-white">{{ o.poidsCorps != null ? (o.poidsCorps | number:'1.0-1') + ' kg' : '—' }}</p>
+            <p class="text-2xl min-[400px]:text-3xl font-black min-w-0 text-white">{{ o.poidsCorps != null ? (o.poidsCorps | number:'1.0-1') + ' kg' : '—' }}</p>
           </div>
-          <div [class]="tierClass(o.tierLevel)" class="bg-slate-900/40 border rounded-xl p-5" [style.border-color]="'var(--tier-border)'">
+          <div [class]="tierClass(o.tierLevel)" class="bg-slate-900/40 border rounded-xl p-4 min-[400px]:p-5" [style.border-color]="'var(--tier-border)'">
             <p class="text-[10px] font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-1">{{ 'stats.globalTier' | t }}</p>
             <p class="text-2xl font-black" [style.color]="'var(--tier-color)'">{{ o.tier }}</p>
             <p class="text-[11px] text-on-surface-variant mt-0.5">{{ o.tierCategorie }} · {{ 'stats.lvl' | t }} {{ o.tierLevel }}</p>
           </div>
-          <div class="bg-slate-900/40 border border-white/5 rounded-xl p-5">
+          <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4 min-[400px]:p-5">
             <p class="text-[10px] font-bold tracking-[0.2em] uppercase text-on-surface-variant mb-1">{{ 'stats.avgDuration' | t }}</p>
-            <p class="text-3xl font-black text-white">{{ formatDuration(o.dureeMoyenneMin) }}</p>
+            <p class="text-2xl min-[400px]:text-3xl font-black min-w-0 text-white">{{ formatDuration(o.dureeMoyenneMin) }}</p>
           </div>
         </div>
       } @else {
@@ -121,9 +121,9 @@
       <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4 md:p-6">
         <input type="text" [ngModel]="exerciseQuery()" (ngModelChange)="exerciseQuery.set($event)"
                [placeholder]="'stats.searchExercise' | t"
-               class="w-full bg-slate-950/60 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:border-secondary/50 mb-3" />
+               class="w-full bg-slate-950/60 border border-white/10 rounded-lg px-4 py-2.5 text-base text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:border-secondary/50 mb-3" />
 
-        <div class="flex gap-2 overflow-x-auto pb-2 mb-4 no-scrollbar">
+        <div class="flex gap-2 overflow-x-auto pb-2 mb-4 no-scrollbar [mask-image:linear-gradient(to_right,black_88%,transparent)]">
           @for (ex of filteredExercises(); track ex.nom) {
             <button (click)="selectExercise(ex.nom)"
                     [class]="selectedExercise() === ex.nom ? 'bg-secondary/20 border-secondary/50 text-secondary' : 'bg-slate-950/50 border-white/5 text-on-surface-variant'"

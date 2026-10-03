@@ -1,7 +1,7 @@
 <app-header [title]="'profile.title' | t" [showBack]="true" [backRoute]="'/chat'"></app-header>
 
 <!-- ═══════════════ MAIN ═══════════════ -->
-<main class="min-h-screen pt-24 pb-32 px-4 md:px-8 relative overflow-hidden"
+<main class="min-h-screen pt-24 pb-32 px-4 md:px-8 relative overflow-x-clip"
       [ngClass]="getTierBgClass()">
 
   <!-- Fond de scène immersif (image + overlay) — fallback = dégradé de <main> -->
@@ -24,7 +24,7 @@
              class="w-full bg-black/30 text-white pl-10 pr-4 py-3 rounded-xl border border-secondary/20 focus:border-secondary outline-none transition-colors font-body shadow-lg">
 
       @if (searchResults().length > 0) {
-        <div class="absolute w-full mt-2 bg-slate-900 border border-secondary/30 rounded-xl shadow-2xl z-50 overflow-hidden">
+        <div class="absolute w-full mt-2 bg-slate-900 border border-secondary/30 rounded-xl shadow-2xl z-50 max-h-[50dvh] overflow-y-auto overscroll-contain">
           @for (result of searchResults(); track result.username) {
             <div (click)="goToProfile(result.username)"
                  class="flex items-center gap-4 p-4 hover:bg-secondary/10 cursor-pointer border-b border-white/5 last:border-0 transition-colors">
@@ -57,7 +57,7 @@
     @if (!isLoading() && athleteProfile()) {
       <div class="hero-card-wrap">
 
-      <div class="profile-hero-card relative rounded-3xl p-8 text-center overflow-hidden"
+      <div class="profile-hero-card relative rounded-3xl p-4 min-[400px]:p-8 text-center overflow-hidden"
            [ngClass]="[getProfileCardClass(), getFrameImgClass()]">
 
         <!-- Calque d'accent narratif (par palier) -->
@@ -70,7 +70,7 @@
         @if (isMyProfile()) {
           <input type="file" #fileInput class="hidden" accept="image/*" (change)="onFileSelected($event)">
           <button (click)="triggerFileInput()"
-                  class="absolute top-6 left-6 border p-2.5 rounded-xl transition-colors group z-10"
+                  class="absolute top-3 left-3 min-[400px]:top-6 min-[400px]:left-6 border p-2 min-[400px]:p-2.5 rounded-xl transition-colors group z-10"
                   [ngClass]="getActionBtnClass()"
                   [title]="'profile.changeAvatar' | t">
             <span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">add_photo_alternate</span>
@@ -80,7 +80,7 @@
         <!-- Delete (own profile or admin) -->
         @if (isMyProfile() || isAdmin()) {
           <button (click)="deleteProfile()"
-                  class="absolute top-6 right-6 bg-slate-950 border border-red-900/50 p-2.5 rounded-xl hover:bg-red-900/20 text-red-400 transition-colors group z-10"
+                  class="absolute top-3 right-3 min-[400px]:top-6 min-[400px]:right-6 bg-slate-950 border border-red-900/50 p-2 min-[400px]:p-2.5 rounded-xl hover:bg-red-900/20 text-red-400 transition-colors group z-10"
                   [title]="'profile.deleteAccount' | t">
             <span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">delete_forever</span>
           </button>
@@ -143,22 +143,22 @@
         }
 
         <!-- ── STATS ── -->
-        <div class="grid grid-cols-2 gap-4">
-          <div class="p-4 rounded-2xl relative overflow-hidden group"
+        <div class="grid grid-cols-2 gap-2 min-[400px]:gap-4">
+          <div class="p-3 min-[400px]:p-4 rounded-2xl relative overflow-hidden group"
                [ngClass]="getStatsCardClass()">
             <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
                  [ngClass]="getStatsHoverClass()"></div>
-            <p class="text-[10px] text-on-surface-variant font-bold tracking-[0.2em] uppercase mb-1 relative z-10">{{ 'profile.sessions' | t }}</p>
-            <p class="text-4xl font-black font-headline relative z-10" [ngClass]="getStatsValueClass()">
+            <p class="text-[10px] text-on-surface-variant font-bold tracking-wider min-[400px]:tracking-[0.2em] uppercase mb-1 relative z-10 [overflow-wrap:anywhere]">{{ 'profile.sessions' | t }}</p>
+            <p class="text-2xl min-[400px]:text-4xl font-black font-headline relative z-10" [ngClass]="getStatsValueClass()">
               {{ athleteProfile().totalSessions }}
             </p>
           </div>
-          <div class="p-4 rounded-2xl relative overflow-hidden group"
+          <div class="p-3 min-[400px]:p-4 rounded-2xl relative overflow-hidden group"
                [ngClass]="getStatsCardClass()">
             <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
                  [ngClass]="getStatsHoverClass()"></div>
-            <p class="text-[10px] text-on-surface-variant font-bold tracking-[0.2em] uppercase mb-1 relative z-10">{{ 'profile.seriesPerMonth' | t }}</p>
-            <p class="text-4xl font-black font-headline relative z-10" [ngClass]="getStatsAltValueClass()">
+            <p class="text-[10px] text-on-surface-variant font-bold tracking-wider min-[400px]:tracking-[0.2em] uppercase mb-1 relative z-10 [overflow-wrap:anywhere]">{{ 'profile.seriesPerMonth' | t }}</p>
+            <p class="text-2xl min-[400px]:text-4xl font-black font-headline relative z-10" [ngClass]="getStatsAltValueClass()">
               {{ athleteProfile().averageSeriesPerMonth }}
             </p>
           </div>
@@ -193,15 +193,15 @@
 
       <!-- ═══════ PROGRAMMES ═══════ -->
       <div class="mt-10">
-        <div class="flex items-center justify-between mb-5">
-          <h3 class="flex items-center gap-3 text-xl font-black font-headline uppercase tracking-widest"
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+          <h3 class="flex items-center gap-3 min-w-0 text-lg min-[400px]:text-xl font-black font-headline uppercase tracking-widest"
               [ngClass]="getSectionTitleClass()">
             <span class="material-symbols-outlined" [ngClass]="getSectionIconClass()">view_list</span>
             {{ 'profile.programmes' | t }}
           </h3>
 
           @if (isMyProfile()) {
-            <label class="flex items-center cursor-pointer gap-3">
+            <label class="flex items-center cursor-pointer gap-3 shrink-0">
               <span class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">
                 {{ (athleteProfile().isPublic ? 'profile.public' : 'profile.private') | t }}
               </span>

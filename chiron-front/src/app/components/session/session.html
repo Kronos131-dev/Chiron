@@ -190,7 +190,7 @@
           }
           @if (transcriptVocal()) {
             <p
-              class="text-on-surface text-xs font-body text-center pt-1 break-words"
+              class="text-on-surface text-xs font-body text-center pt-1 break-words max-h-16 overflow-y-auto"
               [class.text-red-400]="etatVocal() === 'erreur'"
             >
               « {{ transcriptVocal() }} »
@@ -202,7 +202,7 @@
       <button
         (click)="toggleRecording()"
         [class.animate-pulse]="isRecording()"
-        class="w-full bg-gradient-to-r from-secondary to-[#c77a30] text-slate-950 font-bold text-base px-6 py-6 rounded-2xl uppercase tracking-widest active:scale-95 transition-transform shadow-xl shadow-secondary/30 flex items-center justify-center gap-3"
+        class="w-full bg-gradient-to-r from-secondary to-[#c77a30] text-slate-950 font-bold text-sm min-[400px]:text-base px-4 min-[400px]:px-6 py-4 min-[400px]:py-6 rounded-2xl uppercase tracking-wider min-[400px]:tracking-widest active:scale-95 transition-transform shadow-xl shadow-secondary/30 flex items-center justify-center gap-3"
       >
         <span class="material-symbols-outlined text-3xl leading-none">{{
           isRecording() ? 'mic' : 'mic_none'

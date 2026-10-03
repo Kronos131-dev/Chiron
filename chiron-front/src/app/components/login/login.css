@@ -125,3 +125,14 @@ button:disabled {
   transform: none;
   text-decoration: underline;
 }
+
+@media (max-width: 360px) {
+  .login-container {
+    margin: 2rem auto;
+    padding: 1.5rem;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+  }
+}

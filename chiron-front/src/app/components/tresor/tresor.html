@@ -56,13 +56,13 @@
               [ngModel]="bodyweightDraft()"
               (ngModelChange)="bodyweightDraft.set($event)"
               [placeholder]="'tresor.bodyweightPlaceholder' | t"
-              class="flex-1 bg-slate-950/60 border border-secondary/30 text-white rounded-xl px-4 py-2.5 text-lg font-bold outline-none focus:border-secondary font-headline"
+              class="flex-1 min-w-0 w-0 bg-slate-950/60 border border-secondary/30 text-white rounded-xl px-4 py-2.5 text-lg font-bold outline-none focus:border-secondary font-headline"
             />
-            <span class="text-on-surface-variant text-sm">kg</span>
+            <span class="shrink-0 text-on-surface-variant text-sm">kg</span>
             <button
               (click)="saveBodyweight()"
               [disabled]="savingBodyweight()"
-              class="bg-gradient-to-r from-secondary to-[#c77a30] text-slate-950 font-black text-xs tracking-widest uppercase px-4 py-2.5 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50"
+              class="shrink-0 bg-gradient-to-r from-secondary to-[#c77a30] text-slate-950 font-black text-xs tracking-widest uppercase px-4 py-2.5 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50"
             >
               @if (savingBodyweight()) {
                 …
@@ -72,7 +72,7 @@
             </button>
             <button
               (click)="cancelEditBodyweight()"
-              class="text-on-surface-variant hover:text-white transition-colors"
+              class="shrink-0 text-on-surface-variant hover:text-white transition-colors"
             >
               <span class="material-symbols-outlined">close</span>
             </button>
@@ -202,34 +202,43 @@
               exercise.tempsSecondes || (exercise.poids !== null && exercise.poids !== undefined)
             ) {
               <!-- Performance stats -->
-              <div class="grid grid-cols-3 gap-3 mb-4 mt-4">
+              <div class="grid grid-cols-3 gap-2 min-[400px]:gap-3 mb-4 mt-4">
                 @if (isCourse(exercise.exerciseType)) {
-                  <div class="bg-slate-950/50 rounded-xl p-3 text-center">
+                  <div class="bg-slate-950/50 rounded-xl p-2 min-[400px]:p-3 text-center">
                     <p class="text-[9px] text-on-surface-variant tracking-widest uppercase mb-1">
                       {{ 'tresor.chrono' | t }}
                     </p>
-                    <p class="text-lg font-black font-headline text-white">
+                    <p
+                      class="text-base min-[400px]:text-lg font-black font-headline [overflow-wrap:anywhere] text-white"
+                    >
                       {{ formatChrono(exercise.tempsSecondes) }}
                     </p>
                   </div>
-                  <div class="bg-slate-950/50 rounded-xl p-3 text-center">
+                  <div class="bg-slate-950/50 rounded-xl p-2 min-[400px]:p-3 text-center">
                     <p class="text-[9px] text-on-surface-variant tracking-widest uppercase mb-1">
                       {{ 'tresor.pace' | t }}
                     </p>
-                    <p class="text-lg font-black font-headline text-white">
-                      {{ allureParKm(exercise) }}<span class="text-xs font-normal">/km</span>
+                    <p
+                      class="text-base min-[400px]:text-lg font-black font-headline [overflow-wrap:anywhere] text-white"
+                    >
+                      {{ allureParKm(exercise)
+                      }}<span class="text-[10px] min-[400px]:text-xs font-normal">/km</span>
                     </p>
                   </div>
-                  <div class="bg-slate-950/50 rounded-xl p-3 text-center">
+                  <div class="bg-slate-950/50 rounded-xl p-2 min-[400px]:p-3 text-center">
                     <p class="text-[9px] text-on-surface-variant tracking-widest uppercase mb-1">
                       {{ 'tresor.speed' | t }}
                     </p>
-                    <p class="text-lg font-black font-headline" [style.color]="'var(--tier-color)'">
-                      {{ exercise.ratioPerformance }}<span class="text-xs font-normal">km/h</span>
+                    <p
+                      class="text-base min-[400px]:text-lg font-black font-headline [overflow-wrap:anywhere]"
+                      [style.color]="'var(--tier-color)'"
+                    >
+                      {{ exercise.ratioPerformance
+                      }}<span class="text-[10px] min-[400px]:text-xs font-normal">km/h</span>
                     </p>
                   </div>
                 } @else {
-                  <div class="bg-slate-950/50 rounded-xl p-3 text-center">
+                  <div class="bg-slate-950/50 rounded-xl p-2 min-[400px]:p-3 text-center">
                     <p class="text-[9px] text-on-surface-variant tracking-widest uppercase mb-1">
                       {{
                         (isBodyweightExercise(exercise.exerciseType)
@@ -238,24 +247,33 @@
                         ) | t
                       }}
                     </p>
-                    <p class="text-lg font-black font-headline text-white">
-                      {{ exercise.poids }}<span class="text-xs font-normal">kg</span>
+                    <p
+                      class="text-base min-[400px]:text-lg font-black font-headline [overflow-wrap:anywhere] text-white"
+                    >
+                      {{ exercise.poids
+                      }}<span class="text-[10px] min-[400px]:text-xs font-normal">kg</span>
                     </p>
                   </div>
-                  <div class="bg-slate-950/50 rounded-xl p-3 text-center">
+                  <div class="bg-slate-950/50 rounded-xl p-2 min-[400px]:p-3 text-center">
                     <p class="text-[9px] text-on-surface-variant tracking-widest uppercase mb-1">
                       Reps
                     </p>
-                    <p class="text-lg font-black font-headline text-white">
+                    <p
+                      class="text-base min-[400px]:text-lg font-black font-headline [overflow-wrap:anywhere] text-white"
+                    >
                       {{ exercise.nombreReps }}
                     </p>
                   </div>
-                  <div class="bg-slate-950/50 rounded-xl p-3 text-center">
+                  <div class="bg-slate-950/50 rounded-xl p-2 min-[400px]:p-3 text-center">
                     <p class="text-[9px] text-on-surface-variant tracking-widest uppercase mb-1">
                       {{ 'tresor.rm1Est' | t }}
                     </p>
-                    <p class="text-lg font-black font-headline" [style.color]="'var(--tier-color)'">
-                      {{ exercise.rm1Estime }}<span class="text-xs font-normal">kg</span>
+                    <p
+                      class="text-base min-[400px]:text-lg font-black font-headline [overflow-wrap:anywhere]"
+                      [style.color]="'var(--tier-color)'"
+                    >
+                      {{ exercise.rm1Estime
+                      }}<span class="text-[10px] min-[400px]:text-xs font-normal">kg</span>
                     </p>
                   </div>
                 }
@@ -347,11 +365,13 @@
 
     <!-- Card -->
     <div
-      class="relative w-full max-w-sm bg-slate-900 border border-secondary/25 rounded-3xl overflow-hidden shadow-2xl animate-in slide-in-from-bottom-4 duration-300"
+      class="relative w-full max-w-sm max-h-[calc(100dvh-2rem)] flex flex-col bg-slate-900 border border-secondary/25 rounded-3xl overflow-hidden shadow-2xl animate-in slide-in-from-bottom-4 duration-300"
       (click)="$event.stopPropagation()"
     >
       <!-- Header -->
-      <div class="flex items-center justify-between px-6 pt-6 pb-4 border-b border-white/5">
+      <div
+        class="flex items-center justify-between shrink-0 px-6 pt-6 pb-4 border-b border-white/5"
+      >
         <div>
           <p class="text-[10px] text-on-surface-variant tracking-[0.2em] uppercase mb-0.5">
             {{ 'tresor.update' | t }}
@@ -368,7 +388,7 @@
         </button>
       </div>
 
-      <div class="p-6 space-y-6">
+      <div class="p-6 space-y-6 overflow-y-auto min-h-0">
         <!-- Warning if no bodyweight for bodyweight exercises -->
         @if (
           isBodyweightExercise(editingExercise()?.exerciseType) &&
@@ -713,7 +733,7 @@
     <div class="absolute inset-0 bg-slate-950/85 backdrop-blur-sm"></div>
 
     <div
-      class="relative w-full max-w-sm bg-slate-900 border border-secondary/25 rounded-3xl overflow-hidden shadow-2xl animate-in slide-in-from-bottom-4 duration-300 max-h-[80vh] flex flex-col"
+      class="relative w-full max-w-sm bg-slate-900 border border-secondary/25 rounded-3xl overflow-hidden shadow-2xl animate-in slide-in-from-bottom-4 duration-300 max-h-[80dvh] flex flex-col"
       (click)="$event.stopPropagation()"
     >
       <div

@@ -22,15 +22,17 @@
         (click)="toggle('language')"
         class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-white/5 transition-colors"
       >
-        <div class="flex items-center gap-3">
-          <span class="material-symbols-outlined text-secondary">translate</span>
-          <div>
+        <div class="flex items-center gap-3 min-w-0">
+          <span class="material-symbols-outlined text-secondary shrink-0">translate</span>
+          <div class="min-w-0">
             <span class="text-white font-bold">{{ 'settings.language.title' | t }}</span>
-            <p class="text-white/40 text-xs mt-0.5">{{ 'settings.language.subtitle' | t }}</p>
+            <p class="text-white/40 text-xs mt-0.5 truncate">
+              {{ 'settings.language.subtitle' | t }}
+            </p>
           </div>
         </div>
         <span
-          class="material-symbols-outlined text-secondary/60 transition-transform"
+          class="material-symbols-outlined shrink-0 text-secondary/60 transition-transform"
           [class.rotate-180]="openSection() === 'language'"
           >expand_more</span
         >
@@ -97,7 +99,7 @@
                 <p class="text-emerald-400 text-[10px] font-bold tracking-[0.2em] uppercase">
                   {{ 'settings.olympus.linked' | t }}
                 </p>
-                <p class="text-white font-bold tracking-wide">
+                <p class="text-white font-bold tracking-wide break-all">
                   {{ nutritionStatus()?.olympusUsername }}
                 </p>
               </div>
@@ -132,14 +134,14 @@
               [ngModel]="olympusPseudo()"
               (ngModelChange)="olympusPseudo.set($event)"
               [placeholder]="'settings.olympus.usernamePh' | t"
-              class="w-full bg-slate-950/60 text-white px-4 py-2.5 rounded-lg border border-white/10 focus:border-emerald-500/50 outline-none text-sm"
+              class="w-full bg-slate-950/60 text-white px-4 py-2.5 rounded-lg border border-white/10 focus:border-emerald-500/50 outline-none text-base"
             />
             <input
               type="password"
               [ngModel]="olympusPassword()"
               (ngModelChange)="olympusPassword.set($event)"
               [placeholder]="'settings.olympus.passwordPh' | t"
-              class="w-full bg-slate-950/60 text-white px-4 py-2.5 rounded-lg border border-white/10 focus:border-emerald-500/50 outline-none text-sm"
+              class="w-full bg-slate-950/60 text-white px-4 py-2.5 rounded-lg border border-white/10 focus:border-emerald-500/50 outline-none text-base"
             />
             @if (linkError()) {
               <p class="text-red-400 text-xs">{{ linkError() }}</p>
@@ -262,12 +264,12 @@
         (click)="toggle('password')"
         class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-white/5 transition-colors"
       >
-        <div class="flex items-center gap-3">
-          <span class="material-symbols-outlined text-secondary">lock</span>
+        <div class="flex items-center gap-3 min-w-0">
+          <span class="material-symbols-outlined text-secondary shrink-0">lock</span>
           <span class="text-white font-bold">{{ 'settings.password.title' | t }}</span>
         </div>
         <span
-          class="material-symbols-outlined text-secondary/60 transition-transform"
+          class="material-symbols-outlined shrink-0 text-secondary/60 transition-transform"
           [class.rotate-180]="openSection() === 'password'"
           >expand_more</span
         >
@@ -309,19 +311,21 @@
         (click)="toggle('email')"
         class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-white/5 transition-colors"
       >
-        <div class="flex items-center gap-3">
-          <span class="material-symbols-outlined text-secondary">mail</span>
-          <div>
+        <div class="flex items-center gap-3 min-w-0">
+          <span class="material-symbols-outlined text-secondary shrink-0">mail</span>
+          <div class="min-w-0">
             <span class="text-white font-bold">{{ 'settings.email.title' | t }}</span>
             @if (currentEmail()) {
-              <p class="text-white/40 text-xs mt-0.5">{{ currentEmail() }}</p>
+              <p class="text-white/40 text-xs mt-0.5 truncate">{{ currentEmail() }}</p>
             } @else {
-              <p class="text-white/30 text-xs mt-0.5 italic">{{ 'settings.email.none' | t }}</p>
+              <p class="text-white/30 text-xs mt-0.5 truncate italic">
+                {{ 'settings.email.none' | t }}
+              </p>
             }
           </div>
         </div>
         <span
-          class="material-symbols-outlined text-secondary/60 transition-transform"
+          class="material-symbols-outlined shrink-0 text-secondary/60 transition-transform"
           [class.rotate-180]="openSection() === 'email'"
           >expand_more</span
         >
@@ -351,15 +355,15 @@
         (click)="toggle('username')"
         class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-white/5 transition-colors"
       >
-        <div class="flex items-center gap-3">
-          <span class="material-symbols-outlined text-secondary">badge</span>
-          <div>
+        <div class="flex items-center gap-3 min-w-0">
+          <span class="material-symbols-outlined text-secondary shrink-0">badge</span>
+          <div class="min-w-0">
             <span class="text-white font-bold">{{ 'settings.username.title' | t }}</span>
-            <p class="text-white/40 text-xs mt-0.5">{{ username }}</p>
+            <p class="text-white/40 text-xs mt-0.5 truncate">{{ username }}</p>
           </div>
         </div>
         <span
-          class="material-symbols-outlined text-secondary/60 transition-transform"
+          class="material-symbols-outlined shrink-0 text-secondary/60 transition-transform"
           [class.rotate-180]="openSection() === 'username'"
           >expand_more</span
         >
@@ -390,19 +394,23 @@
         (click)="toggle('identity')"
         class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-white/5 transition-colors"
       >
-        <div class="flex items-center gap-3">
-          <span class="material-symbols-outlined text-secondary">person</span>
-          <div>
+        <div class="flex items-center gap-3 min-w-0">
+          <span class="material-symbols-outlined text-secondary shrink-0">person</span>
+          <div class="min-w-0">
             <span class="text-white font-bold">{{ 'settings.identity.title' | t }}</span>
             @if (currentPrenom() || currentNom()) {
-              <p class="text-white/40 text-xs mt-0.5">{{ currentPrenom() }} {{ currentNom() }}</p>
+              <p class="text-white/40 text-xs mt-0.5 truncate">
+                {{ currentPrenom() }} {{ currentNom() }}
+              </p>
             } @else {
-              <p class="text-white/30 text-xs mt-0.5 italic">{{ 'settings.identity.none' | t }}</p>
+              <p class="text-white/30 text-xs mt-0.5 truncate italic">
+                {{ 'settings.identity.none' | t }}
+              </p>
             }
           </div>
         </div>
         <span
-          class="material-symbols-outlined text-secondary/60 transition-transform"
+          class="material-symbols-outlined shrink-0 text-secondary/60 transition-transform"
           [class.rotate-180]="openSection() === 'identity'"
           >expand_more</span
         >
@@ -442,15 +450,17 @@
         (click)="toggle('tonnage')"
         class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-white/5 transition-colors"
       >
-        <div class="flex items-center gap-3">
-          <span class="material-symbols-outlined text-secondary">scale</span>
-          <div>
+        <div class="flex items-center gap-3 min-w-0">
+          <span class="material-symbols-outlined text-secondary shrink-0">scale</span>
+          <div class="min-w-0">
             <span class="text-white font-bold">{{ 'settings.tonnage.title' | t }}</span>
-            <p class="text-white/40 text-xs mt-0.5">{{ 'settings.tonnage.subtitle' | t }}</p>
+            <p class="text-white/40 text-xs mt-0.5 truncate">
+              {{ 'settings.tonnage.subtitle' | t }}
+            </p>
           </div>
         </div>
         <span
-          class="material-symbols-outlined text-secondary/60 transition-transform"
+          class="material-symbols-outlined shrink-0 text-secondary/60 transition-transform"
           [class.rotate-180]="openSection() === 'tonnage'"
           >expand_more</span
         >

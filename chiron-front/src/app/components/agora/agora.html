@@ -25,7 +25,7 @@
 
       <!-- Dynamic Search Results Dropdown -->
       @if (searchResults().length > 0) {
-        <div class="absolute w-full mt-2 bg-slate-900 border border-secondary/30 rounded-xl shadow-2xl z-50 overflow-hidden">
+        <div class="absolute w-full mt-2 bg-slate-900 border border-secondary/30 rounded-xl shadow-2xl z-50 max-h-[50dvh] overflow-y-auto overscroll-contain">
           @for (result of searchResults(); track result.username) {
             <div (click)="goToProfile(result.username)"
                  class="flex items-center gap-4 p-4 hover:bg-secondary/10 cursor-pointer border-b border-white/5 last:border-0 transition-colors">
@@ -61,26 +61,26 @@
         @for (athlete of participants(); track athlete.username) {
           <article (click)="goToProfile(athlete.username)"
                    [ngClass]="getTierClass(athlete.performanceTierLevel)"
-                   class="rounded-2xl p-6 cursor-pointer shadow-xl overflow-hidden relative group">
+                   class="rounded-2xl p-4 min-[400px]:p-6 cursor-pointer shadow-xl overflow-hidden relative group">
 
             <!-- Bordure céramique (méandre grec) teintée par le palier -->
             <span class="agora-meander"></span>
 
-            <div class="relative z-10 flex items-center gap-5">
+            <div class="relative z-10 flex items-center gap-3 min-[400px]:gap-5">
               <!-- Avatar with tier-colored border, no status bubble -->
               <img [src]="chironApi.getImageUrl(athlete.icon || 'default_icon.png')"
                    (error)="$event.target.src='/images/default_icon.png'"
-                   class="agora-avatar w-16 h-16 rounded-full object-cover flex-shrink-0"
+                   class="agora-avatar w-12 h-12 min-[400px]:w-16 min-[400px]:h-16 rounded-full object-cover flex-shrink-0"
                    alt="avatar">
 
               <div class="flex-1 min-w-0">
-                <h3 class="agora-username font-headline font-black text-xl text-white uppercase tracking-wide flex items-center gap-2 min-w-0">
+                <h3 class="agora-username font-headline font-black text-lg min-[400px]:text-xl text-white uppercase tracking-wide flex items-center gap-2 min-w-0">
                   <span class="[overflow-wrap:anywhere] min-w-0">{{ athlete.username }}</span>
                   @if (athlete.isAdmin) {
                     <span class="material-symbols-outlined text-amber-500 text-sm flex-shrink-0" [title]="'agora.admin' | t">shield</span>
                   }
                 </h3>
-                <p class="agora-rank text-xs font-black tracking-widest uppercase mt-1">
+                <p class="agora-rank truncate text-xs font-black tracking-widest uppercase mt-1">
                   {{ athlete.performanceTier || 'Éphèbe' }}
                 </p>
               </div>
@@ -91,7 +91,7 @@
                      class="agora-medal-img" alt="palier" aria-hidden="true">
               </div>
 
-              <span class="agora-arrow material-symbols-outlined text-xl flex-shrink-0">
+              <span class="agora-arrow hidden min-[400px]:inline material-symbols-outlined text-xl flex-shrink-0">
                 arrow_forward
               </span>
             </div>

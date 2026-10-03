@@ -137,8 +137,10 @@
           @for (e of evenementsRecents(); track $index) {
             <li class="flex gap-3">
               <span class="text-slate-600 shrink-0">{{ e.t / 1000 | number: '1.0-0' }}s</span>
-              <span class="shrink-0 w-28 text-cyan-400">{{ e.type }}</span>
-              <span class="text-slate-400">{{ e.detail }}</span>
+              <span class="shrink-0 w-20 min-[400px]:w-28 truncate text-cyan-400">{{
+                e.type
+              }}</span>
+              <span class="min-w-0 flex-1 break-all text-slate-400">{{ e.detail }}</span>
             </li>
           }
         </ul>

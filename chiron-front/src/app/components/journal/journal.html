@@ -69,12 +69,12 @@
               >
                 <!-- Clickable Session Header Summary (Accordion Toggle) -->
                 <div
-                  class="bg-slate-950/50 p-6 border-b border-secondary/10 flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer hover:bg-slate-900/80 transition-colors"
+                  class="bg-slate-950/50 p-4 min-[400px]:p-6 border-b border-secondary/10 flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer hover:bg-slate-900/80 transition-colors"
                   (click)="toggleSeanceDetails(seance.id)"
                 >
-                  <div>
+                  <div class="min-w-0">
                     <h3
-                      class="font-headline text-2xl font-bold text-white uppercase tracking-wide flex items-center gap-3"
+                      class="font-headline text-2xl font-bold text-white uppercase tracking-wide flex items-center gap-3 min-w-0 break-words"
                     >
                       {{ seance.titre || ('journal.workout' | t) }}
 
@@ -98,7 +98,7 @@
                   </div>
 
                   <!-- Session Actions and Badges -->
-                  <div class="flex items-center gap-2">
+                  <div class="flex flex-wrap items-center gap-2">
                     <!-- Exercise Count Badge -->
                     <div
                       class="text-xs font-bold uppercase tracking-widest bg-secondary/10 text-secondary px-4 py-2 rounded"
@@ -135,31 +135,35 @@
                       }
                     }
 
-                    <!-- Edit Session Button -->
-                    @if (editingSeanceId() !== seance.id) {
-                      <button
-                        (click)="startEdit(seance, $event)"
-                        [title]="'journal.editTitle' | t"
-                        class="w-8 h-8 rounded bg-secondary/10 flex items-center justify-center text-secondary hover:bg-secondary/30 transition-colors cursor-pointer z-10"
-                      >
-                        <span class="material-symbols-outlined text-sm">edit</span>
-                      </button>
-                    }
+                    <div class="ml-auto flex items-center gap-2 shrink-0">
+                      <!-- Edit Session Button -->
+                      @if (editingSeanceId() !== seance.id) {
+                        <button
+                          (click)="startEdit(seance, $event)"
+                          [title]="'journal.editTitle' | t"
+                          class="w-8 h-8 rounded bg-secondary/10 flex items-center justify-center text-secondary hover:bg-secondary/30 transition-colors cursor-pointer z-10"
+                        >
+                          <span class="material-symbols-outlined text-sm">edit</span>
+                        </button>
+                      }
 
-                    <!-- Delete Session Button -->
-                    <button
-                      (click)="supprimerSeance(seance.id, $event)"
-                      [title]="'common.delete' | t"
-                      class="w-8 h-8 rounded bg-red-900/20 flex items-center justify-center text-red-400 hover:bg-red-900/40 transition-colors cursor-pointer z-10"
-                    >
-                      <span class="material-symbols-outlined text-sm">delete</span>
-                    </button>
+                      <!-- Delete Session Button -->
+                      <button
+                        (click)="supprimerSeance(seance.id, $event)"
+                        [title]="'common.delete' | t"
+                        class="w-8 h-8 rounded bg-red-900/20 flex items-center justify-center text-red-400 hover:bg-red-900/40 transition-colors cursor-pointer z-10"
+                      >
+                        <span class="material-symbols-outlined text-sm">delete</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
 
                 <!-- Expandable Session Details (Exercises and Sets) -->
                 @if (expandedSeanceId() === seance.id) {
-                  <div class="p-6 space-y-6 animate-in fade-in slide-in-from-top-4 duration-300">
+                  <div
+                    class="p-3 min-[400px]:p-6 space-y-6 animate-in fade-in slide-in-from-top-4 duration-300"
+                  >
                     <!-- ─── READ-ONLY VIEW ─── -->
                     @if (editingSeanceId() !== seance.id) {
                       <!-- Session note -->
@@ -401,7 +405,7 @@
                                               {{ 'journal.distance' | t }}
                                             </p>
                                             <p
-                                              class="font-headline text-lg font-black text-white tabular-nums"
+                                              class="font-headline text-base min-[400px]:text-lg font-black text-white tabular-nums"
                                             >
                                               {{ trace.distanceM / 1000 | number: '1.2-2' }}
                                             </p>
@@ -413,7 +417,7 @@
                                               {{ 'journal.duration' | t }}
                                             </p>
                                             <p
-                                              class="font-headline text-lg font-black text-white tabular-nums"
+                                              class="font-headline text-base min-[400px]:text-lg font-black text-white tabular-nums"
                                             >
                                               {{ chronoFormate(trace.dureeS) }}
                                             </p>
@@ -425,7 +429,7 @@
                                               {{ 'journal.avgPace' | t }}
                                             </p>
                                             <p
-                                              class="font-headline text-lg font-black text-white tabular-nums"
+                                              class="font-headline text-base min-[400px]:text-lg font-black text-white tabular-nums"
                                             >
                                               {{ allureFormatee(trace.allureMoyenneKmh) }}
                                             </p>
@@ -572,9 +576,15 @@
                                   <tr
                                     class="border-b border-secondary/20 text-on-surface-variant font-headline text-sm tracking-wider uppercase"
                                   >
-                                    <th class="py-2 px-4">{{ 'journal.set' | t }}</th>
-                                    <th class="py-2 px-4">{{ 'journal.reps' | t }}</th>
-                                    <th class="py-2 px-4">{{ 'journal.weightKg' | t }}</th>
+                                    <th class="py-2 px-2 min-[400px]:px-4">
+                                      {{ 'journal.set' | t }}
+                                    </th>
+                                    <th class="py-2 px-2 min-[400px]:px-4">
+                                      {{ 'journal.reps' | t }}
+                                    </th>
+                                    <th class="py-2 px-2 min-[400px]:px-4">
+                                      {{ 'journal.weightKg' | t }}
+                                    </th>
                                   </tr>
                                 </thead>
                                 <tbody class="font-body text-on-surface">
@@ -582,21 +592,29 @@
                                     <tr
                                       class="border-b border-white/5 hover:bg-white/5 transition-colors"
                                     >
-                                      <td class="py-2 px-4 font-bold text-secondary/80">
+                                      <td
+                                        class="py-2 px-2 min-[400px]:px-4 font-bold text-secondary/80"
+                                      >
                                         #{{ i + 1 }}
                                       </td>
-                                      <td class="py-2 px-4">{{ serie.reps }}</td>
-                                      <td class="py-2 px-4">{{ serie.poids }}</td>
+                                      <td class="py-2 px-2 min-[400px]:px-4">{{ serie.reps }}</td>
+                                      <td class="py-2 px-2 min-[400px]:px-4">{{ serie.poids }}</td>
                                     </tr>
                                     @for (deg of serie.degressifs; track deg.id; let j = $index) {
                                       <tr
                                         class="border-b border-white/5 bg-slate-900/30 hover:bg-white/5 transition-colors"
                                       >
-                                        <td class="py-2 px-4 pl-8 text-on-surface-variant text-xs">
+                                        <td
+                                          class="py-2 pr-2 min-[400px]:pr-4 pl-6 min-[400px]:pl-8 text-on-surface-variant text-xs"
+                                        >
                                           ↳ {{ 'journal.drop' | t }}
                                         </td>
-                                        <td class="py-2 px-4 text-sm">{{ deg.reps }}</td>
-                                        <td class="py-2 px-4 text-sm">{{ deg.poids }}</td>
+                                        <td class="py-2 px-2 min-[400px]:px-4 text-sm">
+                                          {{ deg.reps }}
+                                        </td>
+                                        <td class="py-2 px-2 min-[400px]:px-4 text-sm">
+                                          {{ deg.poids }}
+                                        </td>
                                       </tr>
                                     }
                                   }
@@ -611,7 +629,9 @@
                     <!-- ─── EDIT VIEW ─── -->
                     @if (editingSeanceId() === seance.id && editingDraft(); as draft) {
                       @for (exo of draft.exercices; track $index; let exoIdx = $index) {
-                        <div class="bg-slate-950/30 rounded-lg p-4 border border-secondary/30">
+                        <div
+                          class="bg-slate-950/30 rounded-lg p-3 min-[400px]:p-4 border border-secondary/30"
+                        >
                           <h4
                             class="font-headline text-lg text-on-surface mb-3 flex items-center gap-2"
                           >
@@ -627,42 +647,50 @@
                                 <tr
                                   class="border-b border-secondary/20 text-on-surface-variant font-headline text-sm tracking-wider uppercase"
                                 >
-                                  <th class="py-2 px-3">{{ 'journal.set' | t }}</th>
-                                  <th class="py-2 px-3">{{ 'journal.reps' | t }}</th>
-                                  <th class="py-2 px-3">{{ 'journal.weightKg' | t }}</th>
-                                  <th class="py-2 px-3 w-10"></th>
+                                  <th class="py-2 px-1.5 min-[400px]:px-3">
+                                    {{ 'journal.set' | t }}
+                                  </th>
+                                  <th class="py-2 px-1.5 min-[400px]:px-3">
+                                    {{ 'journal.reps' | t }}
+                                  </th>
+                                  <th class="py-2 px-1.5 min-[400px]:px-3">
+                                    {{ 'journal.weightKg' | t }}
+                                  </th>
+                                  <th class="py-2 px-1.5 min-[400px]:px-3 w-10"></th>
                                 </tr>
                               </thead>
                               <tbody class="font-body text-on-surface">
                                 @for (serie of exo.series; track $index; let serieIdx = $index) {
                                   <tr class="border-b border-white/5">
-                                    <td class="py-2 px-3 font-bold text-secondary/80">
+                                    <td
+                                      class="py-2 px-1.5 min-[400px]:px-3 font-bold text-secondary/80"
+                                    >
                                       #{{ serieIdx + 1 }}
                                     </td>
-                                    <td class="py-2 px-3">
+                                    <td class="py-2 px-1.5 min-[400px]:px-3">
                                       <input
                                         type="number"
                                         inputmode="numeric"
                                         min="0"
-                                        class="w-20 bg-slate-800 border border-secondary/30 text-on-surface rounded px-2 py-1 focus:outline-none focus:border-secondary"
+                                        class="w-14 min-[400px]:w-20 bg-slate-800 border border-secondary/30 text-on-surface rounded px-2 py-1 focus:outline-none focus:border-secondary"
                                         [(ngModel)]="serie.reps"
                                         (blur)="onFieldChange()"
                                         (click)="$event.stopPropagation()"
                                       />
                                     </td>
-                                    <td class="py-2 px-3">
+                                    <td class="py-2 px-1.5 min-[400px]:px-3">
                                       <input
                                         type="number"
                                         inputmode="decimal"
                                         min="0"
                                         step="0.5"
-                                        class="w-24 bg-slate-800 border border-secondary/30 text-on-surface rounded px-2 py-1 focus:outline-none focus:border-secondary"
+                                        class="w-16 min-[400px]:w-24 bg-slate-800 border border-secondary/30 text-on-surface rounded px-2 py-1 focus:outline-none focus:border-secondary"
                                         [(ngModel)]="serie.poids"
                                         (blur)="onFieldChange()"
                                         (click)="$event.stopPropagation()"
                                       />
                                     </td>
-                                    <td class="py-2 px-3">
+                                    <td class="py-2 px-1.5 min-[400px]:px-3">
                                       <button
                                         (click)="removeSerie(exoIdx, serieIdx, $event)"
                                         [title]="'journal.removeSet' | t"

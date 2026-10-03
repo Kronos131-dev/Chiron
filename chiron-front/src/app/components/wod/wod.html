@@ -1,7 +1,7 @@
 <app-header [title]="'wod.title' | t" [showBack]="false"></app-header>
 
 <main
-  class="min-h-screen pt-20 pb-8 bg-slate-950 heroic-texture flex flex-col items-center px-5"
+  class="min-h-screen pt-20 pb-32 bg-slate-950 heroic-texture flex flex-col items-center px-5"
   (pointerdown)="couperAlarme()"
 >
   <p
@@ -48,7 +48,7 @@
       >
     } @else {
       <span
-        class="font-headline text-3xl font-black text-secondary uppercase tracking-[0.15em] text-center px-6"
+        class="font-headline text-2xl min-[400px]:text-3xl font-black text-secondary uppercase tracking-[0.15em] text-center px-3 min-[400px]:px-6"
         >{{ 'wod.start' | t }}</span
       >
     }

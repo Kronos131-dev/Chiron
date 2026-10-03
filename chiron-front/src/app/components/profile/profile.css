@@ -137,7 +137,7 @@
      Le remplissage est limité au padding-box → AUCUN métal sous le cadre, donc
      les parties transparentes du PNG laissent voir le fond de scène (pas de
      rectangle de bordure CSS qui déborde du vrai cadre). */
-  border: clamp(26px, 9vw, 56px) solid transparent;
+  border: clamp(18px, 6vw, 56px) solid transparent;
   border-radius: 1.5rem;
   background: var(--card-fill) padding-box;
 }

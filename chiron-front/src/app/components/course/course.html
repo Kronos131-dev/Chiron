@@ -12,12 +12,16 @@
       {{ distanceKm() }}<span class="text-2xl text-on-surface-variant ml-2">km</span>
     </p>
 
-    <div class="grid grid-cols-2 gap-3 w-full max-w-sm mt-6">
+    <div class="grid grid-cols-2 gap-2 min-[400px]:gap-3 w-full max-w-sm mt-6">
       <div class="bg-slate-950/50 border border-white/5 rounded-xl p-4 text-center">
         <p class="text-on-surface-variant text-[9px] font-bold tracking-[0.2em] uppercase">
           {{ 'course.duration' | t }}
         </p>
-        <p class="font-headline text-3xl font-black text-white tabular-nums mt-1">{{ chrono() }}</p>
+        <p
+          class="font-headline text-2xl min-[400px]:text-3xl font-black text-white tabular-nums mt-1"
+        >
+          {{ chrono() }}
+        </p>
       </div>
       <div
         class="bg-slate-950/50 border rounded-xl p-4 text-center transition-colors"
@@ -29,7 +33,7 @@
           {{ 'course.pace' | t }} · {{ uniteLibelle() }}
         </p>
         <p
-          class="font-headline text-3xl font-black tabular-nums mt-1"
+          class="font-headline text-2xl min-[400px]:text-3xl font-black tabular-nums mt-1"
           [class.text-white]="!tropLent() && !tropRapide()"
           [class.text-amber-400]="tropLent()"
           [class.text-sky-400]="tropRapide()"
@@ -111,7 +115,7 @@
       (pointerdown)="demarrer()"
     >
       <span
-        class="font-headline text-3xl font-black text-secondary uppercase tracking-[0.15em] text-center px-6"
+        class="font-headline text-2xl min-[400px]:text-3xl font-black text-secondary uppercase tracking-[0.15em] text-center px-3 min-[400px]:px-6"
       >
         {{ 'course.start' | t }}
       </span>
@@ -222,18 +226,24 @@
       {{ distanceKm() }}<span class="text-2xl text-emerald-400/70 ml-2">km</span>
     </p>
 
-    <div class="grid grid-cols-3 gap-3 w-full max-w-sm mt-6">
+    <div class="grid grid-cols-3 gap-2 min-[400px]:gap-3 w-full max-w-sm mt-6">
       <div class="bg-slate-950/50 border border-white/5 rounded-xl p-3 text-center">
         <p class="text-on-surface-variant text-[9px] font-bold tracking-[0.15em] uppercase">
           {{ 'course.duration' | t }}
         </p>
-        <p class="font-headline text-xl font-black text-white tabular-nums mt-1">{{ chrono() }}</p>
+        <p
+          class="font-headline text-lg min-[400px]:text-xl font-black text-white tabular-nums mt-1"
+        >
+          {{ chrono() }}
+        </p>
       </div>
       <div class="bg-slate-950/50 border border-white/5 rounded-xl p-3 text-center">
         <p class="text-on-surface-variant text-[9px] font-bold tracking-[0.15em] uppercase">
           {{ 'course.pace' | t }} · {{ uniteLibelle() }}
         </p>
-        <p class="font-headline text-xl font-black text-white tabular-nums mt-1">
+        <p
+          class="font-headline text-lg min-[400px]:text-xl font-black text-white tabular-nums mt-1"
+        >
           {{ allureMoyenne() }}
         </p>
       </div>
@@ -241,7 +251,9 @@
         <p class="text-on-surface-variant text-[9px] font-bold tracking-[0.15em] uppercase">
           {{ 'course.elevation' | t }}
         </p>
-        <p class="font-headline text-xl font-black text-white tabular-nums mt-1">
+        <p
+          class="font-headline text-lg min-[400px]:text-xl font-black text-white tabular-nums mt-1"
+        >
           {{ resume()?.denivelePositifM ?? 0 | number: '1.0-0' }}
         </p>
       </div>
