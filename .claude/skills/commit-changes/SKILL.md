@@ -20,7 +20,7 @@ remove it.
    return here.
 4. Commit only when the owner has said to. If the work was never handed over for manual testing,
    apply the `run-for-testing` skill and wait for their go; a finished task is not a request to
-   commit.
+   commit. The hand-off asks for commit and push in one question, so a go given there covers both.
 
 **Step 2: Group the changes**
 1. Split the tree into one logical change per commit — a feature, a fix, a refactor, a formatting
@@ -71,9 +71,10 @@ remove it.
    it returns nothing.
 4. Confirm every item in `references/checklist.md`.
 
-**Step 7: Report, do not push**
+**Step 7: Report, then push if the go covered it**
 1. State what was committed and what remains uncommitted in the tree.
-2. Pushing is a separate decision — apply the `push-and-watch-pipeline` skill when asked to ship.
+2. If the owner's go was « commit et push » and the commits match what was announced, apply the
+   `push-and-watch-pipeline` skill straight away. Otherwise pushing stays a separate decision.
 
 ## Error Handling
 

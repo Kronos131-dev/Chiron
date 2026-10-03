@@ -87,7 +87,9 @@ environment.
 - Le même run construit l'**APK Android** (job `build-android`). Il ne dépend de rien et rien ne
   dépend de lui : une erreur de signature ne retient pas un déploiement web, et le job ne reçoit
   aucun secret de serveur. C'est aussi le **seul** endroit du pipeline qui exécute `npm test`.
-- Announce what is about to ship before pushing to `main`, and wait for the go-ahead.
+- Announce what is about to ship before pushing to `main`, and wait for the go-ahead. The announcement
+  comes with the question « commit et push ? » once the work has been tried by hand: one go covers both,
+  as long as the commits made are the ones announced.
 - The production server may be **read** — `docker ps`, `docker logs`, `journalctl`, `df`, health
   probes. It is never mutated: no `docker rm`, no `compose up`, no `scp` of an artefact. Deploying is
   the pipeline's job.
@@ -137,8 +139,8 @@ matching skill **before** starting.
 
 Typical flow: `start-feature` opens the branch and routes to an implementation skill, the `verify-*`
 skills and `review-changes` close the work, then `run-for-testing` starts the backend and the frontend
-on the new code so the owner can try it. Only when the owner says so do `commit-changes` and, on a
-separate go, `push-and-watch-pipeline` ship it.
+on the new code so the owner can try it and asks once « commit et push ? ». Only on their go do
+`commit-changes` then `push-and-watch-pipeline` ship it.
 
 ## Connected services
 

@@ -29,6 +29,10 @@ for a go-ahead, every time.
    an application that starts and then silently does nothing. Apply the `manage-env-and-secrets`
    skill.
 4. Stop and wait for the user's explicit go-ahead. Do not push on an assumed yes.
+5. Skip the wait only when the owner has just answered a combined « commit et push » question
+   (the hand-off of the `run-for-testing` skill) whose announcement listed these same commits:
+   that answer is the go-ahead, and the push follows the commit directly. A commit that differs
+   from what was announced, or a push the owner never asked for, still needs its own announcement.
 
 **Step 3: Push**
 1. Run `git push` (or `git push -u origin <branch>` for a new branch).

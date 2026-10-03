@@ -63,6 +63,10 @@ investigation. Establish which repository the failing job belongs to before anyt
 * If the MCP server returns unauthenticated, tell the user to run `/mcp`. There is no `gh` fallback
   on this machine.
 * If no run exists for the commit, the workflow never triggered — confirm the push landed on `main`.
+* If `build-android` dies in the `android-actions/setup-android` step with
+  `Failed to find package 'tools'`, the action asked `sdkmanager` for a package Google no longer
+  ships. It fails before any compilation, so it is not the code under test: the step carries
+  `packages: ''` for that reason. Nothing else in the pipeline waits on this job.
 * If several jobs are red, fix the earliest in the graph first; `deploy` and `deploy-olympus` fail as
   consequences of their `needs`.
 * If a Maven job fails on a formatting or compilation error that does not reproduce locally, the local

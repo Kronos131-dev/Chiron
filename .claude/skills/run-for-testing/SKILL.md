@@ -68,10 +68,20 @@ thing. `ng serve` does rebuild on save, but only if it is running at all.
    the button, the state to reach.
 2. State honestly what ran and what did not: which verify gates passed, what was not looked at,
    any Android or production-only aspect no local run can show.
-3. State that nothing is committed or pushed, and wait. Do not stage, commit or announce a push
-   until the owner says so. On "commit", apply `commit-changes`; on "push", apply
-   `push-and-watch-pipeline`.
-4. If the owner reports a problem, fix it, run the verify skills again and repeat from Step 1.
+3. State that nothing is committed or pushed, then put **one** question to the owner — commit and
+   push together — preceded by the pre-push announcement that `push-and-watch-pipeline` requires,
+   so that a single answer covers both. The announcement lists, in one short block: the commit
+   subjects about to be created, any new file under `chiron-back/src/main/resources/db/migration/`
+   (`git status --porcelain -- chiron-back/src/main/resources/db/migration/`), any new
+   environment variable the code reads, and any change to `security/SecurityConfig.java` or to the
+   `ChironAgent` `@SystemMessage`.
+4. Wait. Do not stage, commit or push until the owner answers.
+   - If they say go (« go », « oui », « commit et push »), apply `commit-changes`, then
+     `push-and-watch-pipeline` without asking again, provided the commits created are the ones
+     announced. If the content or the grouping changed, announce again.
+   - If they ask for « commit » only, commit and stop. If they ask for « push » alone, push what
+     is already committed.
+5. If the owner reports a problem, fix it, run the verify skills again and repeat from Step 1.
 
 ## Error Handling
 
