@@ -139,6 +139,12 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
 
+  {
+    path: 'labo-carte',
+    loadComponent: () => import('./components/labo-carte/labo-carte').then((m) => m.LaboCarte),
+    canActivate: [authGuard],
+  },
+
   { path: '', redirectTo: 'chat', pathMatch: 'full' },
   { path: '**', redirectTo: 'chat' },
 ];

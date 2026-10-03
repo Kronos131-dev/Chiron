@@ -3,6 +3,9 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ActiveSessionService } from '../../service/active-session.service';
 import { I18nService } from '../../service/i18n.service';
+import { PartageSeance } from '../../service/partage-seance';
+import { CarteSeance } from '../../partage/carte';
+import { PartageCarte } from '../shared/partage-carte/partage-carte';
 import { TranslatePipe } from '../../service/translate.pipe';
 import { HeaderComponent } from '../shared/header/header';
 import { ExerciceForm } from '../../shared/exercise-forms';
@@ -31,7 +34,7 @@ interface WodSnapshot {
 @Component({
   selector: 'app-wod',
   standalone: true,
-  imports: [CommonModule, HeaderComponent, TranslatePipe],
+  imports: [CommonModule, HeaderComponent, TranslatePipe, PartageCarte],
   templateUrl: './wod.html',
   styleUrl: './wod.css',
 })
@@ -45,6 +48,8 @@ export class Wod implements OnInit, OnDestroy {
   readonly record = signal<number | null>(null);
   readonly startedAt = signal<number | null>(null);
   readonly alarmeEnCours = signal(false);
+  readonly carteAPartager = signal<CarteSeance | null>(null);
+  readonly partageEnPreparation = signal(false);
 
   private readonly now = signal(Date.now());
   private ticker: ReturnType<typeof setInterval> | null = null;
@@ -84,6 +89,7 @@ export class Wod implements OnInit, OnDestroy {
     private router: Router,
     private activeSession: ActiveSessionService,
     private i18n: I18nService,
+    private partage: PartageSeance,
   ) {}
 
   ngOnInit() {
@@ -180,6 +186,20 @@ export class Wod implements OnInit, OnDestroy {
     vibrer(VIBRATION_ALARME);
     this.relacherWakeLock();
     this.finDeSonnerie = setTimeout(() => this.couperAlarme(), DUREE_ALARME_MS);
+  }
+
+  partagerWod() {
+    if (!this.exercice || this.partageEnPreparation()) return;
+    this.partageEnPreparation.set(true);
+    this.partage
+      .preparerWod(this.exercice, this.tours(), this.record(), this.recordBattu())
+      .subscribe({
+        next: (carte) => {
+          this.carteAPartager.set(carte);
+          this.partageEnPreparation.set(false);
+        },
+        error: () => this.partageEnPreparation.set(false),
+      });
   }
 
   retourSeance() {

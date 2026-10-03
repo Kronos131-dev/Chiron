@@ -152,6 +152,18 @@
               {{ saveStatus() }}
             </p>
           }
+
+          @if (seancePartageable()) {
+            <button
+              type="button"
+              (click)="partagerSeance()"
+              [disabled]="partageEnPreparation()"
+              class="w-full mt-4 border border-secondary/50 bg-secondary/10 text-secondary font-bold text-sm px-6 py-4 rounded-xl uppercase tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              <span class="material-symbols-outlined text-lg">ios_share</span>
+              {{ 'share.actionSeance' | t }}
+            </button>
+          }
         </div>
       }
     </div>
@@ -221,3 +233,7 @@
   (addCustom)="addCustomExercice()"
   (removeAdded)="removeAddedFromPicker($event)"
 />
+
+@if (carteAPartager(); as carte) {
+  <app-partage-carte [carte]="carte" (fermer)="carteAPartager.set(null)" />
+}

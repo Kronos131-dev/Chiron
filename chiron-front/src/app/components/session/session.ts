@@ -10,6 +10,9 @@ import { ExerciceCardComponent } from '../shared/exercice-card/exercice-card';
 import { ExercisePickerComponent } from '../shared/exercise-picker/exercise-picker';
 import { TranslatePipe } from '../../service/translate.pipe';
 import { I18nService } from '../../service/i18n.service';
+import { PartageSeance } from '../../service/partage-seance';
+import { CarteSeance, SeanceBrute } from '../../partage/carte';
+import { PartageCarte } from '../shared/partage-carte/partage-carte';
 import { nowAsLocalDateTime, getIsoWeekNumber } from '../../util/local-date-time';
 import {
   ExerciceForm,
@@ -39,6 +42,7 @@ const DELAI_ECOUTE_MS = 12000;
     HeaderComponent,
     ExerciceCardComponent,
     ExercisePickerComponent,
+    PartageCarte,
     TranslatePipe,
   ],
   templateUrl: './session.html',
@@ -47,6 +51,10 @@ const DELAI_ECOUTE_MS = 12000;
 export class Session implements OnInit, OnDestroy {
   /** Signal holding the title of the current routine. */
   titreRoutine = signal('');
+
+  seancePartageable = signal<SeanceBrute | null>(null);
+  carteAPartager = signal<CarteSeance | null>(null);
+  partageEnPreparation = signal(false);
 
   /** Signal holding the current date formatted for display. */
   derniereSession = signal('');
@@ -140,6 +148,7 @@ export class Session implements OnInit, OnDestroy {
     private authService: AuthService,
     private activeSession: ActiveSessionService,
     private i18n: I18nService,
+    private partage: PartageSeance,
   ) {
     this.recognition = creerReconnaissance();
   }
@@ -528,6 +537,12 @@ export class Session implements OnInit, OnDestroy {
     this.chironApi.sauvegarderProgramme(username, journalDto).subscribe({
       next: () => {
         this.flashStatus(this.i18n.t('session.addedToJournal'));
+        this.seancePartageable.set({
+          titre: journalDto.titre,
+          startTime: journalDto.startTime,
+          endTime: journalDto.endTime,
+          exercices: this.exercices(),
+        });
 
         // The session is now logged: detach from the shared "in progress" state
         // (a fresh start is required next time) while keeping the current view
@@ -553,6 +568,19 @@ export class Session implements OnInit, OnDestroy {
         }
       },
       error: () => this.flashStatus(this.i18n.t('session.saveError')),
+    });
+  }
+
+  partagerSeance(): void {
+    const seance = this.seancePartageable();
+    if (!seance || this.partageEnPreparation()) return;
+    this.partageEnPreparation.set(true);
+    this.partage.preparer(seance).subscribe({
+      next: (carte) => {
+        this.carteAPartager.set(carte);
+        this.partageEnPreparation.set(false);
+      },
+      error: () => this.partageEnPreparation.set(false),
     });
   }
 

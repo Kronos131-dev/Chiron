@@ -11,6 +11,9 @@ import { durationMinutes, formatDuration } from '../../util/duration';
 import { formaterAllure, formaterChrono } from '../../util/allure';
 import { TraceSvg, projeterTrace } from '../../util/trace-svg';
 import { GrapheAllure, construireGrapheAllure } from '../../util/graphe-allure';
+import { CarteSeance } from '../../partage/carte';
+import { PartageSeance } from '../../service/partage-seance';
+import { PartageCarte } from '../shared/partage-carte/partage-carte';
 
 const COTE_TRACE = 320;
 const LARGEUR_GRAPHE = 320;
@@ -33,7 +36,7 @@ function getIsoWeekNumber(d: Date): number {
 @Component({
   selector: 'app-journal',
   standalone: true,
-  imports: [CommonModule, FormsModule, HeaderComponent, TranslatePipe],
+  imports: [CommonModule, FormsModule, HeaderComponent, TranslatePipe, PartageCarte],
   templateUrl: './journal.html',
   styleUrls: ['./journal.css'],
 })
@@ -62,6 +65,9 @@ export class Journal implements OnInit {
 
   traceDepliee = signal<number | null>(null);
 
+  carteAPartager = signal<CarteSeance | null>(null);
+  partageEnPreparation = signal<number | null>(null);
+
   /** Transient status message (success / error). */
   saveStatus = signal<string | null>(null);
   private _saveStatusTimer: ReturnType<typeof setTimeout> | null = null;
@@ -71,6 +77,7 @@ export class Journal implements OnInit {
     private authService: AuthService,
     private router: Router,
     public i18n: I18nService,
+    private partage: PartageSeance,
   ) {}
 
   ngOnInit() {
@@ -309,6 +316,21 @@ export class Journal implements OnInit {
   dureeSeance(startTime: string | null, endTime?: string | null): string | null {
     const min = durationMinutes(startTime, endTime);
     return min == null ? null : formatDuration(min);
+  }
+
+  partagerSeance(seance: any, event: Event): void {
+    event.stopPropagation();
+    if (this.partageEnPreparation() !== null) return;
+    this.partageEnPreparation.set(seance.id);
+    this.partage
+      .preparer(seance, this.activiteMontre(seance.id) ?? null, this.tracesChargees())
+      .subscribe({
+        next: (carte) => {
+          this.carteAPartager.set(carte);
+          this.partageEnPreparation.set(null);
+        },
+        error: () => this.partageEnPreparation.set(null),
+      });
   }
 
   activiteMontre(seanceId: number): SanteActiviteDto | undefined {

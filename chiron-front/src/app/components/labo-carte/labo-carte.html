@@ -1,0 +1,68 @@
+<app-header title="Labo cartes" [showBack]="true" backRoute="/chat"></app-header>
+
+<main class="min-h-screen pt-24 pb-32 px-4 bg-slate-950 heroic-texture">
+  <div class="max-w-md mx-auto space-y-4">
+    <div class="flex flex-wrap gap-2">
+      @for (g of genres; track g) {
+        <button
+          type="button"
+          (click)="choisirGenre(g)"
+          [class]="
+            genre() === g
+              ? 'bg-secondary/15 text-secondary border-secondary/50'
+              : 'bg-white/5 text-on-surface-variant border-white/10'
+          "
+          class="px-3 py-2 rounded-lg border text-xs font-bold tracking-widest uppercase cursor-pointer"
+        >
+          {{ 'share.genre.' + g | t }}
+        </button>
+      }
+    </div>
+
+    <div class="flex flex-wrap gap-2">
+      @for (f of formats; track f) {
+        <button
+          type="button"
+          (click)="choisirFormat(f)"
+          [class]="
+            format() === f
+              ? 'bg-secondary/15 text-secondary border-secondary/50'
+              : 'bg-white/5 text-on-surface-variant border-white/10'
+          "
+          class="px-3 py-2 rounded-lg border text-xs font-bold tracking-widest uppercase cursor-pointer"
+        >
+          {{ 'share.format.' + f | t }}
+        </button>
+      }
+    </div>
+
+    <div class="flex flex-wrap gap-2">
+      @for (n of niveaux; track n) {
+        <button
+          type="button"
+          (click)="choisirNiveau(n)"
+          [class]="
+            niveau() === n
+              ? 'bg-secondary/15 text-secondary border-secondary/50'
+              : 'bg-white/5 text-on-surface-variant border-white/10'
+          "
+          class="w-10 h-10 rounded-lg border text-sm font-bold cursor-pointer"
+        >
+          {{ n }}
+        </button>
+      }
+    </div>
+
+    @if (apercu()) {
+      <img
+        [src]="apercu()"
+        alt=""
+        class="w-full rounded-2xl border border-secondary/20 shadow-2xl shadow-black/60"
+      />
+    } @else if (enCours()) {
+      <p class="text-on-surface-variant text-xs font-bold tracking-widest uppercase text-center">
+        {{ 'share.forging' | t }}
+      </p>
+    }
+  </div>
+</main>

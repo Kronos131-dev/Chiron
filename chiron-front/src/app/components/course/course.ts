@@ -11,6 +11,9 @@ import { CLES_PHRASES, CourseRuntime, OptionsCourse } from '../../service/course
 import { RuntimeNatif } from '../../service/course-runtime-natif';
 import { RuntimeWeb } from '../../service/course-runtime-web';
 import { I18nService } from '../../service/i18n.service';
+import { PartageSeance } from '../../service/partage-seance';
+import { CarteSeance } from '../../partage/carte';
+import { PartageCarte } from '../shared/partage-carte/partage-carte';
 import { TranslatePipe } from '../../service/translate.pipe';
 import { HeaderComponent } from '../shared/header/header';
 import { ExerciceForm } from '../../shared/exercise-forms';
@@ -70,7 +73,7 @@ interface TraceEnAttente {
 @Component({
   selector: 'app-course',
   standalone: true,
-  imports: [CommonModule, FormsModule, HeaderComponent, TranslatePipe],
+  imports: [CommonModule, FormsModule, HeaderComponent, TranslatePipe, PartageCarte],
   templateUrl: './course.html',
   styleUrl: './course.css',
 })
@@ -81,6 +84,7 @@ export class Course implements OnInit, OnDestroy {
   private chironApi = inject(ChironApi);
   private i18n = inject(I18nService);
   private auth = inject(AuthService);
+  private partage = inject(PartageSeance);
 
   readonly runtime: CourseRuntime = Capacitor.isNativePlatform()
     ? new RuntimeNatif()
@@ -105,6 +109,8 @@ export class Course implements OnInit, OnDestroy {
   readonly enregistrement = signal(false);
   readonly erreurEnregistrement = signal(false);
   readonly resume = signal<CourseTraceDto | null>(null);
+  readonly carteAPartager = signal<CarteSeance | null>(null);
+  readonly partageEnPreparation = signal(false);
 
   readonly etat = this.runtime.etat;
   readonly ecoute = this.runtime.ecoute;
@@ -460,6 +466,19 @@ export class Course implements OnInit, OnDestroy {
       Math.round((trace?.allureMoyenneKmh ?? this.runtime.allureMoyenneKmh()) * 100) / 100;
     serie.courseTraceId = trace?.id ?? null;
     this.activeSession.snapshot();
+  }
+
+  partagerSortie(): void {
+    const trace = this.resume();
+    if (!trace || this.partageEnPreparation()) return;
+    this.partageEnPreparation.set(true);
+    this.partage.preparerSortie(trace, this.exercice?.nom ?? '').subscribe({
+      next: (carte) => {
+        this.carteAPartager.set(carte);
+        this.partageEnPreparation.set(false);
+      },
+      error: () => this.partageEnPreparation.set(false),
+    });
   }
 
   retourSeance(): void {

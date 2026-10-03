@@ -85,8 +85,18 @@
 
     <button
       type="button"
+      (click)="partagerWod()"
+      [disabled]="partageEnPreparation()"
+      class="w-full max-w-sm mt-8 border border-secondary/50 bg-secondary/10 text-secondary font-bold text-sm px-6 py-4 rounded-xl uppercase tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+    >
+      <span class="material-symbols-outlined text-lg">ios_share</span>
+      {{ 'share.action' | t }}
+    </button>
+
+    <button
+      type="button"
       (click)="retourSeance()"
-      class="w-full max-w-sm mt-8 bg-gradient-to-r from-blue-500 to-blue-700 text-white font-bold text-sm px-6 py-4 rounded-xl uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2"
+      class="w-full max-w-sm mt-4 bg-gradient-to-r from-blue-500 to-blue-700 text-white font-bold text-sm px-6 py-4 rounded-xl uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2"
     >
       <span class="material-symbols-outlined text-lg">arrow_back</span>
       {{ 'wod.backToSession' | t }}
@@ -101,3 +111,7 @@
     </button>
   }
 </main>
+
+@if (carteAPartager(); as carte) {
+  <app-partage-carte [carte]="carte" (fermer)="carteAPartager.set(null)" />
+}

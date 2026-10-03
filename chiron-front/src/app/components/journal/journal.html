@@ -136,6 +136,15 @@
                     }
 
                     <div class="ml-auto flex items-center gap-2 shrink-0">
+                      <button
+                        (click)="partagerSeance(seance, $event)"
+                        [disabled]="partageEnPreparation() !== null"
+                        [title]="'share.actionJournal' | t"
+                        class="w-8 h-8 rounded bg-secondary/10 flex items-center justify-center text-secondary hover:bg-secondary/30 transition-colors cursor-pointer z-10 disabled:opacity-50"
+                      >
+                        <span class="material-symbols-outlined text-sm">ios_share</span>
+                      </button>
+
                       <!-- Edit Session Button -->
                       @if (editingSeanceId() !== seance.id) {
                         <button
@@ -762,3 +771,7 @@
     </div>
   </div>
 </main>
+
+@if (carteAPartager(); as carte) {
+  <app-partage-carte [carte]="carte" (fermer)="carteAPartager.set(null)" />
+}
