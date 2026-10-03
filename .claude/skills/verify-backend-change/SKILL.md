@@ -56,6 +56,8 @@ Run everything from `chiron-back/`.
 1. Run `git status` and confirm nothing unintended was touched — in particular no file under
    `db/migration/` other than a newly added one.
 2. Confirm every item in `references/checklist.md`.
+3. Green gates do not end the task: apply the `run-for-testing` skill to restart the backend on the
+   new code and hand it to the owner before any commit.
 
 ## Error Handling
 

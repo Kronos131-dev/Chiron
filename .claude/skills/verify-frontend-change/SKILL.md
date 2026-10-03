@@ -69,7 +69,8 @@ Run everything from `chiron-front/`.
    `CommandesTest` are what catch the drift.
 
 **Step 6: Look at it when it is visual**
-1. Run `npm start` and open `http://localhost:4200`. A layout or styling change is not verified by a
+1. Apply the `run-for-testing` skill, which starts the frontend and the backend it needs, then open
+   `http://localhost:4200`. A layout or styling change is not verified by a
    green build.
 2. Check the narrow viewport too — the app is used on a phone mid-session and shipped through
    Capacitor.

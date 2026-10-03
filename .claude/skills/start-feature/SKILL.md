@@ -60,9 +60,11 @@ order.
 1. Tests: `write-backend-tests` or `write-frontend-tests`.
 2. Verification: `verify-backend-change` or `verify-frontend-change`.
 3. Self-review: `review-changes`.
-4. Commit: `commit-changes`.
-5. Ship: `push-and-watch-pipeline`.
-6. Confirm every item in `references/checklist.md`.
+4. Hand over for manual testing: `run-for-testing` starts both servers on the current code, then
+   stop and wait for the owner's go.
+5. Commit, only once the owner says so: `commit-changes`.
+6. Ship, only once the owner says so: `push-and-watch-pipeline`.
+7. Confirm every item in `references/checklist.md`.
 
 ## Error Handling
 

@@ -47,7 +47,8 @@ nobody wrote. Everything else the build already catches.
 **Step 5: Report**
 1. List only what should change, with file and line. Do not inventory what is already correct.
 2. Separate what blocks the commit from what is a suggestion.
-3. If nothing blocks, say so in one line and move on to `commit-changes`.
+3. If nothing blocks, say so in one line and move on to `run-for-testing`; `commit-changes` comes
+   only after the owner has tried the change and said to commit.
 4. Confirm every item in `references/checklist.md`.
 
 ## Error Handling

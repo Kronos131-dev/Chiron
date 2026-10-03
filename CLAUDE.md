@@ -107,7 +107,7 @@ state what would need to happen and hand it back to the user.
 
 ## Skills
 
-Twenty procedures under `.claude/skills/<name>/SKILL.md`. Each carries numbered steps, copyable
+Twenty-one procedures under `.claude/skills/<name>/SKILL.md`. Each carries numbered steps, copyable
 templates in `assets/`, just-in-time context in `references/`, and an audit checklist. Read the
 matching skill **before** starting.
 
@@ -127,6 +127,7 @@ matching skill **before** starting.
 | Check backend work before committing | `verify-backend-change` |
 | Check frontend work before committing | `verify-frontend-change` |
 | Self-review before committing | `review-changes` |
+| Hand the finished work over to be tried by hand | `run-for-testing` |
 | Commit the work | `commit-changes` |
 | Ship it and follow the deploy | `push-and-watch-pipeline` |
 | A GitHub Actions run is red | `diagnose-ci-failure` |
@@ -135,8 +136,9 @@ matching skill **before** starting.
 | Add or edit a skill | `writing-skills` |
 
 Typical flow: `start-feature` opens the branch and routes to an implementation skill, the `verify-*`
-skills and `review-changes` close the work, then `commit-changes` and `push-and-watch-pipeline` ship
-it.
+skills and `review-changes` close the work, then `run-for-testing` starts the backend and the frontend
+on the new code so the owner can try it. Only when the owner says so do `commit-changes` and, on a
+separate go, `push-and-watch-pipeline` ship it.
 
 ## Connected services
 

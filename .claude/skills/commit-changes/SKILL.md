@@ -18,6 +18,9 @@ remove it.
    how a debug log, a hardcoded key or a leftover experiment reaches production.
 3. If the diff has not been reviewed for defects yet, apply the `review-changes` skill first, then
    return here.
+4. Commit only when the owner has said to. If the work was never handed over for manual testing,
+   apply the `run-for-testing` skill and wait for their go; a finished task is not a request to
+   commit.
 
 **Step 2: Group the changes**
 1. Split the tree into one logical change per commit — a feature, a fix, a refactor, a formatting
