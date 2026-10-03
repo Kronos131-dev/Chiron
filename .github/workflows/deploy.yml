@@ -148,7 +148,12 @@ jobs:
           distribution: temurin
           java-version: '21'
 
+      # WHY: Google ne distribue plus le paquet `tools`. La valeur par défaut de l'action le
+      # réclamait encore et `sdkmanager` échouait avec « Failed to find package 'tools' » avant
+      # toute compilation. Gradle télécharge lui-même la plateforme et les build-tools.
       - uses: android-actions/setup-android@v3
+        with:
+          packages: ''
 
       - name: Install dependencies
         run: npm ci
