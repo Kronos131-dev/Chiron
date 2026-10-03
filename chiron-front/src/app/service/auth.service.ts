@@ -4,6 +4,26 @@ import { Observable, tap } from 'rxjs';
 import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
 
+interface ContenuJeton {
+  sub?: string;
+  exp?: number;
+}
+
+const MS_PAR_SECONDE = 1000;
+
+function lireContenu(jeton: string): ContenuJeton | null {
+  try {
+    const base64 = (jeton.split('.')[1] ?? '').replace(/-/g, '+').replace(/_/g, '/');
+    const octets = atob(base64)
+      .split('')
+      .map((caractere) => '%' + caractere.charCodeAt(0).toString(16).padStart(2, '0'))
+      .join('');
+    return JSON.parse(decodeURIComponent(octets));
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Service responsible for handling user authentication and token management.
  * Provides methods for user registration, login, and managing the JWT session token.
@@ -73,7 +93,20 @@ export class AuthService {
    * @returns True if the user has an authentication token; false otherwise.
    */
   isLoggedIn(): boolean {
-    return !!this.getToken();
+    const jeton = this.getToken();
+    if (!jeton) return false;
+    if (this.jetonPerime(jeton)) {
+      localStorage.removeItem(this.tokenKey);
+      return false;
+    }
+    return true;
+  }
+
+  jetonPerime(jeton: string | null = this.getToken()): boolean {
+    if (!jeton) return true;
+    const contenu = lireContenu(jeton);
+    if (!contenu) return true;
+    return contenu.exp !== undefined && contenu.exp * MS_PAR_SECONDE <= Date.now();
   }
 
   /**
@@ -84,8 +117,7 @@ export class AuthService {
   getUsername(): string | null {
     const token = localStorage.getItem('chiron_jwt');
     if (!token) return null;
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    return payload.sub;
+    return lireContenu(token)?.sub ?? null;
   }
 
   /**
