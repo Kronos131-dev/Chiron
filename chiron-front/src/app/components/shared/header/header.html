@@ -1,22 +1,23 @@
-<header class="bg-slate-950/80 backdrop-blur-md flex items-center justify-between px-6 py-4 w-full fixed top-0 z-50 border-b border-secondary/10">
+<header class="bg-slate-950/80 backdrop-blur-md flex items-center justify-between gap-2 px-4 min-[400px]:px-6 py-4 w-full fixed top-0 border-b border-secondary/10"
+        [ngClass]="showSettings() ? 'z-[70]' : 'z-50'">
 
   <!-- Left: optional back arrow + temple icon + page title -->
-  <div class="flex items-center gap-3">
+  <div class="flex items-center gap-2 min-[400px]:gap-3 min-w-0 flex-1">
     @if (showBack) {
       <button (click)="goBack()"
-              class="material-symbols-outlined text-secondary hover:text-white transition-colors cursor-pointer">
+              class="material-symbols-outlined shrink-0 text-secondary hover:text-white transition-colors cursor-pointer">
         arrow_back
       </button>
     }
     <button (click)="refreshApp()" type="button" [attr.aria-label]="'header.refresh' | t"
-            class="material-symbols-outlined text-secondary text-xl hover:text-white transition-colors cursor-pointer">
+            class="material-symbols-outlined shrink-0 text-secondary text-xl hover:text-white transition-colors cursor-pointer">
       account_balance
     </button>
-    <h1 class="text-2xl font-black text-[#f8fafc] tracking-widest font-headline uppercase">{{ title }}</h1>
+    <h1 class="min-w-0 truncate text-lg min-[400px]:text-2xl font-black text-[#f8fafc] tracking-wider min-[400px]:tracking-widest font-headline uppercase">{{ title }}</h1>
   </div>
 
   <!-- Right: admin badge + settings gear -->
-  <div class="flex items-center gap-3">
+  <div class="flex items-center gap-2 min-[400px]:gap-3 shrink-0">
     @if (isAdmin()) {
       <div class="bg-amber-600 text-slate-900 text-xs font-black uppercase tracking-wide px-2 py-0.5 rounded-full shadow-[0_0_10px_rgba(217,119,6,0.5)] border border-amber-400 flex-shrink-0">
         {{ 'header.admin' | t }}
@@ -41,7 +42,7 @@
       </button>
 
       @if (showSettings()) {
-        <div class="absolute right-0 mt-2 w-52 max-h-[calc(100dvh-4.5rem)] overflow-y-auto overscroll-contain bg-slate-900 border border-secondary/20 rounded-xl shadow-2xl py-2 z-50 animate-in fade-in zoom-in duration-150">
+        <div class="absolute right-0 mt-2 w-52 max-h-[calc(100dvh-var(--hauteur-entete)-1rem)] overflow-y-auto overscroll-contain bg-slate-900 border border-secondary/20 rounded-xl shadow-2xl py-2 z-50 animate-in fade-in zoom-in duration-150">
           <div class="px-4 py-2 border-b border-white/5 text-xs text-on-surface-variant uppercase tracking-wide font-bold flex items-center gap-1.5 min-w-0">
             <span class="material-symbols-outlined text-secondary text-base flex-shrink-0">account_balance</span>
             <span class="min-w-0 [overflow-wrap:anywhere]">{{ currentUsername }}</span>
@@ -79,7 +80,7 @@
           <a href="/settings" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-white/5 transition-colors cursor-pointer">
             <span class="material-symbols-outlined text-sm text-secondary">manage_accounts</span> {{ 'header.settings' | t }}
           </a>
-          <div class="border-t border-white/5 mt-1 pt-1">
+          <div class="sticky bottom-0 bg-slate-900 border-t border-white/5 mt-1 pt-1">
             <button (click)="logout()" class="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer">
               <span class="material-symbols-outlined text-sm">logout</span> {{ 'header.logout' | t }}
             </button>

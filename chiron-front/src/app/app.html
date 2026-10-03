@@ -4,7 +4,7 @@
   <nav
     class="fixed bottom-0 w-full bg-slate-950/95 backdrop-blur-md border-t border-secondary/20 pb-2 z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
   >
-    <div class="flex justify-around items-center p-4 max-w-lg mx-auto">
+    <div class="flex justify-around items-center px-1 py-4 min-[400px]:px-4 max-w-lg mx-auto">
       <!-- WHY: la classe active est appliquée par liaison et non par `routerLinkActive`.
            Ajoutée comme classe supplémentaire, `text-secondary` se retrouvait en concurrence
            de spécificité égale avec la couleur de repos, et c'est l'ordre de la feuille de
@@ -15,7 +15,7 @@
           routerLinkActive
           #actif="routerLinkActive"
           [routerLinkActiveOptions]="{ exact: onglet.exact }"
-          class="flex flex-col items-center gap-1 transition-colors active:scale-95"
+          class="flex flex-col items-center gap-1 flex-1 min-w-0 transition-colors active:scale-95"
           [class.text-secondary]="actif.isActive"
           [class.text-slate-500]="!actif.isActive"
         >
@@ -24,7 +24,10 @@
           } @else {
             <span class="material-symbols-outlined text-2xl leading-none">{{ onglet.icone }}</span>
           }
-          <span class="text-[9px] font-bold uppercase tracking-[0.2em]">{{ onglet.cle | t }}</span>
+          <span
+            class="max-w-full truncate text-[8px] min-[400px]:text-[9px] font-bold uppercase tracking-normal min-[400px]:tracking-[0.2em]"
+            >{{ onglet.cle | t }}</span
+          >
         </a>
       }
     </div>

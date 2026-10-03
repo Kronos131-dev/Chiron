@@ -60,6 +60,7 @@ export class HeaderComponent implements OnInit {
   }
 
   toggleGuide() {
+    this.showSettings.set(false);
     this.showGuide.update(v => !v);
   }
 

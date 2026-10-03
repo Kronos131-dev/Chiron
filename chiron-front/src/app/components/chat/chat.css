@@ -1,16 +1,17 @@
 :host {
   display: block;
-  height: 100dvh;
+  height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   overflow: hidden;
 }
 
 .chat-shell {
   display: flex;
   flex-direction: column;
-  height: 100dvh;
-  /* Réserve la hauteur de la barre de navigation fixe du bas (app.html) pour que
-     le composer ne soit pas masqué derrière elle. box-sizing: border-box (Tailwind). */
-  padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+  height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  /* WHY: le body porte déjà les marges de zone sûre (styles.css), la coquille n'a donc
+     que la barre d'onglets à dégager. Garder `100dvh` plein et l'inset bas ici décalait le
+     composer sous la barre dans la PWA installée, sans effet dans Safari où les insets sont nuls. */
+  padding-bottom: 5.5rem;
   background:
     radial-gradient(120% 80% at 50% -10%, rgba(255, 183, 121, 0.08), transparent 60%), #0a0e14;
 }
@@ -306,7 +307,7 @@
   background: #141c28;
   color: #e8edf2;
   font: inherit;
-  font-size: 0.95rem;
+  font-size: max(16px, 0.95rem);
   outline: none;
   transition: border-color 0.15s;
 }

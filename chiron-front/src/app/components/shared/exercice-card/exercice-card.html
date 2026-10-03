@@ -1,6 +1,6 @@
 <article #exoCard
          [attr.data-exo-idx]="index"
-         class="exo-card bg-[#1a1c23]/80 backdrop-blur-sm border border-white/5 rounded-xl shadow-xl overflow-hidden"
+         class="exo-card bg-[#1a1c23]/80 backdrop-blur-sm border border-white/5 rounded-xl shadow-xl [&>:first-child]:rounded-t-xl"
          [class.is-dragging]="isDragging"
          [class.is-drop-target]="isDropTarget"
          (dragover)="exoDragOver.emit($event)"
@@ -37,7 +37,7 @@
                  class="w-full mt-1 bg-slate-950/50 border border-white/10 rounded p-3 text-white font-headline text-lg outline-none focus:border-secondary/50 transition-colors"
                  [placeholder]="'exCard.searchPlaceholder' | t">
           @if (showSuggestions() && suggestions().length > 0) {
-            <ul class="absolute z-50 left-0 right-0 mt-1 bg-[#1a1c23] border border-white/10 rounded-lg shadow-xl max-h-96 overflow-y-auto">
+            <ul class="absolute z-50 left-0 right-0 mt-1 bg-[#1a1c23] border border-white/10 rounded-lg shadow-xl max-h-[40dvh] overflow-y-auto">
               @for (def of suggestions(); track def.id) {
                 <li (mousedown)="selectDefinition(def)"
                     class="flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-white/5 transition-colors border-b border-white/5 last:border-0">
