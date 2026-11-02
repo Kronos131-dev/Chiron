@@ -74,6 +74,12 @@
             <artifactId>pdfbox</artifactId>
             <version>3.0.3</version>
         </dependency>
+        <!-- Export des séances de programme au format XLSX : onglets, styles et graphiques. -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>5.5.1</version>
+        </dependency>
 
         <dependency>
             <groupId>org.postgresql</groupId>

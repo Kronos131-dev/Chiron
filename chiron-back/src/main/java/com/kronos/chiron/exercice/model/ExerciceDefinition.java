@@ -12,6 +12,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "exercice_definition")
+@org.hibernate.annotations.BatchSize(size = 30)
 @Getter
 @Setter
 @NoArgsConstructor

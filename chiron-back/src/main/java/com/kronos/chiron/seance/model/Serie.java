@@ -49,6 +49,7 @@ public class Serie {
     private Exercice exercice;
 
     @OneToMany(mappedBy = "serie", cascade = CascadeType.ALL, orphanRemoval = true)
+    @org.hibernate.annotations.BatchSize(size = 30)
     @Builder.Default
     private List<Degressif> degressifs = new ArrayList<>();
 
