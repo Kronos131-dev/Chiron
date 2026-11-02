@@ -11,6 +11,7 @@ import org.apache.poi.xddf.usermodel.XDDFSolidFillProperties;
 import org.apache.poi.xddf.usermodel.chart.AxisCrosses;
 import org.apache.poi.xddf.usermodel.chart.AxisPosition;
 import org.apache.poi.xddf.usermodel.chart.ChartTypes;
+import org.apache.poi.xddf.usermodel.chart.DisplayBlanks;
 import org.apache.poi.xddf.usermodel.chart.MarkerStyle;
 import org.apache.poi.xddf.usermodel.chart.XDDFCategoryAxis;
 import org.apache.poi.xddf.usermodel.chart.XDDFDataSource;
@@ -31,6 +32,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,7 +44,9 @@ final class EcritureXlsx {
     private static final int LARGEUR_MAX = 255 * UNITES_PAR_CARACTERE;
     private static final int COLONNES_GRAPHIQUE = 4;
     private static final int LIGNES_GRAPHIQUE = 15;
-    private static final double EPAISSEUR_COURBE_EMU = 38100;
+    // WHY: XDDFLineProperties.setWidth attend des points et convertit lui-même en EMU. Lui passer
+    // des EMU (38100) donne une courbe épaisse de 38 100 points qui recouvre tout le graphique.
+    private static final double EPAISSEUR_COURBE_POINTS = 2.5;
     private static final String COULEUR_COURBE = "#c77a30";
     private static final String POLICE = "Calibri";
 
@@ -61,6 +65,7 @@ final class EcritureXlsx {
     private void ecrireOnglet(Onglet onglet) {
         XSSFSheet feuille = classeur.createSheet(onglet.titre);
         feuille.setTabColor(couleur(onglet.couleurOnglet));
+        preparerImpression(feuille);
         ecrireCellules(feuille, onglet);
         fixerLargeurs(feuille, onglet);
         if (onglet.lignesFigees > 0 || onglet.colonnesFigees > 0) {
@@ -76,8 +81,15 @@ final class EcritureXlsx {
         }
         if (!onglet.graphiques.isEmpty()) {
             XSSFDrawing dessin = feuille.createDrawingPatriarch();
-            onglet.graphiques.forEach(graphique -> ecrireGraphique(feuille, dessin, graphique, onglet.colonnesFigees));
+            onglet.graphiques.forEach(graphique -> ecrireGraphique(feuille, dessin, graphique, onglet));
         }
+    }
+
+    private void preparerImpression(XSSFSheet feuille) {
+        feuille.setFitToPage(true);
+        feuille.getPrintSetup().setLandscape(true);
+        feuille.getPrintSetup().setFitWidth((short) 1);
+        feuille.getPrintSetup().setFitHeight((short) 0);
     }
 
     private void ecrireCellules(XSSFSheet feuille, Onglet onglet) {
@@ -115,18 +127,23 @@ final class EcritureXlsx {
     }
 
     private void ecrireGraphique(XSSFSheet feuille, XSSFDrawing dessin, GraphiqueProgression progression,
-            int premiereColonne) {
+            Onglet onglet) {
+        int premiereColonne = onglet.colonnesFigees;
         int derniereColonne = premiereColonne + progression.nbSeances() - 1;
         XSSFClientAnchor ancre = dessin.createAnchor(0, 0, 0, 0, progression.ancreColonne(), progression.ancreLigne(),
                 progression.ancreColonne() + COLONNES_GRAPHIQUE, progression.ancreLigne() + LIGNES_GRAPHIQUE);
         XSSFChart graphique = dessin.createChart(ancre);
         graphique.setTitleText(progression.titre());
         graphique.setTitleOverlay(false);
+        // WHY: sans `dispBlanksAs`, le schéma OOXML vaut « zero » : une séance où l'exercice n'a pas été
+        // fait serait tracée comme une charge nulle, avec une chute à zéro dans la courbe.
+        graphique.displayBlanksAs(DisplayBlanks.GAP);
 
         XDDFCategoryAxis axeBas = graphique.createCategoryAxis(AxisPosition.BOTTOM);
         XDDFValueAxis axeGauche = graphique.createValueAxis(AxisPosition.LEFT);
         axeGauche.setTitle(progression.unite());
         axeGauche.setCrosses(AxisCrosses.AUTO_ZERO);
+        cadrerAxe(axeGauche, valeursDeLaLigne(onglet, progression));
 
         XDDFDataSource<String> dates = XDDFDataSourcesFactory.fromStringCellRange(feuille,
                 new CellRangeAddress(progression.ligneDates(), progression.ligneDates(), premiereColonne,
@@ -142,10 +159,30 @@ final class EcritureXlsx {
 
         XDDFLineProperties trait = new XDDFLineProperties();
         trait.setFillProperties(new XDDFSolidFillProperties(XDDFColor.from(rgb(COULEUR_COURBE))));
-        trait.setWidth(EPAISSEUR_COURBE_EMU);
+        trait.setWidth(EPAISSEUR_COURBE_POINTS);
         XDDFShapeProperties formes = new XDDFShapeProperties();
         formes.setLineProperties(trait);
         courbe.setShapeProperties(formes);
+    }
+
+    private List<Double> valeursDeLaLigne(Onglet onglet, GraphiqueProgression progression) {
+        List<Cellule> ligne = onglet.lignes.get(progression.ligneDonnees());
+        List<Double> valeurs = new ArrayList<>();
+        for (int colonne = onglet.colonnesFigees; colonne < onglet.colonnesFigees + progression.nbSeances()
+                && colonne < ligne.size(); colonne++) {
+            valeurs.add(ligne.get(colonne).valeur() instanceof Double nombre ? nombre : null);
+        }
+        return valeurs;
+    }
+
+    private void cadrerAxe(XDDFValueAxis axe, List<Double> valeurs) {
+        BornesAxe bornes = BornesAxe.pour(valeurs);
+        if (bornes == null) {
+            return;
+        }
+        axe.setMinimum(bornes.minimum());
+        axe.setMaximum(bornes.maximum());
+        axe.setMajorUnit(bornes.pas());
     }
 
     private XSSFCellStyle style(Cellule.Style modele) {

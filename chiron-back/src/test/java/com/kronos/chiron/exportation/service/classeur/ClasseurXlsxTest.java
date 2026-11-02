@@ -7,6 +7,7 @@ import com.kronos.chiron.exportation.service.classeur.DonneesExport.SeanceDonnee
 import com.kronos.chiron.exportation.service.classeur.DonneesExport.SerieDonnees;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DateUtil;
+import org.apache.poi.xddf.usermodel.chart.XDDFChartAxis;
 import org.apache.poi.xssf.usermodel.XSSFChart;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -18,6 +19,8 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -123,6 +126,39 @@ class ClasseurXlsxTest {
     }
 
     @Test
+    void generer_dessineUneCourbeFineEtNonUnAplatQuiRecouvreLeGraphique() throws IOException {
+        try (XSSFWorkbook classeur = relire(classeurXlsx.generer(pushA()))) {
+            String xml = classeur.getSheet("Push A").createDrawingPatriarch().getCharts().get(0).getCTChart()
+                    .xmlText();
+
+            Matcher epaisseur = Pattern.compile("<a:ln w=\"(\\d+)\"").matcher(xml);
+            assertThat(epaisseur.find()).isTrue();
+            assertThat(Long.parseLong(epaisseur.group(1))).isBetween(12_700L, 63_500L);
+        }
+    }
+
+    @Test
+    void generer_laisseUnTrouPourUneSeanceSansLExercice() throws IOException {
+        try (XSSFWorkbook classeur = relire(classeurXlsx.generer(pushA()))) {
+            String xml = classeur.getSheet("Push A").createDrawingPatriarch().getCharts().get(1).getCTChart()
+                    .xmlText();
+
+            assertThat(xml).contains("dispBlanksAs").contains("gap");
+        }
+    }
+
+    @Test
+    void generer_cadreLAxeVerticalSurLesValeursDeLExercice() throws IOException {
+        try (XSSFWorkbook classeur = relire(classeurXlsx.generer(pushA()))) {
+            List<XSSFChart> graphiques = classeur.getSheet("Push A").createDrawingPatriarch().getCharts();
+
+            XDDFChartAxis axe = graphiques.get(0).getAxes().get(1);
+            assertThat(axe.getMinimum()).isEqualTo(95.0);
+            assertThat(axe.getMaximum()).isEqualTo(115.0);
+        }
+    }
+
+    @Test
     void generer_laisseLesAutresOngletsSansGraphique() throws IOException {
         try (XSSFWorkbook classeur = relire(classeurXlsx.generer(pushA()))) {
             assertThat(classeur.getSheet("Synthèse").getDrawingPatriarch()).isNull();
@@ -139,6 +175,20 @@ class ClasseurXlsxTest {
             assertThat(feuille.getRow(1).getCell(0).getLocalDateTimeCellValue().toLocalDate())
                     .isEqualTo(LocalDate.of(2026, 10, 19));
             assertThat(feuille.getCTWorksheet().isSetAutoFilter()).isTrue();
+        }
+    }
+
+    @Test
+    void generer_imprimeChaqueOngletEnPaysageSurUnePageDeLarge() throws IOException {
+        try (XSSFWorkbook classeur = relire(classeurXlsx.generer(pushA()))) {
+            for (int i = 0; i < classeur.getNumberOfSheets(); i++) {
+                XSSFSheet feuille = classeur.getSheetAt(i);
+
+                assertThat(feuille.getFitToPage()).isTrue();
+                assertThat(feuille.getPrintSetup().getLandscape()).isTrue();
+                assertThat((int) feuille.getPrintSetup().getFitWidth()).isEqualTo(1);
+                assertThat((int) feuille.getPrintSetup().getFitHeight()).isZero();
+            }
         }
     }
 
