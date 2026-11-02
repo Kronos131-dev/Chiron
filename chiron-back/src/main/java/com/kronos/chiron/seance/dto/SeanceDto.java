@@ -16,5 +16,11 @@ public record SeanceDto(
         Integer weekNumber,
         Boolean historique,
         ProfileDto utilisateur,
-        List<ExerciceDto> exercices) {
+        List<ExerciceDto> exercices,
+        Long modeleId) {
+
+    public SeanceDto(Long id, String titre, String note, LocalDateTime startTime, LocalDateTime endTime,
+            Integer weekNumber, Boolean historique, ProfileDto utilisateur, List<ExerciceDto> exercices) {
+        this(id, titre, note, startTime, endTime, weekNumber, historique, utilisateur, exercices, null);
+    }
 }

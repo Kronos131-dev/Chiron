@@ -525,6 +525,7 @@ export class Session implements OnInit, OnDestroy {
 
     const journalDto = {
       id: this.isInteractive() && this.routineId ? parseInt(this.routineId, 10) : null,
+      modeleId: !this.isInteractive() && this.routineId ? parseInt(this.routineId, 10) : null,
       titre: this.titreRoutine(),
       note: this.noteSeance() || null,
       weekNumber: currentWeekNumber,

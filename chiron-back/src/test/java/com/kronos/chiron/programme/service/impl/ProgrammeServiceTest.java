@@ -314,6 +314,86 @@ class ProgrammeServiceTest {
         verifyNoInteractions(activiteEnrichissementService);
     }
 
+    // --- sauvegarderProgramme : modèle d'origine d'une séance faite ---
+
+    private Seance modele(long id, Utilisateur proprietaire, boolean historique) {
+        Seance modele = new Seance();
+        modele.setId(id);
+        modele.setHistorique(historique);
+        modele.setUtilisateur(proprietaire);
+        return modele;
+    }
+
+    private SeanceDto seanceFaiteDepuis(Long modeleId) {
+        return new SeanceDto(null, "Push", null, LocalDateTime.now(clock), LocalDateTime.now(clock), 1, true, null,
+                List.of(), modeleId);
+    }
+
+    @Test
+    void sauvegarderProgramme_newHistoriqueFromOwnTemplate_keepsModeleId() {
+        when(utilisateurRepository.findByUsername("owner")).thenReturn(Optional.of(owner));
+        when(seanceRepository.findById(5L)).thenReturn(Optional.of(modele(5L, owner, false)));
+
+        Seance result = programmeService.sauvegarderProgramme("owner", seanceFaiteDepuis(5L));
+
+        assertThat(result.getModeleId()).isEqualTo(5L);
+    }
+
+    @Test
+    void sauvegarderProgramme_modeleOfAnotherUser_isIgnored() {
+        when(utilisateurRepository.findByUsername("owner")).thenReturn(Optional.of(owner));
+        when(seanceRepository.findById(5L)).thenReturn(Optional.of(modele(5L, otherUser, false)));
+
+        Seance result = programmeService.sauvegarderProgramme("owner", seanceFaiteDepuis(5L));
+
+        assertThat(result.getModeleId()).isNull();
+    }
+
+    @Test
+    void sauvegarderProgramme_modeleIdPointingToJournalEntry_isIgnored() {
+        when(utilisateurRepository.findByUsername("owner")).thenReturn(Optional.of(owner));
+        when(seanceRepository.findById(5L)).thenReturn(Optional.of(modele(5L, owner, true)));
+
+        Seance result = programmeService.sauvegarderProgramme("owner", seanceFaiteDepuis(5L));
+
+        assertThat(result.getModeleId()).isNull();
+    }
+
+    @Test
+    void sauvegarderProgramme_unknownModeleId_isIgnored() {
+        when(utilisateurRepository.findByUsername("owner")).thenReturn(Optional.of(owner));
+        when(seanceRepository.findById(5L)).thenReturn(Optional.empty());
+
+        Seance result = programmeService.sauvegarderProgramme("owner", seanceFaiteDepuis(5L));
+
+        assertThat(result.getModeleId()).isNull();
+    }
+
+    @Test
+    void sauvegarderProgramme_newTemplateWithModeleId_neverStoresIt() {
+        when(utilisateurRepository.findByUsername("owner")).thenReturn(Optional.of(owner));
+        when(seanceRepository.findById(5L)).thenReturn(Optional.of(modele(5L, owner, false)));
+        SeanceDto dto = new SeanceDto(null, "Push", null, null, null, 0, false, null, List.of(), 5L);
+
+        Seance result = programmeService.sauvegarderProgramme("owner", dto);
+
+        assertThat(result.getModeleId()).isNull();
+    }
+
+    @Test
+    void sauvegarderProgramme_editExistingHistoriqueEntry_keepsItsModeleId() {
+        Seance existing = modele(8L, owner, true);
+        existing.setEndTime(LocalDateTime.now(clock));
+        existing.setModeleId(5L);
+        when(utilisateurRepository.findByUsername("owner")).thenReturn(Optional.of(owner));
+        when(seanceRepository.findById(8L)).thenReturn(Optional.of(existing));
+        SeanceDto dto = new SeanceDto(8L, "Push edited", null, null, null, null, true, null, List.of(), 99L);
+
+        Seance result = programmeService.sauvegarderProgramme("owner", dto);
+
+        assertThat(result.getModeleId()).isEqualTo(5L);
+    }
+
     // --- getProgrammes ---
 
     @Test

@@ -208,4 +208,15 @@ class SeanceMapperTest {
         SeanceDto dto = mapper.toDto(seance);
         assertThat(dto.exercices()).isEmpty();
     }
+
+    @Test
+    void toDto_carriesTheTemplateTheSessionWasStartedFrom() {
+        Seance seance = new Seance();
+        seance.setHistorique(true);
+        seance.setModeleId(5L);
+
+        SeanceDto dto = mapper.toDto(seance);
+
+        assertThat(dto.modeleId()).isEqualTo(5L);
+    }
 }

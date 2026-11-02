@@ -38,6 +38,9 @@ public class Seance {
     @Column(nullable = false, columnDefinition = "integer default 0")
     private int displayOrder;
 
+    @Column(name = "modele_id")
+    private Long modeleId;
+
     @OneToMany(mappedBy = "seance", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("displayOrder ASC")
     @Builder.Default

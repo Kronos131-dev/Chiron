@@ -130,6 +130,10 @@ public class ProgrammeServiceImpl implements ProgrammeService {
             seance.setHistorique(false);
         }
 
+        if (!isUpdate && seance.isHistorique()) {
+            seance.setModeleId(modeleAppartenant(seanceDto.modeleId(), targetUser));
+        }
+
         if (seanceDto.exercices() != null) {
             int position = 0;
             for (ExerciceDto exoDto : seanceDto.exercices()) {
@@ -222,6 +226,19 @@ public class ProgrammeServiceImpl implements ProgrammeService {
                 fitbitPushService.pousserSeance(seanceId);
             }
         });
+    }
+
+    // WHY: le modèle d'origine arrive du client. Un identifiant qui ne désigne pas un modèle de
+    // l'utilisateur est ignoré plutôt que refusé : la séance doit s'enregistrer, seul son
+    // rattachement automatique à un export en pâtirait.
+    private Long modeleAppartenant(Long modeleId, Utilisateur proprietaire) {
+        if (modeleId == null) return null;
+        return seanceRepository.findById(modeleId)
+                .filter(modele -> !modele.isHistorique())
+                .filter(modele -> modele.getUtilisateur() != null
+                        && Objects.equals(modele.getUtilisateur().getId(), proprietaire.getId()))
+                .map(Seance::getId)
+                .orElse(null);
     }
 
     // WHY: la trace est téléversée avant la séance, donc son identifiant arrive du client.
