@@ -85,6 +85,11 @@ describe('Programme', () => {
       expect(router.navigate).toHaveBeenCalledWith(['/programme', '42', 'edit']);
     });
 
+    it('ouvrirExports opens the exports screen', () => {
+      component.ouvrirExports();
+      expect(router.navigate).toHaveBeenCalledWith(['/exports']);
+    });
+
     it('ajouterRoutine opens the ProgrammeBuilder in create mode', () => {
       component.ajouterRoutine();
       expect(router.navigate).toHaveBeenCalledWith(['/programme', 'new']);

@@ -537,6 +537,30 @@ export class ChironApi {
     return this.http.get<FitbitDashboard>(`${this.apiUrl}/fitbit/dashboard?days=${days}`);
   }
 
+  getExports(): Observable<ExportProgramme[]> {
+    return this.http.get<ExportProgramme[]>(`${this.apiUrl}/exports`);
+  }
+
+  getExport(id: number): Observable<ExportProgramme> {
+    return this.http.get<ExportProgramme>(`${this.apiUrl}/exports/${id}`);
+  }
+
+  creerExport(requete: ExportProgrammeRequete): Observable<ExportProgramme> {
+    return this.http.post<ExportProgramme>(`${this.apiUrl}/exports`, requete);
+  }
+
+  modifierExport(id: number, requete: ExportProgrammeRequete): Observable<ExportProgramme> {
+    return this.http.put<ExportProgramme>(`${this.apiUrl}/exports/${id}`, requete);
+  }
+
+  supprimerExport(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/exports/${id}`);
+  }
+
+  telechargerExport(id: number): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/exports/${id}/telecharger`, { responseType: 'blob' });
+  }
+
   getActivites(
     jours: number = 400,
     source?: 'CHIRON_MUSCU' | 'GOOGLE_DETECTE',
@@ -631,6 +655,31 @@ export interface FitbitLinkStatus {
   fitbitUserId: string | null;
   scope: string | null;
   linkedAt: string | null;
+}
+
+export interface ModeleExport {
+  id: number;
+  titre: string | null;
+}
+
+export interface SeanceExport {
+  seanceId: number;
+  modeleId: number;
+}
+
+export interface ExportProgramme {
+  id: number;
+  nom: string;
+  creeA: string;
+  modeles: ModeleExport[];
+  seances: SeanceExport[];
+  nbSeances: number;
+}
+
+export interface ExportProgrammeRequete {
+  nom: string;
+  modeleIds: number[];
+  seances: SeanceExport[];
 }
 
 export interface FitbitDayPoint {

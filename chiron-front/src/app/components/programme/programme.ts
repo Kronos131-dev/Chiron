@@ -144,6 +144,10 @@ export class Programme implements OnInit {
     this.router.navigate(['/programme', id, 'edit']);
   }
 
+  ouvrirExports() {
+    this.router.navigate(['/exports']);
+  }
+
   supprimerRoutine(routineId: string) {
     if (confirm(this.i18n.t('programme.confirmDelete'))) {
       const username = this.authService.getUsername();

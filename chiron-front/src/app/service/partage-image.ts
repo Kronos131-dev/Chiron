@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { CarteSeance, Traducteur } from '../partage/carte';
-import { IssuePartage, partagerImage } from './partage';
+import { IssuePartage, partagerFichier } from './partage';
 
 @Injectable({ providedIn: 'root' })
 export class PartageImage {
@@ -10,6 +10,6 @@ export class PartageImage {
   }
 
   partager(fichier: File): Promise<IssuePartage> {
-    return partagerImage(fichier);
+    return partagerFichier(fichier);
   }
 }

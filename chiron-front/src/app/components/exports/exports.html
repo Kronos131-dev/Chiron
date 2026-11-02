@@ -1,0 +1,117 @@
+<app-header
+  [title]="'export.list.title' | t"
+  [showBack]="true"
+  [backRoute]="'/programme'"
+></app-header>
+
+<main class="min-h-screen pt-24 pb-32 px-4 md:px-8 greek-bg heroic-texture">
+  <div class="max-w-xl mx-auto space-y-4 pt-4">
+    <div>
+      <p class="text-secondary text-xs font-bold tracking-[0.2em] uppercase mb-1">
+        {{ 'export.list.eyebrow' | t }}
+      </p>
+      <h2
+        class="font-headline text-3xl min-[400px]:text-4xl font-black text-on-surface uppercase tracking-tight"
+      >
+        {{ 'export.list.heading' | t }}
+      </h2>
+      <div class="h-1 w-12 bg-secondary mt-2 rounded-full"></div>
+    </div>
+
+    <p class="text-white/50 text-xs">{{ 'export.list.intro' | t }}</p>
+
+    @if (erreur()) {
+      <div class="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3 text-red-400 text-sm">
+        {{ erreur() }}
+      </div>
+    }
+
+    <button
+      (click)="nouvelExport()"
+      type="button"
+      class="w-full bg-gradient-to-r from-secondary to-[#c77a30] text-slate-950 font-bold text-xs px-6 py-4 rounded-lg uppercase tracking-widest hover:scale-105 active:scale-95 transition-transform shadow-lg shadow-secondary/20 flex items-center justify-center gap-3"
+    >
+      <span class="material-symbols-outlined text-lg">add</span>
+      <span>{{ 'export.list.new' | t }}</span>
+    </button>
+
+    @if (chargement()) {
+      <div class="flex justify-center py-12">
+        <span
+          class="w-10 h-10 border-4 border-secondary/20 border-t-secondary rounded-full animate-spin"
+        ></span>
+      </div>
+    } @else if (exports().length === 0) {
+      <p class="text-white/50 text-sm border border-white/10 rounded-xl px-4 py-6 text-center">
+        {{ 'export.list.empty' | t }}
+      </p>
+    }
+
+    @for (classeur of exports(); track classeur.id) {
+      <article
+        class="bg-slate-900/80 border border-white/10 rounded-2xl p-4 min-[400px]:p-5 space-y-3"
+      >
+        <div class="flex items-start gap-3">
+          <span class="material-symbols-outlined text-emerald-400 shrink-0">table_chart</span>
+          <div class="min-w-0 flex-1">
+            <h3 class="text-white font-bold text-lg leading-tight [overflow-wrap:anywhere]">
+              {{ classeur.nom }}
+            </h3>
+            <p class="text-white/50 text-xs mt-1">
+              {{
+                (classeur.nbSeances === 1
+                  ? 'export.list.sessionsCount1'
+                  : 'export.list.sessionsCount'
+                ) | t: { n: classeur.nbSeances }
+              }}
+              · {{ 'export.list.createdOn' | t: { date: formaterDate(classeur.creeA) } }}
+            </p>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap gap-1.5">
+          @for (modele of classeur.modeles; track modele.id) {
+            <span
+              class="max-w-full truncate bg-white/5 border border-white/10 rounded-full px-2.5 py-0.5 text-[11px] text-white/70"
+              >{{ modele.titre }}</span
+            >
+          }
+        </div>
+
+        <button
+          (click)="telecharger(classeur)"
+          [disabled]="occupe() !== null"
+          type="button"
+          class="w-full bg-gradient-to-r from-secondary to-[#c77a30] text-slate-950 font-bold text-xs px-2 py-3 rounded-lg uppercase tracking-widest disabled:opacity-40 cursor-pointer flex items-center justify-center gap-2"
+        >
+          @if (occupe() === classeur.id) {
+            <span
+              class="inline-block w-3 h-3 border-2 border-slate-950/30 border-t-slate-950 rounded-full animate-spin"
+            ></span>
+          }
+          {{ 'export.list.download' | t }}
+        </button>
+        <div class="grid grid-cols-2 gap-2">
+          <button
+            (click)="modifier(classeur)"
+            [disabled]="occupe() !== null"
+            type="button"
+            class="border border-white/10 text-white px-2 py-2.5 rounded-lg text-[11px] font-bold tracking-widest uppercase hover:bg-white/5 transition-colors disabled:opacity-40 cursor-pointer"
+          >
+            {{ 'export.list.edit' | t }}
+          </button>
+          <button
+            (click)="supprimer(classeur)"
+            [disabled]="occupe() !== null"
+            type="button"
+            class="border border-red-500/30 text-red-400 px-2 py-2.5 rounded-lg text-[11px] font-bold tracking-widest uppercase hover:bg-red-500/10 transition-colors disabled:opacity-40 cursor-pointer"
+          >
+            {{ 'export.list.delete' | t }}
+          </button>
+        </div>
+      </article>
+    }
+
+    <p class="text-white/40 text-[11px]">{{ 'export.list.banner' | t }}</p>
+  </div>
+</main>

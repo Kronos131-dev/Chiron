@@ -7,7 +7,7 @@ function estAnnulation(erreur: unknown): boolean {
   return erreur instanceof Error && /cancel/i.test(erreur.message);
 }
 
-function telecharger(fichier: File): void {
+function telechargerLocalement(fichier: File): void {
   const adresse = URL.createObjectURL(fichier);
   const lien = document.createElement('a');
   lien.href = adresse;
@@ -34,7 +34,7 @@ async function partagerSurLeWeb(fichier: File): Promise<IssuePartage> {
       if (estAnnulation(erreur)) return 'annule';
     }
   }
-  telecharger(fichier);
+  telechargerLocalement(fichier);
   return 'telechargement';
 }
 
@@ -61,6 +61,14 @@ async function partagerSurAndroid(fichier: File): Promise<IssuePartage> {
 // l'utilisateur ; le moindre `await` placé avant (polices, export du canvas) lui fait perdre
 // ce droit. L'image est donc forgée à l'ouverture de l'aperçu, et cette fonction part au clic
 // sans rien attendre en amont.
-export function partagerImage(fichier: File): Promise<IssuePartage> {
-  return estNatif() ? partagerSurAndroid(fichier) : partagerSurLeWeb(fichier);
+export function partagerFichier(
+  fichier: File,
+  options: { telecharger?: boolean } = {},
+): Promise<IssuePartage> {
+  if (estNatif()) return partagerSurAndroid(fichier);
+  if (options.telecharger) {
+    telechargerLocalement(fichier);
+    return Promise.resolve('telechargement');
+  }
+  return partagerSurLeWeb(fichier);
 }

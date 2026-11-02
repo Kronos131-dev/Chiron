@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { partagerImage } from './partage';
+import { partagerFichier } from './partage';
 
 const fichier = new File(['x'], 'chiron-portrait.jpg', { type: 'image/jpeg' });
 
-describe('partagerImage (web)', () => {
+describe('partagerFichier (web)', () => {
   const share = vi.fn();
   const canShare = vi.fn();
 
@@ -26,7 +26,7 @@ describe('partagerImage (web)', () => {
   it('ouvre la feuille de partage du système quand les fichiers sont acceptés', async () => {
     canShare.mockReturnValue(true);
     share.mockResolvedValue(undefined);
-    expect(await partagerImage(fichier)).toBe('partage');
+    expect(await partagerFichier(fichier)).toBe('partage');
     expect(share).toHaveBeenCalledWith({ files: [fichier] });
   });
 
@@ -34,14 +34,22 @@ describe('partagerImage (web)', () => {
     canShare.mockReturnValue(true);
     share.mockRejectedValue(new DOMException('annulé', 'AbortError'));
     const clic = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
-    expect(await partagerImage(fichier)).toBe('annule');
+    expect(await partagerFichier(fichier)).toBe('annule');
     expect(clic).not.toHaveBeenCalled();
   });
 
   it('télécharge l image quand le partage de fichiers n existe pas', async () => {
     canShare.mockReturnValue(false);
     const clic = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
-    expect(await partagerImage(fichier)).toBe('telechargement');
+    expect(await partagerFichier(fichier)).toBe('telechargement');
+    expect(share).not.toHaveBeenCalled();
+    expect(clic).toHaveBeenCalled();
+  });
+
+  it('télécharge directement quand le téléchargement est demandé, sans passer par le partage', async () => {
+    canShare.mockReturnValue(true);
+    const clic = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+    expect(await partagerFichier(fichier, { telecharger: true })).toBe('telechargement');
     expect(share).not.toHaveBeenCalled();
     expect(clic).toHaveBeenCalled();
   });

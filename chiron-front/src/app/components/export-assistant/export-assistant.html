@@ -1,0 +1,267 @@
+<app-header
+  [title]="(enEdition() ? 'export.assistant.titleEdit' : 'export.assistant.titleNew') | t"
+  [showBack]="true"
+  [backRoute]="'/exports'"
+></app-header>
+
+<main class="min-h-screen pt-24 pb-40 px-4 md:px-8 greek-bg heroic-texture">
+  <div class="max-w-xl mx-auto space-y-4 pt-4">
+    @if (chargement()) {
+      <div class="flex justify-center py-20">
+        <span
+          class="w-12 h-12 border-4 border-secondary/20 border-t-secondary rounded-full animate-spin"
+        ></span>
+      </div>
+    } @else if (erreurChargement()) {
+      <div class="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3 space-y-3">
+        <p class="text-red-400 text-sm">{{ 'export.assistant.loadError' | t }}</p>
+        <button
+          (click)="quitter()"
+          type="button"
+          class="w-full border border-white/10 text-white py-2.5 rounded-lg text-xs font-bold tracking-widest uppercase hover:bg-white/5 transition-colors cursor-pointer"
+        >
+          {{ 'export.assistant.backToExports' | t }}
+        </button>
+      </div>
+    } @else if (resultat(); as classeur) {
+      <section
+        class="bg-slate-900/80 border border-emerald-500/30 rounded-2xl p-5 min-[400px]:p-6 space-y-4 text-center"
+      >
+        <span class="material-symbols-outlined text-emerald-400 text-5xl">check_circle</span>
+        <h2 class="font-headline text-2xl font-black text-white uppercase tracking-tight">
+          {{ (enEdition() ? 'export.assistant.successEdit' : 'export.assistant.successNew') | t }}
+        </h2>
+        <p class="text-white/70 text-sm [overflow-wrap:anywhere]">{{ classeur.nom }}</p>
+        @if (erreur()) {
+          <p class="text-red-400 text-xs">{{ erreur() }}</p>
+        }
+        <div class="space-y-2">
+          <button
+            (click)="telecharger()"
+            [disabled]="telechargementEnCours()"
+            type="button"
+            class="w-full bg-gradient-to-r from-secondary to-[#c77a30] text-slate-950 font-bold text-xs px-4 py-3 rounded-lg uppercase tracking-widest disabled:opacity-40 cursor-pointer"
+          >
+            {{ 'export.list.download' | t }}
+          </button>
+          <button
+            (click)="quitter()"
+            type="button"
+            class="w-full border border-white/10 text-white py-3 rounded-lg text-xs font-bold tracking-widest uppercase hover:bg-white/5 transition-colors cursor-pointer"
+          >
+            {{ 'export.assistant.backToExports' | t }}
+          </button>
+        </div>
+      </section>
+    } @else {
+      <p class="text-secondary text-xs font-bold tracking-[0.2em] uppercase">
+        {{ 'export.assistant.step' | t: { n: etape() } }}
+      </p>
+
+      @switch (etape()) {
+        @case (1) {
+          <section class="space-y-3">
+            <h2 class="font-headline text-2xl font-black text-white uppercase tracking-tight">
+              {{ 'export.assistant.step1.title' | t }}
+            </h2>
+            <p class="text-white/50 text-xs">{{ 'export.assistant.step1.desc' | t }}</p>
+
+            @if (routines().length === 0) {
+              <p class="text-white/50 text-sm border border-white/10 rounded-xl px-4 py-6">
+                {{ 'export.assistant.step1.empty' | t }}
+              </p>
+            } @else {
+              <button
+                (click)="basculerToutesLesRoutines()"
+                type="button"
+                class="text-secondary text-xs font-bold tracking-widest uppercase hover:text-white transition-colors cursor-pointer"
+              >
+                {{
+                  (toutEstCoche() ? 'export.assistant.selectNone' : 'export.assistant.selectAll')
+                    | t
+                }}
+              </button>
+              @for (routine of routines(); track routine.id) {
+                <label
+                  class="flex items-start gap-3 bg-slate-900/80 border rounded-xl p-4 cursor-pointer transition-colors"
+                  [class]="estCochee(routine) ? 'border-secondary' : 'border-white/10'"
+                >
+                  <input
+                    type="checkbox"
+                    class="mt-1 w-5 h-5 shrink-0 accent-[#c77a30]"
+                    [checked]="estCochee(routine)"
+                    (change)="basculerRoutine(routine)"
+                  />
+                  <span class="min-w-0 flex-1">
+                    <span class="block text-white font-bold [overflow-wrap:anywhere]">{{
+                      routine.titre
+                    }}</span>
+                    <span class="block text-white/50 text-xs mt-0.5">
+                      {{
+                        'export.assistant.step1.summary'
+                          | t: { exercices: routine.nbExercices, series: routine.nbSeries }
+                      }}
+                    </span>
+                  </span>
+                </label>
+              }
+            }
+          </section>
+        }
+        @case (2) {
+          <section class="space-y-4">
+            <h2 class="font-headline text-2xl font-black text-white uppercase tracking-tight">
+              {{ 'export.assistant.step2.title' | t }}
+            </h2>
+            <p class="text-white/50 text-xs">{{ 'export.assistant.step2.desc' | t }}</p>
+
+            @if (semaines().length === 0) {
+              <p class="text-white/50 text-sm border border-white/10 rounded-xl px-4 py-6">
+                {{ 'export.assistant.step2.empty' | t }}
+              </p>
+            }
+            @for (semaine of semaines(); track semaine.cle) {
+              <div class="space-y-2">
+                <p class="text-on-surface-variant text-[10px] font-bold tracking-[0.2em] uppercase">
+                  {{ 'export.assistant.step2.week' | t: { date: formaterSemaine(semaine.debut) } }}
+                </p>
+                @for (seance of semaine.seances; track seance.id) {
+                  <div
+                    class="bg-slate-900/80 border rounded-xl p-3 min-[400px]:p-4 space-y-2"
+                    [class]="
+                      estAjoutee(seance) || estAutomatique(seance)
+                        ? 'border-secondary'
+                        : 'border-white/10'
+                    "
+                  >
+                    <label class="flex items-start gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        class="mt-1 w-5 h-5 shrink-0 accent-[#c77a30]"
+                        [checked]="estAjoutee(seance) || estAutomatique(seance)"
+                        [disabled]="estAutomatique(seance)"
+                        (change)="basculerSeance(seance)"
+                      />
+                      <span class="min-w-0 flex-1">
+                        <span class="block text-white font-bold [overflow-wrap:anywhere]">{{
+                          libelleSeance(seance)
+                        }}</span>
+                        <span class="block text-white/50 text-xs mt-0.5">
+                          {{ formaterJour(seance.debut) }} ·
+                          {{ 'export.assistant.step2.exercises' | t: { n: seance.nbExercices } }}
+                        </span>
+                      </span>
+                    </label>
+
+                    @if (estAutomatique(seance)) {
+                      <p class="text-emerald-400 text-xs pl-8">
+                        {{
+                          'export.assistant.step2.auto'
+                            | t: { titre: titreDuModele(seance.modeleId) }
+                        }}
+                      </p>
+                    } @else if (estAjoutee(seance)) {
+                      <div class="pl-8">
+                        <select
+                          (change)="choisirCible(seance, $any($event.target).value)"
+                          [attr.aria-label]="'export.assistant.step2.tab' | t"
+                          class="w-full bg-slate-950 border rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-secondary/60"
+                          [class]="cible(seance) === null ? 'border-amber-500' : 'border-white/10'"
+                        >
+                          <option value="" [selected]="cible(seance) === null">
+                            {{ 'export.assistant.step2.tabPlaceholder' | t }}
+                          </option>
+                          @for (routine of routinesChoisies(); track routine.id) {
+                            <option [value]="routine.id" [selected]="cible(seance) === routine.id">
+                              {{ routine.titre }}
+                            </option>
+                          }
+                        </select>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+            @if (rattachementsIncomplets() > 0) {
+              <p class="text-amber-400 text-xs">
+                {{ 'export.assistant.step2.tabMissing' | t: { n: rattachementsIncomplets() } }}
+              </p>
+            }
+          </section>
+        }
+        @default {
+          <section class="space-y-4">
+            <h2 class="font-headline text-2xl font-black text-white uppercase tracking-tight">
+              {{ 'export.assistant.step3.title' | t }}
+            </h2>
+            <label class="block space-y-1">
+              <span
+                class="text-on-surface-variant text-[10px] font-bold tracking-[0.2em] uppercase"
+              >
+                {{ 'export.assistant.step3.name' | t }}
+              </span>
+              <input
+                type="text"
+                maxlength="120"
+                [value]="nom()"
+                (input)="saisirNom($any($event.target).value)"
+                class="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-secondary/50 transition-colors"
+              />
+            </label>
+            <ul
+              class="bg-slate-900/80 border border-white/10 rounded-xl divide-y divide-white/5 text-sm"
+            >
+              <li class="flex items-center justify-between gap-3 px-4 py-3">
+                <span class="text-white/70">{{ 'export.assistant.step3.tabs' | t }}</span>
+                <span class="text-white font-bold">{{ routinesChoisies().length }}</span>
+              </li>
+              <li class="flex items-center justify-between gap-3 px-4 py-3">
+                <span class="text-white/70">{{ 'export.assistant.step3.auto' | t }}</span>
+                <span class="text-white font-bold">{{ nbAutomatiques() }}</span>
+              </li>
+              <li class="flex items-center justify-between gap-3 px-4 py-3">
+                <span class="text-white/70">{{ 'export.assistant.step3.manual' | t }}</span>
+                <span class="text-white font-bold">{{ nbAjoutees() }}</span>
+              </li>
+            </ul>
+            <p class="text-white/50 text-xs">{{ 'export.assistant.step3.note' | t }}</p>
+          </section>
+        }
+      }
+
+      @if (erreur()) {
+        <p class="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3 text-red-400 text-sm">
+          {{ erreur() }}
+        </p>
+      }
+
+      <div
+        class="sticky bottom-24 z-40 flex gap-2 bg-slate-950/90 backdrop-blur-md border border-white/10 rounded-2xl p-2"
+      >
+        <button
+          (click)="precedent()"
+          [disabled]="enregistrement()"
+          type="button"
+          class="min-w-0 flex-1 border border-white/10 text-white px-1 py-3 rounded-lg text-xs font-bold tracking-wider min-[400px]:tracking-widest uppercase hover:bg-white/5 transition-colors disabled:opacity-50 cursor-pointer"
+        >
+          {{ (etape() === 1 ? 'export.assistant.cancel' : 'export.assistant.previous') | t }}
+        </button>
+        <button
+          (click)="suivant()"
+          [disabled]="!peutAvancer() || enregistrement()"
+          type="button"
+          class="min-w-0 flex-[2] bg-gradient-to-r from-secondary to-[#c77a30] text-slate-950 font-bold text-xs px-2 py-3 rounded-lg uppercase tracking-widest disabled:opacity-40 cursor-pointer"
+        >
+          @if (enregistrement()) {
+            {{ 'export.assistant.saving' | t }}
+          } @else if (etape() === 3) {
+            {{ (enEdition() ? 'export.assistant.save' : 'export.assistant.create') | t }}
+          } @else {
+            {{ 'export.assistant.next' | t }}
+          }
+        </button>
+      </div>
+    }
+  </div>
+</main>

@@ -131,6 +131,26 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
 
+  {
+    path: 'exports',
+    loadComponent: () => import('./components/exports/exports').then((m) => m.Exports),
+    canActivate: [authGuard],
+  },
+
+  {
+    path: 'exports/new',
+    loadComponent: () =>
+      import('./components/export-assistant/export-assistant').then((m) => m.ExportAssistant),
+    canActivate: [authGuard],
+  },
+
+  {
+    path: 'exports/:id/edit',
+    loadComponent: () =>
+      import('./components/export-assistant/export-assistant').then((m) => m.ExportAssistant),
+    canActivate: [authGuard],
+  },
+
   // WHY: instrument de mesure temporaire pour valider la survie du GPS écran éteint avant
   // d'écrire la page Course. À retirer une fois le relevé fait.
   {
