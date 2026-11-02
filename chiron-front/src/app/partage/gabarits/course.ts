@@ -37,7 +37,6 @@ export function dessinerCourse(scene: Scene, zone: Zone): void {
   const { ctx, carte, format, palier, t } = scene;
   const course = carte.course;
   if (!course) return;
-  const story = format.nom === 'story';
 
   let y = dessinerAccroche(scene, zone, zone.y, t('share.genre.course'));
 
@@ -47,7 +46,7 @@ export function dessinerCourse(scene: Scene, zone: Zone): void {
     course.distanceKm,
     mesureurDe(ctx, styleDistance),
     zone.largeur - reserveSceau - 120,
-    story ? 210 : 176,
+    210,
     90,
   );
   const largeurDistance = ecrire(ctx, course.distanceKm, zone.x, y + tailleDistance * 0.86, {
@@ -75,10 +74,10 @@ export function dessinerCourse(scene: Scene, zone: Zone): void {
   });
   y += 30;
 
-  const hauteurTuiles = story ? 150 : 122;
+  const hauteurTuiles = 150;
   const lateral = course.splits.length >= 2 && course.splits.length <= SPLITS_LATERAUX_MAX;
   const aDesSplits = course.splits.length >= 2 && !lateral;
-  const hauteurSplits = aDesSplits ? (story ? 190 : 112) : 0;
+  const hauteurSplits = aDesSplits ? 190 : 0;
   const bas = zone.y + zone.hauteur;
   let hauteurTrace = bas - y - hauteurTuiles - 24 - hauteurSplits - (aDesSplits ? 24 : 0);
   let splitsVisibles = aDesSplits;

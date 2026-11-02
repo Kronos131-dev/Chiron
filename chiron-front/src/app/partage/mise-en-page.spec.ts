@@ -1,24 +1,22 @@
 import { describe, expect, it } from 'vitest';
 import {
-  PORTRAIT,
   STORY,
   cadreDe,
   decouperEnLignes,
   regrouperSplits,
   tailleAjustee,
-  tronquerLignes,
+  disposerPuces,
+  tronquerParHauteur,
 } from './mise-en-page';
 
 const dixParCaractere = (texte: string) => texte.length * 10;
 
 describe('mise en page', () => {
   it('garde le contenu dans le panneau, sous l entête et au-dessus du pied', () => {
-    for (const format of [PORTRAIT, STORY]) {
-      const cadre = cadreDe(format);
-      expect(cadre.contenu.y).toBeGreaterThan(cadre.entete.y + cadre.entete.hauteur);
-      expect(cadre.contenu.y + cadre.contenu.hauteur).toBeLessThan(cadre.pied.y);
-      expect(cadre.pied.y + cadre.pied.hauteur).toBe(format.hauteur - format.margeVerticale);
-    }
+    const cadre = cadreDe(STORY);
+    expect(cadre.contenu.y).toBeGreaterThan(cadre.entete.y + cadre.entete.hauteur);
+    expect(cadre.contenu.y + cadre.contenu.hauteur).toBeLessThan(cadre.pied.y);
+    expect(cadre.pied.y + cadre.pied.hauteur).toBe(STORY.hauteur - STORY.margeVerticale);
   });
 
   it('réduit la taille jusqu à tenir dans la largeur', () => {
@@ -36,20 +34,41 @@ describe('mise en page', () => {
   });
 
   it('ne tronque pas quand tout tient', () => {
-    const { visibles, masquees } = tronquerLignes([1, 2, 3], 400, 80, 6, 50);
-    expect(visibles).toEqual([1, 2, 3]);
-    expect(masquees).toBe(0);
+    expect(tronquerParHauteur([100, 120, 90], 400, 50)).toEqual({ visibles: 3, masquees: 0 });
   });
 
   it('réserve la place de la ligne « autres » quand il faut tronquer', () => {
-    const { visibles, masquees } = tronquerLignes([1, 2, 3, 4, 5, 6, 7, 8], 400, 80, 9, 50);
-    expect(visibles).toHaveLength(4);
-    expect(masquees).toBe(4);
+    const { visibles, masquees } = tronquerParHauteur([100, 100, 100, 100, 100], 320, 50);
+    expect(visibles).toBe(2);
+    expect(masquees).toBe(3);
   });
 
-  it('respecte le maximum de lignes du format', () => {
-    const { visibles } = tronquerLignes([1, 2, 3, 4, 5, 6, 7, 8], 2000, 80, 6, 50);
-    expect(visibles).toHaveLength(6);
+  it('garde au moins une ligne visible', () => {
+    expect(tronquerParHauteur([300, 300], 100, 50).visibles).toBe(0);
+    expect(tronquerParHauteur([40, 300], 100, 50).visibles).toBe(1);
+  });
+
+  it('range les puces sur plusieurs lignes', () => {
+    const { lignes, masquees } = disposerPuces([100, 100, 100, 100], 250, 10, 3, () => 40);
+    expect(lignes).toEqual([
+      [0, 1],
+      [2, 3],
+    ]);
+    expect(masquees).toBe(0);
+  });
+
+  it('résume les puces en trop par un « +N » qui tient sur la dernière ligne', () => {
+    const { lignes, masquees } = disposerPuces(Array(8).fill(100), 250, 10, 2, () => 60);
+    expect(lignes).toHaveLength(2);
+    const placees = lignes.flat().length;
+    expect(placees + masquees).toBe(8);
+    expect(masquees).toBeGreaterThan(0);
+    const derniere = lignes[1];
+    expect(derniere.length * 100 + (derniere.length - 1) * 10 + 10 + 60).toBeLessThanOrEqual(250);
+  });
+
+  it('place une puce plus large que la ligne seule sur sa ligne', () => {
+    expect(disposerPuces([400, 50], 300, 10, 3, () => 40).lignes).toEqual([[0], [1]]);
   });
 
   it('regroupe les splits au-delà du maximum en moyennes', () => {

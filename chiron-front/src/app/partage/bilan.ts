@@ -19,7 +19,6 @@ export interface ExerciceBrut {
   nom?: string | null;
   cardioType?: string | null;
   wodType?: string | null;
-  unilateral?: boolean | null;
   series?: SerieBrute[] | null;
 }
 
@@ -40,24 +39,8 @@ export function estMuscu(exercice: ExerciceBrut): boolean {
   return !exercice.cardioType && !exercice.wodType;
 }
 
-function nombre(valeur: number | null | undefined): number {
+export function nombre(valeur: number | null | undefined): number {
   return Number.isFinite(valeur) ? Number(valeur) : 0;
-}
-
-export function tonnageExercice(exercice: ExerciceBrut): number {
-  if (!estMuscu(exercice)) return 0;
-  let total = 0;
-  for (const serie of exercice.series ?? []) {
-    total += nombre(serie.poids) * nombre(serie.reps);
-    for (const degressif of serie.degressifs ?? []) {
-      total += nombre(degressif.poids) * nombre(degressif.reps);
-    }
-  }
-  return exercice.unilateral ? total * 2 : total;
-}
-
-export function tonnageTotal(exercices: ExerciceBrut[]): number {
-  return exercices.reduce((somme, exercice) => somme + tonnageExercice(exercice), 0);
 }
 
 export function meilleureSerie(exercice: ExerciceBrut): MeilleureSerie | null {
@@ -110,20 +93,6 @@ export function formaterNombre(valeur: number, langue: string, decimales = 0): s
     minimumFractionDigits: 0,
     maximumFractionDigits: decimales,
   });
-}
-
-export interface Mesure {
-  valeur: string;
-  unite: string;
-}
-
-const KG_PAR_TONNE = 1000;
-
-export function formaterTonnage(kg: number, langue: string): Mesure {
-  if (kg >= KG_PAR_TONNE) {
-    return { valeur: formaterNombre(kg / KG_PAR_TONNE, langue, 1), unite: 't' };
-  }
-  return { valeur: formaterNombre(Math.round(kg), langue), unite: 'kg' };
 }
 
 const MINUTES_PAR_HEURE = 60;

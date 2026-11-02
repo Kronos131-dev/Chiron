@@ -68,10 +68,17 @@ export function traceExemple(): CourseTraceDto {
 const serie = (poids: number, reps: number) => ({ poids, reps, degressifs: [] });
 
 export const EXERCICES_EXEMPLE: ExerciceBrut[] = [
-  { nom: 'Développé couché', series: [serie(100, 8), serie(100, 8), serie(95, 10), serie(90, 12)] },
+  {
+    nom: 'Développé couché',
+    series: [
+      serie(100, 8),
+      serie(100, 8),
+      serie(95, 10),
+      { poids: 90, reps: 12, degressifs: [{ poids: 70, reps: 8 }] },
+    ],
+  },
   {
     nom: 'Développé incliné haltères',
-    unilateral: true,
     series: [serie(32, 10), serie(32, 9), serie(30, 10)],
   },
   { nom: 'Écartés à la poulie', series: [serie(18, 15), serie(18, 14), serie(16, 15)] },

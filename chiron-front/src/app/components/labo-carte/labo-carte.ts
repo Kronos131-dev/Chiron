@@ -4,7 +4,6 @@ import { TranslatePipe } from '../../service/translate.pipe';
 import { HeaderComponent } from '../shared/header/header';
 import { GenreCarte } from '../../partage/carte';
 import { carteBatailleExemple, carteCourseExemple, carteWodExemple } from '../../partage/exemples';
-import { FORMATS, NomFormat } from '../../partage/mise-en-page';
 
 @Component({
   selector: 'app-labo-carte',
@@ -15,11 +14,9 @@ import { FORMATS, NomFormat } from '../../partage/mise-en-page';
 })
 export class LaboCarte implements OnInit, OnDestroy {
   readonly genres: GenreCarte[] = ['bataille', 'course', 'wod'];
-  readonly formats: NomFormat[] = ['portrait', 'story'];
   readonly niveaux = [0, 1, 2, 3, 4, 5, 6, 7, 8];
 
   readonly genre = signal<GenreCarte>('bataille');
-  readonly format = signal<NomFormat>('portrait');
   readonly niveau = signal(5);
   readonly apercu = signal<string | null>(null);
   readonly enCours = signal(false);
@@ -41,11 +38,6 @@ export class LaboCarte implements OnInit, OnDestroy {
     this.forger();
   }
 
-  choisirFormat(format: NomFormat): void {
-    this.format.set(format);
-    this.forger();
-  }
-
   choisirNiveau(niveau: number): void {
     this.niveau.set(niveau);
     this.forger();
@@ -64,7 +56,7 @@ export class LaboCarte implements OnInit, OnDestroy {
           ? carteWodExemple(niveau, t)
           : carteBatailleExemple(niveau, t, langue);
     const { rendreCarte } = await import('../../partage/rendu');
-    const blob = await rendreCarte(carte, FORMATS[this.format()], t, langue).catch(() => null);
+    const blob = await rendreCarte(carte, t, langue).catch(() => null);
     if (ordre !== this.ordre) return;
     this.oublier();
     if (blob) this.apercu.set(URL.createObjectURL(blob));

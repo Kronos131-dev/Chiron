@@ -34,20 +34,16 @@ describe('PartageCarte', () => {
     });
   });
 
-  it('forge la carte portrait dès l ouverture', async () => {
+  it('forge la carte dès l ouverture et affiche l aperçu', async () => {
     await ouvrir();
     expect(forger).toHaveBeenCalledTimes(1);
-    expect(forger.mock.calls[0][1].nom).toBe('portrait');
     expect(composant.etat()).toBe('pret');
     expect(fixture.nativeElement.querySelector('img')?.getAttribute('src')).toBe('blob:apercu');
   });
 
-  it('refait le rendu en story et oublie l ancien aperçu', async () => {
+  it('libère l aperçu à la fermeture', async () => {
     await ouvrir();
-    composant.changerFormat('story');
-    await fixture.whenStable();
-    expect(forger).toHaveBeenCalledTimes(2);
-    expect(forger.mock.calls[1][1].nom).toBe('story');
+    fixture.destroy();
     expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:apercu');
   });
 
@@ -62,9 +58,8 @@ describe('PartageCarte', () => {
     await ouvrir();
     await composant.partager();
     expect(partager).toHaveBeenCalledTimes(1);
-    const [fichier, texte] = partager.mock.calls[0];
-    expect(fichier.name).toBe('chiron-portrait.jpg');
-    expect(texte).toContain('chiron-sanctuaire.fr');
+    expect(partager.mock.calls[0]).toHaveLength(1);
+    expect(partager.mock.calls[0][0].name).toBe('chiron-seance.jpg');
   });
 
   it('prévient quand l image a été enregistrée au lieu d être partagée', async () => {

@@ -25,21 +25,20 @@ function enBase64(fichier: File): Promise<string> {
   });
 }
 
-async function partagerSurLeWeb(fichier: File, texte: string): Promise<IssuePartage> {
+async function partagerSurLeWeb(fichier: File): Promise<IssuePartage> {
   if (navigator.canShare?.({ files: [fichier] })) {
     try {
-      await navigator.share({ files: [fichier], text: texte });
+      await navigator.share({ files: [fichier] });
       return 'partage';
     } catch (erreur) {
       if (estAnnulation(erreur)) return 'annule';
     }
   }
   telecharger(fichier);
-  navigator.clipboard?.writeText(texte).catch(() => {});
   return 'telechargement';
 }
 
-async function partagerSurAndroid(fichier: File, texte: string): Promise<IssuePartage> {
+async function partagerSurAndroid(fichier: File): Promise<IssuePartage> {
   const [{ Directory, Filesystem }, { Share }] = await Promise.all([
     import('@capacitor/filesystem'),
     import('@capacitor/share'),
@@ -50,7 +49,7 @@ async function partagerSurAndroid(fichier: File, texte: string): Promise<IssuePa
     directory: Directory.Cache,
   });
   try {
-    await Share.share({ text: texte, files: [ecrit.uri] });
+    await Share.share({ files: [ecrit.uri] });
     return 'partage';
   } catch (erreur) {
     if (estAnnulation(erreur)) return 'annule';
@@ -62,6 +61,6 @@ async function partagerSurAndroid(fichier: File, texte: string): Promise<IssuePa
 // l'utilisateur ; le moindre `await` placé avant (polices, export du canvas) lui fait perdre
 // ce droit. L'image est donc forgée à l'ouverture de l'aperçu, et cette fonction part au clic
 // sans rien attendre en amont.
-export function partagerImage(fichier: File, texte: string): Promise<IssuePartage> {
-  return estNatif() ? partagerSurAndroid(fichier, texte) : partagerSurLeWeb(fichier, texte);
+export function partagerImage(fichier: File): Promise<IssuePartage> {
+  return estNatif() ? partagerSurAndroid(fichier) : partagerSurLeWeb(fichier);
 }

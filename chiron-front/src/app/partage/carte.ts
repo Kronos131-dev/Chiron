@@ -5,16 +5,14 @@ import { durationMinutes } from '../util/duration';
 import { formaterAllure, formaterChrono } from '../util/allure';
 import {
   ExerciceBrut,
+  SerieBrute,
   chiffreRomain,
   compterReps,
   compterSeries,
-  estMuscu,
   formaterDureeMinutes,
   formaterNombre,
-  formaterTonnage,
   meilleureSerie,
-  tonnageExercice,
-  tonnageTotal,
+  nombre,
 } from './bilan';
 
 export type GenreCarte = 'bataille' | 'course' | 'wod';
@@ -33,12 +31,20 @@ export interface Tuile {
   cle: string;
 }
 
+export interface PuceSerie {
+  texte: string;
+  meilleure: boolean;
+}
+
+export type GenreLigne = 'muscu' | 'cardio' | 'wod';
+
 export interface LigneExercice {
   numero: string;
   nom: string;
+  genre: GenreLigne;
   detail: string;
   sousDetail: string | null;
-  part: number;
+  series: PuceSerie[];
 }
 
 export interface CarteBataille {
@@ -115,28 +121,55 @@ function activiteUtile(activite: ActiviteMontre | null | undefined): ActiviteMon
   return activite.fcMoyenne || activite.calories ? activite : null;
 }
 
+function chargeEtReps(
+  poids: number | null | undefined,
+  reps: number | null | undefined,
+  t: Traducteur,
+  langue: string,
+): string {
+  const charge = nombre(poids) > 0 ? formaterNombre(nombre(poids), langue, 1) : t('share.pdc');
+  return `${charge} × ${nombre(reps)}`;
+}
+
+function textePuce(serie: SerieBrute, t: Traducteur, langue: string): string {
+  const principale = chargeEtReps(serie.poids, serie.reps, t, langue);
+  const degressifs = (serie.degressifs ?? []).map(
+    (degressif) => ` › ${chargeEtReps(degressif.poids, degressif.reps, t, langue)}`,
+  );
+  return principale + degressifs.join('');
+}
+
+function puces(exercice: ExerciceBrut, t: Traducteur, langue: string): PuceSerie[] {
+  const valides = (exercice.series ?? []).filter((serie) => nombre(serie.reps) > 0);
+  const textes = valides.map((serie) => textePuce(serie, t, langue));
+  const meilleure = meilleureSerie(exercice);
+  const tousIdentiques = textes.every((texte) => texte === textes[0]);
+  const indexMeilleure =
+    meilleure && !tousIdentiques
+      ? valides.findIndex(
+          (serie) =>
+            nombre(serie.poids) === meilleure.poids && nombre(serie.reps) === meilleure.reps,
+        )
+      : -1;
+  return textes.map((texte, index) => ({ texte, meilleure: index === indexMeilleure }));
+}
+
 function ligneMuscu(
   exercice: ExerciceBrut,
   numero: number,
-  tonnageMax: number,
   t: Traducteur,
   langue: string,
 ): LigneExercice {
-  const meilleure = meilleureSerie(exercice);
-  const nbSeries = (exercice.series ?? []).length;
-  const tonnage = tonnageExercice(exercice);
-  const charge =
-    meilleure && meilleure.poids > 0
-      ? `${formaterNombre(meilleure.poids, langue, 1)} kg`
-      : t('share.pdc');
-  const mesure = formaterTonnage(tonnage, langue);
-  const volume = tonnage > 0 ? ` · ${mesure.valeur} ${mesure.unite}` : '';
+  const series = puces(exercice, t, langue);
   return {
     numero: chiffreRomain(numero),
     nom: exercice.nom ?? '',
-    detail: meilleure ? `${charge} × ${meilleure.reps}` : '—',
-    sousDetail: `${t(nbSeries > 1 ? 'share.seriesCount' : 'share.seriesCount1', { n: nbSeries })}${volume}`,
-    part: tonnageMax > 0 ? tonnage / tonnageMax : 0,
+    genre: 'muscu',
+    detail: series.length
+      ? t(series.length > 1 ? 'share.seriesCount' : 'share.seriesCount1', { n: series.length })
+      : '',
+    sousDetail: null,
+    series,
   };
 }
 
@@ -156,9 +189,10 @@ function ligneCardio(
   return {
     numero: chiffreRomain(numero),
     nom: exercice.nom ?? '',
+    genre: 'cardio',
     detail: parties.join(' · ') || '—',
     sousDetail: calories > 0 ? `${Math.round(calories)} kcal` : null,
-    part: 0,
+    series: [],
   };
 }
 
@@ -167,9 +201,10 @@ function ligneWod(exercice: ExerciceBrut, numero: number, t: Traducteur): LigneE
   return {
     numero: chiffreRomain(numero),
     nom: exercice.nom ?? '',
+    genre: 'wod',
     detail: `${tours} ${t('wod.rounds')}`,
     sousDetail: null,
-    part: 0,
+    series: [],
   };
 }
 
@@ -178,11 +213,10 @@ export function lignesDesExercices(
   t: Traducteur,
   langue: string,
 ): LigneExercice[] {
-  const tonnageMax = Math.max(0, ...exercices.map(tonnageExercice));
   return exercices.map((exercice, index) => {
     if (exercice.wodType) return ligneWod(exercice, index + 1, t);
     if (exercice.cardioType) return ligneCardio(exercice, index + 1, t, langue);
-    return ligneMuscu(exercice, index + 1, tonnageMax, t, langue);
+    return ligneMuscu(exercice, index + 1, t, langue);
   });
 }
 
@@ -192,15 +226,9 @@ function bataille(
   t: Traducteur,
   langue: string,
 ): CarteBataille {
-  const tonnage = formaterTonnage(tonnageTotal(exercices), langue);
-  const aDuMuscu = exercices.some(estMuscu);
   const tuiles: Tuile[] = [
     { cle: 'share.stat.duree', valeur: formaterDureeMinutes(dureeMin), unite: '' },
-    {
-      cle: 'share.stat.tonnage',
-      valeur: aDuMuscu ? tonnage.valeur : '—',
-      unite: aDuMuscu ? tonnage.unite : '',
-    },
+    { cle: 'share.stat.exercices', valeur: formaterNombre(exercices.length, langue), unite: '' },
     {
       cle: 'share.stat.series',
       valeur: formaterNombre(compterSeries(exercices), langue),
@@ -343,24 +371,4 @@ export function carteDeWod(
     wod: wod(avecTours, record, recordBattu),
     activite: null,
   };
-}
-
-export function texteAccompagnement(carte: CarteSeance, t: Traducteur): string {
-  if (carte.genre === 'course' && carte.course) {
-    return t('share.text.course', {
-      km: carte.course.distanceKm,
-      temps: formaterChrono(carte.course.dureeS),
-    });
-  }
-  if (carte.genre === 'wod' && carte.wod) {
-    return t('share.text.wod', { tours: carte.wod.tours, min: carte.wod.dureeMin });
-  }
-  const tuiles = carte.bataille?.tuiles ?? [];
-  const duree = tuiles.find((tuile) => tuile.cle === 'share.stat.duree')?.valeur ?? '—';
-  const tonnage = tuiles.find((tuile) => tuile.cle === 'share.stat.tonnage');
-  return t('share.text.bataille', {
-    titre: carte.titre,
-    duree,
-    tonnage: tonnage ? `${tonnage.valeur} ${tonnage.unite}`.trim() : '—',
-  });
 }

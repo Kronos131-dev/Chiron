@@ -1,36 +1,18 @@
-export type NomFormat = 'portrait' | 'story';
-
 export interface Format {
-  nom: NomFormat;
   largeur: number;
   hauteur: number;
   margeVerticale: number;
   margeHorizontale: number;
-  lignesMax: number;
   traceHauteurMin: number;
 }
 
-export const PORTRAIT: Format = {
-  nom: 'portrait',
-  largeur: 1080,
-  hauteur: 1350,
-  margeVerticale: 48,
-  margeHorizontale: 48,
-  lignesMax: 6,
-  traceHauteurMin: 340,
-};
-
 export const STORY: Format = {
-  nom: 'story',
   largeur: 1080,
   hauteur: 1920,
   margeVerticale: 220,
   margeHorizontale: 48,
-  lignesMax: 9,
   traceHauteurMin: 600,
 };
-
-export const FORMATS: Record<NomFormat, Format> = { portrait: PORTRAIT, story: STORY };
 
 export interface Zone {
   x: number;
@@ -125,23 +107,69 @@ export function decouperEnLignes(
   return lignes;
 }
 
-export interface Troncature<T> {
-  visibles: T[];
+export interface Troncature {
+  visibles: number;
   masquees: number;
 }
 
-export function tronquerLignes<T>(
-  lignes: T[],
+export function tronquerParHauteur(
+  hauteurs: number[],
   placeDisponible: number,
-  hauteurLigne: number,
-  maximum: number,
   hauteurSuite: number,
-): Troncature<T> {
-  const parHauteur = Math.max(0, Math.floor(placeDisponible / hauteurLigne));
-  if (lignes.length <= Math.min(maximum, parHauteur)) return { visibles: lignes, masquees: 0 };
-  const avecSuite = Math.max(0, Math.floor((placeDisponible - hauteurSuite) / hauteurLigne));
-  const visibles = Math.min(maximum, avecSuite, lignes.length - 1);
-  return { visibles: lignes.slice(0, visibles), masquees: lignes.length - visibles };
+): Troncature {
+  const total = hauteurs.reduce((somme, hauteur) => somme + hauteur, 0);
+  if (total <= placeDisponible) return { visibles: hauteurs.length, masquees: 0 };
+  let utilise = 0;
+  let visibles = 0;
+  while (
+    visibles < hauteurs.length - 1 &&
+    utilise + hauteurs[visibles] + hauteurSuite <= placeDisponible
+  ) {
+    utilise += hauteurs[visibles];
+    visibles++;
+  }
+  return { visibles, masquees: hauteurs.length - visibles };
+}
+
+export interface DispositionPuces {
+  lignes: number[][];
+  masquees: number;
+}
+
+export function disposerPuces(
+  largeurs: number[],
+  largeurMax: number,
+  ecart: number,
+  lignesMax: number,
+  largeurSuite: (masquees: number) => number,
+): DispositionPuces {
+  const lignes: number[][] = [[]];
+  let courante = 0;
+  let index = 0;
+  for (; index < largeurs.length; index++) {
+    const largeur = largeurs[index];
+    const ligne = lignes[lignes.length - 1];
+    const besoin = ligne.length === 0 ? largeur : courante + ecart + largeur;
+    if (ligne.length === 0 || besoin <= largeurMax) {
+      ligne.push(index);
+      courante = besoin;
+      continue;
+    }
+    if (lignes.length === lignesMax) break;
+    lignes.push([index]);
+    courante = largeur;
+  }
+  if (index === largeurs.length) return { lignes, masquees: 0 };
+
+  let masquees = largeurs.length - index;
+  const derniere = lignes[lignes.length - 1];
+  const occupe = () =>
+    derniere.reduce((somme, i) => somme + largeurs[i], 0) + ecart * (derniere.length - 1);
+  while (derniere.length > 1 && occupe() + ecart + largeurSuite(masquees) > largeurMax) {
+    derniere.pop();
+    masquees++;
+  }
+  return { lignes, masquees };
 }
 
 export const SPLITS_MAX_BARRES = 21;

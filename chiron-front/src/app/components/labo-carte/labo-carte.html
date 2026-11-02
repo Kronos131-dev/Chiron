@@ -20,23 +20,6 @@
     </div>
 
     <div class="flex flex-wrap gap-2">
-      @for (f of formats; track f) {
-        <button
-          type="button"
-          (click)="choisirFormat(f)"
-          [class]="
-            format() === f
-              ? 'bg-secondary/15 text-secondary border-secondary/50'
-              : 'bg-white/5 text-on-surface-variant border-white/10'
-          "
-          class="px-3 py-2 rounded-lg border text-xs font-bold tracking-widest uppercase cursor-pointer"
-        >
-          {{ 'share.format.' + f | t }}
-        </button>
-      }
-    </div>
-
-    <div class="flex flex-wrap gap-2">
       @for (n of niveaux; track n) {
         <button
           type="button"

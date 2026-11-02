@@ -2,14 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { CourseTraceDto } from '../service/chiron-api';
 import { fr } from '../i18n/fr';
 import { ExerciceBrut } from './bilan';
-import {
-  Athlete,
-  Traducteur,
-  carteDeSeance,
-  carteDeWod,
-  choisirGenre,
-  texteAccompagnement,
-} from './carte';
+import { Athlete, Traducteur, carteDeSeance, carteDeWod, choisirGenre } from './carte';
 import { traceExemple } from './exemples';
 
 const traducteurFr: Traducteur = (cle, params) =>
@@ -26,6 +19,14 @@ const cindy: ExerciceBrut = {
   nom: 'Cindy',
   wodType: 'CINDY',
   series: [{ reps: 18, dureeMin: 20 }],
+};
+const developpe: ExerciceBrut = {
+  nom: 'Développé couché',
+  series: [
+    { poids: 100, reps: 8, degressifs: [{ poids: 80, reps: 6 }] },
+    { poids: 100, reps: 10 },
+    { poids: 90, reps: 12 },
+  ],
 };
 const squat: ExerciceBrut = {
   nom: 'Squat',
@@ -65,13 +66,16 @@ describe('carte', () => {
     expect(carte.genre).toBe('bataille');
     expect(carte.bataille?.tuiles.map((tuile) => tuile.cle)).toEqual([
       'share.stat.duree',
-      'share.stat.tonnage',
+      'share.stat.exercices',
       'share.stat.series',
       'share.stat.reps',
     ]);
     expect(carte.bataille?.tuiles[0].valeur).toBe('1 h 10');
     expect(carte.bataille?.lignes.map((ligne) => ligne.numero)).toEqual(['I', 'II']);
-    expect(carte.bataille?.lignes[0].detail).toBe('120 kg × 5');
+    expect(carte.bataille?.lignes[0].series.map((puce) => puce.texte)).toEqual([
+      '120 × 5',
+      '120 × 5',
+    ]);
   });
 
   it('construit une carte de course quand la trace est connue', () => {
@@ -117,11 +121,35 @@ describe('carte', () => {
     expect(sans.activite).toBeNull();
   });
 
-  it('écrit un texte d accompagnement par genre', () => {
-    const bataille = carteDeSeance(entree([squat]));
-    expect(texteAccompagnement(bataille, traducteurFr)).toContain('chiron-sanctuaire.fr');
-    expect(texteAccompagnement(bataille, traducteurFr)).toContain('Séance du jour');
-    const wod = carteDeSeance(entree([cindy]));
-    expect(texteAccompagnement(wod, traducteurFr)).toContain('18 tours de Cindy');
+  it('liste toutes les séries de chaque exercice, la meilleure en évidence', () => {
+    const carte = carteDeSeance(entree([squat, developpe]));
+    const lignes = carte.bataille?.lignes ?? [];
+    expect(lignes[0].series.map((puce) => puce.texte)).toEqual(['120 × 5', '120 × 5']);
+    expect(lignes[0].series.some((puce) => puce.meilleure)).toBe(false);
+    expect(lignes[1].series.map((puce) => puce.texte)).toEqual([
+      '100 × 8 › 80 × 6',
+      '100 × 10',
+      '90 × 12',
+    ]);
+    expect(lignes[1].series.map((puce) => puce.meilleure)).toEqual([false, true, false]);
+    expect(lignes[1].detail).toBe('3 séries');
+  });
+
+  it('écrit PDC pour une série au poids du corps et ignore les séries vides', () => {
+    const tractions: ExerciceBrut = {
+      nom: 'Tractions',
+      series: [
+        { poids: 0, reps: 12 },
+        { poids: 0, reps: 0 },
+      ],
+    };
+    const lignes = carteDeSeance(entree([tractions])).bataille?.lignes ?? [];
+    expect(lignes[0].series.map((puce) => puce.texte)).toEqual(['PDC × 12']);
+    expect(lignes[0].detail).toBe('1 série');
+  });
+
+  it('ne parle plus de tonnage', () => {
+    const carte = carteDeSeance(entree([squat]));
+    expect(JSON.stringify(carte)).not.toMatch(/tonnage/i);
   });
 });

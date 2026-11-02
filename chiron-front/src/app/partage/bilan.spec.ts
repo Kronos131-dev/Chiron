@@ -4,10 +4,7 @@ import {
   compterReps,
   compterSeries,
   formaterDureeMinutes,
-  formaterTonnage,
   meilleureSerie,
-  tonnageExercice,
-  tonnageTotal,
 } from './bilan';
 
 const developpe = {
@@ -20,22 +17,6 @@ const developpe = {
 };
 
 describe('bilan', () => {
-  it('somme poids x reps, dégressifs compris', () => {
-    expect(tonnageExercice(developpe)).toBe(800 + 480 + 1000 + 1080);
-  });
-
-  it('double le tonnage d un exercice unilatéral', () => {
-    expect(tonnageExercice({ ...developpe, unilateral: true })).toBe(2 * 3360);
-  });
-
-  it('ignore le cardio et le WOD dans le tonnage', () => {
-    const exercices = [
-      developpe,
-      { nom: 'Rameur', cardioType: 'RAMEUR', series: [{ dureeMin: 10 }] },
-    ];
-    expect(tonnageTotal(exercices)).toBe(3360);
-  });
-
   it('retient la charge la plus lourde puis le plus de reps', () => {
     expect(meilleureSerie(developpe)).toEqual({ poids: 100, reps: 10 });
   });
@@ -63,11 +44,6 @@ describe('bilan', () => {
 
   it('écrit les chiffres romains', () => {
     expect([1, 2, 4, 5, 9, 12].map(chiffreRomain)).toEqual(['I', 'II', 'IV', 'V', 'IX', 'XII']);
-  });
-
-  it('passe en tonnes au-delà d une tonne', () => {
-    expect(formaterTonnage(762, 'fr')).toEqual({ valeur: '762', unite: 'kg' });
-    expect(formaterTonnage(12400, 'en')).toEqual({ valeur: '12.4', unite: 't' });
   });
 
   it('formate une durée en heures et minutes', () => {
