@@ -5,6 +5,7 @@ import com.kronos.chiron.seance.model.Seance;
 import com.kronos.chiron.seance.persistence.SeanceRepository;
 import com.kronos.chiron.seance.persistence.SeanceTitre;
 import com.kronos.chiron.exportation.model.ExportProgramme;
+import com.kronos.chiron.exportation.model.ExportProgrammeExclusion;
 import com.kronos.chiron.exportation.model.ExportProgrammeModele;
 import com.kronos.chiron.exportation.model.ExportProgrammeSeance;
 import com.kronos.chiron.utilisateur.model.Role;
@@ -127,6 +128,21 @@ class ExportProgrammeRepositoryTest {
 
         assertThat(relu.getSeances()).extracting(ExportProgrammeSeance::getSeanceId, ExportProgrammeSeance::getModeleId)
                 .containsExactly(org.assertj.core.api.Assertions.tuple(faite.getId(), modele.getId()));
+    }
+
+    @Test
+    void findByIdAndUtilisateurId_rendLesSeancesExclues() {
+        Seance faite = seance(alice, "Push A", true, modele.getId(), T0, "Squat");
+        ExportProgramme export = export(alice, modele);
+        ExportProgramme pris = repository.findById(export.getId()).orElseThrow();
+        pris.ajouterExclusion(ExportProgrammeExclusion.builder().seanceId(faite.getId()).build());
+        em.flush();
+        em.clear();
+
+        ExportProgramme relu = repository.findByIdAndUtilisateurId(export.getId(), alice.getId()).orElseThrow();
+
+        assertThat(relu.getExclusions()).extracting(ExportProgrammeExclusion::getSeanceId)
+                .containsExactly(faite.getId());
     }
 
     @Test

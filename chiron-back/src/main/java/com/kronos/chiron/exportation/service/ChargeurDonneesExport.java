@@ -5,6 +5,7 @@ import com.kronos.chiron.seance.model.Seance;
 import com.kronos.chiron.seance.model.Serie;
 import com.kronos.chiron.seance.persistence.SeanceRepository;
 import com.kronos.chiron.exportation.model.ExportProgramme;
+import com.kronos.chiron.exportation.model.ExportProgrammeExclusion;
 import com.kronos.chiron.exportation.model.ExportProgrammeModele;
 import com.kronos.chiron.exportation.model.ExportProgrammeSeance;
 import com.kronos.chiron.exportation.service.classeur.DonneesExport;
@@ -67,6 +68,7 @@ public class ChargeurDonneesExport {
         }
 
         rattacherParTitre(utilisateurId, lignesModeles, modeles, faites, ongletParSeance);
+        ecarterLesExclues(export, faites, ajoutees);
 
         List<ModeleDonnees> donneesModeles = new ArrayList<>();
         for (ExportProgrammeModele ligne : lignesModeles) {
@@ -82,6 +84,11 @@ public class ChargeurDonneesExport {
                     ordreDesExercices(modele), seances));
         }
         return new DonneesExport(export.getNom(), LocalDateTime.now(clock), donneesModeles);
+    }
+
+    private void ecarterLesExclues(ExportProgramme export, Map<Long, Seance> faites, List<Long> ajoutees) {
+        export.getExclusions().stream().map(ExportProgrammeExclusion::getSeanceId)
+                .filter(id -> !ajoutees.contains(id)).forEach(faites::remove);
     }
 
     private void rattacherParTitre(Long utilisateurId, List<ExportProgrammeModele> lignesModeles,

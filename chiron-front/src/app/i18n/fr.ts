@@ -901,7 +901,8 @@ export const fr: Record<string, string> = {
   'export.assistant.step1.summary': 'Exercices : {{exercices}} · Séries : {{series}}',
   'export.assistant.step2.title': 'Séances déjà faites',
   'export.assistant.step2.desc':
-    "Les séances qui portent le titre d'une séance choisie sont rattachées automatiquement. Pour les autres, coche-les et choisis leur onglet.",
+    "Les séances qui portent le titre d'une séance choisie sont rattachées automatiquement : décoche celles que tu ne veux pas. Pour les autres, coche-les et choisis leur onglet.",
+  'export.assistant.step2.excluded': "Écartée de l'export",
   'export.assistant.step2.empty': "Aucune séance terminée dans ton journal pour l'instant.",
   'export.assistant.step2.week': 'Semaine du {{date}}',
   'export.assistant.step2.exercises': 'Exercices : {{n}}',
@@ -914,6 +915,7 @@ export const fr: Record<string, string> = {
   'export.assistant.step3.tabs': 'Onglets de séances',
   'export.assistant.step3.auto': 'Séances rattachées automatiquement',
   'export.assistant.step3.manual': 'Séances ajoutées à la main',
+  'export.assistant.step3.excluded': 'Séances écartées',
   'export.assistant.step3.note':
     'Le fichier est généré à chaque téléchargement : il contient toujours les dernières séances de ces programmes.',
   'export.assistant.defaultName': 'Programme — {{date}}',

@@ -8,6 +8,7 @@ import com.kronos.chiron.exportation.dto.FichierExporte;
 import com.kronos.chiron.exportation.dto.ModeleExport;
 import com.kronos.chiron.exportation.dto.SeanceExport;
 import com.kronos.chiron.exportation.model.ExportProgramme;
+import com.kronos.chiron.exportation.model.ExportProgrammeExclusion;
 import com.kronos.chiron.exportation.model.ExportProgrammeModele;
 import com.kronos.chiron.exportation.model.ExportProgrammeSeance;
 import com.kronos.chiron.exportation.persistence.ExportProgrammeRepository;
@@ -110,6 +111,10 @@ public class ExportProgrammeServiceImpl implements ExportProgrammeService {
         }
         selection.seances().forEach(s -> export.ajouterSeance(
                 ExportProgrammeSeance.builder().seanceId(s.seanceId()).modeleId(s.modeleId()).build()));
+        if (selection.exclues() != null) {
+            selection.exclues().forEach(
+                    id -> export.ajouterExclusion(ExportProgrammeExclusion.builder().seanceId(id).build()));
+        }
         return exportProgrammeRepository.save(export);
     }
 
@@ -146,11 +151,26 @@ public class ExportProgrammeServiceImpl implements ExportProgrammeService {
             }
         }
 
+        if (selection.exclues() != null) {
+            synchroniserExclusions(export, selection.exclues());
+        }
+
         export.setModifieA(LocalDateTime.now(clock));
         return exportProgrammeRepository.save(export);
     }
 
-    private record Selection(String nom, List<Long> modeleIds, List<SeanceExport> seances) {
+    private void synchroniserExclusions(ExportProgramme export, List<Long> voulues) {
+        Set<Long> existantes = export.getExclusions().stream().map(ExportProgrammeExclusion::getSeanceId)
+                .collect(Collectors.toSet());
+        export.getExclusions().removeIf(e -> !voulues.contains(e.getSeanceId()));
+        for (Long seanceId : voulues) {
+            if (!existantes.contains(seanceId)) {
+                export.ajouterExclusion(ExportProgrammeExclusion.builder().seanceId(seanceId).build());
+            }
+        }
+    }
+
+    private record Selection(String nom, List<Long> modeleIds, List<SeanceExport> seances, List<Long> exclues) {
     }
 
     private Selection valider(Utilisateur user, ExportProgrammeRequest requete) {
@@ -200,7 +220,30 @@ public class ExportProgrammeServiceImpl implements ExportProgrammeService {
                 throw badRequest("Une séance ajoutée n'existe pas, n'est pas à toi ou n'est pas terminée.");
             }
         }
-        return new Selection(nom, modeleIds, seances);
+        return new Selection(nom, modeleIds, seances, exclues(user, requete, vues));
+    }
+
+    private List<Long> exclues(Utilisateur user, ExportProgrammeRequest requete, Set<Long> ajoutees) {
+        if (requete.seancesExclues() == null) {
+            return null;
+        }
+        List<Long> exclues = requete.seancesExclues().stream().filter(Objects::nonNull).distinct().toList();
+        if (exclues.size() > SEANCES_MAX) {
+            throw badRequest("Trop de séances exclues (" + SEANCES_MAX + " au plus).");
+        }
+        if (exclues.stream().anyMatch(ajoutees::contains)) {
+            throw badRequest("Une séance ne peut pas être à la fois ajoutée et exclue.");
+        }
+        if (!exclues.isEmpty()) {
+            long valides = seanceRepository.findAllById(exclues).stream()
+                    .filter(s -> s.isHistorique() && s.getUtilisateur() != null
+                            && Objects.equals(s.getUtilisateur().getId(), user.getId()))
+                    .count();
+            if (valides != exclues.size()) {
+                throw badRequest("Une séance exclue n'existe pas ou n'est pas à toi.");
+            }
+        }
+        return exclues;
     }
 
     private Utilisateur utilisateur(String username) {
@@ -230,7 +273,9 @@ public class ExportProgrammeServiceImpl implements ExportProgrammeService {
         modeleIds.forEach(modeleId -> titresParModele.put(modeleId, titres.get(modeleId)));
         toutes.addAll(rattachementParTitre.chercher(export.getUtilisateur().getId(), titresParModele).keySet());
         ajoutees.forEach(s -> toutes.add(s.seanceId()));
-        return new ExportProgrammeDto(export.getId(), export.getNom(), export.getCreeA(), modeles, ajoutees,
+        List<Long> exclues = export.getExclusions().stream().map(ExportProgrammeExclusion::getSeanceId).toList();
+        exclues.forEach(toutes::remove);
+        return new ExportProgrammeDto(export.getId(), export.getNom(), export.getCreeA(), modeles, ajoutees, exclues,
                 toutes.size());
     }
 

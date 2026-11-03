@@ -56,6 +56,10 @@ public class ExportProgramme {
     @Builder.Default
     private List<ExportProgrammeSeance> seances = new ArrayList<>();
 
+    @OneToMany(mappedBy = "export", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<ExportProgrammeExclusion> exclusions = new ArrayList<>();
+
     public void ajouterModele(ExportProgrammeModele modele) {
         modele.setExport(this);
         modeles.add(modele);
@@ -64,5 +68,10 @@ public class ExportProgramme {
     public void ajouterSeance(ExportProgrammeSeance seance) {
         seance.setExport(this);
         seances.add(seance);
+    }
+
+    public void ajouterExclusion(ExportProgrammeExclusion exclusion) {
+        exclusion.setExport(this);
+        exclusions.add(exclusion);
     }
 }

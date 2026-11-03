@@ -68,6 +68,7 @@ describe('ChironApi', () => {
       nom: 'Programme force',
       modeleIds: [5, 6],
       seances: [{ seanceId: 30, modeleId: 6 }],
+      seancesExclues: [],
     };
 
     it('liste les exports', () => {

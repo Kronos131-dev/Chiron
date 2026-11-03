@@ -17,6 +17,7 @@ function classeur(surcharge: Partial<ExportProgramme> = {}): ExportProgramme {
       { id: 6, titre: 'Pull A' },
     ],
     seances: [],
+    seancesExclues: [],
     nbSeances: 4,
     ...surcharge,
   };

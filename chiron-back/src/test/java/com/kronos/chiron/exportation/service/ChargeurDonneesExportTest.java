@@ -9,6 +9,7 @@ import com.kronos.chiron.seance.model.Serie;
 import com.kronos.chiron.seance.model.WodType;
 import com.kronos.chiron.seance.persistence.SeanceRepository;
 import com.kronos.chiron.exportation.model.ExportProgramme;
+import com.kronos.chiron.exportation.model.ExportProgrammeExclusion;
 import com.kronos.chiron.exportation.model.ExportProgrammeModele;
 import com.kronos.chiron.exportation.model.ExportProgrammeSeance;
 import com.kronos.chiron.exportation.service.classeur.DonneesExport;
@@ -214,6 +215,39 @@ class ChargeurDonneesExportTest {
 
         assertThat(donnees.modeles().get(0).seances()).extracting(s -> s.id()).containsExactly(52L);
         verify(seanceRepository, never()).findCompletesDeLUtilisateur(eq(1L), anyCollection());
+    }
+
+    @Test
+    void charger_ecarteUneSeanceExclueMemeSiSonModeleOuSonTitreCorrespond() {
+        lierModele(5L, 0);
+        Seance m5 = seance(5L, false, null, 1, exercice("Squat", 0, definition(1, null, null)));
+        Seance parLien = seance(60L, true, 5L, 3, exercice("Squat", 0, definition(1, null, null), serie(80, 8)));
+        Seance parTitre = seance(61L, true, null, 4, exercice("Squat", 0, definition(1, null, null), serie(85, 8)));
+        Seance gardee = seance(62L, true, 5L, 5, exercice("Squat", 0, definition(1, null, null), serie(90, 8)));
+        export.ajouterExclusion(ExportProgrammeExclusion.builder().seanceId(60L).build());
+        export.ajouterExclusion(ExportProgrammeExclusion.builder().seanceId(61L).build());
+        when(seanceRepository.findAllById(anyCollection())).thenReturn(List.of(m5));
+        when(seanceRepository.findCompletesParModele(anyCollection())).thenReturn(List.of(parLien, gardee));
+        when(rattachementParTitre.chercher(eq(1L), anyMap())).thenReturn(Map.of(61L, 5L));
+        when(seanceRepository.findCompletesDeLUtilisateur(eq(1L), anyCollection())).thenReturn(List.of(parTitre));
+
+        DonneesExport donnees = chargeur.charger(export);
+
+        assertThat(donnees.modeles().get(0).seances()).extracting(s -> s.id()).containsExactly(62L);
+    }
+
+    @Test
+    void charger_uneSeanceAjouteeALaMainResteMemeSiUneExclusionLaVise() {
+        lierModele(5L, 0);
+        Seance m5 = seance(5L, false, null, 1, exercice("Squat", 0, definition(1, null, null)));
+        Seance ajoutee = seance(63L, true, null, 3, exercice("Squat", 0, definition(1, null, null), serie(80, 8)));
+        ajouter(63L, 5L);
+        export.ajouterExclusion(ExportProgrammeExclusion.builder().seanceId(63L).build());
+        when(seanceRepository.findAllById(anyCollection())).thenReturn(List.of(m5));
+        when(seanceRepository.findCompletesDeLUtilisateur(eq(1L), anyCollection())).thenReturn(List.of(ajoutee));
+
+        assertThat(chargeur.charger(export).modeles().get(0).seances()).extracting(s -> s.id())
+                .containsExactly(63L);
     }
 
     @Test

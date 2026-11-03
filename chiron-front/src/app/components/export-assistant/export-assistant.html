@@ -139,7 +139,6 @@
                         type="checkbox"
                         class="mt-1 w-5 h-5 shrink-0 accent-[#c77a30]"
                         [checked]="estAjoutee(seance) || estAutomatique(seance)"
-                        [disabled]="estAutomatique(seance)"
                         (change)="basculerSeance(seance)"
                       />
                       <span class="min-w-0 flex-1">
@@ -159,6 +158,10 @@
                           'export.assistant.step2.auto'
                             | t: { titre: titreDuModele(modeleAutomatique(seance)) }
                         }}
+                      </p>
+                    } @else if (estExclue(seance)) {
+                      <p class="text-white/40 text-xs pl-8">
+                        {{ 'export.assistant.step2.excluded' | t }}
                       </p>
                     } @else if (estAjoutee(seance)) {
                       <div class="pl-8">
@@ -224,6 +227,12 @@
                 <span class="text-white/70">{{ 'export.assistant.step3.manual' | t }}</span>
                 <span class="text-white font-bold">{{ nbAjoutees() }}</span>
               </li>
+              @if (nbExclues() > 0) {
+                <li class="flex items-center justify-between gap-3 px-4 py-3">
+                  <span class="text-white/70">{{ 'export.assistant.step3.excluded' | t }}</span>
+                  <span class="text-white font-bold">{{ nbExclues() }}</span>
+                </li>
+              }
             </ul>
             <p class="text-white/50 text-xs">{{ 'export.assistant.step3.note' | t }}</p>
           </section>

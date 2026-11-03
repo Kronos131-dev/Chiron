@@ -46,6 +46,7 @@ function exportExistant(surcharge: Partial<ExportProgramme> = {}): ExportProgram
     creeA: '2026-11-02T10:00:00',
     modeles: [{ id: 6, titre: 'Pull A' }],
     seances: [{ seanceId: 31, modeleId: 6 }],
+    seancesExclues: [],
     nbSeances: 1,
     ...surcharge,
   };
@@ -252,16 +253,17 @@ describe('ExportAssistant', () => {
       expect(options).toEqual(['Choisir un onglet', 'Push A', 'Pull A']);
     });
 
-    it('verrouille la case d une séance rattachée automatiquement', () => {
+    it('coche la case d une séance rattachée automatiquement sans la verrouiller', () => {
       fixture.detectChanges();
 
-      const cases = (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLInputElement>(
-        'input[type="checkbox"]',
+      const cases = Array.from(
+        (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLInputElement>(
+          'input[type="checkbox"]',
+        ),
       );
 
-      const verrouillees = Array.from(cases).filter((c) => c.disabled);
-      expect(verrouillees).toHaveLength(1);
-      expect(verrouillees[0].checked).toBe(true);
+      expect(cases.filter((c) => c.checked && !c.disabled)).toHaveLength(1);
+      expect(cases.filter((c) => c.disabled)).toHaveLength(0);
     });
   });
 
@@ -290,13 +292,13 @@ describe('ExportAssistant', () => {
       expect(composant.nbAutomatiques()).toBe(2);
     });
 
-    it('affiche l onglet retenu et verrouille la case', () => {
+    it('affiche l onglet retenu et laisse la case décochable', () => {
       expect(texte()).toContain('Rattachée automatiquement à « Push A »');
       expect(texte()).toContain('Rattachée automatiquement à « Pull A »');
       const cases = (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLInputElement>(
         'input[type="checkbox"]',
       );
-      expect(Array.from(cases).filter((c) => c.disabled)).toHaveLength(2);
+      expect(Array.from(cases).filter((c) => c.checked && !c.disabled)).toHaveLength(2);
     });
 
     it('laisse à la main une séance sans titre reconnu', () => {
@@ -322,6 +324,93 @@ describe('ExportAssistant', () => {
 
       expect(composant.estAutomatique(faiteNumero(40))).toBe(false);
       expect(composant.estAutomatique(faiteNumero(41))).toBe(true);
+    });
+  });
+
+  describe('séances rattachées automatiquement que l on écarte', () => {
+    beforeEach(async () => {
+      chironApi.getHistorique.mockReturnValue(
+        of([faite(40, 2, 5), faite(41, 3, null, { titre: 'Pull A' }), faite(42, 4, null)]),
+      );
+      await monter();
+      cocherRoutines(5, 6);
+      composant.suivant();
+      fixture.detectChanges();
+    });
+
+    it('écarte une séance rattachée par son lien quand on la décoche', () => {
+      composant.basculerSeance(faiteNumero(40));
+
+      expect(composant.estExclue(faiteNumero(40))).toBe(true);
+      expect(composant.estAutomatique(faiteNumero(40))).toBe(false);
+      expect(composant.nbAutomatiques()).toBe(1);
+      expect(composant.nbExclues()).toBe(1);
+    });
+
+    it('écarte aussi une séance rattachée par son titre', () => {
+      composant.basculerSeance(faiteNumero(41));
+
+      expect(composant.estExclue(faiteNumero(41))).toBe(true);
+    });
+
+    it('rétablit une séance écartée quand on la recoche', () => {
+      composant.basculerSeance(faiteNumero(40));
+      composant.basculerSeance(faiteNumero(40));
+
+      expect(composant.estAutomatique(faiteNumero(40))).toBe(true);
+      expect(composant.nbExclues()).toBe(0);
+    });
+
+    it('affiche la mention et décoche la case', () => {
+      composant.basculerSeance(faiteNumero(40));
+      fixture.detectChanges();
+
+      expect(texte()).toContain("Écartée de l'export");
+      const cases = Array.from(
+        (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLInputElement>(
+          'input[type="checkbox"]',
+        ),
+      );
+      expect(cases.filter((c) => c.checked)).toHaveLength(1);
+    });
+
+    it('autorise la suite sans onglet à choisir pour une séance écartée', () => {
+      composant.basculerSeance(faiteNumero(40));
+
+      expect(composant.rattachementsIncomplets()).toBe(0);
+      expect(composant.peutAvancer()).toBe(true);
+    });
+
+    it('envoie les séances écartées avec la requête', () => {
+      composant.basculerSeance(faiteNumero(40));
+      composant.suivant();
+
+      composant.suivant();
+
+      expect(chironApi.creerExport).toHaveBeenCalledWith(
+        expect.objectContaining({ seances: [], seancesExclues: [40] }),
+      );
+    });
+
+    it('n envoie plus l exclusion quand la séance du programme est décochée ensuite', () => {
+      composant.basculerSeance(faiteNumero(40));
+      composant.precedent();
+      cocherRoutines(5);
+      composant.suivant();
+      composant.suivant();
+      composant.suivant();
+
+      expect(chironApi.creerExport).toHaveBeenCalledWith(
+        expect.objectContaining({ modeleIds: [6], seancesExclues: [] }),
+      );
+    });
+
+    it('compte les séances écartées dans le récapitulatif', () => {
+      composant.basculerSeance(faiteNumero(40));
+      composant.suivant();
+      fixture.detectChanges();
+
+      expect(texte()).toContain('Séances écartées');
     });
   });
 
@@ -370,6 +459,7 @@ describe('ExportAssistant', () => {
         nom: 'Mon plan',
         modeleIds: [5, 6],
         seances: [{ seanceId: 31, modeleId: 6 }],
+        seancesExclues: [],
       });
       expect(composant.resultat()?.id).toBe(12);
       expect(composant.enregistrement()).toBe(false);
@@ -455,6 +545,22 @@ describe('ExportAssistant', () => {
       expect(composant.estAjoutee(faiteNumero(31))).toBe(true);
     });
 
+    it('recharge les séances écartées de l export', async () => {
+      chironApi.getExport.mockReturnValue(
+        of(
+          exportExistant({
+            modeles: [{ id: 5, titre: 'Push A' }],
+            seances: [],
+            seancesExclues: [30],
+          }),
+        ),
+      );
+      await monter('9');
+
+      expect(composant.estExclue(faiteNumero(30))).toBe(true);
+      expect(composant.estAutomatique(faiteNumero(30))).toBe(false);
+    });
+
     it('enregistre avec une modification et non une création', async () => {
       await monter('9');
       composant.suivant();
@@ -466,6 +572,7 @@ describe('ExportAssistant', () => {
         nom: 'Mon export',
         modeleIds: [6],
         seances: [{ seanceId: 31, modeleId: 6 }],
+        seancesExclues: [],
       });
       expect(chironApi.creerExport).not.toHaveBeenCalled();
     });

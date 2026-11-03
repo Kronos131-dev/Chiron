@@ -47,6 +47,7 @@ export class ExportAssistant implements OnInit {
   readonly modelesChoisis = signal<ReadonlySet<number>>(new Set());
   readonly journal = signal<SeanceFaite[]>([]);
   readonly ajoutees = signal<ReadonlyMap<number, number | null>>(new Map());
+  readonly exclues = signal<ReadonlySet<number>>(new Set());
   readonly nom = signal('');
   readonly enregistrement = signal(false);
   readonly erreur = signal<string | null>(null);
@@ -66,6 +67,9 @@ export class ExportAssistant implements OnInit {
   );
   readonly nbAutomatiques = computed(
     () => this.journal().filter((seance) => this.estAutomatique(seance)).length,
+  );
+  readonly nbExclues = computed(
+    () => this.journal().filter((seance) => this.estExclue(seance)).length,
   );
   readonly nbAjoutees = computed(
     () => this.journal().filter((seance) => this.estAjoutee(seance)).length,
@@ -123,12 +127,16 @@ export class ExportAssistant implements OnInit {
     return modeleAutomatique(seance, this.modelesChoisis(), this.modeleParTitre());
   }
 
+  estExclue(seance: SeanceFaite): boolean {
+    return this.modeleAutomatique(seance) !== null && this.exclues().has(seance.id);
+  }
+
   estAutomatique(seance: SeanceFaite): boolean {
-    return this.modeleAutomatique(seance) !== null;
+    return this.modeleAutomatique(seance) !== null && !this.exclues().has(seance.id);
   }
 
   estAjoutee(seance: SeanceFaite): boolean {
-    return !this.estAutomatique(seance) && this.ajoutees().has(seance.id);
+    return this.modeleAutomatique(seance) === null && this.ajoutees().has(seance.id);
   }
 
   cible(seance: SeanceFaite): number | null {
@@ -141,9 +149,21 @@ export class ExportAssistant implements OnInit {
   }
 
   basculerSeance(seance: SeanceFaite): void {
+    if (this.modeleAutomatique(seance) !== null) {
+      this.basculerExclusion(seance);
+      return;
+    }
     this.ajoutees.update((courantes) => {
       const suivantes = new Map(courantes);
       if (!suivantes.delete(seance.id)) suivantes.set(seance.id, null);
+      return suivantes;
+    });
+  }
+
+  private basculerExclusion(seance: SeanceFaite): void {
+    this.exclues.update((courantes) => {
+      const suivantes = new Set(courantes);
+      if (!suivantes.delete(seance.id)) suivantes.add(seance.id);
       return suivantes;
     });
   }
@@ -239,6 +259,7 @@ export class ExportAssistant implements OnInit {
     this.nom.set(existant.nom);
     this.modelesChoisis.set(new Set(existant.modeles.map((modele) => modele.id)));
     this.ajoutees.set(new Map(existant.seances.map((s) => [s.seanceId, s.modeleId])));
+    this.exclues.set(new Set(existant.seancesExclues));
   }
 
   private enregistrer(): void {
@@ -272,7 +293,10 @@ export class ExportAssistant implements OnInit {
         seances.push({ seanceId: seance.id, modeleId: cible });
       }
     }
-    return { nom: this.nom().trim(), modeleIds, seances };
+    const seancesExclues = this.journal()
+      .filter((seance) => this.estExclue(seance))
+      .map((seance) => seance.id);
+    return { nom: this.nom().trim(), modeleIds, seances, seancesExclues };
   }
 
   private nomParDefaut(): string {

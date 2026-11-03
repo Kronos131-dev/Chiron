@@ -59,7 +59,7 @@ class ExportProgrammeControllerTest {
 
     private ExportProgrammeDto export() {
         return new ExportProgrammeDto(9L, "Programme force", LocalDateTime.of(2026, 11, 2, 10, 0),
-                List.of(new ModeleExport(5L, "Push A")), List.of(), 4);
+                List.of(new ModeleExport(5L, "Push A")), List.of(), List.of(), 4);
     }
 
     @BeforeEach
@@ -99,6 +99,31 @@ class ExportProgrammeControllerTest {
         verify(exportProgrammeService).creer(eq("alice"), capture.capture());
         org.assertj.core.api.Assertions.assertThat(capture.getValue().modeleIds()).containsExactly(5L, 6L);
         org.assertj.core.api.Assertions.assertThat(capture.getValue().seances().get(0).modeleId()).isEqualTo(6L);
+    }
+
+    @Test
+    void creer_transmetLesSeancesExclues() throws Exception {
+        when(exportProgrammeService.creer(eq("alice"), any(ExportProgrammeRequest.class))).thenReturn(export());
+
+        mockMvc.perform(post("/api/exports").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"nom\":\"E\",\"modeleIds\":[5],\"seancesExclues\":[40,41]}"));
+
+        org.mockito.ArgumentCaptor<ExportProgrammeRequest> capture = org.mockito.ArgumentCaptor
+                .forClass(ExportProgrammeRequest.class);
+        verify(exportProgrammeService).creer(eq("alice"), capture.capture());
+        org.assertj.core.api.Assertions.assertThat(capture.getValue().seancesExclues()).containsExactly(40L, 41L);
+    }
+
+    @Test
+    void creer_sansLaListeDExclusions_laTransmetCommeAbsente() throws Exception {
+        when(exportProgrammeService.creer(eq("alice"), any(ExportProgrammeRequest.class))).thenReturn(export());
+
+        mockMvc.perform(post("/api/exports").contentType(MediaType.APPLICATION_JSON).content(CORPS));
+
+        org.mockito.ArgumentCaptor<ExportProgrammeRequest> capture = org.mockito.ArgumentCaptor
+                .forClass(ExportProgrammeRequest.class);
+        verify(exportProgrammeService).creer(eq("alice"), capture.capture());
+        org.assertj.core.api.Assertions.assertThat(capture.getValue().seancesExclues()).isNull();
     }
 
     @Test

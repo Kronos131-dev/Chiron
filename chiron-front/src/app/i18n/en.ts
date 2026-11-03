@@ -893,7 +893,8 @@ export const en: Record<string, string> = {
   'export.assistant.step1.summary': 'Exercises: {{exercices}} · Sets: {{series}}',
   'export.assistant.step2.title': 'Sessions already done',
   'export.assistant.step2.desc':
-    'Sessions with the same title as a chosen session are attached automatically. For the others, tick them and pick their tab.',
+    'Sessions with the same title as a chosen session are attached automatically: untick the ones you do not want. For the others, tick them and pick their tab.',
+  'export.assistant.step2.excluded': 'Left out of the export',
   'export.assistant.step2.empty': 'No finished session in your journal yet.',
   'export.assistant.step2.week': 'Week of {{date}}',
   'export.assistant.step2.exercises': 'Exercises: {{n}}',
@@ -906,6 +907,7 @@ export const en: Record<string, string> = {
   'export.assistant.step3.tabs': 'Session tabs',
   'export.assistant.step3.auto': 'Sessions attached automatically',
   'export.assistant.step3.manual': 'Sessions added by hand',
+  'export.assistant.step3.excluded': 'Sessions left out',
   'export.assistant.step3.note':
     'The file is generated each time you download it, so it always holds the latest sessions of these programmes.',
   'export.assistant.defaultName': 'Programme — {{date}}',

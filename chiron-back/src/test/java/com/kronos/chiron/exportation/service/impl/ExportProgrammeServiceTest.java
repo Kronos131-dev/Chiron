@@ -6,6 +6,7 @@ import com.kronos.chiron.exportation.dto.FichierExporte;
 import com.kronos.chiron.exportation.dto.ModeleExport;
 import com.kronos.chiron.exportation.dto.SeanceExport;
 import com.kronos.chiron.exportation.model.ExportProgramme;
+import com.kronos.chiron.exportation.model.ExportProgrammeExclusion;
 import com.kronos.chiron.exportation.model.ExportProgrammeModele;
 import com.kronos.chiron.exportation.model.ExportProgrammeSeance;
 import com.kronos.chiron.exportation.persistence.ExportProgrammeRepository;
@@ -117,7 +118,12 @@ class ExportProgrammeServiceTest {
     }
 
     private static ExportProgrammeRequest requete(String nom, List<Long> modeleIds, List<SeanceExport> seances) {
-        return new ExportProgrammeRequest(nom, modeleIds, seances);
+        return new ExportProgrammeRequest(nom, modeleIds, seances, null);
+    }
+
+    private static ExportProgrammeRequest requete(String nom, List<Long> modeleIds, List<SeanceExport> seances,
+            List<Long> exclues) {
+        return new ExportProgrammeRequest(nom, modeleIds, seances, exclues);
     }
 
     private static HttpStatus statutDe(Throwable erreur) {
@@ -244,6 +250,109 @@ class ExportProgrammeServiceTest {
         assertThatThrownBy(() -> service.creer("alice",
                 requete("E", List.of(5L), List.of(new SeanceExport(30L, 5L)))))
                 .satisfies(e -> assertThat(statutDe(e)).isEqualTo(HttpStatus.BAD_REQUEST));
+    }
+
+    // --- séances exclues ---
+
+    @Test
+    void creer_memoriseLesSeancesExclues() {
+        donnerAuxModeles(seance(5L, alice, false));
+        when(seanceRepository.findAllById(List.of(40L, 41L))).thenReturn(
+                List.of(seance(40L, alice, true), seance(41L, alice, true)));
+
+        ExportProgrammeDto dto = service.creer("alice", requete("E", List.of(5L), List.of(), List.of(40L, 41L, 40L)));
+
+        ArgumentCaptor<ExportProgramme> capture = ArgumentCaptor.forClass(ExportProgramme.class);
+        verify(exportRepository).save(capture.capture());
+        assertThat(capture.getValue().getExclusions()).extracting(ExportProgrammeExclusion::getSeanceId)
+                .containsExactly(40L, 41L);
+        assertThat(dto.seancesExclues()).containsExactly(40L, 41L);
+    }
+
+    @Test
+    void creer_sansListeDExclusions_neMemoriseRien() {
+        donnerAuxModeles(seance(5L, alice, false));
+
+        ExportProgrammeDto dto = service.creer("alice", requete("E", List.of(5L), List.of()));
+
+        assertThat(dto.seancesExclues()).isEmpty();
+    }
+
+    @Test
+    void creer_refuseUneSeanceAjouteeEtExclue() {
+        donnerAuxModeles(seance(5L, alice, false));
+        when(seanceRepository.findCompletesDeLUtilisateur(eq(1L), anyCollection()))
+                .thenReturn(List.of(seance(30L, alice, true)));
+
+        assertThatThrownBy(() -> service.creer("alice",
+                requete("E", List.of(5L), List.of(new SeanceExport(30L, 5L)), List.of(30L))))
+                .satisfies(e -> assertThat(statutDe(e)).isEqualTo(HttpStatus.BAD_REQUEST));
+        verify(exportRepository, never()).save(any());
+    }
+
+    @Test
+    void creer_refuseUneExclusionQuiAppartientAUnAutreOuQuiEstUnModele() {
+        donnerAuxModeles(seance(5L, alice, false));
+        when(seanceRepository.findAllById(List.of(40L))).thenReturn(List.of(seance(40L, bob, true)));
+        when(seanceRepository.findAllById(List.of(41L))).thenReturn(List.of(seance(41L, alice, false)));
+        when(seanceRepository.findAllById(List.of(42L))).thenReturn(List.of());
+
+        for (long id : new long[]{40L, 41L, 42L}) {
+            assertThatThrownBy(() -> service.creer("alice", requete("E", List.of(5L), List.of(), List.of(id))))
+                    .satisfies(e -> assertThat(statutDe(e)).isEqualTo(HttpStatus.BAD_REQUEST));
+        }
+        verify(exportRepository, never()).save(any());
+    }
+
+    @Test
+    void modifier_sansListeDExclusions_gardeLesExclusionsExistantes() {
+        ExportProgramme export = exportExistant(alice, 5L);
+        export.ajouterExclusion(ExportProgrammeExclusion.builder().seanceId(40L).build());
+        donnerAuxModeles(seance(5L, alice, false));
+
+        service.modifier("alice", 9L, requete("E", List.of(5L), List.of()));
+
+        assertThat(export.getExclusions()).extracting(ExportProgrammeExclusion::getSeanceId).containsExactly(40L);
+    }
+
+    @Test
+    void modifier_remplaceLesExclusionsParLaNouvelleListe() {
+        ExportProgramme export = exportExistant(alice, 5L);
+        export.ajouterExclusion(ExportProgrammeExclusion.builder().seanceId(40L).build());
+        export.ajouterExclusion(ExportProgrammeExclusion.builder().seanceId(41L).build());
+        donnerAuxModeles(seance(5L, alice, false));
+        when(seanceRepository.findAllById(List.of(41L, 42L))).thenReturn(
+                List.of(seance(41L, alice, true), seance(42L, alice, true)));
+
+        service.modifier("alice", 9L, requete("E", List.of(5L), List.of(), List.of(41L, 42L)));
+
+        assertThat(export.getExclusions()).extracting(ExportProgrammeExclusion::getSeanceId)
+                .containsExactlyInAnyOrder(41L, 42L);
+    }
+
+    @Test
+    void modifier_uneListeVideRendToutesLesSeancesALExport() {
+        ExportProgramme export = exportExistant(alice, 5L);
+        export.ajouterExclusion(ExportProgrammeExclusion.builder().seanceId(40L).build());
+        donnerAuxModeles(seance(5L, alice, false));
+
+        service.modifier("alice", 9L, requete("E", List.of(5L), List.of(), List.of()));
+
+        assertThat(export.getExclusions()).isEmpty();
+    }
+
+    @Test
+    void detail_neCompteQueLesSeancesNonExclues() {
+        ExportProgramme export = exportExistant(alice, 5L);
+        export.ajouterExclusion(ExportProgrammeExclusion.builder().seanceId(41L).build());
+        donnerAuxModeles(seance(5L, alice, false));
+        when(seanceRepository.findIdsCompletesParModele(anyCollection())).thenReturn(List.of(40L, 41L));
+        when(rattachementParTitre.chercher(1L, Map.of(5L, "Séance 5"))).thenReturn(Map.of(42L, 5L, 41L, 5L));
+
+        ExportProgrammeDto dto = service.detail("alice", 9L);
+
+        assertThat(dto.nbSeances()).isEqualTo(2);
+        assertThat(dto.seancesExclues()).containsExactly(41L);
     }
 
     // --- modification ---

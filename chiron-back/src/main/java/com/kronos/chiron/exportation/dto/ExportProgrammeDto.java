@@ -9,5 +9,6 @@ public record ExportProgrammeDto(
         LocalDateTime creeA,
         List<ModeleExport> modeles,
         List<SeanceExport> seances,
+        List<Long> seancesExclues,
         int nbSeances) {
 }

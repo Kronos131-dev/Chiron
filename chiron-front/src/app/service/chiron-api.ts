@@ -673,6 +673,7 @@ export interface ExportProgramme {
   creeA: string;
   modeles: ModeleExport[];
   seances: SeanceExport[];
+  seancesExclues: number[];
   nbSeances: number;
 }
 
@@ -680,6 +681,7 @@ export interface ExportProgrammeRequete {
   nom: string;
   modeleIds: number[];
   seances: SeanceExport[];
+  seancesExclues: number[];
 }
 
 export interface FitbitDayPoint {
