@@ -157,7 +157,7 @@
                       <p class="text-emerald-400 text-xs pl-8">
                         {{
                           'export.assistant.step2.auto'
-                            | t: { titre: titreDuModele(seance.modeleId) }
+                            | t: { titre: titreDuModele(modeleAutomatique(seance)) }
                         }}
                       </p>
                     } @else if (estAjoutee(seance)) {

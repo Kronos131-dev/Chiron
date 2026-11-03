@@ -54,6 +54,13 @@ public interface SeanceRepository extends JpaRepository<Seance, Long> {
             """)
     List<Long> findIdsCompletesParModele(@Param("modeleIds") Collection<Long> modeleIds);
 
+    @Query("""
+            SELECT s.id AS id, s.titre AS titre FROM Seance s
+            WHERE s.historique = true AND s.endTime IS NOT NULL AND s.exercices IS NOT EMPTY
+              AND s.modeleId IS NULL AND s.utilisateur.id = :utilisateurId
+            """)
+    List<SeanceTitre> findTitresCompletesSansModele(@Param("utilisateurId") Long utilisateurId);
+
     // WHY: le push vers Google Health tourne en @Async, donc sans session Hibernate : lire
     // seance.getUtilisateur().getUsername() y déclenche une LazyInitializationException. Cette
     // projection rend le nom sans jamais initialiser le proxy.

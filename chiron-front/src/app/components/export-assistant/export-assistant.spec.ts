@@ -265,6 +265,66 @@ describe('ExportAssistant', () => {
     });
   });
 
+  describe('rattachement par titre des séances sans lien', () => {
+    const sansLien = (id: number, jour: number, titre: string) => faite(id, jour, null, { titre });
+
+    beforeEach(async () => {
+      chironApi.getHistorique.mockReturnValue(
+        of([
+          sansLien(40, 2, 'push a'),
+          sansLien(41, 3, ' Pull A '),
+          sansLien(42, 4, 'Séance interactive'),
+          faite(43, 5, 99, { titre: 'Push A' }),
+        ]),
+      );
+      await monter();
+      cocherRoutines(5, 6);
+      composant.suivant();
+      fixture.detectChanges();
+    });
+
+    it('rattache automatiquement une séance sans lien dont le titre correspond', () => {
+      expect(composant.modeleAutomatique(faiteNumero(40))).toBe(5);
+      expect(composant.modeleAutomatique(faiteNumero(41))).toBe(6);
+      expect(composant.estAutomatique(faiteNumero(40))).toBe(true);
+      expect(composant.nbAutomatiques()).toBe(2);
+    });
+
+    it('affiche l onglet retenu et verrouille la case', () => {
+      expect(texte()).toContain('Rattachée automatiquement à « Push A »');
+      expect(texte()).toContain('Rattachée automatiquement à « Pull A »');
+      const cases = (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLInputElement>(
+        'input[type="checkbox"]',
+      );
+      expect(Array.from(cases).filter((c) => c.disabled)).toHaveLength(2);
+    });
+
+    it('laisse à la main une séance sans titre reconnu', () => {
+      expect(composant.estAutomatique(faiteNumero(42))).toBe(false);
+    });
+
+    it('ne devine pas pour une séance liée à un modèle hors sélection', () => {
+      expect(composant.estAutomatique(faiteNumero(43))).toBe(false);
+    });
+
+    it('n envoie pas ces séances comme ajouts manuels', () => {
+      composant.suivant();
+      composant.suivant();
+
+      expect(chironApi.creerExport).toHaveBeenCalledWith(
+        expect.objectContaining({ modeleIds: [5, 6], seances: [] }),
+      );
+    });
+
+    it('ne rattache plus par titre quand la séance du programme est décochée', () => {
+      composant.precedent();
+      cocherRoutines(5);
+
+      expect(composant.estAutomatique(faiteNumero(40))).toBe(false);
+      expect(composant.estAutomatique(faiteNumero(41))).toBe(true);
+    });
+  });
+
   describe('étape 3 et enregistrement', () => {
     async function allerAuRecapitulatif() {
       await monter();

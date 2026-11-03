@@ -10,6 +10,7 @@ import com.kronos.chiron.exportation.model.ExportProgrammeModele;
 import com.kronos.chiron.exportation.model.ExportProgrammeSeance;
 import com.kronos.chiron.exportation.persistence.ExportProgrammeRepository;
 import com.kronos.chiron.exportation.service.ChargeurDonneesExport;
+import com.kronos.chiron.exportation.service.RattachementParTitre;
 import com.kronos.chiron.exportation.service.classeur.ClasseurXlsx;
 import com.kronos.chiron.exportation.service.classeur.DonneesExport;
 import com.kronos.chiron.seance.model.Seance;
@@ -32,6 +33,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.LongStream;
 
@@ -40,6 +42,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -62,6 +66,8 @@ class ExportProgrammeServiceTest {
     @Mock
     private ChargeurDonneesExport chargeurDonnees;
     @Mock
+    private RattachementParTitre rattachementParTitre;
+    @Mock
     private ClasseurXlsx classeurXlsx;
 
     private ExportProgrammeServiceImpl service;
@@ -71,7 +77,7 @@ class ExportProgrammeServiceTest {
     @BeforeEach
     void setUp() {
         service = new ExportProgrammeServiceImpl(exportRepository, seanceRepository, utilisateurRepository,
-                chargeurDonnees, classeurXlsx, CLOCK);
+                chargeurDonnees, rattachementParTitre, classeurXlsx, CLOCK);
         alice = Utilisateur.builder().id(1L).username("alice").build();
         bob = Utilisateur.builder().id(2L).username("bob").build();
         when(utilisateurRepository.findByUsername("alice")).thenReturn(Optional.of(alice));
@@ -83,6 +89,7 @@ class ExportProgrammeServiceTest {
         });
         when(seanceRepository.findAllById(anyCollection())).thenReturn(List.of());
         when(seanceRepository.findIdsCompletesParModele(anyCollection())).thenReturn(List.of());
+        when(rattachementParTitre.chercher(anyLong(), anyMap())).thenReturn(Map.of());
     }
 
     private Seance seance(long id, Utilisateur proprietaire, boolean historique) {
@@ -295,6 +302,19 @@ class ExportProgrammeServiceTest {
         assertThat(dto.seances()).containsExactly(new SeanceExport(30L, 5L));
         assertThat(dto.nbSeances()).isEqualTo(3);
         assertThat(dto.creeA()).isEqualTo(AVANT);
+    }
+
+    @Test
+    void detail_compteAussiLesSeancesRattacheesParTitre() {
+        ExportProgramme export = exportExistant(alice, 5L);
+        donnerAuxModeles(seance(5L, alice, false));
+        when(seanceRepository.findIdsCompletesParModele(anyCollection())).thenReturn(List.of(40L));
+        when(rattachementParTitre.chercher(1L, Map.of(5L, "Séance 5"))).thenReturn(Map.of(41L, 5L, 42L, 5L));
+        export.ajouterSeance(ExportProgrammeSeance.builder().seanceId(42L).modeleId(5L).build());
+
+        ExportProgrammeDto dto = service.detail("alice", 9L);
+
+        assertThat(dto.nbSeances()).isEqualTo(3);
     }
 
     @Test

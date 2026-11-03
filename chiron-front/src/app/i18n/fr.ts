@@ -901,7 +901,7 @@ export const fr: Record<string, string> = {
   'export.assistant.step1.summary': 'Exercices : {{exercices}} · Séries : {{series}}',
   'export.assistant.step2.title': 'Séances déjà faites',
   'export.assistant.step2.desc':
-    "Ajoute des séances passées à l'export et choisis l'onglet où chacune doit apparaître.",
+    "Les séances qui portent le titre d'une séance choisie sont rattachées automatiquement. Pour les autres, coche-les et choisis leur onglet.",
   'export.assistant.step2.empty': "Aucune séance terminée dans ton journal pour l'instant.",
   'export.assistant.step2.week': 'Semaine du {{date}}',
   'export.assistant.step2.exercises': 'Exercices : {{n}}',

@@ -36,6 +36,7 @@ import java.util.Set;
 public class ChargeurDonneesExport {
 
     private final SeanceRepository seanceRepository;
+    private final RattachementParTitre rattachementParTitre;
     private final Clock clock;
 
     @Transactional(readOnly = true)
@@ -65,6 +66,8 @@ public class ChargeurDonneesExport {
             }
         }
 
+        rattacherParTitre(utilisateurId, lignesModeles, modeles, faites, ongletParSeance);
+
         List<ModeleDonnees> donneesModeles = new ArrayList<>();
         for (ExportProgrammeModele ligne : lignesModeles) {
             Seance modele = modeles.get(ligne.getModeleId());
@@ -79,6 +82,26 @@ public class ChargeurDonneesExport {
                     ordreDesExercices(modele), seances));
         }
         return new DonneesExport(export.getNom(), LocalDateTime.now(clock), donneesModeles);
+    }
+
+    private void rattacherParTitre(Long utilisateurId, List<ExportProgrammeModele> lignesModeles,
+            Map<Long, Seance> modeles, Map<Long, Seance> faites, Map<Long, Long> ongletParSeance) {
+        Map<Long, String> titres = new LinkedHashMap<>();
+        for (ExportProgrammeModele ligne : lignesModeles) {
+            Seance modele = modeles.get(ligne.getModeleId());
+            if (modele != null) {
+                titres.put(ligne.getModeleId(), modele.getTitre());
+            }
+        }
+        Map<Long, Long> parTitre = rattachementParTitre.chercher(utilisateurId, titres);
+        List<Long> aCharger = parTitre.keySet().stream().filter(id -> !faites.containsKey(id)).toList();
+        if (aCharger.isEmpty()) {
+            return;
+        }
+        for (Seance seance : seanceRepository.findCompletesDeLUtilisateur(utilisateurId, aCharger)) {
+            faites.putIfAbsent(seance.getId(), seance);
+            ongletParSeance.putIfAbsent(seance.getId(), parTitre.get(seance.getId()));
+        }
     }
 
     private List<String> ordreDesExercices(Seance modele) {

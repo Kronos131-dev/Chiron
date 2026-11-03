@@ -69,3 +69,31 @@ export function grouperParSemaine(seances: SeanceFaite[]): SemaineJournal[] {
       seances: [...semaine.seances].sort((a, b) => b.debut.getTime() - a.debut.getTime()),
     }));
 }
+
+export function normaliserTitre(titre: string | null | undefined): string {
+  return (titre ?? '').trim().replace(/\s+/g, ' ').toLowerCase();
+}
+
+export function modelesParTitre(
+  routines: ReadonlyArray<{ id: number; titre: string }>,
+): Map<string, number> {
+  const parTitre = new Map<string, number>();
+  const ambigus = new Set<string>();
+  for (const routine of routines) {
+    const cle = normaliserTitre(routine.titre);
+    if (cle === '') continue;
+    if (parTitre.has(cle)) ambigus.add(cle);
+    else parTitre.set(cle, routine.id);
+  }
+  ambigus.forEach((cle) => parTitre.delete(cle));
+  return parTitre;
+}
+
+export function modeleAutomatique(
+  seance: SeanceFaite,
+  choisis: ReadonlySet<number>,
+  parTitre: ReadonlyMap<string, number>,
+): number | null {
+  if (seance.modeleId !== null) return choisis.has(seance.modeleId) ? seance.modeleId : null;
+  return parTitre.get(normaliserTitre(seance.titre)) ?? null;
+}

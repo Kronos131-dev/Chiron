@@ -13,6 +13,7 @@ import com.kronos.chiron.exportation.model.ExportProgrammeSeance;
 import com.kronos.chiron.exportation.persistence.ExportProgrammeRepository;
 import com.kronos.chiron.exportation.service.ChargeurDonneesExport;
 import com.kronos.chiron.exportation.service.ExportProgrammeService;
+import com.kronos.chiron.exportation.service.RattachementParTitre;
 import com.kronos.chiron.exportation.service.classeur.ClasseurXlsx;
 import com.kronos.chiron.exportation.service.classeur.DonneesExport;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
@@ -27,6 +28,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -47,6 +49,7 @@ public class ExportProgrammeServiceImpl implements ExportProgrammeService {
     private final SeanceRepository seanceRepository;
     private final UtilisateurRepository utilisateurRepository;
     private final ChargeurDonneesExport chargeurDonnees;
+    private final RattachementParTitre rattachementParTitre;
     private final ClasseurXlsx classeurXlsx;
     private final Clock clock;
 
@@ -223,6 +226,9 @@ public class ExportProgrammeServiceImpl implements ExportProgrammeService {
                 .map(s -> new SeanceExport(s.getSeanceId(), s.getModeleId()))
                 .toList();
         Set<Long> toutes = new HashSet<>(seanceRepository.findIdsCompletesParModele(modeleIds));
+        Map<Long, String> titresParModele = new LinkedHashMap<>();
+        modeleIds.forEach(modeleId -> titresParModele.put(modeleId, titres.get(modeleId)));
+        toutes.addAll(rattachementParTitre.chercher(export.getUtilisateur().getId(), titresParModele).keySet());
         ajoutees.forEach(s -> toutes.add(s.seanceId()));
         return new ExportProgrammeDto(export.getId(), export.getNom(), export.getCreeA(), modeles, ajoutees,
                 toutes.size());

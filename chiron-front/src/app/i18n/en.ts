@@ -893,7 +893,7 @@ export const en: Record<string, string> = {
   'export.assistant.step1.summary': 'Exercises: {{exercices}} · Sets: {{series}}',
   'export.assistant.step2.title': 'Sessions already done',
   'export.assistant.step2.desc':
-    'Add past sessions to the export and pick the tab where each one belongs.',
+    'Sessions with the same title as a chosen session are attached automatically. For the others, tick them and pick their tab.',
   'export.assistant.step2.empty': 'No finished session in your journal yet.',
   'export.assistant.step2.week': 'Week of {{date}}',
   'export.assistant.step2.exercises': 'Exercises: {{n}}',

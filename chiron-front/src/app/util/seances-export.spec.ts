@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { grouperParSemaine, lundiDe, seancesTerminees } from './seances-export';
+import {
+  SeanceFaite,
+  grouperParSemaine,
+  lundiDe,
+  modeleAutomatique,
+  modelesParTitre,
+  normaliserTitre,
+  seancesTerminees,
+} from './seances-export';
 
 describe('seancesTerminees', () => {
   it('garde les séances terminées qui ont des exercices', () => {
@@ -76,5 +84,70 @@ describe('grouperParSemaine', () => {
     ]);
 
     expect(semaines).toHaveLength(2);
+  });
+});
+
+describe('normaliserTitre', () => {
+  it('ignore la casse, les bords et les blancs multiples', () => {
+    expect(normaliserTitre('  PUSH   Day ')).toBe('push day');
+  });
+
+  it('rend une chaîne vide pour un titre absent', () => {
+    expect(normaliserTitre(null)).toBe('');
+    expect(normaliserTitre(undefined)).toBe('');
+  });
+});
+
+describe('modelesParTitre', () => {
+  it('associe chaque titre normalisé à sa séance du programme', () => {
+    const parTitre = modelesParTitre([
+      { id: 5, titre: 'Push' },
+      { id: 6, titre: ' PULL ' },
+    ]);
+
+    expect(parTitre.get('push')).toBe(5);
+    expect(parTitre.get('pull')).toBe(6);
+  });
+
+  it('écarte un titre porté par deux séances pour ne pas deviner', () => {
+    const parTitre = modelesParTitre([
+      { id: 5, titre: 'Push' },
+      { id: 7, titre: 'push ' },
+      { id: 6, titre: 'Pull' },
+    ]);
+
+    expect(parTitre.has('push')).toBe(false);
+    expect(parTitre.get('pull')).toBe(6);
+  });
+
+  it('ignore les séances sans titre', () => {
+    expect(modelesParTitre([{ id: 5, titre: '  ' }]).size).toBe(0);
+  });
+});
+
+describe('modeleAutomatique', () => {
+  const faite = (modeleId: number | null, titre: string): SeanceFaite => ({
+    id: 1,
+    titre,
+    debut: new Date(2026, 10, 2),
+    modeleId,
+    nbExercices: 1,
+  });
+  const parTitre = new Map([['push', 5]]);
+
+  it('suit le lien enregistré quand le modèle est dans la sélection', () => {
+    expect(modeleAutomatique(faite(6, 'Push'), new Set([6]), parTitre)).toBe(6);
+  });
+
+  it('ne retombe pas sur le titre quand la séance est liée à un modèle hors sélection', () => {
+    expect(modeleAutomatique(faite(9, 'Push'), new Set([5]), parTitre)).toBeNull();
+  });
+
+  it('rattache par titre une séance sans lien', () => {
+    expect(modeleAutomatique(faite(null, ' push'), new Set([5]), parTitre)).toBe(5);
+  });
+
+  it('laisse sans rattachement une séance sans lien dont le titre est inconnu', () => {
+    expect(modeleAutomatique(faite(null, 'Séance interactive'), new Set([5]), parTitre)).toBeNull();
   });
 });

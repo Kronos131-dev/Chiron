@@ -29,10 +29,14 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyCollection;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -43,6 +47,8 @@ class ChargeurDonneesExportTest {
 
     @Mock
     private SeanceRepository seanceRepository;
+    @Mock
+    private RattachementParTitre rattachementParTitre;
 
     private ChargeurDonneesExport chargeur;
     private Utilisateur alice;
@@ -50,12 +56,13 @@ class ChargeurDonneesExportTest {
 
     @BeforeEach
     void setUp() {
-        chargeur = new ChargeurDonneesExport(seanceRepository, CLOCK);
+        chargeur = new ChargeurDonneesExport(seanceRepository, rattachementParTitre, CLOCK);
         alice = Utilisateur.builder().id(1L).username("alice").build();
         export = ExportProgramme.builder().id(9L).utilisateur(alice).nom("Programme").build();
         when(seanceRepository.findAllById(anyCollection())).thenReturn(List.of());
         when(seanceRepository.findCompletesParModele(anyCollection())).thenReturn(List.of());
         when(seanceRepository.findCompletesDeLUtilisateur(eq(1L), anyCollection())).thenReturn(List.of());
+        when(rattachementParTitre.chercher(eq(1L), anyMap())).thenReturn(Map.of());
     }
 
     private ExerciceDefinition definition(long id, CardioType cardio, WodType wod) {
@@ -156,6 +163,57 @@ class ChargeurDonneesExportTest {
 
         assertThat(donnees.modeles().get(0).seances()).isEmpty();
         assertThat(donnees.modeles().get(1).seances()).extracting(s -> s.id()).containsExactly(31L);
+    }
+
+    @Test
+    void charger_uneSeanceSansLienRejointLOngletDeMemeTitre() {
+        lierModele(5L, 0);
+        lierModele(6L, 1);
+        Seance m5 = seance(5L, false, null, 1, exercice("Squat", 0, definition(1, null, null)));
+        Seance m6 = seance(6L, false, null, 1, exercice("Rowing", 0, definition(3, null, null)));
+        Seance ancienne = seance(50L, true, null, 3, exercice("Rowing", 0, definition(3, null, null), serie(60, 8)));
+        when(seanceRepository.findAllById(anyCollection())).thenReturn(List.of(m5, m6));
+        when(rattachementParTitre.chercher(1L, Map.of(5L, "Séance 5", 6L, "Séance 6")))
+                .thenReturn(Map.of(50L, 6L));
+        when(seanceRepository.findCompletesDeLUtilisateur(eq(1L), anyCollection())).thenReturn(List.of(ancienne));
+
+        DonneesExport donnees = chargeur.charger(export);
+
+        assertThat(donnees.modeles().get(0).seances()).isEmpty();
+        assertThat(donnees.modeles().get(1).seances()).extracting(s -> s.id()).containsExactly(50L);
+    }
+
+    @Test
+    void charger_leChoixManuelPrimeSurLeRattachementParTitre() {
+        lierModele(5L, 0);
+        lierModele(6L, 1);
+        Seance m5 = seance(5L, false, null, 1, exercice("Squat", 0, definition(1, null, null)));
+        Seance m6 = seance(6L, false, null, 1, exercice("Rowing", 0, definition(3, null, null)));
+        Seance faite = seance(51L, true, null, 3, exercice("Squat", 0, definition(1, null, null), serie(80, 8)));
+        ajouter(51L, 5L);
+        when(seanceRepository.findAllById(anyCollection())).thenReturn(List.of(m5, m6));
+        when(rattachementParTitre.chercher(eq(1L), anyMap())).thenReturn(Map.of(51L, 6L));
+        when(seanceRepository.findCompletesDeLUtilisateur(eq(1L), anyCollection())).thenReturn(List.of(faite));
+
+        DonneesExport donnees = chargeur.charger(export);
+
+        assertThat(donnees.modeles().get(0).seances()).extracting(s -> s.id()).containsExactly(51L);
+        assertThat(donnees.modeles().get(1).seances()).isEmpty();
+    }
+
+    @Test
+    void charger_leModeleDOrigineNEstPasRechercheUneSecondeFoisParTitre() {
+        lierModele(5L, 0);
+        Seance m5 = seance(5L, false, null, 1, exercice("Squat", 0, definition(1, null, null)));
+        Seance faite = seance(52L, true, 5L, 3, exercice("Squat", 0, definition(1, null, null), serie(80, 8)));
+        when(seanceRepository.findAllById(anyCollection())).thenReturn(List.of(m5));
+        when(seanceRepository.findCompletesParModele(anyCollection())).thenReturn(List.of(faite));
+        when(rattachementParTitre.chercher(eq(1L), anyMap())).thenReturn(Map.of(52L, 5L));
+
+        DonneesExport donnees = chargeur.charger(export);
+
+        assertThat(donnees.modeles().get(0).seances()).extracting(s -> s.id()).containsExactly(52L);
+        verify(seanceRepository, never()).findCompletesDeLUtilisateur(eq(1L), anyCollection());
     }
 
     @Test

@@ -15,6 +15,8 @@ import {
   SeanceFaite,
   SeanceJournalBrute,
   grouperParSemaine,
+  modeleAutomatique,
+  modelesParTitre,
   seancesTerminees,
 } from '../../util/seances-export';
 import { HeaderComponent } from '../shared/header/header';
@@ -58,6 +60,7 @@ export class ExportAssistant implements OnInit {
     this.routines().filter((routine) => this.modelesChoisis().has(routine.id)),
   );
   readonly semaines = computed(() => grouperParSemaine(this.journal()));
+  readonly modeleParTitre = computed(() => modelesParTitre(this.routinesChoisies()));
   readonly toutEstCoche = computed(
     () => this.routines().length > 0 && this.routinesChoisies().length === this.routines().length,
   );
@@ -116,8 +119,12 @@ export class ExportAssistant implements OnInit {
     return this.modelesChoisis().has(routine.id);
   }
 
+  modeleAutomatique(seance: SeanceFaite): number | null {
+    return modeleAutomatique(seance, this.modelesChoisis(), this.modeleParTitre());
+  }
+
   estAutomatique(seance: SeanceFaite): boolean {
-    return seance.modeleId !== null && this.modelesChoisis().has(seance.modeleId);
+    return this.modeleAutomatique(seance) !== null;
   }
 
   estAjoutee(seance: SeanceFaite): boolean {

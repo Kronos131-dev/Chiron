@@ -3,6 +3,7 @@ package com.kronos.chiron.exportation.persistence;
 import com.kronos.chiron.seance.model.Exercice;
 import com.kronos.chiron.seance.model.Seance;
 import com.kronos.chiron.seance.persistence.SeanceRepository;
+import com.kronos.chiron.seance.persistence.SeanceTitre;
 import com.kronos.chiron.exportation.model.ExportProgramme;
 import com.kronos.chiron.exportation.model.ExportProgrammeModele;
 import com.kronos.chiron.exportation.model.ExportProgrammeSeance;
@@ -171,6 +172,19 @@ class ExportProgrammeRepositoryTest {
 
         assertThat(seanceRepository.findIdsCompletesParModele(List.of(modele.getId())))
                 .containsExactly(complete.getId());
+    }
+
+    @Test
+    void findTitresCompletesSansModele_neRendQueLesSeancesTermineesSansLienDeLUtilisateur() {
+        Seance sansLien = seance(alice, "Push", true, null, T0, "Squat");
+        seance(alice, "Push", true, modele.getId(), T0, "Squat");
+        seance(alice, "Push", true, null, null, "Squat");
+        seance(alice, "Push", true, null, T0, null);
+        seance(alice, "Modèle", false, null, null, "Squat");
+        seance(bob, "Push", true, null, T0, "Squat");
+
+        assertThat(seanceRepository.findTitresCompletesSansModele(alice.getId())).extracting(SeanceTitre::getId,
+                SeanceTitre::getTitre).containsExactly(org.assertj.core.api.Assertions.tuple(sansLien.getId(), "Push"));
     }
 
     @Test
