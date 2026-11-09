@@ -289,8 +289,6 @@ export const fr: Record<string, string> = {
   'journal.km': 'Km {{km}}',
   'journal.wodRounds': 'tours en {{minutes}} min',
   'journal.drop': 'Dég.',
-  'journal.addSet': 'Ajouter une série',
-  'journal.removeSet': 'Supprimer la série',
   'journal.deleteConfirm': 'Es-tu sûr de vouloir supprimer cette entrée de ton journal ?',
   'journal.deleteError': 'Impossible de supprimer cette entrée.',
   'journal.updated': 'Séance mise à jour.',

@@ -285,8 +285,6 @@ export const en: Record<string, string> = {
   'journal.km': 'Km {{km}}',
   'journal.wodRounds': 'rounds in {{minutes}} min',
   'journal.drop': 'Drop',
-  'journal.addSet': 'Add a set',
-  'journal.removeSet': 'Remove set',
   'journal.deleteConfirm': 'Are you sure you want to delete this journal entry?',
   'journal.deleteError': 'Unable to delete this entry.',
   'journal.updated': 'Session updated.',

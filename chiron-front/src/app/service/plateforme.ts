@@ -28,6 +28,18 @@ export function ouvrirDansUnOnglet(url: string): void {
   Browser.open({ url }).catch(() => {});
 }
 
+let retourIntercepte: (() => boolean) | null = null;
+
+// WHY: le retour d'Android remonte l'historique sans demander l'avis de l'écran. Une saisie qui
+// ne vit qu'en mémoire disparaissait donc sur un simple appui ; l'écran qui en tient une reçoit
+// le retour en premier et répond true s'il l'a consommé.
+export function intercepterRetourNatif(gestionnaire: () => boolean): () => void {
+  retourIntercepte = gestionnaire;
+  return () => {
+    if (retourIntercepte === gestionnaire) retourIntercepte = null;
+  };
+}
+
 // WHY: sans ce branchement le bouton retour d'Android ferme l'application depuis n'importe
 // quel écran, au lieu de remonter d'une page.
 export function preparerCoquilleNative(quitter: () => void): void {
@@ -37,6 +49,7 @@ export function preparerCoquilleNative(quitter: () => void): void {
   StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
 
   App.addListener('backButton', ({ canGoBack }) => {
+    if (retourIntercepte?.()) return;
     if (canGoBack) window.history.back();
     else quitter();
   }).catch(() => {});

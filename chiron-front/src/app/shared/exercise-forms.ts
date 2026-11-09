@@ -18,6 +18,7 @@ export interface SerieForm {
   poids: number | null;
   reps: number | null;
   degressifs: DegressifForm[];
+  commentaire?: string | null;
   // ── Paramètres cardio (null pour la musculation) ──
   dureeMin?: number | null;
   distanceM?: number | null;
@@ -148,6 +149,7 @@ export function seriesFromDto(series: any[]): SerieForm[] {
       poids: deg.poids ?? null,
       reps: deg.reps ?? null,
     })),
+    commentaire: dto.commentaire ?? null,
     dureeMin: dto.dureeMin ?? null,
     distanceM: dto.distanceM ?? null,
     allureKmh: dto.allureKmh ?? null,
@@ -155,4 +157,19 @@ export function seriesFromDto(series: any[]): SerieForm[] {
     calories: dto.calories ?? null,
     courseTraceId: dto.courseTraceId ?? null,
   }));
+}
+
+export function exerciceFormFromDto(dto: any): ExerciceForm {
+  return {
+    id: dto.id ?? generateFormId(),
+    nom: dto.nom,
+    definitionId: dto.exerciceDefinitionId ?? undefined,
+    cardioType: dto.cardioType ?? null,
+    wodType: dto.wodType ?? null,
+    commentaire: dto.commentaire ?? '',
+    unilateral: dto.unilateral ?? false,
+    blockId: dto.blockId ?? null,
+    blockType: dto.blockType ?? null,
+    series: dto.series?.length ? seriesFromDto(dto.series) : [],
+  };
 }

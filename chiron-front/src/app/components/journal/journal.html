@@ -65,7 +65,8 @@
           <div class="space-y-4">
             @for (seance of weekGroup.seances; track seance.id) {
               <article
-                class="bg-slate-900/60 backdrop-blur-md border border-secondary/20 rounded-xl overflow-hidden shadow-2xl transition-all hover:border-secondary/40"
+                class="bg-slate-900/60 backdrop-blur-md border border-secondary/20 rounded-xl shadow-2xl transition-all hover:border-secondary/40"
+                [class.overflow-hidden]="editingSeanceId() !== seance.id"
               >
                 <!-- Clickable Session Header Summary (Accordion Toggle) -->
                 <div
@@ -637,92 +638,43 @@
 
                     <!-- ─── EDIT VIEW ─── -->
                     @if (editingSeanceId() === seance.id && editingDraft(); as draft) {
-                      @for (exo of draft.exercices; track $index; let exoIdx = $index) {
-                        <div
-                          class="bg-slate-950/30 rounded-lg p-3 min-[400px]:p-4 border border-secondary/30"
+                      <div>
+                        <label
+                          class="text-secondary text-[9px] font-bold tracking-[0.2em] uppercase ml-1"
+                          >{{ 'session.sessionLabel' | t }}</label
                         >
-                          <h4
-                            class="font-headline text-lg text-on-surface mb-3 flex items-center gap-2"
-                          >
-                            <span class="material-symbols-outlined text-secondary text-lg"
-                              >fitness_center</span
-                            >
-                            {{ exo.nom }}
-                          </h4>
+                        <input
+                          type="text"
+                          [(ngModel)]="draft.titre"
+                          class="w-full mt-1 bg-slate-950/50 border border-white/10 rounded p-3 text-white font-headline text-lg outline-none focus:border-secondary/50 transition-colors"
+                          [placeholder]="'session.namePlaceholder' | t"
+                        />
+                      </div>
 
-                          <div class="overflow-x-auto">
-                            <table class="w-full text-left border-collapse">
-                              <thead>
-                                <tr
-                                  class="border-b border-secondary/20 text-on-surface-variant font-headline text-sm tracking-wider uppercase"
-                                >
-                                  <th class="py-2 px-1.5 min-[400px]:px-3">
-                                    {{ 'journal.set' | t }}
-                                  </th>
-                                  <th class="py-2 px-1.5 min-[400px]:px-3">
-                                    {{ 'journal.reps' | t }}
-                                  </th>
-                                  <th class="py-2 px-1.5 min-[400px]:px-3">
-                                    {{ 'journal.weightKg' | t }}
-                                  </th>
-                                  <th class="py-2 px-1.5 min-[400px]:px-3 w-10"></th>
-                                </tr>
-                              </thead>
-                              <tbody class="font-body text-on-surface">
-                                @for (serie of exo.series; track $index; let serieIdx = $index) {
-                                  <tr class="border-b border-white/5">
-                                    <td
-                                      class="py-2 px-1.5 min-[400px]:px-3 font-bold text-secondary/80"
-                                    >
-                                      #{{ serieIdx + 1 }}
-                                    </td>
-                                    <td class="py-2 px-1.5 min-[400px]:px-3">
-                                      <input
-                                        type="number"
-                                        inputmode="numeric"
-                                        min="0"
-                                        class="w-14 min-[400px]:w-20 bg-slate-800 border border-secondary/30 text-on-surface rounded px-2 py-1 focus:outline-none focus:border-secondary"
-                                        [(ngModel)]="serie.reps"
-                                        (blur)="onFieldChange()"
-                                        (click)="$event.stopPropagation()"
-                                      />
-                                    </td>
-                                    <td class="py-2 px-1.5 min-[400px]:px-3">
-                                      <input
-                                        type="number"
-                                        inputmode="decimal"
-                                        min="0"
-                                        step="0.5"
-                                        class="w-16 min-[400px]:w-24 bg-slate-800 border border-secondary/30 text-on-surface rounded px-2 py-1 focus:outline-none focus:border-secondary"
-                                        [(ngModel)]="serie.poids"
-                                        (blur)="onFieldChange()"
-                                        (click)="$event.stopPropagation()"
-                                      />
-                                    </td>
-                                    <td class="py-2 px-1.5 min-[400px]:px-3">
-                                      <button
-                                        (click)="removeSerie(exoIdx, serieIdx, $event)"
-                                        [title]="'journal.removeSet' | t"
-                                        class="w-7 h-7 rounded bg-red-900/20 text-red-400 hover:bg-red-900/40 flex items-center justify-center"
-                                      >
-                                        <span class="material-symbols-outlined text-sm">close</span>
-                                      </button>
-                                    </td>
-                                  </tr>
-                                }
-                              </tbody>
-                            </table>
-                          </div>
-
-                          <button
-                            (click)="addSerie(exoIdx, $event)"
-                            class="mt-3 inline-flex items-center gap-2 text-sm bg-secondary/10 text-secondary hover:bg-secondary/30 transition-colors px-3 py-1.5 rounded"
-                          >
-                            <span class="material-symbols-outlined text-sm">add</span>
-                            {{ 'journal.addSet' | t }}
-                          </button>
-                        </div>
+                      @for (exo of draft.exercices; track exo.id; let exoIdx = $index) {
+                        <app-exercice-card
+                          [exercice]="exo"
+                          [index]="exoIdx"
+                          [seanceDejaEnregistree]="true"
+                          (remove)="retirerExercice(exo.id)"
+                        />
                       }
+
+                      <button
+                        type="button"
+                        (click)="ouvrirSelecteur()"
+                        class="w-full border-2 border-dashed border-secondary/30 rounded-xl p-4 flex items-center justify-center gap-2 text-secondary text-xs font-bold tracking-[0.2em] uppercase hover:bg-secondary/10 hover:border-secondary/60 transition-all"
+                      >
+                        <span class="material-symbols-outlined text-xl">add</span>
+                        {{ 'builder.addExercise' | t }}
+                      </button>
+
+                      <app-champ-note
+                        class="block"
+                        [(valeur)]="draft.note"
+                        [libelle]="'session.noteLabel' | t"
+                        [indication]="'session.notePlaceholder' | t"
+                      />
 
                       <!-- Save / Cancel bar -->
                       <div
@@ -771,6 +723,15 @@
     </div>
   </div>
 </main>
+
+<app-exercise-picker
+  [open]="selecteurOuvert()"
+  [addedExercises]="exercicesAjoutes()"
+  (closeRequest)="fermerSelecteur()"
+  (addFromDefinition)="ajouterExerciceDepuisBibliotheque($event)"
+  (addCustom)="ajouterExerciceLibre()"
+  (removeAdded)="retirerExercice($event.id)"
+/>
 
 @if (carteAPartager(); as carte) {
   <app-partage-carte [carte]="carte" (fermer)="carteAPartager.set(null)" />

@@ -7,7 +7,7 @@
          (drop)="exoDrop.emit($event)"
          (dragend)="exoDragEnd.emit()">
 
-  @if (!readonly) {
+  @if (!readonly && !seanceDejaEnregistree) {
     <!-- Drag handle bar (top of the card, long-press on mobile / click-and-drag on desktop) -->
     <div class="drag-handle flex items-center justify-center gap-2 py-2 bg-white/5 border-b border-white/10 text-secondary/60 hover:text-secondary hover:bg-secondary/10 cursor-grab active:cursor-grabbing transition-colors"
          [draggable]="true"
@@ -92,7 +92,7 @@
         <div class="flex items-center gap-3 flex-shrink-0 ml-auto">
 
           <!-- Bouton fiche complète -->
-          @if (exercice.definitionId) {
+          @if (exercice.definitionId && !seanceDejaEnregistree) {
             <button (click)="voirFiche()"
                     class="bg-slate-950/50 border border-white/10 p-3 rounded text-on-surface-variant hover:text-secondary hover:border-secondary/30 transition-all"
                     [title]="'exCard.viewSheet' | t">
@@ -154,7 +154,14 @@
         }
       </ul>
 
-      @if (scoreWod() !== null) {
+      @if (seanceDejaEnregistree && !readonly && exercice.series[0]) {
+        <div class="mt-4 pt-3 border-t border-white/10 flex items-center gap-3">
+          <input type="number" inputmode="numeric" min="0" [(ngModel)]="exercice.series[0].reps"
+                 [attr.aria-label]="'exCard.wodRounds' | t"
+                 class="w-24 bg-slate-950/80 border border-white/5 rounded p-2.5 text-white font-body text-center outline-none focus:border-secondary/50 transition-colors">
+          <span class="text-on-surface-variant text-[10px] font-bold tracking-widest uppercase">{{ 'exCard.wodRounds' | t }}</span>
+        </div>
+      } @else if (scoreWod() !== null) {
         <div class="mt-4 pt-3 border-t border-white/10 flex items-baseline gap-2">
           <span class="font-headline text-3xl font-black text-secondary tabular-nums">{{ scoreWod() }}</span>
           <span class="text-on-surface-variant text-[10px] font-bold tracking-widest uppercase">{{ 'exCard.wodRounds' | t }}</span>

@@ -43,6 +43,7 @@ export class ExerciceCardComponent implements OnInit {
   @Input() hasNext = false;
   @Input() canStartWod = false;
   @Input() canStartCourse = false;
+  @Input() seanceDejaEnregistree = false;
 
   @Output() remove = new EventEmitter<void>();
   @Output() startWod = new EventEmitter<void>();

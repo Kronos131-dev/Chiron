@@ -1,7 +1,12 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ChironApi, CourseTraceDto, SanteActiviteDto } from '../../service/chiron-api';
+import {
+  ChironApi,
+  CourseTraceDto,
+  ExerciceDefinitionDto,
+  SanteActiviteDto,
+} from '../../service/chiron-api';
 import { AuthService } from '../../service/auth.service';
 import { I18nService } from '../../service/i18n.service';
 import { TranslatePipe } from '../../service/translate.pipe';
@@ -14,10 +19,29 @@ import { GrapheAllure, construireGrapheAllure } from '../../util/graphe-allure';
 import { CarteSeance } from '../../partage/carte';
 import { PartageSeance } from '../../service/partage-seance';
 import { PartageCarte } from '../shared/partage-carte/partage-carte';
+import { ExerciceCardComponent } from '../shared/exercice-card/exercice-card';
+import { ExercisePickerComponent } from '../shared/exercise-picker/exercise-picker';
+import { ChampNote } from '../shared/champ-note/champ-note';
+import { ExerciceForm, exerciceFormFromDto, makeEmptyExercice } from '../../shared/exercise-forms';
+import { intercepterRetourNatif } from '../../service/plateforme';
 
 const COTE_TRACE = 320;
 const LARGEUR_GRAPHE = 320;
 const HAUTEUR_GRAPHE = 110;
+
+interface BrouillonSeance {
+  id: number;
+  titre: string;
+  note: string | null | undefined;
+  weekNumber: number;
+  startTime: string;
+  endTime: string | null;
+  exercices: ExerciceForm[];
+}
+
+function nombreOuNull(valeur: number | null | undefined): number | null {
+  return valeur != null ? Number(valeur) : null;
+}
 
 /** ISO-8601 week number (lundi = 1er jour de la semaine, semaine 1 = celle du premier jeudi). */
 function getIsoWeekNumber(d: Date): number {
@@ -36,11 +60,20 @@ function getIsoWeekNumber(d: Date): number {
 @Component({
   selector: 'app-journal',
   standalone: true,
-  imports: [CommonModule, FormsModule, HeaderComponent, TranslatePipe, PartageCarte],
+  imports: [
+    CommonModule,
+    FormsModule,
+    HeaderComponent,
+    TranslatePipe,
+    PartageCarte,
+    ExerciceCardComponent,
+    ExercisePickerComponent,
+    ChampNote,
+  ],
   templateUrl: './journal.html',
   styleUrls: ['./journal.css'],
 })
-export class Journal implements OnInit {
+export class Journal implements OnInit, OnDestroy {
   historique = signal<any[]>([]);
   historiqueGrouped = signal<any[]>([]);
   weeksToShow = signal(4);
@@ -55,7 +88,10 @@ export class Journal implements OnInit {
   editingSeanceId = signal<number | null>(null);
 
   /** Local mutable working copy of the session being edited. */
-  editingDraft = signal<any | null>(null);
+  editingDraft = signal<BrouillonSeance | null>(null);
+
+  selecteurOuvert = signal(false);
+  exercicesAjoutes = signal<ExerciceForm[]>([]);
 
   /** True while the save request is in flight. */
   isSaving = signal(false);
@@ -71,6 +107,7 @@ export class Journal implements OnInit {
   /** Transient status message (success / error). */
   saveStatus = signal<string | null>(null);
   private _saveStatusTimer: ReturnType<typeof setTimeout> | null = null;
+  private libererRetourNatif: () => void = () => {};
 
   constructor(
     private chironApi: ChironApi,
@@ -81,6 +118,7 @@ export class Journal implements OnInit {
   ) {}
 
   ngOnInit() {
+    this.libererRetourNatif = intercepterRetourNatif(() => this.consommerRetour());
     this.currentUsername = this.authService.getUsername();
     if (this.currentUsername) {
       this.loadJournal(this.currentUsername);
@@ -88,6 +126,22 @@ export class Journal implements OnInit {
       this.isLoading.set(false);
       console.error('Aucun utilisateur connecté !');
     }
+  }
+
+  ngOnDestroy() {
+    this.libererRetourNatif();
+  }
+
+  consommerRetour(): boolean {
+    if (this.selecteurOuvert()) {
+      this.fermerSelecteur();
+      return true;
+    }
+    if (this.editingSeanceId() !== null) {
+      this.cancelEdit();
+      return true;
+    }
+    return false;
   }
 
   loadJournal(username: string) {
@@ -188,42 +242,59 @@ export class Journal implements OnInit {
     event.stopPropagation();
     this.expandedSeanceId.set(seance.id);
     this.editingSeanceId.set(seance.id);
-    this.editingDraft.set(this.cloneSeance(seance));
+    this.editingDraft.set({
+      id: seance.id,
+      titre: seance.titre ?? '',
+      note: seance.note ?? '',
+      weekNumber: seance.weekNumber,
+      startTime: seance.startTime,
+      endTime: seance.endTime ?? null,
+      exercices: (seance.exercices ?? []).map(exerciceFormFromDto),
+    });
   }
 
   cancelEdit(event?: Event) {
     if (event) event.stopPropagation();
+    this.fermerSelecteur();
     this.editingSeanceId.set(null);
     this.editingDraft.set(null);
   }
 
-  /** Add a new empty series to the given exercise in the draft. */
-  addSerie(exoIndex: number, event: Event) {
-    event.stopPropagation();
-    const draft = this.editingDraft();
-    if (!draft) return;
-    const exos = [...draft.exercices];
-    const exo = { ...exos[exoIndex], series: [...exos[exoIndex].series] };
-    exo.series.push({ id: null, reps: 0, poids: 0, degressifs: [] });
-    exos[exoIndex] = exo;
-    this.editingDraft.set({ ...draft, exercices: exos });
+  ouvrirSelecteur() {
+    this.exercicesAjoutes.set([]);
+    this.selecteurOuvert.set(true);
   }
 
-  removeSerie(exoIndex: number, serieIndex: number, event: Event) {
-    event.stopPropagation();
-    const draft = this.editingDraft();
-    if (!draft) return;
-    const exos = [...draft.exercices];
-    const exo = { ...exos[exoIndex], series: [...exos[exoIndex].series] };
-    exo.series.splice(serieIndex, 1);
-    exos[exoIndex] = exo;
-    this.editingDraft.set({ ...draft, exercices: exos });
+  fermerSelecteur() {
+    this.selecteurOuvert.set(false);
+    this.exercicesAjoutes.set([]);
   }
 
-  /** ngModel two-way bindings need direct mutation — emit a signal write on each blur to keep things tidy. */
-  onFieldChange() {
-    // Trigger an explicit signal write so anything reading editingDraft re-evaluates.
-    this.editingDraft.set({ ...this.editingDraft() });
+  ajouterExerciceDepuisBibliotheque(definition: ExerciceDefinitionDto) {
+    const exercice = makeEmptyExercice(
+      this.i18n.pick(definition.nomFr, definition.nomEn),
+      definition.id,
+      definition.cardioType as ExerciceForm['cardioType'],
+      definition.wodType as ExerciceForm['wodType'],
+    );
+    this.ecrireExercicesDuBrouillon((exercices) => [...exercices, exercice]);
+    this.exercicesAjoutes.update((ajoutes) => [...ajoutes, exercice]);
+  }
+
+  ajouterExerciceLibre() {
+    this.ecrireExercicesDuBrouillon((exercices) => [...exercices, makeEmptyExercice()]);
+    this.fermerSelecteur();
+  }
+
+  retirerExercice(exerciceId: ExerciceForm['id']) {
+    this.ecrireExercicesDuBrouillon((exercices) => exercices.filter((e) => e.id !== exerciceId));
+    this.exercicesAjoutes.update((ajoutes) => ajoutes.filter((e) => e.id !== exerciceId));
+  }
+
+  private ecrireExercicesDuBrouillon(transformer: (exercices: ExerciceForm[]) => ExerciceForm[]) {
+    this.editingDraft.update((brouillon) =>
+      brouillon ? { ...brouillon, exercices: transformer(brouillon.exercices) } : brouillon,
+    );
   }
 
   saveEdit(event: Event) {
@@ -232,33 +303,8 @@ export class Journal implements OnInit {
     const username = this.authService.getUsername();
     if (!draft || !username) return;
 
-    const dto = {
-      id: draft.id,
-      titre: draft.titre,
-      weekNumber: draft.weekNumber,
-      startTime: draft.startTime,
-      historique: true,
-      exercices: draft.exercices.map((exo: any) => ({
-        id: exo.id ?? null,
-        nom: exo.nom,
-        commentaire: exo.commentaire ?? '',
-        exerciceDefinitionId: exo.exerciceDefinitionId ?? null,
-        series: (exo.series || []).map((s: any) => ({
-          id: s.id ?? null,
-          poids: s.poids != null ? Number(s.poids) : 0,
-          reps: s.reps != null ? Number(s.reps) : 0,
-          commentaire: s.commentaire ?? '',
-          degressifs: (s.degressifs || []).map((d: any) => ({
-            id: d.id ?? null,
-            poids: d.poids != null ? Number(d.poids) : 0,
-            reps: d.reps != null ? Number(d.reps) : 0,
-          })),
-        })),
-      })),
-    };
-
     this.isSaving.set(true);
-    this.chironApi.sauvegarderProgramme(username, dto).subscribe({
+    this.chironApi.sauvegarderProgramme(username, this.seanceAEnregistrer(draft)).subscribe({
       next: () => {
         this.isSaving.set(false);
         this.editingSeanceId.set(null);
@@ -274,23 +320,44 @@ export class Journal implements OnInit {
     });
   }
 
+  private seanceAEnregistrer(draft: BrouillonSeance) {
+    return {
+      id: draft.id,
+      titre: draft.titre,
+      note: draft.note || null,
+      weekNumber: draft.weekNumber,
+      startTime: draft.startTime,
+      endTime: draft.endTime,
+      historique: true,
+      exercices: draft.exercices.map((exo) => ({
+        nom: exo.nom,
+        commentaire: exo.commentaire ?? '',
+        unilateral: exo.unilateral ?? false,
+        exerciceDefinitionId: exo.definitionId ?? null,
+        blockId: exo.blockId ?? null,
+        blockType: exo.blockType ?? null,
+        series: exo.series.map((serie) => ({
+          poids: nombreOuNull(serie.poids) ?? 0,
+          reps: nombreOuNull(serie.reps) ?? 0,
+          commentaire: serie.commentaire ?? '',
+          dureeMin: nombreOuNull(serie.dureeMin),
+          distanceM: nombreOuNull(serie.distanceM),
+          allureKmh: nombreOuNull(serie.allureKmh),
+          pentePct: nombreOuNull(serie.pentePct),
+          courseTraceId: serie.courseTraceId ?? null,
+          degressifs: serie.degressifs.map((degressif) => ({
+            poids: nombreOuNull(degressif.poids) ?? 0,
+            reps: nombreOuNull(degressif.reps) ?? 0,
+          })),
+        })),
+      })),
+    };
+  }
+
   private flashStatus(msg: string) {
     this.saveStatus.set(msg);
     if (this._saveStatusTimer) clearTimeout(this._saveStatusTimer);
     this._saveStatusTimer = setTimeout(() => this.saveStatus.set(null), 3000);
-  }
-
-  private cloneSeance(seance: any): any {
-    return {
-      ...seance,
-      exercices: (seance.exercices || []).map((exo: any) => ({
-        ...exo,
-        series: (exo.series || []).map((s: any) => ({
-          ...s,
-          degressifs: (s.degressifs || []).map((d: any) => ({ ...d })),
-        })),
-      })),
-    };
   }
 
   formatDate(dateString: string): string {
