@@ -52,6 +52,15 @@ describe('Session', () => {
     component.ngOnInit();
   });
 
+  // WHY: la séance en cours est persistée dans localStorage par ActiveSessionService, qui est
+  // fourni à la racine et la relit dans son constructeur. Une séance laissée là survit au fichier
+  // de test et se retrouve active dans le suivant, où elle change la branche prise par le code
+  // sous test. C'est ce qui a rendu programme.spec rouge en CI et vert en local : seul l'ordre
+  // d'exécution des fichiers, que Vitest décide, séparait les deux.
+  afterEach(() => {
+    localStorage.clear();
+  });
+
   it('should create', () => {
     expect(component).toBeTruthy();
   });
