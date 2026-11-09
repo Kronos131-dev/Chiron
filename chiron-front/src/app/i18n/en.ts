@@ -32,6 +32,7 @@ export const en: Record<string, string> = {
   'common.save': 'Save',
   'common.cancel': 'Cancel',
   'common.delete': 'Delete',
+  'common.clear': 'Clear',
   'common.close': 'Close',
   'common.back': 'Back',
   'common.confirm': 'Confirm',

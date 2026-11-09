@@ -33,6 +33,7 @@ export const fr: Record<string, string> = {
   'common.save': 'Enregistrer',
   'common.cancel': 'Annuler',
   'common.delete': 'Supprimer',
+  'common.clear': 'Effacer',
   'common.close': 'Fermer',
   'common.back': 'Retour',
   'common.confirm': 'Confirmer',

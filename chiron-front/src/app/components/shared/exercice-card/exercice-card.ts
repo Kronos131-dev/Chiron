@@ -15,6 +15,7 @@ import {
   makeSerieFor,
 } from '../../../shared/exercise-forms';
 import { WodSpec, wodSpec } from '../../../shared/wod-specs';
+import { ChampNote } from '../champ-note/champ-note';
 
 /**
  * Inline editable card for one exercise in a programme/session form.
@@ -25,7 +26,7 @@ import { WodSpec, wodSpec } from '../../../shared/wod-specs';
 @Component({
   selector: 'app-exercice-card',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe, LocalizePipe],
+  imports: [CommonModule, FormsModule, TranslatePipe, LocalizePipe, ChampNote],
   templateUrl: './exercice-card.html',
   styleUrls: ['./exercice-card.css'],
 })

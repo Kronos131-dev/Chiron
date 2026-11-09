@@ -8,6 +8,7 @@ import { ActiveSessionService } from '../../service/active-session.service';
 import { HeaderComponent } from '../shared/header/header';
 import { ExerciceCardComponent } from '../shared/exercice-card/exercice-card';
 import { ExercisePickerComponent } from '../shared/exercise-picker/exercise-picker';
+import { ChampNote } from '../shared/champ-note/champ-note';
 import { TranslatePipe } from '../../service/translate.pipe';
 import { I18nService } from '../../service/i18n.service';
 import { PartageSeance } from '../../service/partage-seance';
@@ -42,6 +43,7 @@ const DELAI_ECOUTE_MS = 12000;
     HeaderComponent,
     ExerciceCardComponent,
     ExercisePickerComponent,
+    ChampNote,
     PartageCarte,
     TranslatePipe,
   ],

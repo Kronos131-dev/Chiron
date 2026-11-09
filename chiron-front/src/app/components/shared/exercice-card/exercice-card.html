@@ -340,13 +340,10 @@
 
     <!-- Note d'exercice (facultative) — sous les séries -->
     @if (!readonly) {
-      <div class="mt-4">
-        <label class="text-secondary text-[9px] font-bold tracking-[0.2em] uppercase ml-1">{{ 'exCard.noteOptional' | t }}</label>
-        <textarea [(ngModel)]="exercice.commentaire"
-                  rows="2"
-                  class="w-full mt-1 bg-slate-950/50 border border-white/10 rounded p-3 text-white font-body text-sm outline-none focus:border-secondary/50 transition-colors resize-y"
-                  [placeholder]="'exCard.notePh' | t"></textarea>
-      </div>
+      <app-champ-note class="block mt-4"
+                      [(valeur)]="exercice.commentaire"
+                      [libelle]="'exCard.noteOptional' | t"
+                      [indication]="'exCard.notePh' | t" />
     } @else if (exercice.commentaire) {
       <div class="mt-4 bg-slate-950/40 border border-white/5 rounded p-3">
         <p class="text-secondary text-[9px] font-bold tracking-[0.2em] uppercase mb-1">{{ 'exCard.note' | t }}</p>

@@ -107,18 +107,13 @@
 
       <!-- Note de séance (facultative) — juste avant l'enregistrement au journal -->
       @if (!isReadonly()) {
-        <div class="pt-2">
-          <label class="text-secondary text-[9px] font-bold tracking-[0.2em] uppercase ml-1">{{
-            'session.noteLabel' | t
-          }}</label>
-          <textarea
-            [ngModel]="noteSeance()"
-            (ngModelChange)="noteSeance.set($event)"
-            rows="2"
-            class="w-full mt-1 bg-slate-950/50 border border-white/10 rounded p-3 text-white font-body text-sm outline-none focus:border-secondary/50 transition-colors resize-y"
-            [placeholder]="'session.notePlaceholder' | t"
-          ></textarea>
-        </div>
+        <app-champ-note
+          class="block pt-2"
+          [valeur]="noteSeance()"
+          (valeurChange)="noteSeance.set($event ?? '')"
+          [libelle]="'session.noteLabel' | t"
+          [indication]="'session.notePlaceholder' | t"
+        />
       } @else if (noteSeance()) {
         <div class="bg-slate-950/40 border border-white/5 rounded-xl p-4">
           <p class="text-secondary text-[9px] font-bold tracking-[0.2em] uppercase mb-1">
