@@ -316,6 +316,7 @@ export const fr: Record<string, string> = {
     'Exercice réalisé un membre à la fois (reps par bras/jambe) — compte ×2 dans le tonnage',
   'exCard.unilateral': 'Unilatéral',
   'exCard.viewSheet': "Voir la fiche de l'exercice",
+  'exCard.replace': "Remplacer l'exercice",
   'exCard.groupTitle': "Grouper avec l'exercice suivant",
   'exCard.set': 'Série',
   'exCard.weightKg': 'Poids (KG)',
@@ -482,6 +483,7 @@ export const fr: Record<string, string> = {
   'course.say.notUnderstood': 'Répète.',
   // Exercise picker
   'picker.add': 'Ajouter',
+  'picker.replace': 'Remplacer',
   'picker.library': "Bibliothèque d'exercices",
   'picker.added': 'ajouté(s)',
   'picker.selection': 'Sélection',

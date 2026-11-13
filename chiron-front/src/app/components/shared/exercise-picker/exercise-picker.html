@@ -8,8 +8,13 @@
         <span class="material-symbols-outlined">close</span>
       </button>
       <div class="flex-1 min-w-0">
-        <p class="text-secondary text-[9px] font-bold tracking-[0.25em] uppercase">{{ 'picker.add' | t }}</p>
-        <h2 class="text-white font-bold text-base truncate">{{ 'picker.library' | t }}</h2>
+        @if (remplace !== null) {
+          <p class="text-secondary text-[9px] font-bold tracking-[0.25em] uppercase">{{ 'picker.replace' | t }}</p>
+          <h2 class="text-white font-bold text-base truncate">{{ remplace || ('picker.customExercise' | t) }}</h2>
+        } @else {
+          <p class="text-secondary text-[9px] font-bold tracking-[0.25em] uppercase">{{ 'picker.add' | t }}</p>
+          <h2 class="text-white font-bold text-base truncate">{{ 'picker.library' | t }}</h2>
+        }
       </div>
       @if (addedExercises.length > 0) {
         <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-secondary/15 border border-secondary/30">

@@ -126,6 +126,7 @@ export class Session implements OnInit, OnDestroy {
   /** "Add exercise" picker — open flag + the exos appended during the current session. */
   pickerOpen = signal(false);
   addedExercises = signal<ExerciceForm[]>([]);
+  exerciceARemplacer = signal<ExerciceForm | null>(null);
 
   // ── Drag & drop state for exercise reordering ──────────────────────────────
   dragFromIdx = signal(-1);
@@ -316,6 +317,14 @@ export class Session implements OnInit, OnDestroy {
 
   openPicker() {
     if (this.isReadonly()) return;
+    this.exerciceARemplacer.set(null);
+    this.pickerOpen.set(true);
+    this.addedExercises.set([]);
+  }
+
+  ouvrirRemplacement(exo: ExerciceForm) {
+    if (this.isReadonly()) return;
+    this.exerciceARemplacer.set(exo);
     this.pickerOpen.set(true);
     this.addedExercises.set([]);
   }
@@ -323,38 +332,44 @@ export class Session implements OnInit, OnDestroy {
   closePicker() {
     this.pickerOpen.set(false);
     this.addedExercises.set([]);
+    this.exerciceARemplacer.set(null);
   }
 
-  /** Append an exercise to the session from a library card. */
   addExerciceFromDefinition(def: ExerciceDefinitionDto) {
     if (this.isReadonly()) return;
-    const nom = this.i18n.pick(def.nomFr, def.nomEn);
     const exo = makeEmptyExercice(
-      nom,
+      this.i18n.pick(def.nomFr, def.nomEn),
       def.id,
       def.cardioType as ExerciceForm['cardioType'],
       def.wodType as ExerciceForm['wodType'],
     );
-    this.exercices.update((list) => [...list, exo]);
-    this.addedExercises.update((list) => [...list, exo]);
-
-    if (def.id) {
-      const username = this.authService.getUsername();
-      if (username) {
-        this.chironApi.getLastPerformance(username, def.id).subscribe({
-          next: (lastExo) => {
-            this.exercices.update((list) => {
-              const idx = list.findIndex((e) => e.id === exo.id);
-              if (idx >= 0 && lastExo.series) {
-                list[idx] = { ...list[idx], series: seriesFromDto(lastExo.series) };
-              }
-              return list;
-            });
-          },
-          error: () => {},
-        });
-      }
+    if (this.exerciceARemplacer()) {
+      this.placerALaPlaceDeLExerciceARemplacer(exo);
+    } else {
+      this.exercices.update((list) => [...list, exo]);
+      this.addedExercises.update((list) => [...list, exo]);
     }
+    this.preremplirAvecLaDernierePerformance(exo, def.id);
+  }
+
+  private placerALaPlaceDeLExerciceARemplacer(exo: ExerciceForm) {
+    const remplace = this.exerciceARemplacer();
+    this.exercices.update((list) => list.map((e) => (e.id === remplace?.id ? exo : e)));
+    this.closePicker();
+  }
+
+  private preremplirAvecLaDernierePerformance(exo: ExerciceForm, definitionId: number | undefined) {
+    const username = this.authService.getUsername();
+    if (!definitionId || !username) return;
+    this.chironApi.getLastPerformance(username, definitionId).subscribe({
+      next: (lastExo) => {
+        if (!lastExo.series) return;
+        this.exercices.update((list) =>
+          list.map((e) => (e.id === exo.id ? { ...e, series: seriesFromDto(lastExo.series) } : e)),
+        );
+      },
+      error: () => {},
+    });
   }
 
   demarrerWod(exo: ExerciceForm) {
@@ -369,9 +384,12 @@ export class Session implements OnInit, OnDestroy {
     this.router.navigate(['/session', this.routineId, 'course', exo.id]);
   }
 
-  /** Append a blank custom (free-text) exercise and close the picker. */
   addCustomExercice() {
     if (this.isReadonly()) return;
+    if (this.exerciceARemplacer()) {
+      this.placerALaPlaceDeLExerciceARemplacer(makeEmptyExercice());
+      return;
+    }
     this.exercices.update((list) => [...list, makeEmptyExercice()]);
     this.closePicker();
   }

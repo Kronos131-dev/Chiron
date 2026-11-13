@@ -4,8 +4,18 @@ import { of } from 'rxjs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { Session } from './session';
-import { ChironApi } from '../../service/chiron-api';
+import { ChironApi, ExerciceDefinitionDto } from '../../service/chiron-api';
 import { AuthService } from '../../service/auth.service';
+
+function definition(id: number, nom: string): ExerciceDefinitionDto {
+  return {
+    id,
+    nomFr: nom,
+    nomEn: nom,
+    cardioType: null,
+    wodType: null,
+  } as unknown as ExerciceDefinitionDto;
+}
 
 describe('Session — séance enregistrée au journal', () => {
   afterEach(() => localStorage.clear());
@@ -41,7 +51,10 @@ describe('Session — séance enregistrée au journal', () => {
             ),
             sauvegarderProgramme,
             searchExercices: vi.fn().mockReturnValue(of([])),
-            getLastPerformance: vi.fn().mockReturnValue(of({ series: [] })),
+            getLastPerformance: vi
+              .fn()
+              .mockReturnValue(of({ series: [{ poids: 40, reps: 12, degressifs: [] }] })),
+            getExerciceById: vi.fn().mockReturnValue(of({})),
           },
         },
         { provide: AuthService, useValue: { getUsername: vi.fn().mockReturnValue('alice') } },
@@ -88,6 +101,30 @@ describe('Session — séance enregistrée au journal', () => {
     const [, seanceType] = sauvegarderProgramme.mock.calls[1];
     expect(seanceType).toMatchObject({ id: 7, historique: false });
     expect(seanceType.exercices[0].series[0].poids).toBe(105);
+  });
+
+  it('remplace un exercice à sa place, sans le renvoyer en bas de la séance', async () => {
+    const { session } = await monter({});
+    const [developpe, dips] = session.exercices();
+
+    session.ouvrirRemplacement(developpe);
+    session.addExerciceFromDefinition(definition(50, 'Pompes'));
+
+    expect(session.exercices().map((e) => e.nom)).toEqual(['Pompes', 'Dips']);
+    expect(session.exercices()[1]).toBe(dips);
+    expect(session.exercices()[0].series[0]).toMatchObject({ poids: 40, reps: 12 });
+    expect(session.pickerOpen()).toBe(false);
+    expect(session.exerciceARemplacer()).toBeNull();
+  });
+
+  it("ajoute toujours en fin de séance quand on n'a rien choisi de remplacer", async () => {
+    const { session } = await monter({});
+
+    session.openPicker();
+    session.addExerciceFromDefinition(definition(50, 'Pompes'));
+
+    expect(session.exercices().map((e) => e.nom)).toEqual(['Développé couché', 'Dips', 'Pompes']);
+    expect(session.pickerOpen()).toBe(true);
   });
 
   it('ne rattache aucun modèle à une séance interactive, qui en est une elle-même', async () => {

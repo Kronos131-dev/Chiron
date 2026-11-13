@@ -75,6 +75,8 @@
           [isDropTarget]="dragOverIdx() === i && dragFromIdx() !== i"
           [canStartWod]="!isReadonly()"
           [canStartCourse]="!isReadonly()"
+          [canReplace]="!isReadonly()"
+          (replace)="ouvrirRemplacement(exo)"
           (startWod)="demarrerWod(exo)"
           (startCourse)="demarrerCourse(exo)"
           (remove)="supprimerExercice(exo.id)"
@@ -234,6 +236,7 @@
 <app-exercise-picker
   [open]="pickerOpen()"
   [addedExercises]="addedExercises()"
+  [remplace]="exerciceARemplacer()?.nom ?? null"
   (closeRequest)="closePicker()"
   (addFromDefinition)="addExerciceFromDefinition($event)"
   (addCustom)="addCustomExercice()"

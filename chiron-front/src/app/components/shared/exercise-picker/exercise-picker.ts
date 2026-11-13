@@ -27,6 +27,7 @@ export class ExercisePickerComponent {
 
   @Input({ required: true }) open = false;
   @Input() addedExercises: ExerciceForm[] = [];
+  @Input() remplace: string | null = null;
 
   @Output() closeRequest     = new EventEmitter<void>();
   @Output() addFromDefinition = new EventEmitter<ExerciceDefinitionDto>();
