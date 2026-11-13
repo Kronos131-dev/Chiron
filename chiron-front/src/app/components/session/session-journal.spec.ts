@@ -22,11 +22,19 @@ describe('Session — séance enregistrée au journal', () => {
           useValue: {
             getProgrammeById: vi.fn().mockReturnValue(
               of({
+                id: 7,
                 titre: 'Push',
+                weekNumber: 0,
                 exercices: [
                   {
+                    id: 31,
                     nom: 'Développé couché',
                     series: [{ poids: 100, reps: 8, degressifs: [] }],
+                  },
+                  {
+                    id: 32,
+                    nom: 'Dips',
+                    series: [{ poids: 10, reps: 10, degressifs: [] }],
                   },
                 ],
               }),
@@ -60,6 +68,26 @@ describe('Session — séance enregistrée au journal', () => {
 
     const [, journal] = sauvegarderProgramme.mock.calls[0];
     expect(journal).toMatchObject({ id: null, modeleId: 7, historique: true });
+  });
+
+  it("n'écrit que dans le journal par défaut, sans toucher à la séance type", async () => {
+    const { session, sauvegarderProgramme } = await monter({});
+
+    session.ajouterAuJournal();
+
+    expect(sauvegarderProgramme).toHaveBeenCalledTimes(1);
+  });
+
+  it('reporte les valeurs faites sur la séance type quand on le demande', async () => {
+    const { session, sauvegarderProgramme } = await monter({});
+    session.exercices()[0].series[0].poids = 105;
+
+    session.ajouterAuJournal(true);
+
+    expect(sauvegarderProgramme).toHaveBeenCalledTimes(2);
+    const [, seanceType] = sauvegarderProgramme.mock.calls[1];
+    expect(seanceType).toMatchObject({ id: 7, historique: false });
+    expect(seanceType.exercices[0].series[0].poids).toBe(105);
   });
 
   it('ne rattache aucun modèle à une séance interactive, qui en est une elle-même', async () => {

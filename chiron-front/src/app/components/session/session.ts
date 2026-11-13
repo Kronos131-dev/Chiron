@@ -15,10 +15,13 @@ import { PartageSeance } from '../../service/partage-seance';
 import { CarteSeance, SeanceBrute } from '../../partage/carte';
 import { PartageCarte } from '../shared/partage-carte/partage-carte';
 import { nowAsLocalDateTime, getIsoWeekNumber } from '../../util/local-date-time';
+import { seanceTypeAvecValeursDe } from '../../shared/seance-type';
+import { switchMap } from 'rxjs';
 import {
   ExerciceForm,
   generateFormId,
   makeEmptyExercice,
+  serieFormToDto,
   seriesFromDto,
 } from '../../shared/exercise-forms';
 import { ReconnaissanceVocale, creerReconnaissance } from '../../service/reconnaissance-vocale';
@@ -486,10 +489,8 @@ export class Session implements OnInit, OnDestroy {
   /**
    * Persists the current session state to the backend as an executed Historical Session (historique = true).
    * Calculates the current week number for statistical tracking.
-   * Additionally syncs the source template programme (if the session was started from one)
-   * so the next execution shows the latest reps / weights as presets.
    */
-  ajouterAuJournal() {
+  ajouterAuJournal(mettreAJourSeanceType = false) {
     if (this.isReadonly()) return;
     const username = this.authService.getUsername();
     if (!username) return;
@@ -501,29 +502,10 @@ export class Session implements OnInit, OnDestroy {
       commentaire: exo.commentaire ?? '',
       unilateral: exo.unilateral ?? false,
       exerciceDefinitionId: exo.definitionId ?? null,
-      series: exo.series.map((serie) => ({
-        poids: serie.poids != null ? Number(serie.poids) : 0,
-        reps: serie.reps != null ? Number(serie.reps) : 0,
-        commentaire: '',
-        dureeMin: serie.dureeMin != null ? Number(serie.dureeMin) : null,
-        distanceM: serie.distanceM != null ? Number(serie.distanceM) : null,
-        allureKmh: serie.allureKmh != null ? Number(serie.allureKmh) : null,
-        pentePct: serie.pentePct != null ? Number(serie.pentePct) : null,
-        courseTraceId: serie.courseTraceId ?? null,
-        degressifs: serie.degressifs.map((deg) => ({
-          poids: deg.poids != null ? Number(deg.poids) : 0,
-          reps: deg.reps != null ? Number(deg.reps) : 0,
-        })),
-      })),
+      series: exo.series.map(serieFormToDto),
     }));
-
-    // WHY: ce même payload part deux fois — une fois dans le journal, une fois pour remettre à
-    // jour le modèle de programme. Une trace GPS appartient à la sortie du jour, pas au modèle :
-    // l'y laisser rattacherait la course d'aujourd'hui à toutes celles de demain.
-    const exercicesModele = exercicesPayload.map((exo) => ({
-      ...exo,
-      series: exo.series.map(({ courseTraceId, ...serie }) => serie),
-    }));
+    const exercicesFaits = this.exercices();
+    const seanceTypeId = !this.isInteractive() && this.routineId ? this.routineId : null;
 
     const journalDto = {
       id: this.isInteractive() && this.routineId ? parseInt(this.routineId, 10) : null,
@@ -558,20 +540,33 @@ export class Session implements OnInit, OnDestroy {
           this.titreRoutine = signal(titre);
         }
 
-        if (!this.isInteractive() && this.routineId && !this.isReadonly()) {
-          const templateDto = {
-            id: parseInt(this.routineId, 10),
-            titre: this.titreRoutine(),
-            historique: false,
-            exercices: exercicesModele,
-          };
-          this.chironApi.sauvegarderProgramme(username, templateDto).subscribe({
-            error: () => this.flashStatus(this.i18n.t('session.modelUpdateFailed')),
-          });
+        if (mettreAJourSeanceType && seanceTypeId) {
+          this.reporterSurLaSeanceType(username, seanceTypeId, exercicesFaits);
         }
       },
       error: () => this.flashStatus(this.i18n.t('session.saveError')),
     });
+  }
+
+  private reporterSurLaSeanceType(
+    username: string,
+    seanceTypeId: string,
+    exercicesFaits: ExerciceForm[],
+  ) {
+    this.chironApi
+      .getProgrammeById(username, seanceTypeId)
+      .pipe(
+        switchMap((seanceType) =>
+          this.chironApi.sauvegarderProgramme(
+            username,
+            seanceTypeAvecValeursDe(seanceType, exercicesFaits),
+          ),
+        ),
+      )
+      .subscribe({
+        next: () => this.flashStatus(this.i18n.t('session.templateUpdated')),
+        error: () => this.flashStatus(this.i18n.t('session.modelUpdateFailed')),
+      });
   }
 
   partagerSeance(): void {

@@ -601,6 +601,8 @@ export const en: Record<string, string> = {
   'session.notePlaceholder': 'Overall feeling, condition, things to remember for next time…',
   'session.noteTitle': 'Session note',
   'session.addToJournal': 'Add to journal',
+  'session.addToJournalAndTemplate': 'Add to journal and update the template',
+  'session.templateUpdated': 'Session logged, template updated.',
   'session.finishInteractive': 'Finish session',
   'session.newSession': 'New session',
   'session.interactiveTitle': 'Interactive session',

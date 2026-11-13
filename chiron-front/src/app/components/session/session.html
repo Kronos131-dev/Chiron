@@ -139,6 +139,17 @@
             {{ isInteractive() ? ('session.finishInteractive' | t) : ('session.addToJournal' | t) }}
           </button>
 
+          @if (!isInteractive() && routineId) {
+            <button
+              type="button"
+              (click)="ajouterAuJournal(true)"
+              class="w-full mt-3 border border-blue-500/50 bg-blue-500/10 text-blue-200 font-bold text-xs px-6 py-3 rounded-xl uppercase tracking-wider leading-snug active:scale-95 transition-all flex items-center justify-center gap-2"
+            >
+              <span class="material-symbols-outlined text-lg">sync</span>
+              {{ 'session.addToJournalAndTemplate' | t }}
+            </button>
+          }
+
           <!-- Transient status message (auto-clears after 3s) -->
           @if (saveStatus()) {
             <p

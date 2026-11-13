@@ -22,7 +22,12 @@ import { PartageCarte } from '../shared/partage-carte/partage-carte';
 import { ExerciceCardComponent } from '../shared/exercice-card/exercice-card';
 import { ExercisePickerComponent } from '../shared/exercise-picker/exercise-picker';
 import { ChampNote } from '../shared/champ-note/champ-note';
-import { ExerciceForm, exerciceFormFromDto, makeEmptyExercice } from '../../shared/exercise-forms';
+import {
+  ExerciceForm,
+  exerciceFormFromDto,
+  makeEmptyExercice,
+  serieFormToDto,
+} from '../../shared/exercise-forms';
 import { intercepterRetourNatif } from '../../service/plateforme';
 
 const COTE_TRACE = 320;
@@ -37,10 +42,6 @@ interface BrouillonSeance {
   startTime: string;
   endTime: string | null;
   exercices: ExerciceForm[];
-}
-
-function nombreOuNull(valeur: number | null | undefined): number | null {
-  return valeur != null ? Number(valeur) : null;
 }
 
 /** ISO-8601 week number (lundi = 1er jour de la semaine, semaine 1 = celle du premier jeudi). */
@@ -336,20 +337,7 @@ export class Journal implements OnInit, OnDestroy {
         exerciceDefinitionId: exo.definitionId ?? null,
         blockId: exo.blockId ?? null,
         blockType: exo.blockType ?? null,
-        series: exo.series.map((serie) => ({
-          poids: nombreOuNull(serie.poids) ?? 0,
-          reps: nombreOuNull(serie.reps) ?? 0,
-          commentaire: serie.commentaire ?? '',
-          dureeMin: nombreOuNull(serie.dureeMin),
-          distanceM: nombreOuNull(serie.distanceM),
-          allureKmh: nombreOuNull(serie.allureKmh),
-          pentePct: nombreOuNull(serie.pentePct),
-          courseTraceId: serie.courseTraceId ?? null,
-          degressifs: serie.degressifs.map((degressif) => ({
-            poids: nombreOuNull(degressif.poids) ?? 0,
-            reps: nombreOuNull(degressif.reps) ?? 0,
-          })),
-        })),
+        series: exo.series.map(serieFormToDto),
       })),
     };
   }

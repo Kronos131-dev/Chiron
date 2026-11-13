@@ -173,3 +173,24 @@ export function exerciceFormFromDto(dto: any): ExerciceForm {
     series: dto.series?.length ? seriesFromDto(dto.series) : [],
   };
 }
+
+function nombreOuNull(valeur: number | null | undefined): number | null {
+  return valeur != null ? Number(valeur) : null;
+}
+
+export function serieFormToDto(serie: SerieForm) {
+  return {
+    poids: nombreOuNull(serie.poids) ?? 0,
+    reps: nombreOuNull(serie.reps) ?? 0,
+    commentaire: serie.commentaire ?? '',
+    dureeMin: nombreOuNull(serie.dureeMin),
+    distanceM: nombreOuNull(serie.distanceM),
+    allureKmh: nombreOuNull(serie.allureKmh),
+    pentePct: nombreOuNull(serie.pentePct),
+    courseTraceId: serie.courseTraceId ?? null,
+    degressifs: serie.degressifs.map((degressif) => ({
+      poids: nombreOuNull(degressif.poids) ?? 0,
+      reps: nombreOuNull(degressif.reps) ?? 0,
+    })),
+  };
+}

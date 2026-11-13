@@ -605,6 +605,8 @@ export const fr: Record<string, string> = {
   'session.notePlaceholder': 'Ressenti global, condition, à retenir pour la prochaine fois…',
   'session.noteTitle': 'Note de séance',
   'session.addToJournal': 'Ajouter au journal',
+  'session.addToJournalAndTemplate': 'Ajouter au journal et mettre à jour la séance type',
+  'session.templateUpdated': 'Séance ajoutée au journal, séance type mise à jour.',
   'session.finishInteractive': 'Terminer la séance',
   'session.newSession': 'Nouvelle séance',
   'session.interactiveTitle': 'Séance interactive',
