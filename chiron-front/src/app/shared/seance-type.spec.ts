@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { seanceTypeAvecValeursDe } from './seance-type';
+import { seanceTypeAvecExercicesDe, seanceTypeAvecValeursDe } from './seance-type';
 import { ExerciceForm } from './exercise-forms';
 
 function seanceType(): any {
@@ -76,5 +76,30 @@ describe('seanceTypeAvecValeursDe', () => {
       historique: false,
     });
     expect(resultat.exercices[0].series[0].courseTraceId).toBeNull();
+  });
+});
+
+describe('seanceTypeAvecExercicesDe', () => {
+  it('takes the list of exercises done, removals and replacements included, in their order', () => {
+    const resultat = seanceTypeAvecExercicesDe(seanceType(), [
+      fait('remplacant', 'Pompes', 0),
+      fait(31, 'Développé couché', 105, { commentaire: 'Nouvelle note' }),
+    ]);
+
+    expect(resultat.exercices.map((e: any) => e.nom)).toEqual(['Pompes', 'Développé couché']);
+    expect(resultat.exercices[1]).toMatchObject({ commentaire: 'Nouvelle note', blockId: 2 });
+    expect(resultat.exercices[1].series[0]).toMatchObject({ poids: 105, courseTraceId: null });
+    expect(resultat.exercices[0].blockId).toBeNull();
+  });
+
+  it('keeps the title and the note of the template', () => {
+    const resultat = seanceTypeAvecExercicesDe(seanceType(), [fait(31, 'Développé couché', 105)]);
+
+    expect(resultat).toMatchObject({
+      id: 7,
+      titre: 'Push',
+      note: 'Échauffement long',
+      historique: false,
+    });
   });
 });

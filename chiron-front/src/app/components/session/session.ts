@@ -15,7 +15,7 @@ import { PartageSeance } from '../../service/partage-seance';
 import { CarteSeance, SeanceBrute } from '../../partage/carte';
 import { PartageCarte } from '../shared/partage-carte/partage-carte';
 import { nowAsLocalDateTime, getIsoWeekNumber } from '../../util/local-date-time';
-import { seanceTypeAvecValeursDe } from '../../shared/seance-type';
+import { seanceTypeAvecExercicesDe, seanceTypeAvecValeursDe } from '../../shared/seance-type';
 import { switchMap } from 'rxjs';
 import {
   ExerciceForm,
@@ -508,7 +508,7 @@ export class Session implements OnInit, OnDestroy {
    * Persists the current session state to the backend as an executed Historical Session (historique = true).
    * Calculates the current week number for statistical tracking.
    */
-  ajouterAuJournal(mettreAJourSeanceType = false) {
+  ajouterAuJournal(reprendreLesExercices = false) {
     if (this.isReadonly()) return;
     const username = this.authService.getUsername();
     if (!username) return;
@@ -558,8 +558,13 @@ export class Session implements OnInit, OnDestroy {
           this.titreRoutine = signal(titre);
         }
 
-        if (mettreAJourSeanceType && seanceTypeId) {
-          this.reporterSurLaSeanceType(username, seanceTypeId, exercicesFaits);
+        if (seanceTypeId) {
+          this.reporterSurLaSeanceType(
+            username,
+            seanceTypeId,
+            exercicesFaits,
+            reprendreLesExercices,
+          );
         }
       },
       error: () => this.flashStatus(this.i18n.t('session.saveError')),
@@ -570,15 +575,16 @@ export class Session implements OnInit, OnDestroy {
     username: string,
     seanceTypeId: string,
     exercicesFaits: ExerciceForm[],
+    reprendreLesExercices: boolean,
   ) {
+    const versSeanceType = reprendreLesExercices
+      ? seanceTypeAvecExercicesDe
+      : seanceTypeAvecValeursDe;
     this.chironApi
       .getProgrammeById(username, seanceTypeId)
       .pipe(
         switchMap((seanceType) =>
-          this.chironApi.sauvegarderProgramme(
-            username,
-            seanceTypeAvecValeursDe(seanceType, exercicesFaits),
-          ),
+          this.chironApi.sauvegarderProgramme(username, versSeanceType(seanceType, exercicesFaits)),
         ),
       )
       .subscribe({

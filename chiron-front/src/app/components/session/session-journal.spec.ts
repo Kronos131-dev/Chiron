@@ -83,24 +83,30 @@ describe('Session — séance enregistrée au journal', () => {
     expect(journal).toMatchObject({ id: null, modeleId: 7, historique: true });
   });
 
-  it("n'écrit que dans le journal par défaut, sans toucher à la séance type", async () => {
-    const { session, sauvegarderProgramme } = await monter({});
-
-    session.ajouterAuJournal();
-
-    expect(sauvegarderProgramme).toHaveBeenCalledTimes(1);
-  });
-
-  it('reporte les valeurs faites sur la séance type quand on le demande', async () => {
+  it('reporte par défaut la progression sur la séance type, sans toucher à ses exercices', async () => {
     const { session, sauvegarderProgramme } = await monter({});
     session.exercices()[0].series[0].poids = 105;
+    session.ouvrirRemplacement(session.exercices()[1]);
+    session.addExerciceFromDefinition(definition(50, 'Pompes'));
 
-    session.ajouterAuJournal(true);
+    session.ajouterAuJournal();
 
     expect(sauvegarderProgramme).toHaveBeenCalledTimes(2);
     const [, seanceType] = sauvegarderProgramme.mock.calls[1];
     expect(seanceType).toMatchObject({ id: 7, historique: false });
+    expect(seanceType.exercices.map((e: any) => e.nom)).toEqual(['Développé couché', 'Dips']);
     expect(seanceType.exercices[0].series[0].poids).toBe(105);
+  });
+
+  it("applique les changements d'exercices à la séance type quand on le demande", async () => {
+    const { session, sauvegarderProgramme } = await monter({});
+    session.ouvrirRemplacement(session.exercices()[1]);
+    session.addExerciceFromDefinition(definition(50, 'Pompes'));
+
+    session.ajouterAuJournal(true);
+
+    const [, seanceType] = sauvegarderProgramme.mock.calls[1];
+    expect(seanceType.exercices.map((e: any) => e.nom)).toEqual(['Développé couché', 'Pompes']);
   });
 
   it('remplace un exercice à sa place, sans le renvoyer en bas de la séance', async () => {
