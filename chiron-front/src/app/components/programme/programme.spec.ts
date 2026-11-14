@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Programme } from './programme';
 import { ChironApi } from '../../service/chiron-api';
 import { AuthService } from '../../service/auth.service';
+import { I18nService } from '../../service/i18n.service';
 import { ActiveSessionService } from '../../service/active-session.service';
 
 describe('Programme', () => {
@@ -74,6 +75,18 @@ describe('Programme', () => {
     expect(component.routines().map((r) => r.id)).toEqual(['1', '2', '3']);
   });
 
+  describe('rendu', () => {
+    it('ne propose plus l export : il se trouve dans les statistiques', () => {
+      Object.assign(chironApi, { getProfile: vi.fn().mockReturnValue(of({ isAdmin: false })) });
+
+      fixture.detectChanges();
+
+      const page = (fixture.nativeElement as HTMLElement).textContent ?? '';
+      expect(page).not.toMatch(/export/i);
+      expect(page).toContain(TestBed.inject(I18nService).t('programme.add'));
+    });
+  });
+
   describe('navigation', () => {
     it('commencerRoutine opens the execution Session view', () => {
       component.commencerRoutine('42');
@@ -83,11 +96,6 @@ describe('Programme', () => {
     it('editerRoutine opens the ProgrammeBuilder in edit mode', () => {
       component.editerRoutine('42');
       expect(router.navigate).toHaveBeenCalledWith(['/programme', '42', 'edit']);
-    });
-
-    it('ouvrirExports opens the exports screen', () => {
-      component.ouvrirExports();
-      expect(router.navigate).toHaveBeenCalledWith(['/exports']);
     });
 
     it('ajouterRoutine opens the ProgrammeBuilder in create mode', () => {

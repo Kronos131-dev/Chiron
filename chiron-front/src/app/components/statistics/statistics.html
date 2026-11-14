@@ -11,6 +11,15 @@
       <p class="text-on-surface-variant font-body mt-2">{{ 'stats.subtitle' | t }}</p>
     </div>
 
+    <div class="flex justify-center mb-5">
+      <button type="button" (click)="ouvrirExports()"
+              class="flex items-center gap-2 min-h-11 px-4 rounded-full border border-secondary/40 bg-secondary/10 text-secondary text-[11px] min-[400px]:text-xs font-bold tracking-wide min-[400px]:tracking-widest uppercase hover:bg-secondary/20 transition-colors cursor-pointer">
+        <span class="material-symbols-outlined text-lg">table_chart</span>
+        {{ 'stats.exportButton' | t }}
+        <span class="material-symbols-outlined text-lg">chevron_right</span>
+      </button>
+    </div>
+
     <!-- Sélecteur de période -->
     <div class="flex justify-center gap-2 mb-5">
       @for (p of periodes; track p.value) {

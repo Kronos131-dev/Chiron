@@ -666,6 +666,10 @@ export class Statistics implements OnInit {
     this.router.navigate(['/profile']);
   }
 
+  ouvrirExports(): void {
+    this.router.navigate(['/exports']);
+  }
+
   tierClass(level: number | undefined | null): string {
     return `tier-${level ?? 1}`;
   }

@@ -1,10 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthService } from '../../service/auth.service';
 import { ChironApi, ExportProgramme } from '../../service/chiron-api';
 import { TelechargementExport } from '../../service/telechargement-export';
+import { HeaderComponent } from '../shared/header/header';
 import { Exports } from './exports';
 
 function classeur(surcharge: Partial<ExportProgramme> = {}): ExportProgramme {
@@ -119,6 +121,14 @@ describe('Exports', () => {
     expect(composant.erreur()).toBe('Impossible de charger tes exports.');
     expect(composant.chargement()).toBe(false);
     expect(texte()).toContain('Impossible de charger tes exports.');
+  });
+
+  it('ramène vers les statistiques avec la flèche de retour', async () => {
+    await monter();
+
+    const entete = fixture.debugElement.query(By.directive(HeaderComponent));
+
+    expect(entete.componentInstance.backRoute).toBe('/statistics');
   });
 
   it('ouvre la page de création', async () => {
