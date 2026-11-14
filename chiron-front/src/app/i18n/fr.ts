@@ -607,7 +607,8 @@ export const fr: Record<string, string> = {
   'session.notePlaceholder': 'Ressenti global, condition, à retenir pour la prochaine fois…',
   'session.noteTitle': 'Note de séance',
   'session.addToJournal': 'Ajouter au journal',
-  'session.addToJournalWithExercises': "Ajouter au journal et appliquer les changements d'exercices",
+  'session.addToJournalWithExercises':
+    "Ajouter au journal et appliquer les changements d'exercices",
   'session.templateUpdated': 'Séance ajoutée au journal, séance type mise à jour.',
   'session.finishInteractive': 'Terminer la séance',
   'session.newSession': 'Nouvelle séance',
@@ -877,7 +878,11 @@ export const fr: Record<string, string> = {
   'export.list.sessionsCount': '{{n}} séances',
   'export.list.sessionsCount1': '{{n}} séance',
   'export.list.createdOn': 'créé le {{date}}',
-  'export.list.download': 'Télécharger',
+  'export.list.download': 'Télécharger Excel',
+  'export.list.copyForAi': 'Copier pour IA',
+  'export.list.downloadMd': 'Fichier .md',
+  'export.list.copied': 'Copié · ≈ {{tokens}} tokens',
+  'export.list.copyError': 'Impossible de copier. Télécharge le fichier .md à la place.',
   'export.list.edit': 'Modifier',
   'export.list.delete': 'Supprimer',
   'export.list.deleteConfirm':
@@ -885,7 +890,7 @@ export const fr: Record<string, string> = {
   'export.list.deleteError': "Impossible de supprimer l'export.",
   'export.list.downloadError': 'Impossible de télécharger le fichier.',
   'export.list.banner':
-    'Le fichier est généré à chaque téléchargement depuis ton journal : il contient toujours tes dernières séances. Ouvre-le dans Excel, LibreOffice ou Google Sheets.',
+    'Le fichier est généré à chaque téléchargement depuis ton journal : il contient toujours tes dernières séances. Ouvre-le dans Excel, LibreOffice ou Google Sheets. Pour une IA, copie plutôt la version texte : elle est bien plus légère que le fichier Excel.',
   'export.assistant.titleNew': 'Nouvel export',
   'export.assistant.titleEdit': "Modifier l'export",
   'export.assistant.step': 'Étape {{n}} sur 3',

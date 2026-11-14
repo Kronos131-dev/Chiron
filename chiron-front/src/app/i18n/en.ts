@@ -869,7 +869,11 @@ export const en: Record<string, string> = {
   'export.list.sessionsCount': '{{n}} sessions',
   'export.list.sessionsCount1': '{{n}} session',
   'export.list.createdOn': 'created on {{date}}',
-  'export.list.download': 'Download',
+  'export.list.download': 'Download Excel',
+  'export.list.copyForAi': 'Copy for AI',
+  'export.list.downloadMd': '.md file',
+  'export.list.copied': 'Copied · ≈ {{tokens}} tokens',
+  'export.list.copyError': 'Could not copy. Download the .md file instead.',
   'export.list.edit': 'Edit',
   'export.list.delete': 'Delete',
   'export.list.deleteConfirm':
@@ -877,7 +881,7 @@ export const en: Record<string, string> = {
   'export.list.deleteError': 'Could not delete the export.',
   'export.list.downloadError': 'Could not download the file.',
   'export.list.banner':
-    'The file is generated from your journal each time you download it, so it always holds your latest sessions. Open it in Excel, LibreOffice or Google Sheets.',
+    'The file is generated from your journal each time you download it, so it always holds your latest sessions. Open it in Excel, LibreOffice or Google Sheets. For an AI, copy the text version instead: it is much lighter than the Excel file.',
   'export.assistant.titleNew': 'New export',
   'export.assistant.titleEdit': 'Edit export',
   'export.assistant.step': 'Step {{n}} of 3',

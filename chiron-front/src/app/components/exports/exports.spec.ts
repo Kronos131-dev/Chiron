@@ -27,7 +27,11 @@ describe('Exports', () => {
   let fixture: ComponentFixture<Exports>;
   let composant: Exports;
   const router = { navigate: vi.fn() };
-  const telechargementExport = { telecharger: vi.fn() };
+  const telechargementExport = {
+    telecharger: vi.fn(),
+    telechargerMarkdown: vi.fn(),
+    copierPourIa: vi.fn(),
+  };
   let chironApi: {
     getExports: ReturnType<typeof vi.fn>;
     supprimerExport: ReturnType<typeof vi.fn>;
@@ -51,7 +55,7 @@ describe('Exports', () => {
     const boutons = Array.from(
       (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLButtonElement>('article button'),
     );
-    const trouve = boutons.find((b) => b.textContent?.trim() === libelle);
+    const trouve = boutons.find((b) => b.textContent?.includes(libelle));
     if (!trouve) throw new Error(`bouton introuvable : ${libelle}`);
     return trouve;
   }
@@ -60,6 +64,8 @@ describe('Exports', () => {
     localStorage.setItem('chiron_lang', 'fr');
     router.navigate.mockReset();
     telechargementExport.telecharger.mockReset().mockResolvedValue(undefined);
+    telechargementExport.telechargerMarkdown.mockReset().mockResolvedValue(undefined);
+    telechargementExport.copierPourIa.mockReset().mockResolvedValue(4200);
     chironApi = {
       getExports: vi.fn(),
       supprimerExport: vi.fn(),
@@ -134,7 +140,7 @@ describe('Exports', () => {
   it('télécharge le fichier', async () => {
     await monter();
 
-    bouton('Télécharger').click();
+    bouton('Télécharger Excel').click();
     await fixture.whenStable();
 
     expect(telechargementExport.telecharger).toHaveBeenCalledWith(
@@ -160,6 +166,89 @@ describe('Exports', () => {
     await composant.telecharger(classeur());
 
     expect(telechargementExport.telecharger).not.toHaveBeenCalled();
+  });
+
+  describe('version texte pour une IA', () => {
+    afterEach(() => vi.useRealTimers());
+
+    it('copie le texte et affiche le coût estimé en tokens', async () => {
+      telechargementExport.copierPourIa.mockResolvedValue(6817);
+      await monter();
+
+      bouton('Copier pour IA').click();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(telechargementExport.copierPourIa).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 9 }),
+      );
+      expect(composant.copie()?.id).toBe(9);
+      expect(texte()).toMatch(/Copié · ≈ 6\s800 tokens/);
+      expect(composant.occupe()).toBeNull();
+    });
+
+    it('efface le message après quelques secondes', async () => {
+      await monter();
+      vi.useFakeTimers();
+
+      await composant.copierPourIa(classeur());
+      expect(composant.copie()).not.toBeNull();
+      vi.advanceTimersByTime(3000);
+
+      expect(composant.copie()).toBeNull();
+    });
+
+    it('renvoie vers le fichier .md quand la copie est refusée', async () => {
+      telechargementExport.copierPourIa.mockRejectedValue(new Error('refusé'));
+      await monter();
+
+      await composant.copierPourIa(classeur());
+
+      expect(composant.erreur()).toBe(
+        'Impossible de copier. Télécharge le fichier .md à la place.',
+      );
+      expect(composant.copie()).toBeNull();
+      expect(composant.occupe()).toBeNull();
+    });
+
+    it('ne copie pas pendant qu une autre action est en cours', async () => {
+      await monter();
+      composant.occupe.set(3);
+
+      await composant.copierPourIa(classeur());
+
+      expect(telechargementExport.copierPourIa).not.toHaveBeenCalled();
+    });
+
+    it('télécharge le fichier .md', async () => {
+      await monter();
+
+      bouton('Fichier .md').click();
+      await fixture.whenStable();
+
+      expect(telechargementExport.telechargerMarkdown).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 9 }),
+      );
+    });
+
+    it('affiche une erreur quand le téléchargement du fichier .md échoue', async () => {
+      telechargementExport.telechargerMarkdown.mockRejectedValue(new Error('503'));
+      await monter();
+
+      await composant.telechargerMarkdown(classeur());
+
+      expect(composant.erreur()).toBe('Impossible de télécharger le fichier.');
+      expect(composant.occupe()).toBeNull();
+    });
+
+    it('n affiche le message de copie que sur l export copié', async () => {
+      await monter([classeur(), classeur({ id: 10, nom: 'Jambes' })]);
+
+      await composant.copierPourIa(classeur());
+      fixture.detectChanges();
+
+      expect((texte().match(/Copié/g) ?? []).length).toBe(1);
+    });
   });
 
   it('supprime l export après confirmation', async () => {

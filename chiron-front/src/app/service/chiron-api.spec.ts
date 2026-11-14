@@ -121,5 +121,16 @@ describe('ChironApi', () => {
       expect(req.request.responseType).toBe('blob');
       req.flush(new Blob(['x']));
     });
+
+    it('lit la version texte pour une IA', () => {
+      let recu = '';
+      service.getExportMarkdown(9).subscribe((texte) => (recu = texte));
+
+      const req = httpMock.expectOne(`${environment.apiUrl}/exports/9/markdown`);
+      expect(req.request.method).toBe('GET');
+      expect(req.request.responseType).toBe('text');
+      req.flush('# Programme');
+      expect(recu).toBe('# Programme');
+    });
   });
 });

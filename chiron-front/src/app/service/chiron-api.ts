@@ -561,6 +561,10 @@ export class ChironApi {
     return this.http.get(`${this.apiUrl}/exports/${id}/telecharger`, { responseType: 'blob' });
   }
 
+  getExportMarkdown(id: number): Observable<string> {
+    return this.http.get(`${this.apiUrl}/exports/${id}/markdown`, { responseType: 'text' });
+  }
+
   getActivites(
     jours: number = 400,
     source?: 'CHIRON_MUSCU' | 'GOOGLE_DETECTE',

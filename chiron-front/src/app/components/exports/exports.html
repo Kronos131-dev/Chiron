@@ -93,6 +93,34 @@
         </button>
         <div class="grid grid-cols-2 gap-2">
           <button
+            (click)="copierPourIa(classeur)"
+            [disabled]="occupe() !== null"
+            type="button"
+            class="border border-secondary/40 text-secondary px-2 py-2.5 rounded-lg text-[11px] font-bold tracking-wider min-[400px]:tracking-widest uppercase hover:bg-secondary/10 transition-colors disabled:opacity-40 cursor-pointer flex items-center justify-center gap-1.5 min-w-0"
+          >
+            <span class="material-symbols-outlined text-sm shrink-0 hidden min-[400px]:inline"
+              >content_copy</span
+            >
+            <span class="text-center leading-tight">{{ 'export.list.copyForAi' | t }}</span>
+          </button>
+          <button
+            (click)="telechargerMarkdown(classeur)"
+            [disabled]="occupe() !== null"
+            type="button"
+            class="border border-secondary/40 text-secondary px-2 py-2.5 rounded-lg text-[11px] font-bold tracking-wider min-[400px]:tracking-widest uppercase hover:bg-secondary/10 transition-colors disabled:opacity-40 cursor-pointer min-w-0 leading-tight"
+          >
+            {{ 'export.list.downloadMd' | t }}
+          </button>
+        </div>
+        @if (copie(); as reussie) {
+          @if (reussie.id === classeur.id) {
+            <p class="text-emerald-400 text-xs">
+              {{ 'export.list.copied' | t: { tokens: reussie.tokens } }}
+            </p>
+          }
+        }
+        <div class="grid grid-cols-2 gap-2">
+          <button
             (click)="modifier(classeur)"
             [disabled]="occupe() !== null"
             type="button"
