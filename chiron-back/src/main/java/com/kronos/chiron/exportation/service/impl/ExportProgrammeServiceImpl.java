@@ -16,6 +16,7 @@ import com.kronos.chiron.exportation.service.ChargeurDonneesExport;
 import com.kronos.chiron.exportation.service.ExportProgrammeService;
 import com.kronos.chiron.exportation.service.RattachementParTitre;
 import com.kronos.chiron.exportation.service.classeur.ClasseurXlsx;
+import com.kronos.chiron.exportation.service.classeur.ExportMarkdown;
 import com.kronos.chiron.exportation.service.classeur.DonneesExport;
 import com.kronos.chiron.utilisateur.model.Utilisateur;
 import com.kronos.chiron.utilisateur.persistence.UtilisateurRepository;
@@ -23,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
 import java.text.Normalizer;
 import java.time.Clock;
 import java.time.LocalDateTime;
@@ -52,6 +54,7 @@ public class ExportProgrammeServiceImpl implements ExportProgrammeService {
     private final ChargeurDonneesExport chargeurDonnees;
     private final RattachementParTitre rattachementParTitre;
     private final ClasseurXlsx classeurXlsx;
+    private final ExportMarkdown exportMarkdown;
     private final Clock clock;
 
     @Transactional(readOnly = true)
@@ -92,7 +95,16 @@ public class ExportProgrammeServiceImpl implements ExportProgrammeService {
     public FichierExporte telecharger(String username, Long id) {
         ExportProgramme export = exportDe(username, id);
         DonneesExport donnees = chargeurDonnees.charger(export);
-        return new FichierExporte(nomDeFichier(export.getNom()), classeurXlsx.generer(donnees));
+        return new FichierExporte(nomDeFichier(export.getNom(), "xlsx"), classeurXlsx.generer(donnees));
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public FichierExporte telechargerMarkdown(String username, Long id) {
+        ExportProgramme export = exportDe(username, id);
+        DonneesExport donnees = chargeurDonnees.charger(export);
+        return new FichierExporte(nomDeFichier(export.getNom(), "md"),
+                exportMarkdown.generer(donnees).getBytes(StandardCharsets.UTF_8));
     }
 
     private ExportProgramme creerLigne(String username, ExportProgrammeRequest requete) {
@@ -279,9 +291,9 @@ public class ExportProgrammeServiceImpl implements ExportProgrammeService {
                 toutes.size());
     }
 
-    private String nomDeFichier(String nom) {
+    private String nomDeFichier(String nom, String extension) {
         String sansAccent = Normalizer.normalize(nom, Normalizer.Form.NFD).replaceAll("\\p{M}", "");
         String propre = sansAccent.replaceAll("[^A-Za-z0-9 _-]", "").trim().replaceAll("\\s+", "-");
-        return (propre.isEmpty() ? "export-chiron" : propre) + ".xlsx";
+        return (propre.isEmpty() ? "export-chiron" : propre) + "." + extension;
     }
 }

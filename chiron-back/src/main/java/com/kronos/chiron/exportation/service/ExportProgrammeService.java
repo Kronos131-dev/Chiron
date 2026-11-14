@@ -19,4 +19,6 @@ public interface ExportProgrammeService {
     void supprimer(String username, Long id);
 
     FichierExporte telecharger(String username, Long id);
+
+    FichierExporte telechargerMarkdown(String username, Long id);
 }

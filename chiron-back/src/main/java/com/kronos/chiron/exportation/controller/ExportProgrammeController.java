@@ -31,6 +31,7 @@ public class ExportProgrammeController {
 
     private static final MediaType XLSX = MediaType
             .parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    private static final MediaType MARKDOWN = MediaType.parseMediaType("text/markdown;charset=UTF-8");
 
     private final ExportProgrammeService exportProgrammeService;
     private final AuthenticatedUserService authenticatedUserService;
@@ -62,10 +63,21 @@ public class ExportProgrammeController {
 
     @GetMapping("/{id}/telecharger")
     public ResponseEntity<byte[]> telecharger(@PathVariable Long id) {
-        FichierExporte fichier = exportProgrammeService.telecharger(authenticatedUserService.getAuthenticatedUsername(),
-                id);
+        return enPieceJointe(
+                exportProgrammeService.telecharger(authenticatedUserService.getAuthenticatedUsername(), id),
+                XLSX);
+    }
+
+    @GetMapping("/{id}/markdown")
+    public ResponseEntity<byte[]> markdown(@PathVariable Long id) {
+        return enPieceJointe(
+                exportProgrammeService.telechargerMarkdown(authenticatedUserService.getAuthenticatedUsername(), id),
+                MARKDOWN);
+    }
+
+    private ResponseEntity<byte[]> enPieceJointe(FichierExporte fichier, MediaType type) {
         return ResponseEntity.ok()
-                .contentType(XLSX)
+                .contentType(type)
                 .header(HttpHeaders.CONTENT_DISPOSITION,
                         ContentDisposition.attachment().filename(fichier.nom(), StandardCharsets.UTF_8).build()
                                 .toString())

@@ -19,6 +19,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -33,6 +34,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -179,6 +181,26 @@ class ExportProgrammeControllerTest {
                         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .andExpect(header().string("Content-Disposition",
                         org.hamcrest.Matchers.containsString("Programme-force.xlsx")));
+    }
+
+    @Test
+    void markdown_rendUnTexteMarkdownEnUtf8() throws Exception {
+        when(exportProgrammeService.telechargerMarkdown("alice", 9L)).thenReturn(
+                new FichierExporte("Programme-force.md", "# Développé couché\n".getBytes(StandardCharsets.UTF_8)));
+
+        mockMvc.perform(get("/api/exports/9/markdown"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", "text/markdown;charset=UTF-8"))
+                .andExpect(header().string("Content-Disposition",
+                        org.hamcrest.Matchers.containsString("Programme-force.md")))
+                .andExpect(content().string("# Développé couché\n"));
+    }
+
+    @Test
+    void markdown_unExportDUnAutre_repond404() throws Exception {
+        when(exportProgrammeService.telechargerMarkdown("alice", 9L)).thenThrow(notFound("export", 9L));
+
+        mockMvc.perform(get("/api/exports/9/markdown")).andExpect(status().isNotFound());
     }
 
     @Test

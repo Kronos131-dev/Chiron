@@ -13,6 +13,7 @@ import com.kronos.chiron.exportation.persistence.ExportProgrammeRepository;
 import com.kronos.chiron.exportation.service.ChargeurDonneesExport;
 import com.kronos.chiron.exportation.service.RattachementParTitre;
 import com.kronos.chiron.exportation.service.classeur.ClasseurXlsx;
+import com.kronos.chiron.exportation.service.classeur.ExportMarkdown;
 import com.kronos.chiron.exportation.service.classeur.DonneesExport;
 import com.kronos.chiron.seance.model.Seance;
 import com.kronos.chiron.seance.persistence.SeanceRepository;
@@ -70,6 +71,8 @@ class ExportProgrammeServiceTest {
     private RattachementParTitre rattachementParTitre;
     @Mock
     private ClasseurXlsx classeurXlsx;
+    @Mock
+    private ExportMarkdown exportMarkdown;
 
     private ExportProgrammeServiceImpl service;
     private Utilisateur alice;
@@ -78,7 +81,7 @@ class ExportProgrammeServiceTest {
     @BeforeEach
     void setUp() {
         service = new ExportProgrammeServiceImpl(exportRepository, seanceRepository, utilisateurRepository,
-                chargeurDonnees, rattachementParTitre, classeurXlsx, CLOCK);
+                chargeurDonnees, rattachementParTitre, classeurXlsx, exportMarkdown, CLOCK);
         alice = Utilisateur.builder().id(1L).username("alice").build();
         bob = Utilisateur.builder().id(2L).username("bob").build();
         when(utilisateurRepository.findByUsername("alice")).thenReturn(Optional.of(alice));
@@ -492,5 +495,39 @@ class ExportProgrammeServiceTest {
         assertThatThrownBy(() -> service.telecharger("bob", 9L))
                 .satisfies(e -> assertThat(statutDe(e)).isEqualTo(HttpStatus.NOT_FOUND));
         verify(classeurXlsx, never()).generer(any());
+    }
+
+    @Test
+    void telechargerMarkdown_rendLeTexteEnUtf8SousUnNomSansAccent() {
+        ExportProgramme export = exportExistant(alice, 5L);
+        export.setNom("Programme Force été");
+        DonneesExport donnees = new DonneesExport("Programme Force été", MAINTENANT, List.of());
+        when(chargeurDonnees.charger(export)).thenReturn(donnees);
+        when(exportMarkdown.generer(donnees)).thenReturn("# Développé « 80×8 »");
+
+        FichierExporte fichier = service.telechargerMarkdown("alice", 9L);
+
+        assertThat(fichier.nom()).isEqualTo("Programme-Force-ete.md");
+        assertThat(new String(fichier.contenu(), java.nio.charset.StandardCharsets.UTF_8))
+                .isEqualTo("# Développé « 80×8 »");
+    }
+
+    @Test
+    void telechargerMarkdown_nomSansCaractereUtilisable_retombeSurUnNomNeutre() {
+        ExportProgramme export = exportExistant(alice, 5L);
+        export.setNom("???");
+        when(chargeurDonnees.charger(export)).thenReturn(new DonneesExport("???", MAINTENANT, List.of()));
+        when(exportMarkdown.generer(any())).thenReturn("");
+
+        assertThat(service.telechargerMarkdown("alice", 9L).nom()).isEqualTo("export-chiron.md");
+    }
+
+    @Test
+    void telechargerMarkdown_unExportDUnAutre_estIntrouvableEtNeGenereRien() {
+        exportExistant(alice, 5L);
+
+        assertThatThrownBy(() -> service.telechargerMarkdown("bob", 9L))
+                .satisfies(e -> assertThat(statutDe(e)).isEqualTo(HttpStatus.NOT_FOUND));
+        verify(exportMarkdown, never()).generer(any());
     }
 }
